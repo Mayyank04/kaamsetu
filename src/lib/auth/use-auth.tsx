@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import { UserProfile } from "@/types/auth";
-import { DEMO_PERSONAS, DemoPersona } from "@/lib/auth/personas";
 
 interface AuthContextValue {
   user: UserProfile | null;
   role: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isDemo: boolean;
   switchPersona: (personaKey: string) => Promise<string>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -17,20 +17,31 @@ interface AuthContextValue {
 const AuthContext = React.createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = React.useState<UserProfile | null>(DEMO_PERSONAS[0]);
+  const [user, setUser] = React.useState<UserProfile | null>(null);
+  const [isDemo, setIsDemo] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
 
   const refreshSession = React.useCallback(async () => {
+    setIsLoading(true);
     try {
       const res = await fetch("/api/auth/me");
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.user) {
           setUser(data.user);
+          setIsDemo(Boolean(data.isDemo));
+        } else {
+          setUser(null);
+          setIsDemo(false);
         }
+      } else {
+        setUser(null);
+        setIsDemo(false);
       }
     } catch (err) {
       console.warn("Session check error:", err);
+      setUser(null);
+      setIsDemo(false);
     } finally {
       setIsLoading(false);
     }
@@ -51,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (data.success && data.user) {
         setUser(data.user);
+        setIsDemo(Boolean(data.isDemo));
         return data.redirectUrl || "/dashboard";
       }
       throw new Error(data.message || "Failed to switch persona");
@@ -64,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
+      setIsDemo(false);
       window.location.href = "/";
     } finally {
       setIsLoading(false);
@@ -77,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: user?.role || null,
         isAuthenticated: !!user,
         isLoading,
+        isDemo,
         switchPersona,
         logout,
         refreshSession,
@@ -90,12 +104,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const ctx = React.useContext(AuthContext);
   if (!ctx) {
-    // Graceful fallback for components outside provider
     return {
-      user: DEMO_PERSONAS[0],
-      role: DEMO_PERSONAS[0].role,
-      isAuthenticated: true,
+      user: null,
+      role: null,
+      isAuthenticated: false,
       isLoading: false,
+      isDemo: false,
       switchPersona: async () => "/dashboard",
       logout: async () => {},
       refreshSession: async () => {},

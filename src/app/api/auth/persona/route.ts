@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_PERSONAS } from "@/lib/auth/personas";
+import { isConfigured } from "@/lib/env";
 import { z } from "zod";
 
 const personaSchema = z.object({
@@ -8,6 +9,17 @@ const personaSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Strict Environment Guard: Disallow demo persona login if demo mode is not explicitly enabled
+    if (!isConfigured.demoAuth) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Demo persona authentication is disabled in this environment.",
+        },
+        { status: 403 }
+      );
+    }
+
     const json = await request.json();
     const { personaKey } = personaSchema.parse(json);
 
@@ -21,14 +33,18 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({
       success: true,
-      user: persona,
+      user: {
+        ...persona,
+        isDemo: true,
+      },
+      isDemo: true,
       redirectUrl: persona.targetDashboard,
-      message: `Signed in as ${persona.fullName} (${persona.badgeLabel})`,
+      message: `Signed in as simulated demo persona: ${persona.fullName} (${persona.badgeLabel})`,
     });
 
-    // Set cookie
-    response.cookies.set("kaamsetu_session", JSON.stringify(persona), {
-      httpOnly: false,
+    // Set secure HttpOnly cookie with the verified persona key only
+    response.cookies.set("kaamsetu_demo_persona", persona.personaKey, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days

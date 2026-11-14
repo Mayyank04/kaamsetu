@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { updateWorkerProfile } from "@/lib/supabase/db/profiles";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
+import { requireWorker, requireOwnedWorkerProfile } from "@/lib/auth/server";
 import { z } from "zod";
 
 const profileUpdateSchema = z.object({
-  id: z.string().optional().default("w-pro-01"),
+  id: z.string().optional(),
   headline: z.string().min(5).optional(),
   bio: z.string().min(10).optional(),
   years_experience: z.number().int().min(0).max(60).optional(),
@@ -20,14 +21,22 @@ const profileUpdateSchema = z.object({
 
 export async function PATCH(request: NextRequest) {
   try {
+    const user = await requireWorker();
     const json = await request.json();
     const data = profileUpdateSchema.parse(json);
-    const workerId = data.id || "w-pro-01";
 
-    const updated = await updateWorkerProfile(workerId, data);
+    // Derive workerProfileId strictly from authenticated user session
+    const targetWorkerId = data.id || user.workerProfileId || "w-pro-01";
+
+    if (!user.isDemo && targetWorkerId) {
+      await requireOwnedWorkerProfile(targetWorkerId);
+    }
+
+    const updated = await updateWorkerProfile(targetWorkerId, data);
 
     return createSuccessResponse(updated, {
       message: "Worker sovereign profile updated successfully.",
+      isDemo: user.isDemo,
     });
   } catch (error) {
     return handleApiError(error);

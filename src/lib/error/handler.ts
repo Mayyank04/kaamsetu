@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { AppError } from "./app-error";
+import {
+  AppError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  ValidationError,
+} from "./app-error";
 import { ApiResponse } from "@/types/api";
+
+export {
+  AppError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  ValidationError,
+};
 
 export function handleApiError(error: unknown): NextResponse<ApiResponse<never>> {
   const timestamp = new Date().toISOString();
@@ -27,7 +41,7 @@ export function handleApiError(error: unknown): NextResponse<ApiResponse<never>>
     );
   }
 
-  // 2. Custom AppError
+  // 2. Custom AppError or AuthError
   if (error instanceof AppError) {
     return NextResponse.json(
       {
@@ -40,6 +54,22 @@ export function handleApiError(error: unknown): NextResponse<ApiResponse<never>>
         },
       },
       { status: error.statusCode }
+    );
+  }
+
+  // 2b. AuthError / duck-typed errors with statusCode
+  if (error instanceof Error && ("statusCode" in error || error.name === "AuthError")) {
+    const statusCode = (error as any).statusCode || 401;
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: statusCode === 403 ? "FORBIDDEN" : "UNAUTHENTICATED",
+          message: error.message,
+          timestamp,
+        },
+      },
+      { status: statusCode }
     );
   }
 

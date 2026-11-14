@@ -147,8 +147,10 @@ npm start
 | `NEXT_PUBLIC_SUPABASE_URL` | Optional | Your Supabase project URL (`https://your-project.supabase.co`). |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Optional | Supabase public anon key for client-side queries. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Optional | Supabase service-role key for backend admin operations (**NEVER exposed to frontend**). |
-| `GEMINI_API_KEY` | Optional | Google Gemini API key for live voice audio & transcript analysis. |
+| `GEMINI_API_KEY` | Optional | Google Gemini API key for live voice audio & transcript analysis (Server-Side Only). |
 | `NEXT_PUBLIC_APP_URL` | Optional | Base URL of the deployment (default: `http://localhost:3000`). |
+| `ENABLE_DEMO_AUTH` | Optional | Explicit environment guard to permit simulated hackathon personas (default: false in production). |
+| `NEXT_PUBLIC_ENABLE_DEMO_AUTH`| Optional | Exposes demo persona toggle to frontend authentication modal. |
 
 ---
 
@@ -178,11 +180,18 @@ Applies PostgreSQL Row Level Security (RLS) policies:
 ### 3. `20261114000003_storage_and_worker_controls.sql`
 Configures the Supabase Storage bucket `portfolio-images` and worker asset policies.
 
-### 4. Running Migrations & Seeding
+### 4. `20261114000004_security_hardening.sql`
+Enforces production-grade application security and data isolation:
+- **Phone & Identity Masking View**: `public_worker_profiles` strictly hides unauthenticated phone numbers and email addresses.
+- **Strict Storage Path Isolation**: Authenticated workers can only upload to `portfolio-images/${auth.uid()}/*`.
+- **Verified Work Ledger Integrity**: Work records are append-only and cannot be forged by arbitrary callers.
+- **Booking State Transition Trigger**: Enforces valid status transitions at the database level (`requested -> confirmed -> in_progress -> completed`).
+
+### 5. Running Migrations & Seeding
 Using the Supabase CLI:
 ```bash
 supabase db push
-# Or seed database:
+# Or seed database idempotently without destructive truncate:
 supabase db reset
 ```
 
@@ -191,6 +200,7 @@ supabase db reset
 ## Security & Row Level Security (RLS)
 
 - **Browser Secret Isolation**: Frontend code never imports or references `SUPABASE_SERVICE_ROLE_KEY`. Verified by static check in test suite.
+- **Camera-Scannable QR Verification**: Camera-scannable QR codes generated via `qrcode` link to `/verify/[registryId]`, displaying UIDAI masked Aadhaar (`XXXX-XXXX-4012`) and verified NSQF classifications.
 - **Unique Profile Slugs**: Enforced with automated slug generation trigger to prevent collision.
 - **Tamper-Evident Ledger**: Work records contain SHA-256 cryptographic hashes chaining work completion certificates.
 - **Aadhaar / DigiLocker Verification**: Pre-configured verification flags ensure clear visual trust markers on sovereign identity cards.
@@ -212,7 +222,7 @@ Follow these steps to evaluate the full end-to-end functionality of KAAMSETU:
 1. Navigate to `/onboarding`.
 2. **Step 1 (Language & Mode)**: Select **हिन्दी (Hindi)** or your preferred language, and choose **Voice Mode** (or Text Mode).
 3. **Step 2 (Voice Testimony)**: Click the microphone or use the sample text button to load a realistic trade description.
-4. **Step 3 (AI Analysis)**: Click **Analyze Craft Testimony**. Google Gemini extracts the occupation, years of experience, NSQF category, sub-skills, daily rates, and generates an editorial bio.
+4. **Step 3 (AI Analysis)**: Click **Analyze Craft Testimony**. Google Gemini extracts the occupation, years of experience, NSQF category, sub-skills, daily rates, and generates an editorial bio without hallucination.
 5. **Step 4 (Approve & Mint)**: Edit any field, review the confidence score, and click **Approve & Mint Sovereign ID**.
 6. **Result**: An authentic Sovereign Skill Credential is minted with a unique Registry ID (e.g., `IN-RJ-2026-4029-KS`), verifiable QR code, and KAAMSCORE™.
 
@@ -248,7 +258,7 @@ Follow these steps to evaluate the full end-to-end functionality of KAAMSETU:
 
 ## Verification Test Suite
 
-KAAMSETU includes an automated 42-point backend and RLS verification test suite.
+KAAMSETU includes an automated 67-point backend, security, RLS, and AI extraction verification test suite.
 
 Run the test suite:
 ```bash
@@ -260,18 +270,26 @@ npm run verify:db
 =================================================================
 KAAMSETU SUPABASE BACKEND VERIFICATION SUITE
 =================================================================
-VERIFICATION SUMMARY: 42/42 TESTS PASSED (0 FAILED)
+VERIFICATION SUMMARY: 67/67 TESTS PASSED (0 FAILED)
 =================================================================
 ✓ PASS [1. SQL Migrations] Migration 01 (Initial Schema) exists
 ✓ PASS [1. SQL Migrations] Migration 02 (Row Level Security) exists
 ✓ PASS [1. SQL Migrations] Seed SQL data exists
-✓ PASS [1. SQL Migrations] Table public.occupations defined in schema
 ...
-✓ PASS [2. Row Level Security] Public read access STRICTLY gated to published profiles
-✓ PASS [2. Row Level Security] Customer review eligibility: ONLY completed booking can review
-...
-✓ PASS [5. Security Invariant] Browser client NEVER references or exposes SUPABASE_SERVICE_ROLE_KEY
-✓ PASS [5. Security Invariant] Service role key is NOT exposed via NEXT_PUBLIC prefix
+✓ PASS [6. Security Hardening] Migration 04 (Security Hardening) exists
+✓ PASS [6. Security Hardening] Public worker profiles view securely restricts unauthenticated phone/email leakage
+✓ PASS [6. Security Hardening] Storage folder isolation: workers can ONLY upload to their own folder (auth.uid() = folder)
+✓ PASS [6. Security Hardening] Database trigger validates booking lifecycle transitions (preventing invalid transitions)
+✓ PASS [6. Security Hardening] Seed SQL removed destructive TRUNCATE CASCADE, using safe idempotent operations
+✓ PASS [7. AI Non-Invention] Extracted worker identity from Hindi transcript
+✓ PASS [7. AI Non-Invention] Non-invention invariant: experienceYears is 0 when unmentioned (never defaulted)
+✓ PASS [7. AI Non-Invention] Non-invention invariant: daily rates are undefined when unmentioned
+✓ PASS [7. AI Non-Invention] Non-invention invariant: equipment list is EMPTY when unmentioned
+✓ PASS [7. AI Non-Invention] Unmentioned experience accurately flagged in missingFields array
+✓ PASS [8. QR Verification] generateQrDataUrl outputs a valid base64 PNG data URL
+✓ PASS [8. QR Verification] Public credential verification route /verify/[registryId] exists and is operational
+✓ PASS [9. Storage Security] PNG magic byte detection (89 50 4E 47) verified
+✓ PASS [9. Storage Security] Executable scripts strictly rejected by file header inspection
 ```
 
 ---

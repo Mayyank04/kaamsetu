@@ -4,10 +4,15 @@
 -- Portfolio Showcases, Reviews, and Cryptographic Work Records
 -- ============================================================================
 
--- Clean existing demo data if re-seeding
-TRUNCATE TABLE public.work_records, public.reviews, public.bookings, public.portfolio,
-               public.worker_skills, public.worker_profiles, public.skills,
-               public.occupations, public.profiles CASCADE;
+-- CAUTION: Non-destructive local demo seed. In production environments, this script
+-- uses ON CONFLICT clauses to avoid mutating or truncating live user data.
+-- Do NOT run TRUNCATE on a production database.
+DELETE FROM public.work_records WHERE id LIKE '77777777%';
+DELETE FROM public.reviews WHERE id LIKE 'rev-%';
+DELETE FROM public.bookings WHERE id LIKE '66666666%';
+DELETE FROM public.portfolio WHERE id LIKE '55555555%';
+DELETE FROM public.worker_skills WHERE worker_profile_id LIKE 'w-pro-%';
+DELETE FROM public.worker_profiles WHERE id LIKE 'w-pro-%';
 
 -- ----------------------------------------------------------------------------
 -- 1. OCCUPATIONS (10 Distinct National Trade Categories)

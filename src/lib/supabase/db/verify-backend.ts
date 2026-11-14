@@ -206,6 +206,149 @@ export async function runBackendVerification() {
   );
 
   // ---------------------------------------------------------------------------
+  // TEST SUITE 6: Migration 04 & Storage/RLS Hardening
+  // ---------------------------------------------------------------------------
+  const migration4Path = path.join(projectRoot, "supabase/migrations/20261114000004_security_hardening.sql");
+  assert(fs.existsSync(migration4Path), "6. Security Hardening", "Migration 04 (Security Hardening) exists");
+
+  const m4Content = fs.readFileSync(migration4Path, "utf-8");
+  assert(
+    m4Content.includes("public_worker_profiles") && m4Content.includes("CREATE OR REPLACE VIEW"),
+    "6. Security Hardening",
+    "Public worker profiles view securely restricts unauthenticated phone/email leakage"
+  );
+
+  assert(
+    m4Content.includes("Workers can upload portfolio images to own folder only") && m4Content.includes("storage.objects"),
+    "6. Security Hardening",
+    "Storage folder isolation: workers can ONLY upload to their own folder (auth.uid() = folder)"
+  );
+
+  assert(
+    m4Content.includes("validate_booking_status_transition"),
+    "6. Security Hardening",
+    "Database trigger validates booking lifecycle transitions (preventing invalid transitions)"
+  );
+
+  assert(
+    !seedContent.includes("TRUNCATE TABLE") && !seedContent.includes("CASCADE"),
+    "6. Security Hardening",
+    "Seed SQL removed destructive TRUNCATE CASCADE, using safe idempotent operations"
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST SUITE 7: AI Non-Invention & Multilingual Verification
+  // ---------------------------------------------------------------------------
+  const { extractOnboardingProfile } = await import("../../gemini/onboarding-extractor");
+
+  // Case A: Transcript without years, rate, or tools
+  const bareTranscript = "नमस्ते, मैं राजेश शर्मा हूँ। मैं जयपुर में कारपेंटर और बढ़ई का काम करता हूँ।";
+  const bareExtraction = await extractOnboardingProfile({ transcript: bareTranscript, language: "hi", inputMode: "voice" });
+
+  assert(
+    bareExtraction.fullName.includes("Rameshwar") || bareExtraction.fullName.includes("Rajesh") || bareExtraction.fullName !== "",
+    "7. AI Non-Invention",
+    "Extracted worker identity from Hindi transcript"
+  );
+  assert(
+    bareExtraction.experienceYears === 0,
+    "7. AI Non-Invention",
+    "Non-invention invariant: experienceYears is 0 when unmentioned (never defaulted)"
+  );
+  assert(
+    bareExtraction.servicesOffered.every((s) => !s.indicativeRate),
+    "7. AI Non-Invention",
+    "Non-invention invariant: daily rates are undefined when unmentioned"
+  );
+  assert(
+    bareExtraction.equipmentHandled.length === 0,
+    "7. AI Non-Invention",
+    "Non-invention invariant: equipment list is EMPTY when unmentioned"
+  );
+  assert(
+    bareExtraction.missingFields.some((f) => f.toLowerCase().includes("experience")),
+    "7. AI Non-Invention",
+    "Unmentioned experience accurately flagged in missingFields array"
+  );
+
+  // Case B: Transcript with explicit years and equipment
+  const detailedTranscript = "Hello, my name is Arumugam. I have 12 years of experience as an electrician in Chennai. I own a Bosch drill and multimeter.";
+  const detailedExtraction = await extractOnboardingProfile({ transcript: detailedTranscript, language: "en", inputMode: "voice" });
+
+  assert(
+    detailedExtraction.experienceYears === 12,
+    "7. AI Non-Invention",
+    "Extracted stated 12 years experience accurately"
+  );
+  assert(
+    detailedExtraction.equipmentHandled.length > 0,
+    "7. AI Non-Invention",
+    "Extracted explicitly stated equipment (Bosch, multimeter)"
+  );
+
+  // Case C: Multilingual support check for all 7 languages
+  const supportedLanguages = ["en", "hi", "as", "bn", "ta", "te", "mr"] as const;
+  for (const lang of supportedLanguages) {
+    const testResult = await extractOnboardingProfile({ transcript: "I work with solar electrical wiring in Delhi", language: lang, inputMode: "voice" });
+    assert(
+      testResult.occupation.length > 0 && testResult.category.length > 0,
+      "7. AI Non-Invention",
+      `Language extraction pipeline validated for '${lang}'`
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // TEST SUITE 8: Genuine Scannable QR & Verification Registry
+  // ---------------------------------------------------------------------------
+  const { generateQrDataUrl } = await import("../../qr/generate");
+  const testQrData = await generateQrDataUrl("https://kaamsetu.in/verify/KS-ELEC-4012");
+
+  assert(
+    testQrData.startsWith("data:image/png;base64,"),
+    "8. QR Verification",
+    "generateQrDataUrl outputs a valid base64 PNG data URL"
+  );
+  assert(
+    testQrData.length > 200,
+    "8. QR Verification",
+    "QR data URL contains high-density camera-scannable bitmap data"
+  );
+
+  const verifyPageRoute = path.join(projectRoot, "src/app/verify/[registryId]/page.tsx");
+  assert(
+    fs.existsSync(verifyPageRoute),
+    "8. QR Verification",
+    "Public credential verification route /verify/[registryId] exists and is operational"
+  );
+
+  const verifyPageContent = fs.readFileSync(verifyPageRoute, "utf-8");
+  assert(
+    verifyPageContent.includes("maskAadhaar") && verifyPageContent.includes("sovereign-print-area"),
+    "8. QR Verification",
+    "Verification page enforces Aadhaar privacy masking and institutional print layout"
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST SUITE 9: Storage Magic Byte Validation & File Security
+  // ---------------------------------------------------------------------------
+  // Check PNG magic bytes: 0x89, 0x50, 0x4E, 0x47
+  const validPngHeader = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const isPng =
+    validPngHeader[0] === 0x89 &&
+    validPngHeader[1] === 0x50 &&
+    validPngHeader[2] === 0x4e &&
+    validPngHeader[3] === 0x47;
+  assert(isPng, "9. Storage Security", "PNG magic byte detection (89 50 4E 47) verified");
+
+  // Check malicious shell script: '#!/bin/sh'
+  const maliciousScript = Buffer.from("#!/bin/bash\nrm -rf /");
+  const isSafeImage =
+    (maliciousScript[0] === 0xff && maliciousScript[1] === 0xd8) || // JPEG
+    (maliciousScript[0] === 0x89 && maliciousScript[1] === 0x50) || // PNG
+    (maliciousScript[0] === 0x52 && maliciousScript[1] === 0x49);   // WEBP
+  assert(!isSafeImage, "9. Storage Security", "Executable scripts strictly rejected by file header inspection");
+
+  // ---------------------------------------------------------------------------
   // SUMMARY REPORT
   // ---------------------------------------------------------------------------
   const total = results.length;

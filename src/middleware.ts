@@ -1,16 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-// Routes that require an authenticated session in strict production
+// Routes requiring authentication
 const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/customer/bookings",
+  "/bookings",
   "/identity/card",
   "/identity/edit",
-  "/employer/post",
   "/employer/manage",
 ];
 
-// Routes reserved for guests (redirect to dashboard if already authenticated)
-const AUTH_ROUTES = ["/auth/login", "/auth/register", "/auth/verify"];
+// Routes reserved for guests
+const AUTH_ROUTES = ["/login", "/auth/login", "/signup", "/auth/register"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -24,15 +26,17 @@ export async function middleware(request: NextRequest) {
   );
 
   if (isProtected && !user) {
-    const loginUrl = new URL("/auth/login", request.url);
+    const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // 3. Guest routes check
+  // 3. Guest routes check (redirect to proper dashboard if already authenticated)
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const role = (user as any).role || (user as any).user_metadata?.role;
+    const targetDashboard = role === "worker" ? "/dashboard" : "/customer/bookings";
+    return NextResponse.redirect(new URL(targetDashboard, request.url));
   }
 
   return supabaseResponse;
@@ -41,12 +45,13 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * Match all request paths except for:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - images/ or public assets with common extensions
+     * - api routes (handled independently with fine-grained HTTP status codes)
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import QRCode from "qrcode";
 import {
   ShieldCheck,
   Award,
@@ -67,10 +68,30 @@ export function SovereignSuccessCard({
 }: SovereignSuccessCardProps) {
   const i18n = ONBOARDING_I18N[language] || ONBOARDING_I18N.en;
   const [copied, setCopied] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
 
   const profileUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/explore?worker=${cardData.slug}`
-    : `https://kaamsetu.in/explore?worker=${cardData.slug}`;
+    ? `${window.location.origin}/profile/${cardData.slug}`
+    : `/profile/${cardData.slug}`;
+
+  const verifyUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/verify/${cardData.registryId}`
+    : `/verify/${cardData.registryId}`;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      QRCode.toDataURL(verifyUrl, {
+        width: 140,
+        margin: 1,
+        color: {
+          dark: "#153E35",
+          light: "#F7F5F0",
+        },
+      })
+        .then((url) => setQrCodeDataUrl(url))
+        .catch((err) => console.error("QR generation error:", err));
+    }
+  }, [verifyUrl]);
 
   const handleCopyLink = () => {
     if (navigator.clipboard) {
@@ -223,16 +244,22 @@ export function SovereignSuccessCard({
 
           {/* Bottom Security Footer */}
           <div className="relative pt-4 border-t border-sand/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-sand/70 font-mono">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-sand/10 border border-sand/30 flex items-center justify-center text-sand">
-                <QrCode className="w-5 h-5" />
-              </div>
+            <div className="flex items-center gap-3">
+              {qrCodeDataUrl ? (
+                <div className="w-10 h-10 rounded bg-ivory p-0.5 border border-sand shrink-0 shadow-xs">
+                  <img src={qrCodeDataUrl} alt="Scannable QR" className="w-full h-full" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded bg-sand/10 border border-sand/30 flex items-center justify-center text-sand">
+                  <QrCode className="w-5 h-5" />
+                </div>
+              )}
               <div>
                 <span className="block text-[10px] uppercase text-sand/60">
-                  Verification Protocol
+                  Scannable QR Verification
                 </span>
                 <span className="text-[11px] text-ivory font-medium">
-                  Gemini Flash 2.5 + WebSpeech
+                  Scan via camera to verify credential
                 </span>
               </div>
             </div>

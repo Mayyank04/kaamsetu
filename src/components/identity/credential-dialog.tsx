@@ -27,6 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { formatINR } from "@/lib/utils";
+import { generateQrDataUrl } from "@/lib/qr/generate";
 
 interface CredentialDialogProps {
   worker: WorkerProfile & { photoUrl?: string; bio?: string; isDemoRecord?: boolean };
@@ -35,6 +36,17 @@ interface CredentialDialogProps {
 
 export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
   const [open, setOpen] = React.useState(false);
+  const [qrDataUrl, setQrDataUrl] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (open && worker.registryId) {
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://kaamsetu.in";
+      const verifyUrl = `${origin}/verify/${encodeURIComponent(worker.registryId)}`;
+      generateQrDataUrl(verifyUrl).then((url) => {
+        if (url) setQrDataUrl(url);
+      });
+    }
+  }, [open, worker.registryId]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -230,29 +242,48 @@ export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
             </div>
           )}
 
-          {/* Modal Footer with QR verification */}
-          <div className="pt-4 border-t border-forest/15 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xs bg-forest/5 border border-forest/15">
-                <QrCode className="h-6 w-6 text-forest" />
-              </div>
+          {/* Modal Footer with Camera-Scannable QR verification */}
+          <div className="pt-4 border-t border-forest/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3">
+              {qrDataUrl ? (
+                <div className="relative h-12 w-12 rounded-xs overflow-hidden border border-forest/20 shrink-0 bg-white p-0.5 shadow-xs">
+                  <img
+                    src={qrDataUrl}
+                    alt="Scannable QR Verification"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-12 w-12 items-center justify-center rounded-xs bg-forest/5 border border-forest/15 shrink-0">
+                  <QrCode className="h-6 w-6 text-forest" />
+                </div>
+              )}
               <div>
                 <span className="text-[10px] font-bold text-forest block">
                   CRYPTOGRAPHIC ON-CHAIN RECORD
                 </span>
                 <span className="text-[10px] font-mono text-charcoal-muted">
-                  SHA-256 Verified on Sovereign Skill Trust Registry
+                  Registry: {worker.registryId} • Live Scannable
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <Button asChild variant="outline" size="sm" className="text-xs border-forest/20 text-forest">
+                <a
+                  href={`/verify/${encodeURIComponent(worker.registryId)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                  Public Verify
+                </a>
+              </Button>
               <Button asChild variant="outline" size="sm" className="text-xs border-forest/20 text-forest">
                 <a
                   href={`/profile/${worker.fullName.toLowerCase().replace(/\s+/g, "-")}-${worker.location.city.toLowerCase()}`}
                   onClick={() => setOpen(false)}
                 >
-                  <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
                   Full Profile
                 </a>
               </Button>

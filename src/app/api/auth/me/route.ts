@@ -1,39 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import { DEMO_PERSONAS } from "@/lib/auth/personas";
-import { UserProfile } from "@/types/auth";
+import { NextResponse } from "next/server";
+import { getAuthenticatedSession } from "@/lib/auth/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const sessionCookie = request.cookies.get("kaamsetu_session")?.value;
+    const { user, isDemo } = await getAuthenticatedSession();
 
-    if (!sessionCookie) {
-      // Default fallback demo user if no session cookie exists
+    if (!user) {
       return NextResponse.json({
         success: true,
-        user: DEMO_PERSONAS[0],
-        isAuthenticated: true,
-        isDemo: true,
+        user: null,
+        isAuthenticated: false,
+        isDemo: false,
       });
     }
 
-    try {
-      const parsedUser = JSON.parse(sessionCookie) as UserProfile;
-      return NextResponse.json({
-        success: true,
-        user: parsedUser,
-        isAuthenticated: true,
-        isDemo: true,
-      });
-    } catch {
-      return NextResponse.json({
-        success: true,
-        user: DEMO_PERSONAS[0],
-        isAuthenticated: true,
-      });
-    }
+    return NextResponse.json({
+      success: true,
+      user,
+      isAuthenticated: true,
+      isDemo,
+    });
   } catch (error) {
     return NextResponse.json(
-      { success: false, message: "Error resolving session" },
+      {
+        success: false,
+        user: null,
+        isAuthenticated: false,
+        message: "Failed to resolve session",
+      },
       { status: 500 }
     );
   }

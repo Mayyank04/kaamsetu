@@ -31,6 +31,19 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
+  // Demo Mode Flags (explicitly disabled in production unless ENABLE_DEMO_AUTH=true)
+  ENABLE_DEMO_AUTH: z
+    .string()
+    .optional()
+    .transform((val) =>
+      process.env.NODE_ENV === "production" ? val === "true" : val !== "false"
+    ),
+  NEXT_PUBLIC_ENABLE_DEMO_AUTH: z
+    .string()
+    .optional()
+    .transform((val) =>
+      process.env.NODE_ENV === "production" ? val === "true" : val !== "false"
+    ),
 });
 
 // Parse process.env with runtime safety
@@ -42,6 +55,8 @@ function validateEnv() {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NODE_ENV: process.env.NODE_ENV,
+    ENABLE_DEMO_AUTH: process.env.ENABLE_DEMO_AUTH,
+    NEXT_PUBLIC_ENABLE_DEMO_AUTH: process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH,
   });
 
   if (!parsed.success) {
@@ -70,4 +85,5 @@ export const isConfigured = {
   gemini:
     Boolean(process.env.GEMINI_API_KEY) &&
     !process.env.GEMINI_API_KEY?.includes("placeholder"),
+  demoAuth: env.ENABLE_DEMO_AUTH,
 };

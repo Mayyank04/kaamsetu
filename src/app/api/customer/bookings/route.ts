@@ -1,28 +1,18 @@
 import { NextRequest } from "next/server";
 import { getCustomerBookings } from "@/lib/supabase/db/bookings";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { isConfigured } from "@/lib/env";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
+import { requireCustomerOrContractor } from "@/lib/auth/server";
 
 export async function GET(request: NextRequest) {
   try {
-    let customerId = "22222222-2222-2222-2222-222222220001"; // Default demo customer
+    const user = await requireCustomerOrContractor();
 
-    if (isConfigured.supabase) {
-      const supabase = await createServerSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        customerId = user.id;
-      }
-    }
-
-    const bookings = await getCustomerBookings(customerId);
+    const bookings = await getCustomerBookings(user.id);
 
     return createSuccessResponse(bookings, {
-      customerId,
+      customerId: user.id,
       total: bookings.length,
+      isDemo: user.isDemo,
     });
   } catch (error) {
     return handleApiError(error);

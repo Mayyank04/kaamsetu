@@ -3,6 +3,7 @@
 import * as React from "react";
 import { X, QrCode, ShieldCheck, Download, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import QRCode from "qrcode";
 
 interface QRDialogProps {
   isOpen: boolean;
@@ -20,6 +21,22 @@ export function QRDialog({
   profileUrl,
 }: QRDialogProps) {
   const [copied, setCopied] = React.useState(false);
+  const [qrDataUrl, setQrDataUrl] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (isOpen && profileUrl) {
+      QRCode.toDataURL(profileUrl, {
+        width: 260,
+        margin: 2,
+        color: {
+          dark: "#153E35",
+          light: "#F7F5F0",
+        },
+      })
+        .then((url) => setQrDataUrl(url))
+        .catch((err) => console.error("Error generating QR:", err));
+    }
+  }, [isOpen, profileUrl]);
 
   if (!isOpen) return null;
 
@@ -31,6 +48,15 @@ export function QRDialog({
     }
   };
 
+  const handleDownload = () => {
+    if (qrDataUrl) {
+      const a = document.createElement("a");
+      a.href = qrDataUrl;
+      a.download = `KAAMSETU-QR-${registryId}.png`;
+      a.click();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-card w-full max-w-sm rounded-2xl border border-forest/20 shadow-sovereign-xl p-6 space-y-5 animate-in zoom-in-95 duration-200 text-center">
@@ -38,7 +64,7 @@ export function QRDialog({
           <div className="flex items-center gap-2 text-forest">
             <QrCode className="w-4 h-4" />
             <span className="font-serif text-base font-bold">
-              Verification QR Code
+              Verifiable Sovereign QR
             </span>
           </div>
           <button
@@ -49,86 +75,58 @@ export function QRDialog({
           </button>
         </div>
 
-        {/* QR Code Presentation */}
-        <div className="p-4 rounded-xl bg-ivory border-2 border-forest/20 max-w-[200px] mx-auto shadow-inner">
-          <svg
-            viewBox="0 0 100 100"
-            className="w-full h-full text-forest fill-current"
-          >
-            {/* Scalable QR matrix mockup */}
-            <rect x="5" y="5" width="25" height="25" rx="3" fill="#153E35" />
-            <rect x="10" y="10" width="15" height="15" fill="#F7F5F0" />
-            <rect x="14" y="14" width="7" height="7" fill="#153E35" />
-
-            <rect x="70" y="5" width="25" height="25" rx="3" fill="#153E35" />
-            <rect x="75" y="10" width="15" height="15" fill="#F7F5F0" />
-            <rect x="79" y="14" width="7" height="7" fill="#153E35" />
-
-            <rect x="5" y="70" width="25" height="25" rx="3" fill="#153E35" />
-            <rect x="10" y="75" width="15" height="15" fill="#F7F5F0" />
-            <rect x="14" y="79" width="7" height="7" fill="#153E35" />
-
-            {/* Simulated data bits */}
-            <rect x="35" y="10" width="6" height="6" fill="#153E35" />
-            <rect x="45" y="15" width="6" height="6" fill="#153E35" />
-            <rect x="55" y="10" width="6" height="6" fill="#153E35" />
-            <rect x="35" y="25" width="6" height="6" fill="#153E35" />
-            <rect x="50" y="25" width="6" height="6" fill="#153E35" />
-
-            <rect x="10" y="35" width="6" height="6" fill="#153E35" />
-            <rect x="25" y="35" width="6" height="6" fill="#153E35" />
-            <rect x="40" y="38" width="8" height="8" rx="2" fill="#E8C999" />
-            <rect x="52" y="35" width="6" height="6" fill="#153E35" />
-            <rect x="65" y="38" width="6" height="6" fill="#153E35" />
-            <rect x="80" y="35" width="6" height="6" fill="#153E35" />
-
-            <rect x="35" y="55" width="6" height="6" fill="#153E35" />
-            <rect x="48" y="52" width="6" height="6" fill="#153E35" />
-            <rect x="62" y="55" width="6" height="6" fill="#153E35" />
-            <rect x="75" y="52" width="6" height="6" fill="#153E35" />
-
-            <rect x="35" y="72" width="6" height="6" fill="#153E35" />
-            <rect x="45" y="78" width="6" height="6" fill="#153E35" />
-            <rect x="58" y="72" width="6" height="6" fill="#153E35" />
-            <rect x="70" y="78" width="6" height="6" fill="#153E35" />
-            <rect x="85" y="72" width="6" height="6" fill="#153E35" />
-          </svg>
+        {/* Genuine Camera-Scannable QR Presentation */}
+        <div className="p-4 rounded-xl bg-[#F7F5F0] border-2 border-forest/20 max-w-[220px] mx-auto shadow-inner">
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt={`Scannable verification QR for ${registryId}`}
+              className="w-full h-full rounded"
+            />
+          ) : (
+            <div className="w-48 h-48 flex items-center justify-center text-xs text-charcoal-muted animate-pulse">
+              Generating Scannable QR...
+            </div>
+          )}
         </div>
 
         <div className="space-y-1">
           <p className="font-serif font-bold text-sm text-forest">{fullName}</p>
           <p className="font-mono text-xs text-charcoal-muted">{registryId}</p>
-          <p className="text-[11px] text-charcoal-muted pt-1">
-            Scan with any smartphone camera to inspect the cryptographically anchored credential ledger.
+          <p className="text-[11px] text-emerald-700 font-mono flex items-center justify-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Scannable by Any Smartphone Camera
           </p>
         </div>
 
-        <div className="flex justify-center gap-2 pt-2">
+        <div className="pt-2 flex flex-col gap-2">
           <Button
+            variant="default"
             size="sm"
-            variant="outline"
             onClick={handleCopy}
-            className="text-xs h-8 border-forest/20 text-forest"
+            className="w-full bg-forest text-ivory text-xs"
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                Copied
+                <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+                Copied Direct Link
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 mr-1" />
-                Copy URL
+                <Copy className="w-3.5 h-3.5 mr-1.5" />
+                Copy Verification Link
               </>
             )}
           </Button>
 
           <Button
+            variant="outline"
             size="sm"
-            onClick={onClose}
-            className="bg-forest text-ivory text-xs h-8 px-4"
+            onClick={handleDownload}
+            className="w-full border-forest/20 text-forest text-xs"
           >
-            Close
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Download QR Code Image
           </Button>
         </div>
       </div>

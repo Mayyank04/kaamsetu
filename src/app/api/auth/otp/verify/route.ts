@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { UserProfile, UserRole } from "@/types/auth";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isConfigured } from "@/lib/env";
+import { DEMO_PERSONAS } from "@/lib/auth/personas";
+import { AppRole } from "@/types/database.types";
 import { z } from "zod";
 
 const verifySchema = z.object({
   phone: z.string().min(10),
-  otp: z.string().length(6),
-  role: z.enum(["worker", "contractor", "employer", "verifier"]).default("worker"),
+  otp: z.string().regex(/^\d{6}$/, "Verification code must be exactly 6 digits"),
+  role: z.enum(["worker", "contractor", "verifier", "admin"]).default("worker"),
   fullName: z.string().optional(),
 });
 
@@ -14,48 +17,127 @@ export async function POST(request: NextRequest) {
     const json = await request.json();
     const data = verifySchema.parse(json);
 
-    // In demo mode or production testing, verify 6-digit OTP
-    if (data.otp !== "123456" && process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("placeholder")) {
-      // In live environment, real Supabase auth would verify
+    const rawDigits = data.phone.replace(/\D/g, "");
+    const clean10Digits = rawDigits.startsWith("91") && rawDigits.length === 12
+      ? rawDigits.slice(2)
+      : rawDigits;
+    const formattedPhone = `+91${clean10Digits}`;
+
+    // 1. Production Mode: Verify OTP via Supabase Auth
+    if (isConfigured.supabase) {
+      const supabase = await createServerSupabaseClient();
+      const { data: authData, error } = await supabase.auth.verifyOtp({
+        phone: formattedPhone,
+        token: data.otp,
+        type: "sms",
+      });
+
+      if (error || !authData.user) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: error?.message || "Invalid or expired verification code.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Check or create profile in public.profiles table
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", authData.user.id)
+        .single();
+
+      let profile = existingProfile;
+      if (!profile) {
+        const defaultName = data.fullName?.trim() || "Verified User";
+        const { data: newProfile, error: profileErr } = await supabase
+          .from("profiles")
+          .insert({
+            id: authData.user.id,
+            role: data.role as AppRole,
+            full_name: defaultName,
+            phone: formattedPhone,
+            is_verified: true,
+          })
+          .select("*")
+          .single();
+
+        if (profileErr) {
+          console.error("Error creating user profile:", profileErr);
+        } else {
+          profile = newProfile;
+        }
+      }
+
+      const targetUrl = profile?.role === "worker" ? "/dashboard" : "/customer/bookings";
+
+      return NextResponse.json({
+        success: true,
+        user: {
+          id: authData.user.id,
+          phone: formattedPhone,
+          fullName: profile?.full_name || "Verified User",
+          role: profile?.role || data.role,
+          isDemo: false,
+        },
+        isDemo: false,
+        redirectUrl: targetUrl,
+        message: "Mobile phone verified successfully.",
+      });
     }
 
-    const defaultName =
-      data.fullName?.trim() ||
-      (data.role === "worker"
-        ? "Registered Skilled Craftsman"
-        : "Commercial Project Manager");
+    // 2. Demo Evaluation Mode: Only when demo auth is explicitly enabled
+    if (isConfigured.demoAuth) {
+      if (data.otp !== "123456") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid verification code. In demo evaluation mode, enter sandbox code 123456.",
+          },
+          { status: 400 }
+        );
+      }
 
-    const user: UserProfile = {
-      id: `u-${Date.now()}`,
-      phone: `+91 ${data.phone.slice(-10)}`,
-      fullName: defaultName,
-      role: data.role as UserRole,
-      isPhoneVerified: true,
-      isDigiLockerVerified: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      const personaKey = data.role === "worker" ? "worker-electrician" : "customer-contractor";
+      const matched = DEMO_PERSONAS.find((p) => p.personaKey === personaKey)!;
 
-    const targetUrl = data.role === "worker" ? "/dashboard" : "/customer/bookings";
+      const response = NextResponse.json({
+        success: true,
+        user: {
+          ...matched,
+          fullName: data.fullName?.trim() || matched.fullName,
+          phone: formattedPhone,
+          isDemo: true,
+        },
+        isDemo: true,
+        redirectUrl: matched.targetDashboard,
+        message: "Demo verification successful.",
+      });
 
-    const response = NextResponse.json({
-      success: true,
-      user,
-      redirectUrl: targetUrl,
-      message: `Authentication successful. Welcome, ${user.fullName}!`,
-    });
+      // Set demo cookie
+      response.cookies.set("kaamsetu_demo_persona", personaKey, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
 
-    response.cookies.set("kaamsetu_session", JSON.stringify(user), {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
+      return response;
+    }
 
-    return response;
+    // 3. Fallback: Block unverified logins in production
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Verification service unavailable.",
+      },
+      { status: 503 }
+    );
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Invalid verification credentials";
+    const message = err instanceof Error ? err.message : "Invalid verification payload.";
     return NextResponse.json({ success: false, message }, { status: 400 });
   }
 }
