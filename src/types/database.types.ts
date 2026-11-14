@@ -1127,6 +1127,176 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      contractor_team_members: {
+        Row: {
+          id: string;
+          organization_id: string;
+          user_id: string;
+          role: "owner" | "project_supervisor" | "site_thekedaar" | "finance_admin";
+          permissions: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          user_id: string;
+          role: "owner" | "project_supervisor" | "site_thekedaar" | "finance_admin";
+          permissions?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          user_id?: string;
+          role?: "owner" | "project_supervisor" | "site_thekedaar" | "finance_admin";
+          permissions?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      project_crew_assignments: {
+        Row: {
+          id: string;
+          project_id: string;
+          workforce_id: string;
+          assigned_by: string;
+          assigned_role: string;
+          start_date: string;
+          end_date: string | null;
+          status: "scheduled" | "active" | "completed" | "released";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          workforce_id: string;
+          assigned_by: string;
+          assigned_role: string;
+          start_date?: string;
+          end_date?: string | null;
+          status?: "scheduled" | "active" | "completed" | "released";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          workforce_id?: string;
+          assigned_by?: string;
+          assigned_role?: string;
+          start_date?: string;
+          end_date?: string | null;
+          status?: "scheduled" | "active" | "completed" | "released";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      contractor_customer_health: {
+        Row: {
+          id: string;
+          organization_id: string;
+          health_score: number;
+          churn_risk: "low" | "medium" | "high";
+          weekly_active_days: number;
+          roster_utilization_pct: number;
+          renewal_reminder_sent: boolean;
+          last_activity_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          health_score?: number;
+          churn_risk?: "low" | "medium" | "high";
+          weekly_active_days?: number;
+          roster_utilization_pct?: number;
+          renewal_reminder_sent?: boolean;
+          last_activity_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          health_score?: number;
+          churn_risk?: "low" | "medium" | "high";
+          weekly_active_days?: number;
+          roster_utilization_pct?: number;
+          renewal_reminder_sent?: boolean;
+          last_activity_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_identity_exports: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          export_format: "json" | "pdf" | "csv";
+          cryptographic_hash: string;
+          exported_by: string;
+          exported_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          export_format?: "json" | "pdf" | "csv";
+          cryptographic_hash: string;
+          exported_by: string;
+          exported_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          export_format?: "json" | "pdf" | "csv";
+          cryptographic_hash?: string;
+          exported_by?: string;
+          exported_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_expansion_readiness: {
+        Row: {
+          id: string;
+          state: string;
+          district: string;
+          contractor_demand_score: number;
+          artisan_density_score: number;
+          institutional_access_score: number;
+          readiness_score: number;
+          status: "active_base" | "selected_expansion" | "pipeline" | "exploratory";
+          local_operating_partner: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          state: string;
+          district: string;
+          contractor_demand_score: number;
+          artisan_density_score: number;
+          institutional_access_score: number;
+          readiness_score: number;
+          status?: "active_base" | "selected_expansion" | "pipeline" | "exploratory";
+          local_operating_partner?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          state?: string;
+          district?: string;
+          contractor_demand_score?: number;
+          artisan_density_score?: number;
+          institutional_access_score?: number;
+          readiness_score?: number;
+          status?: "active_base" | "selected_expansion" | "pipeline" | "exploratory";
+          local_operating_partner?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -1168,3 +1338,8 @@ export type InstitutionAuditLog = Database["public"]["Tables"]["institution_audi
 export type CrmContractorLead = Database["public"]["Tables"]["crm_contractor_leads"]["Row"];
 export type PaymentWebhookEvent = Database["public"]["Tables"]["payment_webhook_events"]["Row"];
 export type WorkerAssociationEvent = Database["public"]["Tables"]["worker_association_events"]["Row"];
+export type ContractorTeamMember = Database["public"]["Tables"]["contractor_team_members"]["Row"];
+export type ProjectCrewAssignment = Database["public"]["Tables"]["project_crew_assignments"]["Row"];
+export type ContractorCustomerHealth = Database["public"]["Tables"]["contractor_customer_health"]["Row"];
+export type WorkerIdentityExport = Database["public"]["Tables"]["worker_identity_exports"]["Row"];
+export type RegionalExpansionReadiness = Database["public"]["Tables"]["regional_expansion_readiness"]["Row"];

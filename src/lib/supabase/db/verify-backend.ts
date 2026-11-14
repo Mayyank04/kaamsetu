@@ -45,6 +45,7 @@ export async function runBackendVerification() {
   const migration7Path = path.join(projectRoot, "supabase/migrations/20261114000007_contractor_and_institutional_platform.sql");
   const migration8Path = path.join(projectRoot, "supabase/migrations/20261114000008_commercial_launch_and_workforce_consent.sql");
   const migration9Path = path.join(projectRoot, "supabase/migrations/20261114000009_production_operations_crm_and_webhooks.sql");
+  const migration10Path = path.join(projectRoot, "supabase/migrations/20261114000010_scale_multi_cohort_and_retention.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
@@ -52,6 +53,7 @@ export async function runBackendVerification() {
   assert(fs.existsSync(migration7Path), "1. SQL Migrations", "Migration 07 (Contractor Pro & Institutional Platform) exists");
   assert(fs.existsSync(migration8Path), "1. SQL Migrations", "Migration 08 (Commercial Launch & Workforce Consent) exists");
   assert(fs.existsSync(migration9Path), "1. SQL Migrations", "Migration 09 (Production Operations, CRM & Webhooks) exists");
+  assert(fs.existsSync(migration10Path), "1. SQL Migrations", "Migration 10 (Scale, Multi-Cohort & Retention) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
@@ -137,6 +139,24 @@ export async function runBackendVerification() {
     );
   }
 
+  const m10Content = fs.readFileSync(migration10Path, "utf-8");
+  const phase9Tables = [
+    "contractor_team_members",
+    "project_crew_assignments",
+    "contractor_customer_health",
+    "worker_identity_exports",
+    "regional_expansion_readiness",
+  ];
+
+  for (const table of phase9Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m10Content),
+      "1. SQL Migrations",
+      `Phase 9 Table public.${table} defined in schema`
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // TEST SUITE 2: Row Level Security (RLS) Policies
   // ---------------------------------------------------------------------------
@@ -171,6 +191,14 @@ export async function runBackendVerification() {
       m9Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
       "2. Row Level Security",
       `RLS enabled on Phase 8 public.${table}`
+    );
+  }
+
+  for (const table of phase9Tables) {
+    assert(
+      m10Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `RLS enabled on Phase 9 public.${table}`
     );
   }
 

@@ -15,7 +15,8 @@
     "test:perf": "tsx test/network-resilience.test.ts",
     "test:multitenant": "tsx test/contractor-institution-security.test.ts",
     "test:commercial": "tsx test/commercial-billing-invitation.test.ts",
-    "test:production": "tsx test/production-readiness-and-operations.test.ts"
+    "test:production": "tsx test/production-readiness-and-operations.test.ts",
+    "test:growth": "tsx test/sustainable-growth-and-retention.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
