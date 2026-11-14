@@ -1,16 +1,20 @@
 /**
- * KAAMSETU Persistent Rate Limiting & Fail-Closed Architecture Test Suite
+ * KAAMSETU Persistent Rate Limiting, Fail-Closed Architecture & HMAC Integrity Test Suite
  *
  * Validates:
- * 1. Privacy preservation (HMAC-SHA256 key hashing)
- * 2. Persistent atomic tracking in PostgreSQL auth_rate_limits
- * 3. Threshold blocking and remaining cooldown duration calculation
- * 4. Persistent OTP verify brute-force lockout (5 attempts -> 15 min lock)
- * 5. Persistent lockout clearing on successful verification
- * 6. Fail-closed production architecture (zero memory fallback in production)
- * 7. Explicit mock gating for offline development
- * 8. High-concurrency atomic serialization without race conditions or key collisions
- * 9. Multi-tier OTP send rate limiting (cooldown, hourly phone limit, hourly IP limit)
+ * 1. Privacy preservation (HMAC-SHA256 key hashing with dedicated RATE_LIMIT_HMAC_SECRET)
+ * 2. Domain separation (phone:send, phone:verify, ip:send produce distinct digests for identical input)
+ * 3. 256-bit entropy enforcement on RATE_LIMIT_HMAC_SECRET (fails closed if missing or weak in production)
+ * 4. Dual-secret rotation preservation (active lockouts remain enforceable under previous secret)
+ * 5. Persistent atomic tracking in PostgreSQL auth_rate_limits
+ * 6. Threshold blocking and remaining cooldown duration calculation
+ * 7. Persistent OTP verify brute-force lockout (5 attempts -> 15 min lock)
+ * 8. Persistent lockout clearing on successful verification
+ * 9. Fail-closed production architecture (unconfigured Supabase, connection errors, RPC failures deny access)
+ * 10. Development sandbox gating (explicit ENABLE_IN_MEMORY_RATE_LIMIT_MOCK required for mock fallback)
+ * 11. High-concurrency atomic serialization across multiple PostgreSQL connections
+ * 12. Concurrent verification failures recorded atomically without loss
+ * 13. Logging privacy assertion (no plaintext phone, OTP, or secret in logs or diagnostics)
  */
 
 import { Client } from "pg";
@@ -21,7 +25,9 @@ import {
   recordFailedOtpAttempt,
   clearFailedOtpAttempts,
   validateOtpSendRateLimit,
+  getRateLimitHmacSecret,
 } from "../src/lib/security/rate-limiter";
+import { maskPhone, maskEmail, maskSecret, sanitizeLogData } from "../src/lib/security/privacy-logger";
 
 const DB_CONFIG = {
   host: process.env.PGHOST || "localhost",
@@ -51,6 +57,8 @@ async function main() {
   await pgClient.connect();
 
   const originalEnv = { ...process.env };
+  (process.env as Record<string, string | undefined>).NODE_ENV = "test";
+  process.env.RATE_LIMIT_HMAC_SECRET = "kaamsetu-test-hmac-rate-limit-secret-32-chars-long";
 
   try {
     // -------------------------------------------------------------------------
@@ -60,12 +68,12 @@ async function main() {
       const rawPhone = "+91 98765 43210";
       const rawIp = "192.168.1.100";
 
-      const hashedPhoneKey = hashRateLimitKey("phone:verify:fail", rawPhone);
-      const hashedIpKey = hashRateLimitKey("ip:send:hourly", rawIp);
+      const hashedPhoneKey = hashRateLimitKey("phone:verify", rawPhone);
+      const hashedIpKey = hashRateLimitKey("ip:send", rawIp);
 
       const containsRawPhone = hashedPhoneKey.includes("9876543210") || hashedPhoneKey.includes("98765");
       const containsRawIp = hashedIpKey.includes("192.168.1.100");
-      const isExpectedFormat = hashedPhoneKey.startsWith("phone:verify:fail:") && hashedPhoneKey.length > 30;
+      const isExpectedFormat = hashedPhoneKey.startsWith("phone:verify:") && hashedPhoneKey.length > 25;
 
       const passed = !containsRawPhone && !containsRawIp && isExpectedFormat;
       results.push({
@@ -78,7 +86,132 @@ async function main() {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 2: Direct Database RPC Incrementation (Positive Check)
+    // Scenario 2: Domain Separation (Identical Input in Different Namespaces)
+    // -------------------------------------------------------------------------
+    {
+      const identicalInput = "919876543210";
+      const sendKey = hashRateLimitKey("phone:send", identicalInput);
+      const verifyKey = hashRateLimitKey("phone:verify", identicalInput);
+
+      const sendDigest = sendKey.split(":")[2];
+      const verifyDigest = verifyKey.split(":")[2];
+      const passed = sendDigest !== verifyDigest;
+
+      results.push({
+        scenarioId: 2,
+        name: "Domain Separation Across Namespaces",
+        expected: "Different digests for phone:send vs phone:verify",
+        actual: passed ? "Distinct HMAC digests generated" : "FAILED: Namespace collision",
+        passed,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Scenario 3: Missing RATE_LIMIT_HMAC_SECRET in Production Fails Closed
+    // -------------------------------------------------------------------------
+    {
+      let blockedInProd = false;
+      try {
+        (process.env as any).NODE_ENV = "production";
+        delete process.env.RATE_LIMIT_HMAC_SECRET;
+        getRateLimitHmacSecret();
+      } catch (err: unknown) {
+        blockedInProd = true;
+      } finally {
+        (process.env as any).NODE_ENV = "test";
+      }
+
+      results.push({
+        scenarioId: 3,
+        name: "Missing RATE_LIMIT_HMAC_SECRET in Production Fails Closed",
+        expected: "throw Fatal Configuration Error",
+        actual: blockedInProd ? "Fatal Error Thrown (Blocked)" : "Silent Fallback (VULNERABILITY)",
+        passed: blockedInProd,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Scenario 4: Weak RATE_LIMIT_HMAC_SECRET (< 32 bytes) Fails Closed
+    // -------------------------------------------------------------------------
+    {
+      let weakKeyBlocked = false;
+      try {
+        (process.env as any).NODE_ENV = "production";
+        process.env.RATE_LIMIT_HMAC_SECRET = "short_insecure_key_16_bytes";
+        getRateLimitHmacSecret();
+      } catch (err: unknown) {
+        weakKeyBlocked = true;
+      } finally {
+        (process.env as any).NODE_ENV = "test";
+        delete process.env.RATE_LIMIT_HMAC_SECRET;
+      }
+
+      results.push({
+        scenarioId: 4,
+        name: "Weak RATE_LIMIT_HMAC_SECRET (<32 bytes) Rejected",
+        expected: "throw Fatal Configuration Error on weak entropy",
+        actual: weakKeyBlocked ? "Weak Key Rejected (Blocked)" : "Weak Key Allowed (VULNERABILITY)",
+        passed: weakKeyBlocked,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Scenario 5: Dual-Secret Rotation Preserves Active Lockout
+    // -------------------------------------------------------------------------
+    {
+      const oldSecret = "b2xkX2htYWNfc2VjcmV0X2Zvcl9yb3RhdGlvbl8zMmJ5dGVz";
+      const newSecret = "bmV3X2htYWNfc2VjcmV0X2Zvcl9yb3RhdGlvbl8zMmJ5dGVz";
+      const testPhone = "919999900088";
+
+      // 1. Lock out phone under old secret in both DB and memory store
+      process.env.RATE_LIMIT_HMAC_SECRET = oldSecret;
+      process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK = "true";
+      delete process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS;
+
+      const oldVerifyKey = hashRateLimitKey("phone:verify", testPhone, oldSecret);
+      await pgClient.query("DELETE FROM public.auth_rate_limits WHERE key = $1;", [oldVerifyKey]);
+
+      for (let i = 0; i < 5; i++) {
+        await pgClient.query(
+          "SELECT * FROM public.check_and_increment_rate_limit($1, 5, 900, 900);",
+          [oldVerifyKey]
+        );
+        await recordFailedOtpAttempt(testPhone);
+      }
+
+      // Verify that database status RPC detects the lockout under oldVerifyKey
+      const dbStatusRes = await pgClient.query(
+        "SELECT * FROM public.get_rate_limit_status($1);",
+        [oldVerifyKey]
+      );
+      const isDbBlocked = dbStatusRes.rows[0]?.is_blocked === true;
+
+      // 2. Rotate secret: active secret becomes newSecret, oldSecret becomes previous
+      process.env.RATE_LIMIT_HMAC_SECRET = newSecret;
+      process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS = oldSecret;
+
+      // Lockout check must detect the active lockout under previous secret
+      const lockoutCheck = await validateOtpVerifyAttempt(testPhone);
+      const passed = isDbBlocked && lockoutCheck.allowed === false;
+
+      // Clean up
+      await pgClient.query("DELETE FROM public.auth_rate_limits WHERE key = $1;", [oldVerifyKey]);
+      await clearFailedOtpAttempts(testPhone);
+      delete process.env.RATE_LIMIT_HMAC_SECRET;
+      delete process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS;
+      delete process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK;
+
+      results.push({
+        scenarioId: 5,
+        name: "Dual-Secret Rotation Preserves Active Lockout",
+        expected: "allowed: false (lockout preserved across key rotation)",
+        actual: `allowed: ${lockoutCheck.allowed} (${lockoutCheck.reason})`,
+        passed,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Scenario 6: Direct Database RPC Incrementation (Positive Check)
     // -------------------------------------------------------------------------
     {
       const testKey = `test:direct_rpc:${Date.now()}`;
@@ -93,7 +226,7 @@ async function main() {
       await pgClient.query("DELETE FROM public.auth_rate_limits WHERE key = $1;", [testKey]);
 
       results.push({
-        scenarioId: 2,
+        scenarioId: 6,
         name: "Atomic PostgreSQL check_and_increment_rate_limit RPC",
         expected: "allowed: true, current_count: 1",
         actual: `allowed: ${row?.allowed}, count: ${row?.current_count}`,
@@ -102,7 +235,7 @@ async function main() {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 3: Threshold Enforcement & Block Duration in Database
+    // Scenario 7: Threshold Enforcement & Block Duration in Database
     // -------------------------------------------------------------------------
     {
       const testKey = `test:threshold:${Date.now()}`;
@@ -137,7 +270,7 @@ async function main() {
       await pgClient.query("DELETE FROM public.auth_rate_limits WHERE key = $1;", [testKey]);
 
       results.push({
-        scenarioId: 3,
+        scenarioId: 7,
         name: "Threshold Exceeded Triggers Block Duration",
         expected: "allowed: false, is_blocked: true, remaining > 500s",
         actual: `allowed: ${blockedRow?.allowed}, is_blocked: ${statusRow?.is_blocked}, remaining: ${statusRow?.remaining_seconds}s`,
@@ -146,11 +279,11 @@ async function main() {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 4: Persistent Lockout Check via get_rate_limit_status
+    // Scenario 8: Persistent 5-Attempt Lockout Enforcement
     // -------------------------------------------------------------------------
     {
       const testPhone = "919999900001";
-      const verifyKey = hashRateLimitKey("phone:verify:fail", testPhone);
+      const verifyKey = hashRateLimitKey("phone:verify", testPhone);
 
       // Clean slate
       await pgClient.query("DELETE FROM public.auth_rate_limits WHERE key = $1;", [verifyKey]);
@@ -172,7 +305,7 @@ async function main() {
       const isLockedOut = status?.is_blocked === true;
 
       results.push({
-        scenarioId: 4,
+        scenarioId: 8,
         name: "Persistent 5-Attempt Lockout Enforcement",
         expected: "is_blocked: true, remaining_seconds <= 900",
         actual: `is_blocked: ${status?.is_blocked}, remaining: ${status?.remaining_seconds}s`,
@@ -180,7 +313,7 @@ async function main() {
       });
 
       // -----------------------------------------------------------------------
-      // Scenario 5: Persistent Lockout Reset on Successful Verification
+      // Scenario 9: Persistent Lockout Reset via clear_rate_limit RPC
       // -----------------------------------------------------------------------
       await pgClient.query("SELECT public.clear_rate_limit($1);", [verifyKey]);
 
@@ -192,7 +325,7 @@ async function main() {
       const isCleared = statusAfterClear?.is_blocked === false && statusAfterClear?.current_count === 0;
 
       results.push({
-        scenarioId: 5,
+        scenarioId: 9,
         name: "Persistent Lockout Reset via clear_rate_limit RPC",
         expected: "is_blocked: false, current_count: 0",
         actual: `is_blocked: ${statusAfterClear?.is_blocked}, count: ${statusAfterClear?.current_count}`,
@@ -201,18 +334,17 @@ async function main() {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 6: Production Fail-Closed Architecture (No Silent Memory Bypass)
+    // Scenario 10: Production Fail-Closed Architecture (Unconfigured Supabase)
     // -------------------------------------------------------------------------
     {
-      // Simulate production environment where database is unreachable / not configured
       (process.env as Record<string, string | undefined>).NODE_ENV = "production";
       process.env.NEXT_PUBLIC_SUPABASE_URL = "https://placeholder-kaamsetu.supabase.co";
 
       const result = await checkRateLimit("test:prod_fail_closed", 5, 60, 60);
-
       const passed = result.allowed === false && Boolean(result.reason);
+
       results.push({
-        scenarioId: 6,
+        scenarioId: 10,
         name: "Production Fail-Closed Architecture (No Silent Memory Bypass)",
         expected: "allowed: false (reject without database in production)",
         actual: `allowed: ${result.allowed}, reason: "${result.reason}"`,
@@ -221,7 +353,26 @@ async function main() {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 7: Offline Development Sandbox Rejection Without Explicit Mock Flag
+    // Scenario 11: Production OTP Verify Fails Closed Without Database
+    // -------------------------------------------------------------------------
+    {
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
+      process.env.NEXT_PUBLIC_SUPABASE_URL = "https://placeholder-kaamsetu.supabase.co";
+
+      const verifyCheck = await validateOtpVerifyAttempt("+91 99999 88888");
+      const passed = verifyCheck.allowed === false;
+
+      results.push({
+        scenarioId: 11,
+        name: "Production OTP Verify Fails Closed Without Database",
+        expected: "allowed: false (never allow OTP verify without database)",
+        actual: `allowed: ${verifyCheck.allowed}, reason: "${verifyCheck.reason}"`,
+        passed,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Scenario 12: Offline Development Sandbox Rejection Without Explicit Mock Flag
     // -------------------------------------------------------------------------
     {
       (process.env as Record<string, string | undefined>).NODE_ENV = "development";
@@ -232,7 +383,7 @@ async function main() {
       const passed = Boolean(result.allowed === false && result.reason?.includes("ENABLE_IN_MEMORY_RATE_LIMIT_MOCK"));
 
       results.push({
-        scenarioId: 7,
+        scenarioId: 12,
         name: "Development Fail-Closed Without Explicit Mock Opt-In",
         expected: "allowed: false (explicit ENABLE_IN_MEMORY_RATE_LIMIT_MOCK required)",
         actual: `allowed: ${result.allowed}, reason: "${result.reason}"`,
@@ -241,7 +392,7 @@ async function main() {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 8: Development In-Memory Store When Explicitly Enabled
+    // Scenario 13: Development In-Memory Store When Explicitly Enabled
     // -------------------------------------------------------------------------
     {
       (process.env as Record<string, string | undefined>).NODE_ENV = "development";
@@ -255,7 +406,7 @@ async function main() {
 
       const passed = res1.allowed === true && res2.allowed === true && res3.allowed === false;
       results.push({
-        scenarioId: 8,
+        scenarioId: 13,
         name: "Development In-Memory Mock Store with Explicit Flag",
         expected: "res1: true, res2: true, res3: false",
         actual: `res1: ${res1.allowed}, res2: ${res2.allowed}, res3: ${res3.allowed}`,
@@ -264,7 +415,7 @@ async function main() {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 9: 10 Parallel Simultaneous Requests to Same Key (Concurrency)
+    // Scenario 14: Atomic Concurrency Serialization (10 Simultaneous Connections)
     // -------------------------------------------------------------------------
     {
       const concurrencyKey = `concurrency_rl_test_${Date.now()}`;
@@ -305,7 +456,7 @@ async function main() {
 
       const passed = allSucceeded && finalCount === 10;
       results.push({
-        scenarioId: 9,
+        scenarioId: 14,
         name: "Atomic Concurrency Serialization on First Key Insertion",
         expected: "all 10 queries allowed: true, final count = 10",
         actual: `allSucceeded: ${allSucceeded}, final count: ${finalCount}`,
@@ -314,7 +465,56 @@ async function main() {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 10: Multi-Tier OTP Send Validation Integration
+    // Scenario 15: Concurrent Failed Verification Attempts (5 Simultaneous Failures)
+    // -------------------------------------------------------------------------
+    {
+      const failPhone = "919999988877";
+      const failKey = hashRateLimitKey("phone:verify", failPhone);
+      await pgClient.query("DELETE FROM public.auth_rate_limits WHERE key = $1;", [failKey]);
+
+      const failureClients: Client[] = [];
+      for (let i = 0; i < 5; i++) {
+        const c = new Client(DB_CONFIG);
+        await c.connect();
+        failureClients.push(c);
+      }
+
+      try {
+        // 5 simultaneous failed attempts across separate connections
+        const failPromises = failureClients.map((c) =>
+          c.query(
+            "SELECT * FROM public.check_and_increment_rate_limit($1, 5, 900, 900);",
+            [failKey]
+          )
+        );
+        await Promise.all(failPromises);
+
+        // 6th attempt: Must be blocked
+        const sixthRes = await pgClient.query(
+          "SELECT * FROM public.check_and_increment_rate_limit($1, 5, 900, 900);",
+          [failKey]
+        );
+        const sixthRow = sixthRes.rows[0];
+
+        const passed = sixthRow?.allowed === false && sixthRow?.remaining_seconds > 800;
+        await pgClient.query("DELETE FROM public.auth_rate_limits WHERE key = $1;", [failKey]);
+
+        results.push({
+          scenarioId: 15,
+          name: "Concurrent Failed Attempts Serialized and Locked",
+          expected: "5 concurrent failures recorded; 6th attempt blocked",
+          actual: passed ? "Locked: 6th attempt rejected" : "FAILED: Lockout missed",
+          passed,
+        });
+      } finally {
+        for (const c of failureClients) {
+          await c.end();
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Scenario 16: Multi-Tier OTP Send Validation Integration
     // -------------------------------------------------------------------------
     {
       (process.env as Record<string, string | undefined>).NODE_ENV = "development";
@@ -331,10 +531,49 @@ async function main() {
 
       const passed = firstAttempt.allowed === true && cooldownAttempt.allowed === false && Boolean(cooldownAttempt.remainingSeconds);
       results.push({
-        scenarioId: 10,
+        scenarioId: 16,
         name: "Multi-Tier OTP Send Validation (60s Cooldown Enforcement)",
         expected: "first: allowed: true, second: allowed: false with cooldown",
         actual: `first: ${firstAttempt.allowed}, second: ${cooldownAttempt.allowed} (${cooldownAttempt.reason})`,
+        passed,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Scenario 17: Logging Privacy & Diagnostic Masking Assertion
+    // -------------------------------------------------------------------------
+    {
+      const rawPhone = "+91 98765 43210";
+      const rawEmail = "rameshwar.electrician@kaamsetu.in";
+      const rawOtp = "492817";
+      const rawSigningSecret = "top-secret-signing-key-material-256";
+
+      const maskedPhone = maskPhone(rawPhone);
+      const maskedEmail = maskEmail(rawEmail);
+      const maskedSecretVal = maskSecret(rawSigningSecret);
+
+      const logPayload = sanitizeLogData({
+        userPhone: rawPhone,
+        userEmail: rawEmail,
+        smsOtp: rawOtp,
+        serviceKey: rawSigningSecret,
+        workerName: "Rameshwar Sharma",
+      }) as Record<string, unknown>;
+
+      const passed =
+        maskedPhone === "******3210" &&
+        maskedEmail === "r***@kaamsetu.in" &&
+        maskedSecretVal === "[REDACTED_SECRET]" &&
+        logPayload.userPhone === "******3210" &&
+        logPayload.userEmail === "r***@kaamsetu.in" &&
+        logPayload.smsOtp === "[REDACTED_SECRET]" &&
+        logPayload.serviceKey === "[REDACTED_SECRET]";
+
+      results.push({
+        scenarioId: 17,
+        name: "Logging Privacy & Diagnostic Masking Assertion",
+        expected: "Phone, email, OTP, and secrets masked in diagnostics",
+        actual: passed ? "All PII and secrets safely redacted" : "FAILED: Sensitive data unmasked",
         passed,
       });
     }
@@ -364,7 +603,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("ALL 10 PERSISTENT RATE LIMITING SCENARIOS INDEPENDENTLY VERIFIED SECURE.\n");
+  console.log("ALL 17 PERSISTENT RATE LIMITING SCENARIOS INDEPENDENTLY VERIFIED SECURE.\n");
 }
 
 main().catch((err) => {

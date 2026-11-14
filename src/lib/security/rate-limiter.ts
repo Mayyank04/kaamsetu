@@ -3,18 +3,28 @@
  *
  * Protects SMS OTP endpoints against abuse, toll fraud, and brute force attacks.
  * Uses atomic PostgreSQL operations with strict fail-closed security.
- * Privacy-preserving: Raw phone numbers and IP addresses are hashed using SHA-256 before storage.
+ * Privacy-preserving: Raw phone numbers and IP addresses are hashed using SHA-256 HMAC with
+ * dedicated server-side RATE_LIMIT_HMAC_SECRET before database storage.
+ * Domain separation prevents key collisions across phone:send, phone:verify, and ip:send.
  */
 
 import * as crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isConfigured } from "@/lib/env";
+import { assertCryptographicKeyQuality } from "@/lib/crypto/key-validator";
 
 export interface RateLimitResult {
   allowed: boolean;
   remainingSeconds?: number;
   reason?: string;
 }
+
+export type RateLimitNamespace =
+  | "phone:send"
+  | "phone:verify"
+  | "ip:send"
+  | "cooldown"
+  | string;
 
 // In-memory fallback bucket STRICTLY for offline development and local unit tests.
 // IMPOSSIBLE to enable in production.
@@ -27,18 +37,62 @@ interface MemoryBucket {
 
 const memoryStore = new Map<string, MemoryBucket>();
 
-// Helper to hash rate limit keys with salt to preserve user privacy in database logs
-export function hashRateLimitKey(prefix: string, identifier: string): string {
-  const salt =
-    process.env.CREDENTIAL_SIGNING_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    "kaamsetu-rate-limit-privacy-salt";
+/**
+ * Resolves the server-only HMAC secret for privacy-preserving rate limit keys.
+ * Fails closed in production if secret is missing, predictable, or lacks 256-bit entropy.
+ */
+export function getRateLimitHmacSecret(): string {
+  const isProduction = (process.env.NODE_ENV as string) === "production";
+  const secret = process.env.RATE_LIMIT_HMAC_SECRET;
+
+  if (isProduction) {
+    if (!secret) {
+      throw new Error(
+        "FATAL SECURITY CONFIGURATION: RATE_LIMIT_HMAC_SECRET is missing from environment in production."
+      );
+    }
+    assertCryptographicKeyQuality(secret, "RATE_LIMIT_HMAC_SECRET");
+    return secret;
+  }
+
+  if (secret) {
+    return secret;
+  }
+
+  if (process.env.NODE_ENV === "test") {
+    return "kaamsetu-test-hmac-rate-limit-secret-32-chars-long";
+  }
+
+  // Development with explicit mock enabled:
+  if (process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK === "true") {
+    return "kaamsetu-dev-hmac-rate-limit-secret-32-chars-long";
+  }
+
+  throw new Error(
+    "RATE_LIMIT_HMAC_SECRET is not configured. Set RATE_LIMIT_HMAC_SECRET or enable ENABLE_IN_MEMORY_RATE_LIMIT_MOCK for offline development."
+  );
+}
+
+/**
+ * Hashes rate limit identifiers with HMAC-SHA256 and domain separation.
+ * Raw phone numbers and IP addresses NEVER appear in database keys or logs.
+ */
+export function hashRateLimitKey(
+  namespace: RateLimitNamespace,
+  identifier: string,
+  secretOverride?: string
+): string {
+  const secret = secretOverride || getRateLimitHmacSecret();
+  const normalizedId = identifier.trim().toLowerCase();
+
+  // Domain separation: include namespace in the HMAC input
   const digest = crypto
-    .createHmac("sha256", salt)
-    .update(identifier.trim().toLowerCase())
+    .createHmac("sha256", secret)
+    .update(`${namespace}:${normalizedId}`)
     .digest("hex")
     .slice(0, 32);
-  return `${prefix}:${digest}`;
+
+  return `${namespace}:${digest}`;
 }
 
 /**
@@ -185,6 +239,9 @@ export async function checkRateLimit(
   }
 
   bucket.count += 1;
+  if (bucket.count >= maxAttempts) {
+    bucket.blockedUntil = now + blockSeconds * 1000;
+  }
   bucket.lastAttemptAt = now;
   return { allowed: true };
 }
@@ -202,7 +259,7 @@ export async function validateOtpSendRateLimit(
 ): Promise<RateLimitResult> {
   const normalizedPhone = phone.replace(/\D/g, "");
 
-  // Check 1: 60-second cooldown per phone (hashed key)
+  // Check 1: 60-second cooldown per phone (namespace: "cooldown")
   const cooldownKey = hashRateLimitKey("cooldown", normalizedPhone);
   const cooldown = await checkRateLimit(cooldownKey, 1, 60, 60);
   if (!cooldown.allowed) {
@@ -213,8 +270,8 @@ export async function validateOtpSendRateLimit(
     };
   }
 
-  // Check 2: Hourly phone limit (max 5 SMS/hr)
-  const phoneHourlyKey = hashRateLimitKey("phone:send:hourly", normalizedPhone);
+  // Check 2: Hourly phone limit (max 5 SMS/hr) (namespace: "phone:send")
+  const phoneHourlyKey = hashRateLimitKey("phone:send", `${normalizedPhone}:hourly`);
   const phoneHourly = await checkRateLimit(phoneHourlyKey, 5, 3600, 3600);
   if (!phoneHourly.allowed) {
     return {
@@ -224,8 +281,8 @@ export async function validateOtpSendRateLimit(
     };
   }
 
-  // Check 3: Hourly IP limit (max 15 SMS/hr per IP)
-  const ipKey = hashRateLimitKey("ip:send:hourly", clientIp);
+  // Check 3: Hourly IP limit (max 15 SMS/hr per IP) (namespace: "ip:send")
+  const ipKey = hashRateLimitKey("ip:send", clientIp);
   const ipHourly = await checkRateLimit(ipKey, 15, 3600, 3600);
   if (!ipHourly.allowed) {
     return {
@@ -242,10 +299,34 @@ export async function validateOtpSendRateLimit(
  * Validates verification attempt against persistent brute-force lockouts.
  * Checks persistent database state BEFORE invoking SMS provider verification.
  * Max 5 failed attempts locks out the phone for 15 minutes.
+ * STRICTLY FAILS CLOSED in production if database is unavailable, unconfigured, or in error.
  */
 export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimitResult> {
+  const isProduction = (process.env.NODE_ENV as string) === "production";
   const normalizedPhone = phone.replace(/\D/g, "");
-  const verifyKey = hashRateLimitKey("phone:verify:fail", normalizedPhone);
+
+  let verifyKey: string;
+  try {
+    verifyKey = hashRateLimitKey("phone:verify", normalizedPhone);
+  } catch (err: unknown) {
+    if (isProduction) {
+      return {
+        allowed: false,
+        remainingSeconds: 60,
+        reason: "Security configuration error. Verification unavailable.",
+      };
+    }
+    throw err;
+  }
+
+  // In production, database MUST be configured. No silent fallback to allowed.
+  if (isProduction && !isConfigured.supabase) {
+    return {
+      allowed: false,
+      remainingSeconds: 300,
+      reason: "Verification service unavailable in production without persistent database.",
+    };
+  }
 
   if (isConfigured.supabase) {
     try {
@@ -253,18 +334,6 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
       const { data, error } = await adminClient.rpc("get_rate_limit_status", {
         p_key: verifyKey,
       });
-
-      if (!error && data && data.length > 0) {
-        const row = data[0];
-        if (row.is_blocked) {
-          return {
-            allowed: false,
-            remainingSeconds: row.remaining_seconds || 900,
-            reason: `Account temporarily locked due to too many failed attempts. Try again in ${row.remaining_seconds}s.`,
-          };
-        }
-        return { allowed: true };
-      }
 
       if (error) {
         console.error(
@@ -275,15 +344,52 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
             message: "Database error querying verification lockout status",
           })
         );
-        // Fail closed in production if security check cannot be verified
-        if ((process.env.NODE_ENV as string) === "production") {
+        // Fail closed in production or database-backed configurations
+        return {
+          allowed: false,
+          remainingSeconds: 60,
+          reason: "Verification service temporarily unavailable. Please try again shortly.",
+        };
+      }
+
+      if (!data || data.length === 0) {
+        // Unexpected empty response -> Fail closed
+        return {
+          allowed: false,
+          remainingSeconds: 60,
+          reason: "Verification service temporarily unavailable. Please try again shortly.",
+        };
+      }
+
+      const row = data[0];
+      if (row.is_blocked) {
+        return {
+          allowed: false,
+          remainingSeconds: row.remaining_seconds || 900,
+          reason: `Account temporarily locked due to too many failed attempts. Try again in ${row.remaining_seconds}s.`,
+        };
+      }
+
+      // Check previous key during key rotation window if configured
+      if (process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS) {
+        const prevKey = hashRateLimitKey(
+          "phone:verify",
+          normalizedPhone,
+          process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS
+        );
+        const { data: prevData, error: prevErr } = await adminClient.rpc("get_rate_limit_status", {
+          p_key: prevKey,
+        });
+        if (!prevErr && prevData && prevData.length > 0 && prevData[0].is_blocked) {
           return {
             allowed: false,
-            remainingSeconds: 60,
-            reason: "Verification service temporarily unavailable. Please try again shortly.",
+            remainingSeconds: prevData[0].remaining_seconds || 900,
+            reason: `Account temporarily locked due to too many failed attempts. Try again in ${prevData[0].remaining_seconds}s.`,
           };
         }
       }
+
+      return { allowed: true };
     } catch (err: unknown) {
       console.error(
         JSON.stringify({
@@ -293,18 +399,37 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
           message: err instanceof Error ? err.message : "Exception in lockout check",
         })
       );
-      if ((process.env.NODE_ENV as string) === "production") {
-        return {
-          allowed: false,
-          remainingSeconds: 60,
-          reason: "Verification service temporarily unavailable. Please try again shortly.",
-        };
-      }
+      return {
+        allowed: false,
+        remainingSeconds: 60,
+        reason: "Verification service temporarily unavailable. Please try again shortly.",
+      };
     }
   }
 
-  // Offline / development mock check
-  const bucket = memoryStore.get(verifyKey);
+  // Development sandbox: only permitted if explicitly opted into
+  const allowDevMock =
+    process.env.NODE_ENV !== "production" &&
+    process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK === "true";
+
+  if (!allowDevMock) {
+    return {
+      allowed: false,
+      remainingSeconds: 60,
+      reason: "Rate limiting database is required. Enable ENABLE_IN_MEMORY_RATE_LIMIT_MOCK for offline development.",
+    };
+  }
+
+  let bucket = memoryStore.get(verifyKey);
+  if ((!bucket || !bucket.blockedUntil) && process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS) {
+    const prevKey = hashRateLimitKey(
+      "phone:verify",
+      normalizedPhone,
+      process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS
+    );
+    bucket = memoryStore.get(prevKey) || bucket;
+  }
+
   if (bucket?.blockedUntil && bucket.blockedUntil > Date.now()) {
     const remaining = Math.ceil((bucket.blockedUntil - Date.now()) / 1000);
     return {
@@ -320,12 +445,14 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
 /**
  * Records a failed verification attempt persistently in PostgreSQL.
  * 5 failed attempts locks for 900 seconds (15 minutes).
+ * Atomic operation returns RateLimitResult reflecting lock status.
  */
-export async function recordFailedOtpAttempt(phone: string): Promise<void> {
+export async function recordFailedOtpAttempt(phone: string): Promise<RateLimitResult> {
   const normalizedPhone = phone.replace(/\D/g, "");
-  const verifyKey = hashRateLimitKey("phone:verify:fail", normalizedPhone);
+  const verifyKey = hashRateLimitKey("phone:verify", normalizedPhone);
   // 5 failed attempts locks for 900 seconds (15 minutes)
-  await checkRateLimit(verifyKey, 5, 900, 900);
+  const result = await checkRateLimit(verifyKey, 5, 900, 900);
+  return result;
 }
 
 /**
@@ -333,12 +460,21 @@ export async function recordFailedOtpAttempt(phone: string): Promise<void> {
  */
 export async function clearFailedOtpAttempts(phone: string): Promise<void> {
   const normalizedPhone = phone.replace(/\D/g, "");
-  const verifyKey = hashRateLimitKey("phone:verify:fail", normalizedPhone);
+  const verifyKey = hashRateLimitKey("phone:verify", normalizedPhone);
 
   if (isConfigured.supabase) {
     try {
       const adminClient = createAdminClient();
       await adminClient.rpc("clear_rate_limit", { p_key: verifyKey });
+
+      if (process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS) {
+        const prevKey = hashRateLimitKey(
+          "phone:verify",
+          normalizedPhone,
+          process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS
+        );
+        await adminClient.rpc("clear_rate_limit", { p_key: prevKey });
+      }
     } catch (err) {
       console.error(
         JSON.stringify({
@@ -352,4 +488,12 @@ export async function clearFailedOtpAttempts(phone: string): Promise<void> {
   }
 
   memoryStore.delete(verifyKey);
+  if (process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS) {
+    const prevKey = hashRateLimitKey(
+      "phone:verify",
+      normalizedPhone,
+      process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS
+    );
+    memoryStore.delete(prevKey);
+  }
 }

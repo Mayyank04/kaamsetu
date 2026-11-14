@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { assertCryptographicKeyQuality } from "./crypto/key-validator";
 
 const envSchema = z.object({
   // Supabase Configuration
@@ -28,7 +29,9 @@ const envSchema = z.object({
   ACTIVE_SIGNING_KEY_VERSION: z.string().default("v1"),
   REVOKED_SIGNING_KEY_VERSIONS: z.string().default(""),
 
-  // Rate Limiting
+  // Rate Limiting Privacy & Key Material
+  RATE_LIMIT_HMAC_SECRET: z.string().optional(),
+  RATE_LIMIT_HMAC_SECRET_PREVIOUS: z.string().optional(),
   ENABLE_IN_MEMORY_RATE_LIMIT_MOCK: z.string().optional(),
 
   // Application
@@ -64,6 +67,8 @@ function validateEnv() {
     CREDENTIAL_SIGNING_KEY: process.env.CREDENTIAL_SIGNING_KEY,
     ACTIVE_SIGNING_KEY_VERSION: process.env.ACTIVE_SIGNING_KEY_VERSION,
     REVOKED_SIGNING_KEY_VERSIONS: process.env.REVOKED_SIGNING_KEY_VERSIONS,
+    RATE_LIMIT_HMAC_SECRET: process.env.RATE_LIMIT_HMAC_SECRET,
+    RATE_LIMIT_HMAC_SECRET_PREVIOUS: process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS,
     ENABLE_IN_MEMORY_RATE_LIMIT_MOCK: process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NODE_ENV: process.env.NODE_ENV,
@@ -100,12 +105,16 @@ export function validateEnvironmentSafety(): void {
         "FATAL SECURITY VIOLATION: Demo authentication (ENABLE_DEMO_AUTH) cannot be enabled in production."
       );
     }
-    const signingKey = process.env.CREDENTIAL_SIGNING_KEY;
-    if (!signingKey || signingKey.length < 32) {
-      throw new Error(
-        "FATAL SECURITY VIOLATION: CREDENTIAL_SIGNING_KEY must be configured with at least 32 characters (256 bits) in production."
-      );
-    }
+    // Validate Credential Signing Key Quality
+    const activeVersion = process.env.ACTIVE_SIGNING_KEY_VERSION || "v1";
+    const signingKey =
+      process.env[`CREDENTIAL_SIGNING_KEY_${activeVersion.toUpperCase()}`] ||
+      process.env.CREDENTIAL_SIGNING_KEY;
+    assertCryptographicKeyQuality(signingKey, `CREDENTIAL_SIGNING_KEY (${activeVersion})`);
+
+    // Validate Rate Limiting HMAC Secret Quality
+    const rateLimitSecret = process.env.RATE_LIMIT_HMAC_SECRET;
+    assertCryptographicKeyQuality(rateLimitSecret, "RATE_LIMIT_HMAC_SECRET");
   }
 }
 

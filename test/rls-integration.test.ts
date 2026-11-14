@@ -15,6 +15,7 @@
  */
 
 import { Client } from "pg";
+import { maskPhone } from "../src/lib/security/privacy-logger";
 
 const DB_CONFIG = {
   host: process.env.PGHOST || "localhost",
@@ -102,7 +103,7 @@ async function main() {
         testId: 1,
         name: "Private Phone Access",
         category: "Privacy & Identification",
-        positiveControl: positivePassed ? `Owner read own profile (phone: ${ownerRows[0]?.phone})` : "FAILED positive control",
+        positiveControl: positivePassed ? `Owner read own profile (phone: ${maskPhone(ownerRows[0]?.phone)})` : "FAILED positive control",
         negativeControl: negativePassed ? "Attacker received 0 rows" : "FAILED: Phone leaked",
         passed,
         notes: "Strict column and row isolation protects personal contact data",

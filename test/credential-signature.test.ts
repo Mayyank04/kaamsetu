@@ -1,31 +1,30 @@
 /**
- * KAAMSETU Cryptographic Credential Integrity & Key Rotation Test Suite
+ * KAAMSETU Cryptographic Credential Signature & Key Integrity Test Suite
  *
- * Verifies RFC 8785 Canonical JSON hashing, HMAC-SHA256 signature verification,
- * and key rotation across 13 required security scenarios:
- *
- * 1. Valid signature
- * 2. Modified payload
- * 3. Wrong key
- * 4. Missing secret enforcement in production
- * 5. Unknown key version
- * 6. Revoked key version
- * 7. Expired credential
- * 8. Suspended credential
- * 9. Revoked credential
- * 10. Signature tampering
- * 11. Canonicalization edge cases (Unicode sorting, nested structures, whitespace)
- * 12. Key rotation (Verifying older v1 credentials alongside newer v2 credentials)
- * 13. Registry identifier mismatch
+ * Validates:
+ * 1. RFC 8785 Canonical JSON (JCS) deterministic encoding
+ * 2. HMAC-SHA256 non-repudiation signature generation and constant-time verification
+ * 3. Removal of customSecret from production signing and verification APIs
+ * 4. Test-only dependency injection isolation (forbidden in production)
+ * 5. Multi-version key rotation (historical credentials remain valid under previous keys)
+ * 6. Revocation lists (revoked key versions fail closed immediately)
+ * 7. Key material quality & 256-bit entropy enforcement (rejects placeholders and weak keys)
+ * 8. Expiration, suspension, and registry tampering detection
  */
 
 import {
-  canonicalizeJson,
-  computeCanonicalHash,
   signCredentialPayload,
   verifyCredentialSignature,
+  canonicalizeJson,
+  computeCanonicalHash,
   CanonicalCredentialPayload,
+  __setTestSigningKeyForVersion,
+  __resetTestSigningKeys,
 } from "../src/lib/crypto/credential-signer";
+import {
+  validateCryptographicKeyMaterial,
+  assertCryptographicKeyQuality,
+} from "../src/lib/crypto/key-validator";
 
 interface ScenarioResult {
   scenarioId: number;
@@ -34,19 +33,19 @@ interface ScenarioResult {
   actualStatus: string;
   isValid: boolean;
   passed: boolean;
-  details: string;
+  details?: string;
 }
 
 const scenarioResults: ScenarioResult[] = [];
 
-function runSuite() {
+async function runSuite() {
   console.log("===============================================================================");
   console.log("KAAMSETU CRYPTOGRAPHIC CREDENTIAL INTEGRITY & KEY ROTATION TEST SUITE");
   console.log("Standard: RFC 8785 Canonical JSON (JCS) + HMAC-SHA256 Non-Repudiation");
   console.log("===============================================================================\n");
 
   const basePayload: CanonicalCredentialPayload = {
-    registryId: "IN-RJ-2026-8812-KS",
+    registryId: "IN-RJ-2026-8802-KS",
     workerProfileId: "55555555-5555-5555-5555-555555550001",
     fullName: "Rameshwar Sharma",
     primaryTrade: "Industrial Electrician & Solar Grid Specialist",
@@ -59,18 +58,23 @@ function runSuite() {
     keyVersion: "v1",
   };
 
-  const keyV1 = "kaamsetu-test-signing-key-version-1-minimum-32-characters";
-  const keyV2 = "kaamsetu-test-signing-key-version-2-minimum-32-characters";
-  const wrongKey = "completely-wrong-unauthorized-key-32-characters-minimum";
+  // 256-bit cryptographically secure test keys
+  const keyV1 = "eHRvWnF0V21ZOGJ3UjRuVzV0TTh4Y09yWTV0TTB4YzE="; // 32 bytes base64
+  const keyV2 = "YjNtVjl4Y09yWTV0TTB4YzF4dG9acXRXbVk4YndSNG4="; // 32 bytes base64
+  const wrongKey = "d3Jvbmcxa2V5MWZvcmVpZ24xbWluaW11bTEzMmNoYXI="; // 32 bytes base64
+
+  // Set test keys via isolated test-only dependency injection
+  __setTestSigningKeyForVersion("v1", keyV1);
+  __setTestSigningKeyForVersion("v2", keyV2);
 
   // Sign original valid payload with v1
-  const signedV1 = signCredentialPayload(basePayload, { keyVersion: "v1", customSecret: keyV1 });
+  const signedV1 = signCredentialPayload(basePayload, { keyVersion: "v1" });
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 1: Valid signature
+  // SCENARIO 1: Valid signature verification
   // ---------------------------------------------------------------------------
   {
-    const ver = verifyCredentialSignature(basePayload, signedV1.signature, { customSecret: keyV1 });
+    const ver = verifyCredentialSignature(basePayload, signedV1.signature, { keyVersion: "v1" });
     const passed = ver.isValid === true && ver.status === "active";
     scenarioResults.push({
       scenarioId: 1,
@@ -91,7 +95,7 @@ function runSuite() {
       ...basePayload,
       nsqfLevel: 8,
     };
-    const ver = verifyCredentialSignature(tamperedPayload, signedV1.signature, { customSecret: keyV1 });
+    const ver = verifyCredentialSignature(tamperedPayload, signedV1.signature, { keyVersion: "v1" });
     const passed = ver.isValid === false && ver.status === "tampered";
     scenarioResults.push({
       scenarioId: 2,
@@ -105,10 +109,11 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 3: Wrong key
+  // SCENARIO 3: Wrong key rejection
   // ---------------------------------------------------------------------------
   {
-    const ver = verifyCredentialSignature(basePayload, signedV1.signature, { customSecret: wrongKey });
+    __setTestSigningKeyForVersion("v1_wrong", wrongKey);
+    const ver = verifyCredentialSignature(basePayload, signedV1.signature, { keyVersion: "v1_wrong" });
     const passed = ver.isValid === false && ver.status === "tampered";
     scenarioResults.push({
       scenarioId: 3,
@@ -122,7 +127,7 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 4: Missing secret enforcement in production
+  // SCENARIO 4: Missing secret enforcement in production (Fails Closed)
   // ---------------------------------------------------------------------------
   {
     let errorThrown = false;
@@ -155,7 +160,7 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 5: Unknown key version
+  // SCENARIO 5: Unknown key version rejection
   // ---------------------------------------------------------------------------
   {
     const unknownVersionPayload: CanonicalCredentialPayload = {
@@ -176,7 +181,7 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 6: Revoked key version
+  // SCENARIO 6: Revoked key version rejection
   // ---------------------------------------------------------------------------
   {
     const originalRevoked = process.env.REVOKED_SIGNING_KEY_VERSIONS;
@@ -202,7 +207,7 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 7: Expired credential
+  // SCENARIO 7: Expired credential detection
   // ---------------------------------------------------------------------------
   {
     const expiredPayload: CanonicalCredentialPayload = {
@@ -210,8 +215,8 @@ function runSuite() {
       issuedAt: "2023-01-01T00:00:00.000Z",
       expiresAt: "2024-01-01T00:00:00.000Z",
     };
-    const expiredSigned = signCredentialPayload(expiredPayload, { customSecret: keyV1 });
-    const ver = verifyCredentialSignature(expiredPayload, expiredSigned.signature, { customSecret: keyV1 });
+    const expiredSigned = signCredentialPayload(expiredPayload, { keyVersion: "v1" });
+    const ver = verifyCredentialSignature(expiredPayload, expiredSigned.signature, { keyVersion: "v1" });
     const passed = ver.isValid === false && ver.status === "expired";
     scenarioResults.push({
       scenarioId: 7,
@@ -225,15 +230,15 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 8: Suspended credential
+  // SCENARIO 8: Suspended credential handling
   // ---------------------------------------------------------------------------
   {
     const suspendedPayload: CanonicalCredentialPayload = {
       ...basePayload,
       status: "suspended",
     };
-    const suspendedSigned = signCredentialPayload(suspendedPayload, { customSecret: keyV1 });
-    const ver = verifyCredentialSignature(suspendedPayload, suspendedSigned.signature, { customSecret: keyV1 });
+    const suspendedSigned = signCredentialPayload(suspendedPayload, { keyVersion: "v1" });
+    const ver = verifyCredentialSignature(suspendedPayload, suspendedSigned.signature, { keyVersion: "v1" });
     const passed = ver.isValid === false && ver.status === "suspended";
     scenarioResults.push({
       scenarioId: 8,
@@ -247,15 +252,15 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 9: Revoked credential
+  // SCENARIO 9: Revoked credential identification
   // ---------------------------------------------------------------------------
   {
     const revokedPayload: CanonicalCredentialPayload = {
       ...basePayload,
       status: "revoked",
     };
-    const revokedSigned = signCredentialPayload(revokedPayload, { customSecret: keyV1 });
-    const ver = verifyCredentialSignature(revokedPayload, revokedSigned.signature, { customSecret: keyV1 });
+    const revokedSigned = signCredentialPayload(revokedPayload, { keyVersion: "v1" });
+    const ver = verifyCredentialSignature(revokedPayload, revokedSigned.signature, { keyVersion: "v1" });
     const passed = ver.isValid === false && ver.status === "revoked";
     scenarioResults.push({
       scenarioId: 9,
@@ -269,12 +274,11 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 10: Signature tampering
+  // SCENARIO 10: Signature byte tampering rejection
   // ---------------------------------------------------------------------------
   {
-    // Modify one hex byte in the signature
     const tamperedHex = signedV1.signature.slice(0, -2) + (signedV1.signature.slice(-2) === "00" ? "ff" : "00");
-    const ver = verifyCredentialSignature(basePayload, tamperedHex, { customSecret: keyV1 });
+    const ver = verifyCredentialSignature(basePayload, tamperedHex, { keyVersion: "v1" });
     const passed = ver.isValid === false && ver.status === "tampered";
     scenarioResults.push({
       scenarioId: 10,
@@ -288,7 +292,7 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 11: Canonicalization edge cases
+  // SCENARIO 11: RFC 8785 Canonical JSON sorting & Unicode invariance
   // ---------------------------------------------------------------------------
   {
     const complex1 = {
@@ -318,16 +322,15 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 12: Key rotation (Active key rotated from v1 to v2)
+  // SCENARIO 12: Multi-version key rotation support
   // ---------------------------------------------------------------------------
   {
-    // Simulate multi-key environment
     process.env.CREDENTIAL_SIGNING_KEY_V1 = keyV1;
     process.env.CREDENTIAL_SIGNING_KEY_V2 = keyV2;
     process.env.ACTIVE_SIGNING_KEY_VERSION = "v2";
 
     // 1. Old credential issued under v1 remains valid
-    const verOld = verifyCredentialSignature(basePayload, signedV1.signature, { customSecret: keyV1 });
+    const verOld = verifyCredentialSignature(basePayload, signedV1.signature, { keyVersion: "v1" });
 
     // 2. New credential issued under active key v2
     const payloadV2: CanonicalCredentialPayload = {
@@ -335,8 +338,8 @@ function runSuite() {
       registryId: "IN-AS-2026-9901-KS",
       keyVersion: "v2",
     };
-    const signedV2 = signCredentialPayload(payloadV2, { keyVersion: "v2", customSecret: keyV2 });
-    const verNew = verifyCredentialSignature(payloadV2, signedV2.signature, { customSecret: keyV2 });
+    const signedV2 = signCredentialPayload(payloadV2, { keyVersion: "v2" });
+    const verNew = verifyCredentialSignature(payloadV2, signedV2.signature, { keyVersion: "v2" });
 
     const passed = verOld.isValid === true && verNew.isValid === true && signedV2.keyVersion === "v2";
     scenarioResults.push({
@@ -351,14 +354,14 @@ function runSuite() {
   }
 
   // ---------------------------------------------------------------------------
-  // SCENARIO 13: Registry identifier mismatch
+  // SCENARIO 13: Registry identifier mismatch rejection
   // ---------------------------------------------------------------------------
   {
     const spoofedRegistryPayload: CanonicalCredentialPayload = {
       ...basePayload,
-      registryId: "IN-DL-2026-9999-KS", // Attacker substituted registry ID
+      registryId: "IN-DL-2026-9999-KS",
     };
-    const ver = verifyCredentialSignature(spoofedRegistryPayload, signedV1.signature, { customSecret: keyV1 });
+    const ver = verifyCredentialSignature(spoofedRegistryPayload, signedV1.signature, { keyVersion: "v1" });
     const passed = ver.isValid === false && ver.status === "tampered";
     scenarioResults.push({
       scenarioId: 13,
@@ -371,11 +374,95 @@ function runSuite() {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // SCENARIO 14: Removal of customSecret from Production Interfaces
+  // ---------------------------------------------------------------------------
+  {
+    // Calling signCredentialPayload with arbitrary custom secret property must NOT bypass key resolver
+    const maliciousSecret = "attacker-controlled-arbitrary-signing-secret-key-32";
+    const signedWithFakeOption = (signCredentialPayload as any)(basePayload, {
+      keyVersion: "v1",
+      customSecret: maliciousSecret,
+    });
+
+    // The signature MUST match keyV1, NOT maliciousSecret
+    const verUnderRealKey = verifyCredentialSignature(basePayload, signedWithFakeOption.signature, { keyVersion: "v1" });
+
+    // Attempting to verify with maliciousSecret should fail because verifier ignores customSecret
+    const passed = verUnderRealKey.isValid === true;
+    scenarioResults.push({
+      scenarioId: 14,
+      name: "Arbitrary customSecret cannot bypass key resolver",
+      expectedStatus: "customSecret ignored (valid: true under real key)",
+      actualStatus: passed ? "customSecret Ignored by Engine" : "Custom Secret Accepted (VULNERABILITY)",
+      isValid: passed,
+      passed,
+      details: "Production signing and verification interfaces ignore untrusted secret parameters",
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // SCENARIO 15: Test-only Dependency Injection Forbidden in Production
+  // ---------------------------------------------------------------------------
+  {
+    let injectionBlockedInProd = false;
+    const originalEnv = process.env.NODE_ENV;
+    try {
+      (process.env as any).NODE_ENV = "production";
+      __setTestSigningKeyForVersion("v_evil", "malicious_key_in_production_attempt");
+    } catch (err: unknown) {
+      injectionBlockedInProd = true;
+    } finally {
+      (process.env as any).NODE_ENV = originalEnv;
+    }
+
+    scenarioResults.push({
+      scenarioId: 15,
+      name: "Test-only injection strictly throws in production",
+      expectedStatus: "throw Fatal Security Violation",
+      actualStatus: injectionBlockedInProd ? "Fatal Error Thrown" : "Allowed in Production (VULNERABILITY)",
+      isValid: injectionBlockedInProd,
+      passed: injectionBlockedInProd,
+      details: "__setTestSigningKeyForVersion guards against execution in production mode",
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // SCENARIO 16: Cryptographic Key Quality & 256-bit Entropy Assertion
+  // ---------------------------------------------------------------------------
+  {
+    // 1. Weak key (< 32 bytes)
+    const shortKeyRes = validateCryptographicKeyMaterial("short_key_16_byt", "ShortKey");
+    // 2. Predictable placeholder
+    const placeholderRes = validateCryptographicKeyMaterial("placeholder-signing-key-minimum-32-chars-long", "PlaceholderKey");
+    // 3. Low character diversity
+    const repetitiveRes = validateCryptographicKeyMaterial("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "RepetitiveKey");
+    // 4. Valid 256-bit Base64 key
+    const validKeyRes = validateCryptographicKeyMaterial(keyV1, "ValidKey");
+
+    const passed =
+      shortKeyRes.valid === false &&
+      placeholderRes.valid === false &&
+      repetitiveRes.valid === false &&
+      validKeyRes.valid === true &&
+      validKeyRes.byteLength >= 32;
+
+    scenarioResults.push({
+      scenarioId: 16,
+      name: "Cryptographic key material quality & entropy enforcement",
+      expectedStatus: "reject weak/predictable, accept 256-bit",
+      actualStatus: passed ? "Strict Entropy Validated (>=32 bytes)" : "Weak Key Allowed",
+      isValid: passed,
+      passed,
+      details: "Validates decoded byte length and rejects predictable or low-entropy patterns",
+    });
+  }
+
   // Print Results Table
   console.log("------------------------------------------------------------------------------------------------------");
   console.log(
     "ID".padEnd(4) +
-    "Credential Scenario".padEnd(46) +
+    "Credential Scenario".padEnd(48) +
     "Expected".padEnd(26) +
     "Result".padEnd(10)
   );
@@ -387,7 +474,7 @@ function runSuite() {
     const statusStr = r.passed ? "PASSED [OK]" : "FAILED [X]";
     console.log(
       String(r.scenarioId).padEnd(4) +
-      r.name.padEnd(46) +
+      r.name.padEnd(48) +
       r.expectedStatus.padEnd(26) +
       statusStr.padEnd(10)
     );
@@ -400,8 +487,11 @@ function runSuite() {
     console.error("SOME CREDENTIAL SCENARIOS FAILED!");
     process.exit(1);
   } else {
-    console.log("ALL 13 CRYPTOGRAPHIC CREDENTIAL & KEY ROTATION SCENARIOS INDEPENDENTLY VERIFIED.\n");
+    console.log("ALL 16 CRYPTOGRAPHIC CREDENTIAL & KEY ROTATION SCENARIOS INDEPENDENTLY VERIFIED.\n");
   }
 }
 
-runSuite();
+runSuite().catch((err) => {
+  console.error("Fatal error in credential test suite:", err);
+  process.exit(1);
+});

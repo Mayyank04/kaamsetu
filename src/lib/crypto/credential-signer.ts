@@ -6,9 +6,14 @@
  *
  * Strictly server-side: signing keys are NEVER exposed to the browser or logged.
  * In production, missing or weak keys FAIL CLOSED immediately.
+ * No arbitrary custom secrets may be injected into production signing or verification interfaces.
  */
 
 import * as crypto from "crypto";
+import {
+  assertCryptographicKeyQuality,
+  validateCryptographicKeyMaterial,
+} from "./key-validator";
 
 export interface CanonicalCredentialPayload {
   registryId: string;
@@ -43,6 +48,14 @@ export interface VerificationResult {
   payload?: CanonicalCredentialPayload;
 }
 
+export interface SignCredentialOptions {
+  keyVersion?: string;
+}
+
+export interface VerifyCredentialOptions {
+  keyVersion?: string;
+}
+
 interface KeyResolutionResult {
   key: string | null;
   isRevoked: boolean;
@@ -50,6 +63,35 @@ interface KeyResolutionResult {
 }
 
 export const DEFAULT_KEY_VERSION = "v1";
+
+// Isolated test-only dependency injection store.
+// Strictly forbidden in production.
+const testKeyStore = new Map<string, string | null>();
+
+/**
+ * Test-only dependency injection helper.
+ * Strictly throws if invoked in production.
+ */
+export function __setTestSigningKeyForVersion(version: string, key: string | null): void {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "FATAL SECURITY VIOLATION: Test signing key injection (__setTestSigningKeyForVersion) is strictly forbidden in production."
+    );
+  }
+  testKeyStore.set(version.toLowerCase().trim(), key);
+}
+
+/**
+ * Resets test-only key store.
+ */
+export function __resetTestSigningKeys(): void {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "FATAL SECURITY VIOLATION: Test signing key manipulation is strictly forbidden in production."
+    );
+  }
+  testKeyStore.clear();
+}
 
 /**
  * Gets the current active signing key version from environment.
@@ -61,7 +103,7 @@ export function getActiveKeyVersion(): string {
 /**
  * Resolves the signing key for a given key version.
  * Supports key rotation, versioning, and revocation lists.
- * In production, fails closed if key is missing or lacks sufficient entropy (256-bit / 32 chars).
+ * In production, fails closed if key is missing or lacks genuine 256-bit entropy.
  */
 export function getSigningKeyForVersion(version: string = DEFAULT_KEY_VERSION): KeyResolutionResult {
   const normVersion = version.toLowerCase().trim();
@@ -76,6 +118,12 @@ export function getSigningKeyForVersion(version: string = DEFAULT_KEY_VERSION): 
     return { key: null, isRevoked: true, version: normVersion };
   }
 
+  // Check test-only mock store (only active if NODE_ENV !== "production")
+  if (process.env.NODE_ENV !== "production" && testKeyStore.has(normVersion)) {
+    const testKey = testKeyStore.get(normVersion) || null;
+    return { key: testKey, isRevoked: false, version: normVersion };
+  }
+
   // Version-specific key: CREDENTIAL_SIGNING_KEY_V1, CREDENTIAL_SIGNING_KEY_V2, etc.
   const envVarName = `CREDENTIAL_SIGNING_KEY_${normVersion.toUpperCase()}`;
   let secret = process.env[envVarName];
@@ -88,12 +136,14 @@ export function getSigningKeyForVersion(version: string = DEFAULT_KEY_VERSION): 
   const isProduction = (process.env.NODE_ENV as string) === "production";
 
   if (isProduction) {
-    if (!secret || secret.length < 32) {
+    if (!secret) {
       throw new Error(
-        `FATAL SECURITY CONFIGURATION: Signing key for version '${normVersion}' is missing or below minimum 256-bit requirement (32 chars) in production.`
+        `FATAL SECURITY CONFIGURATION: Signing key for version '${normVersion}' is missing from environment in production.`
       );
     }
-    return { key: secret || null, isRevoked: false, version: normVersion };
+    // Strict key entropy and quality assertion in production
+    assertCryptographicKeyQuality(secret, `Signing key for version '${normVersion}'`);
+    return { key: secret, isRevoked: false, version: normVersion };
   }
 
   // If a specific version was requested (not default v1) and not found in environment, it is unknown
@@ -150,15 +200,15 @@ export function computeCanonicalHash(payload: CanonicalCredentialPayload): strin
 
 /**
  * Signs a canonical credential payload using HMAC-SHA256 with key versioning.
+ * Production callers cannot supply arbitrary custom secrets; keys are resolved authoritatively
+ * from server environment configuration via getSigningKeyForVersion.
  */
 export function signCredentialPayload(
   payload: CanonicalCredentialPayload,
-  options?: { keyVersion?: string; customSecret?: string }
+  options?: SignCredentialOptions
 ): CredentialSignatureResult {
   const keyVersion = options?.keyVersion || payload.keyVersion || getActiveKeyVersion();
-  const keyResolution = options?.customSecret
-    ? { key: options.customSecret, isRevoked: false, version: keyVersion }
-    : getSigningKeyForVersion(keyVersion);
+  const keyResolution = getSigningKeyForVersion(keyVersion);
 
   if (keyResolution.isRevoked || !keyResolution.key) {
     throw new Error(`Cannot sign credential: Key version '${keyVersion}' is revoked or unavailable.`);
@@ -191,11 +241,12 @@ export function signCredentialPayload(
 /**
  * Independently verifies a credential payload against a provided cryptographic signature.
  * Enforces key rotation, constant-time comparison, revocation check, and expiration check.
+ * Production callers cannot supply arbitrary custom secrets.
  */
 export function verifyCredentialSignature(
   payload: CanonicalCredentialPayload,
   signature: string,
-  options?: { keyVersion?: string; customSecret?: string }
+  options?: VerifyCredentialOptions
 ): VerificationResult {
   const keyVersion = options?.keyVersion || payload.keyVersion || DEFAULT_KEY_VERSION;
   const canonicalPayload: CanonicalCredentialPayload = {
@@ -206,9 +257,7 @@ export function verifyCredentialSignature(
   const canonicalHash = computeCanonicalHash(canonicalPayload);
 
   // Check key revocation / resolution
-  const keyResolution = options?.customSecret
-    ? { key: options.customSecret, isRevoked: false, version: keyVersion }
-    : getSigningKeyForVersion(keyVersion);
+  const keyResolution = getSigningKeyForVersion(keyVersion);
 
   if (keyResolution.isRevoked) {
     return {

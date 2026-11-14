@@ -52,13 +52,16 @@ export async function POST(request: NextRequest) {
 
       if (error || !authData.user) {
         // Record failed attempt for brute-force tracking
-        await recordFailedOtpAttempt(formattedPhone);
+        const failResult = await recordFailedOtpAttempt(formattedPhone);
         return NextResponse.json(
           {
             success: false,
-            message: error?.message || "Invalid or expired verification code.",
+            message: !failResult.allowed && failResult.reason
+              ? failResult.reason
+              : error?.message || "Invalid or expired verification code.",
+            retryAfterSeconds: failResult.allowed ? undefined : failResult.remainingSeconds,
           },
-          { status: 400 }
+          { status: failResult.allowed ? 400 : 429 }
         );
       }
 
@@ -116,13 +119,17 @@ export async function POST(request: NextRequest) {
     // 2. Demo Evaluation Mode: STRICTLY prohibited in production
     if (isConfigured.demoAuth && process.env.NODE_ENV !== "production") {
       if (data.otp !== "123456") {
-        await recordFailedOtpAttempt(formattedPhone);
+        const failResult = await recordFailedOtpAttempt(formattedPhone);
         return NextResponse.json(
           {
             success: false,
-            message: "Invalid verification code. In demo evaluation mode, enter sandbox code 123456.",
+            message:
+              !failResult.allowed && failResult.reason
+                ? failResult.reason
+                : "Invalid verification code. In demo evaluation mode, enter sandbox code 123456.",
+            retryAfterSeconds: failResult.allowed ? undefined : failResult.remainingSeconds,
           },
-          { status: 400 }
+          { status: failResult.allowed ? 400 : 429 }
         );
       }
 
