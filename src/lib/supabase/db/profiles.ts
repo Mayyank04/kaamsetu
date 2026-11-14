@@ -55,6 +55,7 @@ export async function getPublishedWorkerProfiles(
       digilocker_linked: p.digiLockerLinked,
       is_published: true,
       availability_status: p.availabilityStatus as "available",
+      travel_willingness: "adjacent_districts" as const,
       created_at: p.createdAt,
       updated_at: p.updatedAt,
       subTrades: p.subTrades,
@@ -207,6 +208,7 @@ export async function getWorkerProfileBySlug(slug: string): Promise<WorkerProfil
       digilocker_linked: demo.digiLockerLinked,
       is_published: true,
       availability_status: (demo.availabilityStatus as any) || "available",
+      travel_willingness: "adjacent_districts" as const,
       created_at: demo.createdAt,
       updated_at: demo.updatedAt,
       occupation: {

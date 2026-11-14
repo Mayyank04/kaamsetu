@@ -147,6 +147,7 @@ export interface Database {
           digilocker_linked: boolean;
           is_published: boolean;
           availability_status: AvailabilityState;
+          travel_willingness: "same_district" | "adjacent_districts" | "interstate" | "remote_only";
           created_at: string;
           updated_at: string;
         };
@@ -173,6 +174,7 @@ export interface Database {
           digilocker_linked?: boolean;
           is_published?: boolean;
           availability_status?: AvailabilityState;
+          travel_willingness?: "same_district" | "adjacent_districts" | "interstate" | "remote_only";
           created_at?: string;
           updated_at?: string;
         };
@@ -199,6 +201,7 @@ export interface Database {
           digilocker_linked?: boolean;
           is_published?: boolean;
           availability_status?: AvailabilityState;
+          travel_willingness?: "same_district" | "adjacent_districts" | "interstate" | "remote_only";
           created_at?: string;
           updated_at?: string;
         };
@@ -658,6 +661,7 @@ export interface Database {
           contact_email: string;
           contact_phone: string | null;
           partner_status: "identified" | "contacted" | "in_discussion" | "pilot_proposal" | "agreement_signed" | "operational";
+          verification_status: "registered" | "in_review" | "verified" | "rejected" | "suspended";
           created_at: string;
           updated_at: string;
         };
@@ -670,6 +674,7 @@ export interface Database {
           contact_email: string;
           contact_phone?: string | null;
           partner_status?: "identified" | "contacted" | "in_discussion" | "pilot_proposal" | "agreement_signed" | "operational";
+          verification_status?: "registered" | "in_review" | "verified" | "rejected" | "suspended";
           created_at?: string;
           updated_at?: string;
         };
@@ -682,6 +687,7 @@ export interface Database {
           contact_email?: string;
           contact_phone?: string | null;
           partner_status?: "identified" | "contacted" | "in_discussion" | "pilot_proposal" | "agreement_signed" | "operational";
+          verification_status?: "registered" | "in_review" | "verified" | "rejected" | "suspended";
           created_at?: string;
           updated_at?: string;
         };
@@ -1313,7 +1319,7 @@ export interface Database {
           supported_languages: string[];
           trade_aliases: Record<string, string[]>;
           discovery_radius_km: number;
-          status: "planning" | "active" | "suspended" | "deactivated";
+          status: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags: Record<string, boolean>;
           created_at: string;
           updated_at: string;
@@ -1329,7 +1335,7 @@ export interface Database {
           supported_languages?: string[];
           trade_aliases?: Record<string, string[]>;
           discovery_radius_km?: number;
-          status?: "planning" | "active" | "suspended" | "deactivated";
+          status?: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags?: Record<string, boolean>;
           created_at?: string;
           updated_at?: string;
@@ -1345,7 +1351,7 @@ export interface Database {
           supported_languages?: string[];
           trade_aliases?: Record<string, string[]>;
           discovery_radius_km?: number;
-          status?: "planning" | "active" | "suspended" | "deactivated";
+          status?: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags?: Record<string, boolean>;
           created_at?: string;
           updated_at?: string;
@@ -1837,6 +1843,187 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      regional_launch_transitions: {
+        Row: {
+          id: string;
+          region_id: string;
+          from_status: string;
+          to_status: string;
+          authorized_by: string | null;
+          authorization_notes: string;
+          readiness_score: number | null;
+          evidence_checklist: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          from_status: string;
+          to_status: string;
+          authorized_by?: string | null;
+          authorization_notes: string;
+          readiness_score?: number | null;
+          evidence_checklist?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          from_status?: string;
+          to_status?: string;
+          authorized_by?: string | null;
+          authorization_notes?: string;
+          readiness_score?: number | null;
+          evidence_checklist?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      cross_region_project_staffing: {
+        Row: {
+          id: string;
+          organization_id: string;
+          opportunity_id: string | null;
+          source_region_id: string;
+          target_region_id: string;
+          worker_profile_id: string;
+          trade_required: string;
+          crew_role: string;
+          duration_days: number;
+          daily_wage: number;
+          travel_stipend: number;
+          accommodation_provided: boolean;
+          worker_consent_obtained: boolean;
+          status: "proposed" | "offered" | "accepted" | "deployed" | "completed" | "declined" | "cancelled";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          opportunity_id?: string | null;
+          source_region_id: string;
+          target_region_id: string;
+          worker_profile_id: string;
+          trade_required: string;
+          crew_role?: string;
+          duration_days?: number;
+          daily_wage: number;
+          travel_stipend?: number;
+          accommodation_provided?: boolean;
+          worker_consent_obtained?: boolean;
+          status?: "proposed" | "offered" | "accepted" | "deployed" | "completed" | "declined" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          opportunity_id?: string | null;
+          source_region_id?: string;
+          target_region_id?: string;
+          worker_profile_id?: string;
+          trade_required?: string;
+          crew_role?: string;
+          duration_days?: number;
+          daily_wage?: number;
+          travel_stipend?: number;
+          accommodation_provided?: boolean;
+          worker_consent_obtained?: boolean;
+          status?: "proposed" | "offered" | "accepted" | "deployed" | "completed" | "declined" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      payment_records_ledger: {
+        Row: {
+          id: string;
+          booking_id: string | null;
+          opportunity_id: string | null;
+          worker_profile_id: string;
+          employer_declared_amount: number;
+          worker_agreed_amount: number;
+          amount_invoiced: number;
+          amount_paid: number;
+          platform_commission_amount: number;
+          payment_date: string | null;
+          payment_evidence_ref: string | null;
+          disputed_amount: number | null;
+          resolution_status: "pending" | "settled" | "disputed" | "escalated";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id?: string | null;
+          opportunity_id?: string | null;
+          worker_profile_id: string;
+          employer_declared_amount: number;
+          worker_agreed_amount: number;
+          amount_invoiced: number;
+          amount_paid?: number;
+          platform_commission_amount?: number;
+          payment_date?: string | null;
+          payment_evidence_ref?: string | null;
+          disputed_amount?: number | null;
+          resolution_status?: "pending" | "settled" | "disputed" | "escalated";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string | null;
+          opportunity_id?: string | null;
+          worker_profile_id?: string;
+          employer_declared_amount?: number;
+          worker_agreed_amount?: number;
+          amount_invoiced?: number;
+          amount_paid?: number;
+          platform_commission_amount?: number;
+          payment_date?: string | null;
+          payment_evidence_ref?: string | null;
+          disputed_amount?: number | null;
+          resolution_status?: "pending" | "settled" | "disputed" | "escalated";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      offline_verification_logs: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          verifier_identity: string;
+          cached_key_version: string;
+          last_sync_timestamp: string;
+          scan_timestamp: string;
+          verification_result: "valid_signature_cached" | "signature_mismatch" | "expired_cache" | "revoked_online_check";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          verifier_identity: string;
+          cached_key_version?: string;
+          last_sync_timestamp: string;
+          scan_timestamp?: string;
+          verification_result: "valid_signature_cached" | "signature_mismatch" | "expired_cache" | "revoked_online_check";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          verifier_identity?: string;
+          cached_key_version?: string;
+          last_sync_timestamp?: string;
+          scan_timestamp?: string;
+          verification_result?: "valid_signature_cached" | "signature_mismatch" | "expired_cache" | "revoked_online_check";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -1895,3 +2082,7 @@ export type InstitutionalCredential = Database["public"]["Tables"]["institutiona
 export type InstitutionalPartnerApiKey = Database["public"]["Tables"]["institutional_partner_api_keys"]["Row"];
 export type WorkerDispute = Database["public"]["Tables"]["worker_disputes"]["Row"];
 export type OpportunityFeedbackReport = Database["public"]["Tables"]["opportunity_feedback_reports"]["Row"];
+export type RegionalLaunchTransition = Database["public"]["Tables"]["regional_launch_transitions"]["Row"];
+export type CrossRegionProjectStaffing = Database["public"]["Tables"]["cross_region_project_staffing"]["Row"];
+export type PaymentRecordLedger = Database["public"]["Tables"]["payment_records_ledger"]["Row"];
+export type OfflineVerificationLog = Database["public"]["Tables"]["offline_verification_logs"]["Row"];

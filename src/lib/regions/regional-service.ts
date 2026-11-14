@@ -15,7 +15,7 @@ export interface RegionalConfig {
   featureFlags: Record<string, boolean>;
 }
 
-export const FALLBACK_LANGUAGES = ["en", "as", "hi", "bn", "kha"] as const;
+export const FALLBACK_LANGUAGES = ["en", "as", "hi", "bn", "kha", "ne", "nag"] as const;
 export type SupportedLanguage = (typeof FALLBACK_LANGUAGES)[number];
 
 export const REGIONAL_LANGUAGE_CONFIG: Record<string, { default: SupportedLanguage; supported: SupportedLanguage[] }> = {
@@ -23,6 +23,9 @@ export const REGIONAL_LANGUAGE_CONFIG: Record<string, { default: SupportedLangua
   "IN-AS-KMP-RURAL": { default: "as", supported: ["as", "en", "bn", "hi"] },
   "IN-AS-UDL": { default: "as", supported: ["as", "en", "bn", "hi"] },
   "IN-ML-EKH": { default: "kha", supported: ["kha", "en", "as", "hi"] },
+  "IN-TR-WTR": { default: "bn", supported: ["bn", "en", "hi"] },
+  "IN-WB-DAR": { default: "bn", supported: ["bn", "ne", "en", "hi"] },
+  "IN-NL-DIM": { default: "en", supported: ["en", "nag", "hi"] },
 };
 
 /**
