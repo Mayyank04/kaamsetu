@@ -279,9 +279,19 @@ export function SovereignSuccessCard({
           asChild
           className="w-full sm:w-auto bg-forest hover:bg-forest-500 text-ivory dark:bg-sand dark:text-forest dark:hover:bg-sand-400 h-11 px-6 shadow-sovereign-sm font-semibold"
         >
-          <Link href={`/explore`}>
+          <Link href={cardData.slug ? `/profile/${cardData.slug}` : "/dashboard"}>
             <ExternalLink className="w-4 h-4 mr-2" />
             {i18n.viewLiveProfile}
+          </Link>
+        </Button>
+
+        <Button
+          asChild
+          variant="secondary"
+          className="w-full sm:w-auto bg-sand text-forest hover:bg-sand-400 h-11 px-5 font-semibold text-xs border border-sand-500/30"
+        >
+          <Link href="/dashboard">
+            Worker Dashboard
           </Link>
         </Button>
       </div>

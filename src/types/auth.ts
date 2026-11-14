@@ -14,6 +14,10 @@ export interface UserProfile {
   avatarUrl?: string;
   isPhoneVerified: boolean;
   isDigiLockerVerified: boolean;
+  slug?: string;
+  trade?: string;
+  registryId?: string;
+  city?: string;
   createdAt: string;
   updatedAt: string;
 }

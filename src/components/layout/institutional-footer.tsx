@@ -57,7 +57,7 @@ export function InstitutionalFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/how-it-works#voice-registration" className="hover:text-sand transition-colors">
+                <Link href="/onboarding" className="hover:text-sand transition-colors">
                   Multilingual Voice Attestation
                 </Link>
               </li>

@@ -1,6 +1,7 @@
 import { WorkerDashboardData } from "@/types/dashboard";
 import { isConfigured } from "@/lib/env";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { FEATURED_PROFESSIONALS } from "@/lib/data/professionals";
 
 export async function getWorkerDashboardData(
   targetSlug?: string
@@ -272,6 +273,54 @@ export async function getWorkerDashboardData(
       ],
     },
   };
+
+  if (targetSlug) {
+    const matched = FEATURED_PROFESSIONALS.find((p) => {
+      const pSlug =
+        p.fullName.toLowerCase().replace(/\s+/g, "-") +
+        "-" +
+        p.location.city.toLowerCase();
+      return pSlug === targetSlug || p.id === targetSlug || p.registryId === targetSlug;
+    });
+
+    if (matched) {
+      defaultDashboardData.profile = {
+        ...defaultDashboardData.profile,
+        id: matched.id,
+        registryId: matched.registryId,
+        slug: targetSlug,
+        fullName: matched.fullName,
+        avatarUrl: matched.photoUrl,
+        occupation: matched.primaryTrade,
+        category: matched.primaryTrade.split("&")[0].trim(),
+        headline: matched.primaryTrade,
+        bio: matched.bio,
+        yearsExperience: matched.yearsExperience,
+        city: matched.location.city,
+        state: matched.location.state,
+        pincode: matched.location.pincode,
+        languages: matched.languages,
+        kaamScore: {
+          totalScore: matched.kaamScore.totalScore,
+          level: matched.kaamScore.level,
+          tier: matched.kaamScore.tier,
+          percentile: matched.kaamScore.percentileRank,
+        },
+        aadhaarVerified: matched.aadhaarVerified,
+        digiLockerLinked: matched.digiLockerLinked,
+        availabilityStatus: (matched.availabilityStatus as any) || "available",
+      };
+
+      defaultDashboardData.skills = matched.subTrades.map((st, idx) => ({
+        id: `sk-${matched.id}-${idx}`,
+        name: st,
+        category: matched.primaryTrade,
+        isPrimary: idx < 2,
+        verificationType: idx === 0 ? "digilocker_verified" : "voice_attested",
+        yearsPracticed: Math.max(2, matched.yearsExperience - idx * 2),
+      }));
+    }
+  }
 
   if (!isConfigured.supabase) {
     return defaultDashboardData;

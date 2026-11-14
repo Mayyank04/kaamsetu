@@ -58,7 +58,17 @@ export function AnalyticsOverview({ analytics, profile }: AnalyticsOverviewProps
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] font-mono font-bold uppercase text-forest/70 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-sand animate-pulse" />
+          WORKER IDENTITY METRICS (DEMO SIMULATION BASELINE)
+        </span>
+        <span className="text-[10px] text-charcoal-muted font-mono">
+          Updated: Today
+        </span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, idx) => {
         const Icon = card.icon;
         return (
@@ -91,6 +101,7 @@ export function AnalyticsOverview({ analytics, profile }: AnalyticsOverviewProps
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

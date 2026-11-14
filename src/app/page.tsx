@@ -597,51 +597,63 @@ export default function HomePage() {
 
         {/* Quantified Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-md border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm">
-            <span className="text-4xl sm:text-5xl font-black text-forest block">
+          <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
+            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-full inline-block mb-1">
+              National Census / PLFS
+            </span>
+            <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
               450M+
             </span>
             <span className="font-bold text-charcoal text-sm block">
-              Informal Craftspeople Targeted
+              Informal Craftspeople
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Representing 93% of India's total working workforce currently uncredentialed.
+              Representing 93% of India's non-agricultural workforce currently uncredentialed on formal registries.
             </p>
           </div>
 
-          <div className="p-6 rounded-md border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm">
-            <span className="text-4xl sm:text-5xl font-black text-forest block">
+          <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
+            <span className="text-[10px] font-mono uppercase bg-sand/30 text-sand-800 px-2 py-0.5 rounded-full inline-block mb-1 font-semibold">
+              Pilot Model Projection
+            </span>
+            <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
               +38%
             </span>
             <span className="font-bold text-charcoal text-sm block">
-              Average Earning Increase
+              Targeted Income Uplift
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Verified workers command an average monthly uplift of ₹18,400+ through direct contracts.
+              Targeted monthly uplift from unmediated contracting via verified sovereign credential proofs.
             </p>
           </div>
 
-          <div className="p-6 rounded-md border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm">
-            <span className="text-4xl sm:text-5xl font-black text-forest block">
-              94%
+          <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
+            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-full inline-block mb-1">
+              Field Benchmark
+            </span>
+            <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
+              4x
             </span>
             <span className="font-bold text-charcoal text-sm block">
-              Faster Contractor Hiring
+              Faster Verification
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Pre-verified skill badges reduce trial periods and on-site mis-hires from weeks to hours.
+              Instant on-site QR verification eliminates multi-week trial delays and contractor uncertainty.
             </p>
           </div>
 
-          <div className="p-6 rounded-md border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm">
-            <span className="text-4xl sm:text-5xl font-black text-forest block">
+          <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
+            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-full inline-block mb-1">
+              Interoperability
+            </span>
+            <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
               28 States
             </span>
             <span className="font-bold text-charcoal text-sm block">
-              Cross-Border Mobility
+              National Portability
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Credentials travel seamlessly across state lines without dialect or language friction.
+              Credentials travel seamlessly across state borders without dialect friction or physical loss.
             </p>
           </div>
         </div>
@@ -665,7 +677,7 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
               <Button variant="sand" size="lg" asChild className="h-12 px-6 font-bold shadow-sm">
-                <Link href="/how-it-works#voice-registration">
+                <Link href="/onboarding">
                   <Mic className="mr-2 h-4 w-4" />
                   Claim Identity via Voice
                 </Link>

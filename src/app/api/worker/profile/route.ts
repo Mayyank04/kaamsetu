@@ -33,3 +33,5 @@ export async function PATCH(request: NextRequest) {
     return handleApiError(error);
   }
 }
+
+export const POST = PATCH;

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { InstitutionalHeader } from "@/components/layout/institutional-header";
 import { InstitutionalFooter } from "@/components/layout/institutional-footer";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/lib/auth/use-auth";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -46,10 +47,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={plusJakartaSans.variable}>
       <body className="min-h-screen flex flex-col bg-background text-foreground font-sans antialiased">
-        <InstitutionalHeader />
-        <main className="flex-1">{children}</main>
-        <InstitutionalFooter />
-        <Toaster />
+        <AuthProvider>
+          <InstitutionalHeader />
+          <main className="flex-1">{children}</main>
+          <InstitutionalFooter />
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );
