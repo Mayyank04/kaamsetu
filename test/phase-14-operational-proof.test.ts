@@ -1126,13 +1126,13 @@ export async function runPhase14OperationalProofSuite() {
       const total = parseInt(tables[0].total_tables, 10);
       const rls = parseInt(rlsTables[0].rls_tables, 10);
 
-      const passed = total === 59 && rls === 59;
+      const passed = total >= 59 && rls === total;
       recordTest(
         35,
         "Disaster Recovery & 100% RLS Catalog Verification",
         "Pillar J: Evidence-Backed Regional Expansion",
         passed,
-        `PostgreSQL catalog verified: exactly 59 tables with 100% Row-Level Security (${rls}/${total})`
+        `PostgreSQL catalog verified: at least 59 tables with 100% Row-Level Security (${rls}/${total})`
       );
     }
 
