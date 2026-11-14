@@ -9,7 +9,6 @@ const PROTECTED_PREFIXES = [
   "/worker",
   "/employer/post",
   "/employer/manage",
-  "/onboarding/voice",
 ];
 
 // Routes reserved for guests (redirect to dashboard if already authenticated)

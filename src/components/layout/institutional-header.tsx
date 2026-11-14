@@ -94,7 +94,7 @@ export function InstitutionalHeader() {
           </Button>
 
           <Button variant="default" size="sm" asChild className="bg-forest text-ivory hover:bg-forest-500 shadow-sm">
-            <Link href="/how-it-works#voice-registration">
+            <Link href="/onboarding">
               <Mic className="mr-1.5 h-3.5 w-3.5 text-sand" />
               Create Your Identity
             </Link>
@@ -143,7 +143,7 @@ export function InstitutionalHeader() {
               </Link>
             </Button>
             <Button variant="default" className="w-full justify-center" asChild>
-              <Link href="/how-it-works#voice-registration" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/onboarding" onClick={() => setMobileMenuOpen(false)}>
                 <Mic className="mr-2 h-4 w-4 text-sand" />
                 Create Your Identity
               </Link>

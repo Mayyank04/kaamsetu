@@ -89,7 +89,7 @@ export default function HomePage() {
                   asChild
                   className="bg-forest hover:bg-forest-500 text-ivory shadow-sovereign-sm h-13 px-8 text-base font-semibold"
                 >
-                  <Link href="/how-it-works#voice-registration">
+                  <Link href="/onboarding">
                     <Mic className="mr-2.5 h-5 w-5 text-sand" />
                     Create Your Identity
                   </Link>

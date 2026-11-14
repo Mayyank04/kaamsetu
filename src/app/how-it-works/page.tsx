@@ -418,7 +418,7 @@ export default function HowItWorksPage() {
 
         <div className="pt-6 flex flex-col sm:flex-row justify-center gap-4">
           <Button variant="default" size="lg" asChild className="bg-forest hover:bg-forest-500 text-ivory">
-            <Link href="/how-it-works#voice-registration">
+            <Link href="/onboarding">
               <Mic className="mr-2 h-4 w-4 text-sand" />
               Create Your Identity
             </Link>
