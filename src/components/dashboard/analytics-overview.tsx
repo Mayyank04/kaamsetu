@@ -49,7 +49,7 @@ export function AnalyticsOverview({ analytics, profile }: AnalyticsOverviewProps
     {
       label: "KAAMSCORE™ Trust Index",
       value: profile.kaamScore.totalScore,
-      subvalue: `${profile.kaamScore.tier} (Top ${100 - profile.kaamScore.percentile}%)`,
+      subvalue: `${profile.kaamScore.tier} • Evidence-Backed Tier`,
       icon: Award,
       trend: "+18 pts this quarter",
       accent: "text-forest-900",

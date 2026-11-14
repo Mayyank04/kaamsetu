@@ -36,6 +36,8 @@ export default function ExplorePage() {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const locations = [
+    "Guwahati",
+    "Dispur",
     "Jaipur",
     "Varanasi",
     "Pune",
@@ -47,6 +49,9 @@ export default function ExplorePage() {
   ];
 
   const popularSkills = [
+    "Assam Cane & Bamboo Joinery",
+    "Submersible Borewell Pumps",
+    "DISCOM Safety Earthing",
     "Rooftop Solar Array",
     "3-Phase Inverters",
     "Pure Silk Brocade",

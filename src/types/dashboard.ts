@@ -2,9 +2,15 @@ import { AvailabilityState } from "@/types/database.types";
 
 export type SkillVerificationType =
   | "self_declared"
+  | "ai_extracted"
+  | "worker_confirmed"
   | "voice_attested"
-  | "digilocker_verified"
-  | "peer_confirmed";
+  | "customer_confirmed"
+  | "peer_confirmed"
+  | "peer_endorsed"
+  | "third_party_verified"
+  | "official_government_verified"
+  | "digilocker_verified";
 
 export interface DashboardSkill {
   id: string;

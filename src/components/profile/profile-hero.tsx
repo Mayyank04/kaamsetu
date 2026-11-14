@@ -218,14 +218,16 @@ export function ProfileHero({
           </div>
 
           <div className="text-xs text-forest font-semibold">
-            {profile.kaamScore.tier} • Top {100 - profile.kaamScore.percentile}% in Region
+            {profile.kaamScore.tier} • Verified Evidence Tier
           </div>
 
           {/* Daily Rate */}
           <div className="pt-2 border-t border-forest/10 flex items-center justify-between text-xs">
             <span className="text-charcoal-muted font-medium">Standard Daily Rate:</span>
             <span className="font-bold text-forest font-mono">
-              ₹{profile.dailyRateMin} - ₹{profile.dailyRateMax}
+              {profile.dailyRateMin && profile.dailyRateMax
+                ? `₹${profile.dailyRateMin} - ₹${profile.dailyRateMax}`
+                : "Custom / On Consultation"}
             </span>
           </div>
 

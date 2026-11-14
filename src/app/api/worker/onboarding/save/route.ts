@@ -7,6 +7,25 @@ import { requireAuthenticatedUser } from "@/lib/auth/server";
 import { calculateKaamScore } from "@/lib/scoring/kaamscore";
 import { signCredentialPayload, CanonicalCredentialPayload } from "@/lib/crypto/credential-signer";
 
+// Resolve appropriate valid PIN code adhering to regional context if not explicitly provided
+function resolvePincode(explicitPin?: string, city?: string, state?: string): string {
+  if (explicitPin && /^[1-9][0-9]{5}$/.test(explicitPin)) {
+    return explicitPin;
+  }
+  const s = (state || "").toLowerCase();
+  const c = (city || "").toLowerCase();
+  if (s.includes("assam") || c.includes("guwahati") || c.includes("dispur")) return "781001";
+  if (s.includes("rajasthan") || c.includes("jaipur")) return "302001";
+  if (s.includes("uttar pradesh") || c.includes("varanasi")) return "221001";
+  if (s.includes("maharashtra") || c.includes("pune") || c.includes("mumbai")) return "411001";
+  if (s.includes("karnataka") || c.includes("bengaluru") || c.includes("bangalore")) return "560001";
+  if (s.includes("tamil nadu") || c.includes("chennai")) return "600001";
+  if (s.includes("west bengal") || c.includes("kolkata")) return "700001";
+  if (s.includes("telangana") || c.includes("hyderabad")) return "500001";
+  if (s.includes("delhi")) return "110001";
+  return "781001"; // Default to Assam pilot region
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuthenticatedUser();
@@ -39,6 +58,7 @@ export async function POST(request: NextRequest) {
     const provisionalScore = scoreResult.totalScore;
     const scoreLevel = provisionalScore >= 500 ? 3 : 2;
     const scoreTier = scoreResult.tier;
+    const resolvedPincode = resolvePincode(data.pincode, data.city, data.state);
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const qrVerificationUrl = `${appUrl}/verify/${registryId}`;
@@ -56,9 +76,10 @@ export async function POST(request: NextRequest) {
       yearsExperience: data.yearsExperience,
       city: data.city,
       state: data.state,
+      pincode: resolvedPincode,
       dailyRateEstimate: {
-        min: data.dailyRateMin || 1100,
-        max: data.dailyRateMax || 1800,
+        min: data.dailyRateMin ?? null,
+        max: data.dailyRateMax ?? null,
       },
       skills: data.skills,
       equipmentHandled: data.equipmentHandled,
@@ -127,10 +148,11 @@ export async function POST(request: NextRequest) {
             headline: data.headline,
             bio: data.bio,
             years_experience: data.yearsExperience,
-            daily_rate_min: data.dailyRateMin || 1100,
-            daily_rate_max: data.dailyRateMax || 1800,
+            daily_rate_min: data.dailyRateMin ?? null,
+            daily_rate_max: data.dailyRateMax ?? null,
             city: data.city,
             state: data.state,
+            pincode: resolvedPincode,
             languages: data.languages,
             kaamscore: provisionalScore,
             kaamscore_level: scoreLevel,
@@ -158,11 +180,11 @@ export async function POST(request: NextRequest) {
             headline: data.headline,
             bio: data.bio,
             years_experience: data.yearsExperience,
-            daily_rate_min: data.dailyRateMin || 1100,
-            daily_rate_max: data.dailyRateMax || 1800,
+            daily_rate_min: data.dailyRateMin ?? null,
+            daily_rate_max: data.dailyRateMax ?? null,
             city: data.city,
             state: data.state,
-            pincode: "110001",
+            pincode: resolvedPincode,
             languages: data.languages,
             kaamscore: provisionalScore,
             kaamscore_level: scoreLevel,

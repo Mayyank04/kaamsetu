@@ -11,10 +11,66 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DashboardSkill } from "@/types/dashboard";
+import { DashboardSkill, SkillVerificationType } from "@/types/dashboard";
 
 interface ProfileSkillsProps {
   skills: DashboardSkill[];
+}
+
+function getSkillBadge(type: SkillVerificationType) {
+  switch (type) {
+    case "official_government_verified":
+    case "digilocker_verified":
+      return (
+        <Badge className="bg-emerald-600/15 text-emerald-800 border-emerald-600/30 text-[9px] font-mono shrink-0">
+          GOV VERIFIED (DIGILOCKER)
+        </Badge>
+      );
+    case "customer_confirmed":
+      return (
+        <Badge className="bg-blue-500/15 text-blue-800 border-blue-500/30 text-[9px] font-mono shrink-0">
+          CUSTOMER CONFIRMED (LEDGER)
+        </Badge>
+      );
+    case "peer_endorsed":
+    case "peer_confirmed":
+      return (
+        <Badge className="bg-teal-500/15 text-teal-800 border-teal-500/30 text-[9px] font-mono shrink-0">
+          PEER ENDORSED
+        </Badge>
+      );
+    case "third_party_verified":
+      return (
+        <Badge className="bg-indigo-500/15 text-indigo-800 border-indigo-500/30 text-[9px] font-mono shrink-0">
+          THIRD-PARTY AUDITED
+        </Badge>
+      );
+    case "voice_attested":
+      return (
+        <Badge className="bg-forest/15 text-forest border-forest/30 text-[9px] font-mono shrink-0">
+          VOICE AI ATTESTED
+        </Badge>
+      );
+    case "worker_confirmed":
+      return (
+        <Badge className="bg-sand/30 text-sand-800 border-sand/50 text-[9px] font-mono shrink-0">
+          WORKER CONFIRMED
+        </Badge>
+      );
+    case "ai_extracted":
+      return (
+        <Badge className="bg-amber-500/15 text-amber-800 border-amber-500/30 text-[9px] font-mono shrink-0">
+          AI EXTRACTED (PENDING)
+        </Badge>
+      );
+    case "self_declared":
+    default:
+      return (
+        <Badge variant="outline" className="bg-forest/5 text-charcoal-muted border-forest/20 text-[9px] font-mono shrink-0">
+          SELF-DECLARED
+        </Badge>
+      );
+  }
 }
 
 export function ProfileSkills({ skills }: ProfileSkillsProps) {
@@ -63,13 +119,7 @@ export function ProfileSkills({ skills }: ProfileSkillsProps) {
                   </div>
                 </div>
 
-                <Badge className="bg-emerald-500/15 text-emerald-800 border-emerald-500/30 text-[9px] font-mono shrink-0">
-                  {s.verificationType === "digilocker_verified"
-                    ? "DIGILOCKER VERIFIED"
-                    : s.verificationType === "voice_attested"
-                    ? "VOICE AI ATTESTED"
-                    : "PEER CONFIRMED"}
-                </Badge>
+                {getSkillBadge(s.verificationType)}
               </div>
             ))}
           </div>
@@ -107,12 +157,7 @@ export function ProfileSkills({ skills }: ProfileSkillsProps) {
                     </div>
                   </div>
 
-                  <Badge
-                    variant="outline"
-                    className="bg-forest/5 text-charcoal-muted border-forest/20 text-[9px] font-mono shrink-0"
-                  >
-                    SELF-DECLARED
-                  </Badge>
+                  {getSkillBadge(s.verificationType)}
                 </div>
               ))}
             </div>
@@ -122,6 +167,13 @@ export function ProfileSkills({ skills }: ProfileSkillsProps) {
             Note: Self-declared skills reflect the craftsman&apos;s stated capabilities. They graduate to Verified status as client bookings and peer evaluations are logged on KAAMSETU.
           </div>
         </div>
+      </div>
+
+      <div className="p-3 rounded-xl bg-forest/5 border border-forest/10 text-[11px] text-charcoal-muted flex items-center gap-2">
+        <ShieldCheck className="w-4 h-4 text-forest shrink-0" />
+        <span>
+          <strong>Trust Framework:</strong> Credential cryptographic integrity verified via HMAC-SHA256. Independent truth of underlying claims requires verified customer bookings or institutional attestations.
+        </span>
       </div>
     </div>
   );

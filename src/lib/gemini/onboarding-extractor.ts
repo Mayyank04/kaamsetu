@@ -111,6 +111,12 @@ export function extractDeterministicFallback(
     name = nameMatch[1].trim();
   } else if (lower.includes("rameshwar") || transcript.includes("रामेश्वर") || transcript.includes("ৰামেশ্বৰ")) {
     name = "Rameshwar Sharma";
+  } else if (lower.includes("dipak") || transcript.includes("দীপক")) {
+    name = "Dipak Kalita";
+  } else if (lower.includes("bipul") || transcript.includes("বিপুল")) {
+    name = "Bipul Das";
+  } else if (lower.includes("ratan") || transcript.includes("ৰতন")) {
+    name = "Ratan Gogoi";
   } else if (lower.includes("sunita") || transcript.includes("सुनीता")) {
     name = "Sunita Devi";
   } else if (lower.includes("rafiq") || transcript.includes("रफीक")) {
@@ -290,7 +296,7 @@ export function extractDeterministicFallback(
   else if (lower.includes("mumbai") || transcript.includes("मुंबई")) { city = "Mumbai"; state = "Maharashtra"; }
   else if (lower.includes("kolkata") || transcript.includes("কলকাতা")) { city = "Kolkata"; state = "West Bengal"; }
   else if (lower.includes("tirupati") || transcript.includes("తిరుపతి")) { city = "Tirupati"; state = "Andhra Pradesh"; }
-  else if (lower.includes("guwahati") || transcript.includes("গুৱাহাটী")) { city = "Guwahati"; state = "Assam"; }
+  else if (lower.includes("guwahati") || lower.includes("dispur") || lower.includes("beltola") || lower.includes("kamrup") || transcript.includes("গুৱাহাটী") || transcript.includes("দিছপুৰ") || transcript.includes("বেলতলা") || transcript.includes("কামৰূপ")) { city = "Guwahati"; state = "Assam"; }
 
   if (!city) {
     missing.push("Operating City & Primary District");

@@ -5,8 +5,8 @@ import { Layers, CheckCircle2, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProfileServicesProps {
-  dailyRateMin: number;
-  dailyRateMax: number;
+  dailyRateMin?: number | null;
+  dailyRateMax?: number | null;
   onRequestBooking: (serviceTitle?: string) => void;
 }
 
@@ -15,18 +15,21 @@ export function ProfileServices({
   dailyRateMax,
   onRequestBooking,
 }: ProfileServicesProps) {
+  const minRateStr = dailyRateMin ? `₹${dailyRateMin} / day` : "Scope-Based Consultation";
+  const maxRateStr = dailyRateMax ? `₹${dailyRateMax} / day` : "Custom Project Contracting";
+
   const defaultServices = [
     {
       title: "Commercial Rooftop Solar Grid Synchronization",
       description:
         "Complete 3-phase grid tie-in, DC/AC cabling, inverter parameter setup, and DISCOM net-metering inspection readiness.",
-      indicativeRate: `₹${dailyRateMax} / day`,
+      indicativeRate: maxRateStr,
     },
     {
       title: "Industrial Distribution Panel & Busbar Assembly",
       description:
         "Busbar chamber installation, MCCB/MCB sizing, ferrule labeling, phase balancing, and thermal imaging verification.",
-      indicativeRate: `₹${dailyRateMin} / day`,
+      indicativeRate: minRateStr,
     },
     {
       title: "Substation Earthing Pit Testing & Certification",

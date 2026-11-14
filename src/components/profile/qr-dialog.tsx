@@ -97,6 +97,9 @@ export function QRDialog({
             <ShieldCheck className="w-3.5 h-3.5" />
             Scannable by Any Smartphone Camera
           </p>
+          <p className="text-[10px] text-charcoal-muted leading-tight pt-1">
+            Cryptographic integrity verified via HMAC-SHA256 non-repudiation. Independent truth of underlying claims requires verified customer bookings or institutional attestations.
+          </p>
         </div>
 
         <div className="pt-2 flex flex-col gap-2">

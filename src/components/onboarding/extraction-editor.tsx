@@ -44,14 +44,19 @@ export function ExtractionEditor({
   const [occupation, setOccupation] = React.useState(extractedData.occupation);
   const [category, setCategory] = React.useState(extractedData.category);
   const [yearsExperience, setYearsExperience] = React.useState<number | null>(extractedData.experienceYears);
-  const [city, setCity] = React.useState(extractedData.city || "Jaipur");
-  const [state, setState] = React.useState(extractedData.state || "Rajasthan");
+  const [city, setCity] = React.useState(extractedData.city || "");
+  const [state, setState] = React.useState(extractedData.state || "");
+  const [pincode, setPincode] = React.useState("");
   const [headline, setHeadline] = React.useState(extractedData.headline);
   const [bio, setBio] = React.useState(extractedData.bio);
   const [skills, setSkills] = React.useState<string[]>(extractedData.skills);
   const [newSkillInput, setNewSkillInput] = React.useState("");
-  const [dailyRateMin, setDailyRateMin] = React.useState<number>(1100);
-  const [dailyRateMax, setDailyRateMax] = React.useState<number>(1700);
+  const [dailyRateMin, setDailyRateMin] = React.useState<number | null>(
+    (extractedData as any).dailyRateMin ?? null
+  );
+  const [dailyRateMax, setDailyRateMax] = React.useState<number | null>(
+    (extractedData as any).dailyRateMax ?? null
+  );
 
   const handleAddSkill = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,10 +79,11 @@ export function ExtractionEditor({
       yearsExperience,
       city,
       state,
+      pincode: pincode.trim() || undefined,
       skills,
       equipmentHandled: extractedData.equipmentHandled,
-      dailyRateMin,
-      dailyRateMax,
+      dailyRateMin: dailyRateMin ?? undefined,
+      dailyRateMax: dailyRateMax ?? undefined,
       headline,
       bio,
       languages: [language.toUpperCase(), "Hindi"],
@@ -163,12 +169,12 @@ export function ExtractionEditor({
 
           <div>
             <label className="font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-              Operating City & State
+              Operating City, State & PIN Code
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
                 type="text"
-                placeholder="City (e.g. Jaipur)"
+                placeholder="City (e.g. Guwahati)"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 required
@@ -176,47 +182,57 @@ export function ExtractionEditor({
               />
               <input
                 type="text"
-                placeholder="State (e.g. Rajasthan)"
+                placeholder="State (e.g. Assam)"
                 value={state}
                 onChange={(e) => setState(e.target.value)}
                 required
                 className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm text-forest focus:outline-none focus:border-forest"
               />
+              <input
+                type="text"
+                placeholder="PIN Code (e.g. 781001)"
+                maxLength={6}
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm font-mono text-forest focus:outline-none focus:border-forest"
+              />
             </div>
           </div>
         </div>
 
-        {/* Daily Rate Expectation */}
+        {/* Daily Rate Expectation (Non-invention: optional) */}
         <div className="p-4 rounded-xs bg-forest/5 border border-forest/10 space-y-2 text-xs">
           <label className="font-bold uppercase tracking-wider text-forest block">
-            Estimated Daily Rate Range (₹ / day)
+            Estimated Daily Rate Range (₹ / day, Optional)
           </label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <span className="text-[10px] text-charcoal-muted block">Minimum Daily Rate</span>
+              <span className="text-[10px] text-charcoal-muted block">Minimum Daily Rate (Optional)</span>
               <div className="relative mt-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-muted text-xs">₹</span>
                 <input
                   type="number"
-                  min="500"
+                  min="0"
                   step="50"
-                  value={dailyRateMin}
-                  onChange={(e) => setDailyRateMin(Number(e.target.value))}
+                  placeholder="Unstated (e.g. 900)"
+                  value={dailyRateMin ?? ""}
+                  onChange={(e) => setDailyRateMin(e.target.value === "" ? null : Math.max(0, parseInt(e.target.value, 10)))}
                   className="w-full h-10 pl-7 pr-3 rounded-xs border border-forest/20 text-xs font-mono font-bold text-forest bg-card"
                 />
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] text-charcoal-muted block">Maximum Daily Rate</span>
+              <span className="text-[10px] text-charcoal-muted block">Maximum Daily Rate (Optional)</span>
               <div className="relative mt-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-muted text-xs">₹</span>
                 <input
                   type="number"
-                  min={dailyRateMin}
+                  min={dailyRateMin ?? 0}
                   step="50"
-                  value={dailyRateMax}
-                  onChange={(e) => setDailyRateMax(Number(e.target.value))}
+                  placeholder="Unstated (e.g. 1600)"
+                  value={dailyRateMax ?? ""}
+                  onChange={(e) => setDailyRateMax(e.target.value === "" ? null : Math.max(0, parseInt(e.target.value, 10)))}
                   className="w-full h-10 pl-7 pr-3 rounded-xs border border-forest/20 text-xs font-mono font-bold text-forest bg-card"
                 />
               </div>

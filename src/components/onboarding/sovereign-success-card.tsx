@@ -47,6 +47,7 @@ export interface SovereignCardData {
   kaamScore: {
     totalScore: number;
     level: number;
+    tier?: string;
     percentile?: string;
     verifiedFactors?: string[];
   };
@@ -230,7 +231,7 @@ export function SovereignSuccessCard({
                 {cardData.kaamScore.totalScore}
               </div>
               <div className="text-[11px] text-ivory/80 font-mono">
-                {cardData.kaamScore.percentile || "Level 4 Sovereign Tier"}
+                {cardData.kaamScore.tier || cardData.kaamScore.percentile || `Level ${cardData.kaamScore.level} Evidence Tier`}
               </div>
               <Badge
                 variant="outline"
