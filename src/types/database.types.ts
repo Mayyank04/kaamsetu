@@ -1641,6 +1641,202 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      institutional_credentials: {
+        Row: {
+          id: string;
+          institution_id: string;
+          cohort_id: string;
+          participant_id: string;
+          worker_profile_id: string;
+          credential_identifier: string;
+          trade_title: string;
+          nsqf_level: number;
+          assessment_reference: string;
+          authorized_issuer_name: string;
+          authorized_issuer_role: string;
+          learner_consent_obtained: boolean;
+          status: "issued" | "verified" | "suspended" | "revoked";
+          issued_at: string;
+          verified_at: string | null;
+          revoked_at: string | null;
+          revocation_reason: string | null;
+          schema_version: string;
+          integrity_signature: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          cohort_id: string;
+          participant_id: string;
+          worker_profile_id: string;
+          credential_identifier: string;
+          trade_title: string;
+          nsqf_level?: number;
+          assessment_reference: string;
+          authorized_issuer_name: string;
+          authorized_issuer_role: string;
+          learner_consent_obtained?: boolean;
+          status?: "issued" | "verified" | "suspended" | "revoked";
+          issued_at?: string;
+          verified_at?: string | null;
+          revoked_at?: string | null;
+          revocation_reason?: string | null;
+          schema_version?: string;
+          integrity_signature: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_id?: string;
+          cohort_id?: string;
+          participant_id?: string;
+          worker_profile_id?: string;
+          credential_identifier?: string;
+          trade_title?: string;
+          nsqf_level?: number;
+          assessment_reference?: string;
+          authorized_issuer_name?: string;
+          authorized_issuer_role?: string;
+          learner_consent_obtained?: boolean;
+          status?: "issued" | "verified" | "suspended" | "revoked";
+          issued_at?: string;
+          verified_at?: string | null;
+          revoked_at?: string | null;
+          revocation_reason?: string | null;
+          schema_version?: string;
+          integrity_signature?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institutional_partner_api_keys: {
+        Row: {
+          id: string;
+          institution_id: string;
+          key_name: string;
+          key_prefix: string;
+          api_key_hash: string;
+          is_sandbox: boolean;
+          rate_limit_per_minute: number;
+          status: "active" | "suspended" | "revoked";
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          key_name: string;
+          key_prefix: string;
+          api_key_hash: string;
+          is_sandbox?: boolean;
+          rate_limit_per_minute?: number;
+          status?: "active" | "suspended" | "revoked";
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_id?: string;
+          key_name?: string;
+          key_prefix?: string;
+          api_key_hash?: string;
+          is_sandbox?: boolean;
+          rate_limit_per_minute?: number;
+          status?: "active" | "suspended" | "revoked";
+          expires_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_disputes: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          dispute_type: "unpaid_wages" | "incorrect_work_record" | "false_review" | "unauthorized_sharing" | "credential_discrepancy" | "contractor_harassment" | "account_recovery";
+          target_id: string | null;
+          counterparty_name: string;
+          evidence_notes: string;
+          claimed_amount: number | null;
+          status: "submitted" | "under_review" | "in_mediation" | "resolved_worker_upheld" | "resolved_counterparty_upheld" | "dismissed" | "appealed";
+          resolution_summary: string | null;
+          assigned_reviewer_id: string | null;
+          resolved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          dispute_type: "unpaid_wages" | "incorrect_work_record" | "false_review" | "unauthorized_sharing" | "credential_discrepancy" | "contractor_harassment" | "account_recovery";
+          target_id?: string | null;
+          counterparty_name: string;
+          evidence_notes: string;
+          claimed_amount?: number | null;
+          status?: "submitted" | "under_review" | "in_mediation" | "resolved_worker_upheld" | "resolved_counterparty_upheld" | "dismissed" | "appealed";
+          resolution_summary?: string | null;
+          assigned_reviewer_id?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          dispute_type?: "unpaid_wages" | "incorrect_work_record" | "false_review" | "unauthorized_sharing" | "credential_discrepancy" | "contractor_harassment" | "account_recovery";
+          target_id?: string | null;
+          counterparty_name?: string;
+          evidence_notes?: string;
+          claimed_amount?: number | null;
+          status?: "submitted" | "under_review" | "in_mediation" | "resolved_worker_upheld" | "resolved_counterparty_upheld" | "dismissed" | "appealed";
+          resolution_summary?: string | null;
+          assigned_reviewer_id?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      opportunity_feedback_reports: {
+        Row: {
+          id: string;
+          opportunity_id: string;
+          reporter_profile_id: string;
+          report_type: "misleading_terms" | "unpaid_wages" | "unsafe_conditions" | "fake_opportunity" | "discriminatory_treatment";
+          details: string;
+          status: "submitted" | "investigating" | "action_taken" | "dismissed";
+          action_taken: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          opportunity_id: string;
+          reporter_profile_id: string;
+          report_type: "misleading_terms" | "unpaid_wages" | "unsafe_conditions" | "fake_opportunity" | "discriminatory_treatment";
+          details: string;
+          status?: "submitted" | "investigating" | "action_taken" | "dismissed";
+          action_taken?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          opportunity_id?: string;
+          reporter_profile_id?: string;
+          report_type?: "misleading_terms" | "unpaid_wages" | "unsafe_conditions" | "fake_opportunity" | "discriminatory_treatment";
+          details?: string;
+          status?: "submitted" | "investigating" | "action_taken" | "dismissed";
+          action_taken?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -1695,3 +1891,7 @@ export type PartnerCrmRecord = Database["public"]["Tables"]["partner_crm_records
 export type WorkforceOpportunity = Database["public"]["Tables"]["workforce_opportunities"]["Row"];
 export type WorkerOpportunityApplication = Database["public"]["Tables"]["worker_opportunity_applications"]["Row"];
 export type SkillsGapRecommendation = Database["public"]["Tables"]["skills_gap_recommendations"]["Row"];
+export type InstitutionalCredential = Database["public"]["Tables"]["institutional_credentials"]["Row"];
+export type InstitutionalPartnerApiKey = Database["public"]["Tables"]["institutional_partner_api_keys"]["Row"];
+export type WorkerDispute = Database["public"]["Tables"]["worker_disputes"]["Row"];
+export type OpportunityFeedbackReport = Database["public"]["Tables"]["opportunity_feedback_reports"]["Row"];

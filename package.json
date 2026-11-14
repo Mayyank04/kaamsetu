@@ -17,7 +17,8 @@
     "test:commercial": "tsx test/commercial-billing-invitation.test.ts",
     "test:production": "tsx test/production-readiness-and-operations.test.ts",
     "test:growth": "tsx test/sustainable-growth-and-retention.test.ts",
-    "test:phase10": "tsx test/national-network-and-infrastructure.test.ts"
+    "test:phase10": "tsx test/national-network-and-infrastructure.test.ts",
+    "test:phase11": "tsx test/interstate-expansion-and-ecosystem.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
