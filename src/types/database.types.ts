@@ -1321,6 +1321,10 @@ export interface Database {
           discovery_radius_km: number;
           status: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags: Record<string, boolean>;
+          launch_owner_id: string | null;
+          accountable_partner_name: string | null;
+          active_incident_count: number;
+          readiness_score: number;
           created_at: string;
           updated_at: string;
         };
@@ -1337,6 +1341,10 @@ export interface Database {
           discovery_radius_km?: number;
           status?: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags?: Record<string, boolean>;
+          launch_owner_id?: string | null;
+          accountable_partner_name?: string | null;
+          active_incident_count?: number;
+          readiness_score?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -1353,6 +1361,10 @@ export interface Database {
           discovery_radius_km?: number;
           status?: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags?: Record<string, boolean>;
+          launch_owner_id?: string | null;
+          accountable_partner_name?: string | null;
+          active_incident_count?: number;
+          readiness_score?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -1662,7 +1674,7 @@ export interface Database {
           authorized_issuer_name: string;
           authorized_issuer_role: string;
           learner_consent_obtained: boolean;
-          status: "issued" | "verified" | "suspended" | "revoked";
+          status: "issued" | "active" | "verified" | "suspended" | "revoked" | "expired";
           issued_at: string;
           verified_at: string | null;
           revoked_at: string | null;
@@ -1685,7 +1697,7 @@ export interface Database {
           authorized_issuer_name: string;
           authorized_issuer_role: string;
           learner_consent_obtained?: boolean;
-          status?: "issued" | "verified" | "suspended" | "revoked";
+          status?: "issued" | "active" | "verified" | "suspended" | "revoked" | "expired";
           issued_at?: string;
           verified_at?: string | null;
           revoked_at?: string | null;
@@ -1708,7 +1720,7 @@ export interface Database {
           authorized_issuer_name?: string;
           authorized_issuer_role?: string;
           learner_consent_obtained?: boolean;
-          status?: "issued" | "verified" | "suspended" | "revoked";
+          status?: "issued" | "active" | "verified" | "suspended" | "revoked" | "expired";
           issued_at?: string;
           verified_at?: string | null;
           revoked_at?: string | null;
@@ -1774,6 +1786,10 @@ export interface Database {
           resolution_summary: string | null;
           assigned_reviewer_id: string | null;
           resolved_at: string | null;
+          sla_due_at: string | null;
+          is_retaliatory_suspected: boolean;
+          confidential_evidence_urls: string[];
+          appeal_reason: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1789,6 +1805,10 @@ export interface Database {
           resolution_summary?: string | null;
           assigned_reviewer_id?: string | null;
           resolved_at?: string | null;
+          sla_due_at?: string | null;
+          is_retaliatory_suspected?: boolean;
+          confidential_evidence_urls?: string[];
+          appeal_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1804,6 +1824,10 @@ export interface Database {
           resolution_summary?: string | null;
           assigned_reviewer_id?: string | null;
           resolved_at?: string | null;
+          sla_due_at?: string | null;
+          is_retaliatory_suspected?: boolean;
+          confidential_evidence_urls?: string[];
+          appeal_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2024,6 +2048,258 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      regional_launch_milestones: {
+        Row: {
+          id: string;
+          region_id: string;
+          stage: string;
+          milestone_name: string;
+          status: "pending" | "in_progress" | "completed" | "blocked" | "skipped";
+          accountable_owner_id: string | null;
+          target_date: string | null;
+          completed_at: string | null;
+          evidence_notes: string | null;
+          risk_assessment: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          stage: string;
+          milestone_name: string;
+          status?: "pending" | "in_progress" | "completed" | "blocked" | "skipped";
+          accountable_owner_id?: string | null;
+          target_date?: string | null;
+          completed_at?: string | null;
+          evidence_notes?: string | null;
+          risk_assessment?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          stage?: string;
+          milestone_name?: string;
+          status?: "pending" | "in_progress" | "completed" | "blocked" | "skipped";
+          accountable_owner_id?: string | null;
+          target_date?: string | null;
+          completed_at?: string | null;
+          evidence_notes?: string | null;
+          risk_assessment?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_operational_incidents: {
+        Row: {
+          id: string;
+          region_id: string;
+          title: string;
+          incident_type: "wage_theft" | "labor_violence" | "safety_violation" | "system_outage" | "credential_fraud" | "data_breach" | "regulatory_action";
+          severity: "low" | "medium" | "high" | "critical";
+          status: "open" | "investigating" | "mitigated" | "resolved" | "closed";
+          details: string;
+          reported_by: string | null;
+          resolved_by: string | null;
+          resolved_at: string | null;
+          resolution_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          title: string;
+          incident_type: "wage_theft" | "labor_violence" | "safety_violation" | "system_outage" | "credential_fraud" | "data_breach" | "regulatory_action";
+          severity?: "low" | "medium" | "high" | "critical";
+          status?: "open" | "investigating" | "mitigated" | "resolved" | "closed";
+          details: string;
+          reported_by?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          resolution_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          title?: string;
+          incident_type?: "wage_theft" | "labor_violence" | "safety_violation" | "system_outage" | "credential_fraud" | "data_breach" | "regulatory_action";
+          severity?: "low" | "medium" | "high" | "critical";
+          status?: "open" | "investigating" | "mitigated" | "resolved" | "closed";
+          details?: string;
+          reported_by?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          resolution_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institution_authorized_signatories: {
+        Row: {
+          id: string;
+          institution_id: string;
+          full_name: string;
+          designation: string;
+          signatory_key_fingerprint: string;
+          is_active: boolean;
+          authorized_from: string;
+          authorized_until: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          full_name: string;
+          designation: string;
+          signatory_key_fingerprint: string;
+          is_active?: boolean;
+          authorized_from?: string;
+          authorized_until?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_id?: string;
+          full_name?: string;
+          designation?: string;
+          signatory_key_fingerprint?: string;
+          is_active?: boolean;
+          authorized_from?: string;
+          authorized_until?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_privacy_settings: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          field_visibility: Record<string, boolean>;
+          consent_expires_at: string | null;
+          auto_renew_consent: boolean;
+          allow_cross_region_discovery: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          field_visibility?: Record<string, boolean>;
+          consent_expires_at?: string | null;
+          auto_renew_consent?: boolean;
+          allow_cross_region_discovery?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          field_visibility?: Record<string, boolean>;
+          consent_expires_at?: string | null;
+          auto_renew_consent?: boolean;
+          allow_cross_region_discovery?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      financial_gst_ledger: {
+        Row: {
+          id: string;
+          invoice_number: string;
+          organization_id: string;
+          region_id: string | null;
+          taxable_amount: number;
+          gst_rate: number;
+          cgst_amount: number;
+          sgst_amount: number;
+          igst_amount: number;
+          total_tax_amount: number;
+          grand_total: number;
+          state_code: string;
+          is_interstate: boolean;
+          payment_date: string;
+          reconciliation_status: "pending" | "reconciled" | "refunded" | "disputed";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          invoice_number: string;
+          organization_id: string;
+          region_id?: string | null;
+          taxable_amount: number;
+          gst_rate?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          total_tax_amount: number;
+          grand_total: number;
+          state_code: string;
+          is_interstate?: boolean;
+          payment_date?: string;
+          reconciliation_status?: "pending" | "reconciled" | "refunded" | "disputed";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          invoice_number?: string;
+          organization_id?: string;
+          region_id?: string | null;
+          taxable_amount?: number;
+          gst_rate?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          total_tax_amount?: number;
+          grand_total?: number;
+          state_code?: string;
+          is_interstate?: boolean;
+          payment_date?: string;
+          reconciliation_status?: "pending" | "reconciled" | "refunded" | "disputed";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_service_telemetry: {
+        Row: {
+          id: string;
+          region_id: string;
+          metric_name: string;
+          metric_value: number;
+          dimension_tags: Json;
+          is_simulated: boolean;
+          measured_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          metric_name: string;
+          metric_value: number;
+          dimension_tags?: Json;
+          is_simulated?: boolean;
+          measured_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          metric_name?: string;
+          metric_value?: number;
+          dimension_tags?: Json;
+          is_simulated?: boolean;
+          measured_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -2086,3 +2362,9 @@ export type RegionalLaunchTransition = Database["public"]["Tables"]["regional_la
 export type CrossRegionProjectStaffing = Database["public"]["Tables"]["cross_region_project_staffing"]["Row"];
 export type PaymentRecordLedger = Database["public"]["Tables"]["payment_records_ledger"]["Row"];
 export type OfflineVerificationLog = Database["public"]["Tables"]["offline_verification_logs"]["Row"];
+export type RegionalLaunchMilestone = Database["public"]["Tables"]["regional_launch_milestones"]["Row"];
+export type RegionalOperationalIncident = Database["public"]["Tables"]["regional_operational_incidents"]["Row"];
+export type InstitutionAuthorizedSignatory = Database["public"]["Tables"]["institution_authorized_signatories"]["Row"];
+export type WorkerPrivacySetting = Database["public"]["Tables"]["worker_privacy_settings"]["Row"];
+export type FinancialGstLedger = Database["public"]["Tables"]["financial_gst_ledger"]["Row"];
+export type RegionalServiceTelemetry = Database["public"]["Tables"]["regional_service_telemetry"]["Row"];

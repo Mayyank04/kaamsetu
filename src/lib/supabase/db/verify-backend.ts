@@ -49,6 +49,7 @@ export async function runBackendVerification() {
   const migration11Path = path.join(projectRoot, "supabase/migrations/20261114000011_national_multi_region_network.sql");
   const migration12Path = path.join(projectRoot, "supabase/migrations/20261114000012_interstate_expansion_and_ecosystem.sql");
   const migration13Path = path.join(projectRoot, "supabase/migrations/20261114000013_national_network_readiness.sql");
+  const migration14Path = path.join(projectRoot, "supabase/migrations/20261115000014_national_operations_scale.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
@@ -60,6 +61,7 @@ export async function runBackendVerification() {
   assert(fs.existsSync(migration11Path), "1. SQL Migrations", "Migration 11 (National Multi-Region Network) exists");
   assert(fs.existsSync(migration12Path), "1. SQL Migrations", "Migration 12 (Interstate Expansion & Ecosystem) exists");
   assert(fs.existsSync(migration13Path), "1. SQL Migrations", "Migration 13 (National Network Readiness) exists");
+  assert(fs.existsSync(migration14Path), "1. SQL Migrations", "Migration 14 (National Operations & Scale) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
@@ -215,6 +217,30 @@ export async function runBackendVerification() {
       tableRegex.test(m13Content),
       "1. SQL Migrations",
       `Phase 12 Table public.${table} defined in schema`
+    );
+  }
+
+  const m14Content = fs.readFileSync(migration14Path, "utf-8");
+  const phase13Tables = [
+    "regional_launch_milestones",
+    "regional_operational_incidents",
+    "institution_authorized_signatories",
+    "worker_privacy_settings",
+    "financial_gst_ledger",
+    "regional_service_telemetry",
+  ];
+
+  for (const table of phase13Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m14Content),
+      "1. SQL Migrations",
+      `Phase 13 Table public.${table} defined in schema`
+    );
+    assert(
+      m14Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 13 RLS enabled on public.${table}`
     );
   }
 
