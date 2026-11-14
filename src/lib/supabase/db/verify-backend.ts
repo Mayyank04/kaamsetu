@@ -251,9 +251,9 @@ export async function runBackendVerification() {
     "Extracted worker identity from Hindi transcript"
   );
   assert(
-    bareExtraction.experienceYears === 0,
+    bareExtraction.experienceYears === null,
     "7. AI Non-Invention",
-    "Non-invention invariant: experienceYears is 0 when unmentioned (never defaulted)"
+    "Non-invention invariant: experienceYears is null when unmentioned (never defaulted to 0 or 5)"
   );
   assert(
     bareExtraction.servicesOffered.every((s) => !s.indicativeRate),
@@ -296,6 +296,34 @@ export async function runBackendVerification() {
       `Language extraction pipeline validated for '${lang}'`
     );
   }
+
+  // Case D: Assamese Pilot Voice Extraction & Indic Numeral Normalization
+  const assameseTranscript = "নমস্কাৰ, মোৰ নাম ৰামেশ্বৰ শৰ্মা। মই গুৱাহাটীত ১২ বছৰ ধৰি সৌৰ পেনেল আৰু বিজুলীৰ কাম কৰি আছোঁ। দৈনিক মজুৰি ১৫০০ টকা।";
+  const assameseResult = await extractOnboardingProfile({
+    transcript: assameseTranscript,
+    language: "as",
+    inputMode: "voice",
+  });
+  assert(
+    assameseResult.fullName.includes("Rameshwar") || assameseResult.fullName.includes("ৰামেশ্বৰ"),
+    "7. AI Non-Invention",
+    "Assamese pilot: Extracted worker identity from Assamese transcript"
+  );
+  assert(
+    assameseResult.experienceYears === 12,
+    "7. AI Non-Invention",
+    "Assamese pilot: Extracted 12 years experience from native Assamese numerals (১২ বছৰ)"
+  );
+  assert(
+    assameseResult.city === "Guwahati" && assameseResult.state === "Assam",
+    "7. AI Non-Invention",
+    "Assamese pilot: Extracted operating city (Guwahati) and state (Assam)"
+  );
+  assert(
+    assameseResult.servicesOffered.some((s) => s.indicativeRate?.includes("1500")),
+    "7. AI Non-Invention",
+    "Assamese pilot: Extracted stated daily wage in Taka (১৫০০ টকা)"
+  );
 
   // ---------------------------------------------------------------------------
   // TEST SUITE 8: Genuine Scannable QR & Verification Registry

@@ -9,12 +9,12 @@ const personaSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Strict Environment Guard: Disallow demo persona login if demo mode is not explicitly enabled
-    if (!isConfigured.demoAuth) {
+    // 1. Strict Environment Guard: Disallow demo persona login in production or when demo mode is not explicitly enabled
+    if (process.env.NODE_ENV === "production" || !isConfigured.demoAuth) {
       return NextResponse.json(
         {
           success: false,
-          message: "Demo persona authentication is disabled in this environment.",
+          message: "Demo persona authentication is strictly disabled in production.",
         },
         { status: 403 }
       );
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Set secure HttpOnly cookie with the verified persona key only
     response.cookies.set("kaamsetu_demo_persona", persona.personaKey, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: (process.env.NODE_ENV as string) === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",

@@ -43,7 +43,7 @@ export function ExtractionEditor({
   const [fullName, setFullName] = React.useState(extractedData.fullName);
   const [occupation, setOccupation] = React.useState(extractedData.occupation);
   const [category, setCategory] = React.useState(extractedData.category);
-  const [yearsExperience, setYearsExperience] = React.useState(extractedData.experienceYears);
+  const [yearsExperience, setYearsExperience] = React.useState<number | null>(extractedData.experienceYears);
   const [city, setCity] = React.useState(extractedData.city || "Jaipur");
   const [state, setState] = React.useState(extractedData.state || "Rajasthan");
   const [headline, setHeadline] = React.useState(extractedData.headline);
@@ -154,9 +154,9 @@ export function ExtractionEditor({
               type="number"
               min="0"
               max="60"
-              value={yearsExperience}
-              onChange={(e) => setYearsExperience(Number(e.target.value))}
-              required
+              placeholder="Unreported (Optional)"
+              value={yearsExperience ?? ""}
+              onChange={(e) => setYearsExperience(e.target.value === "" ? null : Math.max(0, parseInt(e.target.value, 10)))}
               className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm font-semibold text-forest focus:outline-none focus:border-forest"
             />
           </div>

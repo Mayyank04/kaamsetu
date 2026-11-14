@@ -3,6 +3,11 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isConfigured } from "@/lib/env";
 import { DEMO_PERSONAS } from "@/lib/auth/personas";
 import { AppRole } from "@/types/database.types";
+import {
+  validateOtpVerifyAttempt,
+  recordFailedOtpAttempt,
+  clearFailedOtpAttempts,
+} from "@/lib/security/rate-limiter";
 import { z } from "zod";
 
 const verifySchema = z.object({
@@ -23,6 +28,19 @@ export async function POST(request: NextRequest) {
       : rawDigits;
     const formattedPhone = `+91${clean10Digits}`;
 
+    // Brute-force lockout protection (5 failed attempts locks for 15 minutes)
+    const bruteForceCheck = await validateOtpVerifyAttempt(formattedPhone);
+    if (!bruteForceCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: bruteForceCheck.reason || "Too many failed attempts. Account temporarily locked.",
+          retryAfterSeconds: bruteForceCheck.remainingSeconds,
+        },
+        { status: 429 }
+      );
+    }
+
     // 1. Production Mode: Verify OTP via Supabase Auth
     if (isConfigured.supabase) {
       const supabase = await createServerSupabaseClient();
@@ -33,6 +51,8 @@ export async function POST(request: NextRequest) {
       });
 
       if (error || !authData.user) {
+        // Record failed attempt for brute-force tracking
+        await recordFailedOtpAttempt(formattedPhone);
         return NextResponse.json(
           {
             success: false,
@@ -41,6 +61,9 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      // Success: clear brute force counter
+      await clearFailedOtpAttempts(formattedPhone);
 
       // Check or create profile in public.profiles table
       const { data: existingProfile } = await supabase
@@ -52,11 +75,13 @@ export async function POST(request: NextRequest) {
       let profile = existingProfile;
       if (!profile) {
         const defaultName = data.fullName?.trim() || "Verified User";
+        // Enforce safe role assignment: client can never self-assign admin
+        const assignedRole: AppRole = data.role === "admin" ? "customer" : (data.role as AppRole);
         const { data: newProfile, error: profileErr } = await supabase
           .from("profiles")
           .insert({
             id: authData.user.id,
-            role: data.role as AppRole,
+            role: assignedRole,
             full_name: defaultName,
             phone: formattedPhone,
             is_verified: true,
@@ -88,9 +113,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 2. Demo Evaluation Mode: Only when demo auth is explicitly enabled
-    if (isConfigured.demoAuth) {
+    // 2. Demo Evaluation Mode: STRICTLY prohibited in production
+    if (isConfigured.demoAuth && process.env.NODE_ENV !== "production") {
       if (data.otp !== "123456") {
+        await recordFailedOtpAttempt(formattedPhone);
         return NextResponse.json(
           {
             success: false,
@@ -99,6 +125,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      await clearFailedOtpAttempts(formattedPhone);
 
       const personaKey = data.role === "worker" ? "worker-electrician" : "customer-contractor";
       const matched = DEMO_PERSONAS.find((p) => p.personaKey === personaKey)!;
@@ -119,7 +147,7 @@ export async function POST(request: NextRequest) {
       // Set demo cookie
       response.cookies.set("kaamsetu_demo_persona", personaKey, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: (process.env.NODE_ENV as string) === "production",
         sameSite: "lax",
         maxAge: 60 * 60 * 24 * 7,
         path: "/",

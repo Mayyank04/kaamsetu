@@ -28,7 +28,8 @@ export default function LoginPage() {
 
   const { switchPersona, refreshSession } = useAuth();
 
-  const [activeTab, setActiveTab] = React.useState<"personas" | "otp">("personas");
+  const allowDemo = process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH !== "false";
+  const [activeTab, setActiveTab] = React.useState<"personas" | "otp">(allowDemo ? "personas" : "otp");
   const [selectedRole, setSelectedRole] = React.useState<"worker" | "contractor">("worker");
   const [phoneNumber, setPhoneNumber] = React.useState("");
   const [fullName, setFullName] = React.useState("");
@@ -142,35 +143,37 @@ export default function LoginPage() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex rounded-xl bg-forest/5 p-1 border border-forest/15 text-xs font-medium">
-          <button
-            type="button"
-            onClick={() => setActiveTab("personas")}
-            className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
-              activeTab === "personas"
-                ? "bg-forest text-ivory shadow-xs font-bold"
-                : "text-charcoal-muted hover:text-forest"
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-sand" />
-            <span>Hackathon Quick-Sign In</span>
-            <Badge variant="outline" className="text-[10px] bg-sand/20 border-sand text-sand-800 hidden sm:inline-flex">
-              Fast Track
-            </Badge>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("otp")}
-            className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
-              activeTab === "otp"
-                ? "bg-forest text-ivory shadow-xs font-bold"
-                : "text-charcoal-muted hover:text-forest"
-            }`}
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span>Mobile OTP Login</span>
-          </button>
-        </div>
+        {allowDemo && (
+          <div className="flex rounded-xl bg-forest/5 p-1 border border-forest/15 text-xs font-medium">
+            <button
+              type="button"
+              onClick={() => setActiveTab("personas")}
+              className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                activeTab === "personas"
+                  ? "bg-forest text-ivory shadow-xs font-bold"
+                  : "text-charcoal-muted hover:text-forest"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-sand" />
+              <span>Hackathon Quick-Sign In</span>
+              <Badge variant="outline" className="text-[10px] bg-sand/20 border-sand text-sand-800 hidden sm:inline-flex">
+                Fast Track
+              </Badge>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("otp")}
+              className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                activeTab === "otp"
+                  ? "bg-forest text-ivory shadow-xs font-bold"
+                  : "text-charcoal-muted hover:text-forest"
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Mobile OTP Login</span>
+            </button>
+          </div>
+        )}
 
         {/* Feedback Message */}
         {statusMessage && (

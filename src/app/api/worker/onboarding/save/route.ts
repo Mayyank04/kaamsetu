@@ -4,6 +4,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isConfigured } from "@/lib/env";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
 import { requireAuthenticatedUser } from "@/lib/auth/server";
+import { calculateKaamScore } from "@/lib/scoring/kaamscore";
+import { signCredentialPayload, CanonicalCredentialPayload } from "@/lib/crypto/credential-signer";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,13 +26,19 @@ export async function POST(request: NextRequest) {
     const slug = `${baseSlug}-${randomSuffix}`;
 
     // Transparent, Documented KAAMSCORE Calculation strictly based on verified evidence
-    const voiceAttestationBase = 250;
-    const experiencePoints = Math.min(150, (data.yearsExperience || 0) * 10);
-    const skillsPoints = Math.min(150, (data.skills?.length || 0) * 15);
-    const provisionalScore = voiceAttestationBase + experiencePoints + skillsPoints;
+    const scoreResult = calculateKaamScore({
+      hasVoiceAttestation: true,
+      workerConfirmedVoice: true,
+      yearsExperience: data.yearsExperience,
+      verifiedSkillsCount: data.skills?.length || 0,
+      completedBookingsCount: 0,
+      peerEndorsementsCount: 0,
+      officialGovVerified: false,
+    });
 
+    const provisionalScore = scoreResult.totalScore;
     const scoreLevel = provisionalScore >= 500 ? 3 : 2;
-    const scoreTier = "Provisional Voice Attestation";
+    const scoreTier = scoreResult.tier;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const qrVerificationUrl = `${appUrl}/verify/${registryId}`;
@@ -59,14 +67,9 @@ export async function POST(request: NextRequest) {
         totalScore: provisionalScore,
         level: scoreLevel,
         tier: scoreTier,
-        isProvisional: true,
-        breakdown: {
-          spokenAudioProof: voiceAttestationBase,
-          experienceDepth: experiencePoints,
-          technicalSkillsIdentified: skillsPoints,
-          digiLockerOfficial: 0,
-          customerCompletedJobs: 0,
-        },
+        isProvisional: scoreResult.isProvisional,
+        completenessPercent: scoreResult.provisionalCompletenessPercent,
+        dimensions: scoreResult.dimensions,
       },
       aadhaarVerified: false,
       digiLockerLinked: false,
@@ -218,6 +221,43 @@ export async function POST(request: NextRequest) {
                 { onConflict: "worker_profile_id,skill_id" }
               );
           }
+        }
+      }
+
+      // Anchor cryptographic credential in credential_registry
+      if (targetWorkerProfileId) {
+        try {
+          const credentialPayload: CanonicalCredentialPayload = {
+            registryId,
+            workerProfileId: targetWorkerProfileId,
+            fullName: data.fullName,
+            primaryTrade: data.occupation,
+            category: data.category,
+            nsqfLevel: 4,
+            issuer: "KAAMSETU National Workforce Trust Protocol",
+            issuedAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            status: "active",
+          };
+          const signed = signCredentialPayload(credentialPayload);
+
+          await supabase
+            .from("credential_registry")
+            .upsert(
+              {
+                registry_id: registryId,
+                worker_profile_id: targetWorkerProfileId,
+                canonical_hash: signed.canonicalHash,
+                signature: signed.signature,
+                status: "active",
+                algorithm: "HMAC-SHA256",
+                issued_at: credentialPayload.issuedAt,
+                expires_at: credentialPayload.expiresAt,
+              },
+              { onConflict: "registry_id" }
+            );
+        } catch (credErr) {
+          console.warn("Failed to anchor credential in registry:", credErr);
         }
       }
     }

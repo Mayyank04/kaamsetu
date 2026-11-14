@@ -6,13 +6,32 @@
 
 -- CAUTION: Non-destructive local demo seed. In production environments, this script
 -- uses ON CONFLICT clauses to avoid mutating or truncating live user data.
--- Do NOT run TRUNCATE on a production database.
-DELETE FROM public.work_records WHERE id LIKE '77777777%';
-DELETE FROM public.reviews WHERE id LIKE 'rev-%';
-DELETE FROM public.bookings WHERE id LIKE '66666666%';
-DELETE FROM public.portfolio WHERE id LIKE '55555555%';
-DELETE FROM public.worker_skills WHERE worker_profile_id LIKE 'w-pro-%';
-DELETE FROM public.worker_profiles WHERE id LIKE 'w-pro-%';
+DELETE FROM public.work_records WHERE id::text LIKE '77777777%';
+DELETE FROM public.reviews WHERE id::text LIKE 'rev-%';
+DELETE FROM public.bookings WHERE id::text LIKE '66666666%';
+DELETE FROM public.portfolio WHERE id::text LIKE '55555555%';
+DELETE FROM public.worker_skills WHERE worker_profile_id::text LIKE 'w-pro-%' OR worker_profile_id::text LIKE '55555555%';
+DELETE FROM public.worker_profiles WHERE id::text LIKE 'w-pro-%' OR id::text LIKE '55555555%';
+DELETE FROM public.profiles WHERE id::text LIKE '33333333%' OR id::text LIKE '44444444%';
+
+-- ----------------------------------------------------------------------------
+-- 0. AUTH USERS (Required for profiles Foreign Key)
+-- ----------------------------------------------------------------------------
+INSERT INTO auth.users (id, phone, email, role, raw_user_meta_data) VALUES
+('33333333-3333-3333-3333-333333330001', '+919876543210', 'rameshwar@kaamsetu.in', 'authenticated', '{"full_name": "Rameshwar Sharma", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330002', '+919876543220', 'sunita@kaamsetu.in', 'authenticated', '{"full_name": "Sunita Devi", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330003', '+919822011993', 'rafiq@kaamsetu.in', 'authenticated', '{"full_name": "Mohammed Rafiq", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330004', '+919880099204', 'ananya@kaamsetu.in', 'authenticated', '{"full_name": "Ananya Murugan", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330005', '+919711033211', 'jagdish@kaamsetu.in', 'authenticated', '{"full_name": "Jagdish Meena", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330006', '+919814088451', 'gurpreet@kaamsetu.in', 'authenticated', '{"full_name": "Gurpreet Singh", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330007', '+919444066120', 'lakshmi@kaamsetu.in', 'authenticated', '{"full_name": "Lakshmi Narayan", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330008', '+919825077309', 'arun@kaamsetu.in', 'authenticated', '{"full_name": "Arun Patel", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330009', '+919816022198', 'vikram@kaamsetu.in', 'authenticated', '{"full_name": "Vikram Thakur", "role": "worker"}'::jsonb),
+('33333333-3333-3333-3333-333333330010', '+919820011400', 'preeti@kaamsetu.in', 'authenticated', '{"full_name": "Preeti Kulkarni", "role": "worker"}'::jsonb),
+('44444444-4444-4444-4444-444444440001', '+919811099881', 'vikrant@customer.kaamsetu.in', 'authenticated', '{"full_name": "Vikrant Singhania", "role": "customer"}'::jsonb),
+('44444444-4444-4444-4444-444444440002', '+919810055442', 'dlf@contractor.kaamsetu.in', 'authenticated', '{"full_name": "DLF Luxury Projects Lead", "role": "contractor"}'::jsonb),
+('44444444-4444-4444-4444-444444440003', '+919920044113', 'pooja@customer.kaamsetu.in', 'authenticated', '{"full_name": "Pooja Agarwal", "role": "customer"}'::jsonb)
+ON CONFLICT (id) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
 -- 1. OCCUPATIONS (10 Distinct National Trade Categories)
@@ -27,7 +46,8 @@ INSERT INTO public.occupations (id, name, hindi_name, slug, description, nsqf_le
 ('11111111-1111-1111-1111-111111111107', 'Sustainable Agri & Farming', 'टिकाऊ कृषि एवं एग्रीटेक', 'sustainable-agritech', 'Closed-loop hydroponics, drip fertigation, soil health, and polyhouse climate management.', 4, 'ShieldCheck', true),
 ('11111111-1111-1111-1111-111111111108', 'HVAC & Cold Chain', 'वातानुकूलन एवं कोल्ड चेन', 'hvac-refrigeration', 'VRV/VRF ducting, inverter compressor overhaul, industrial chillers, and refrigerant recovery.', 4, 'Activity', true),
 ('11111111-1111-1111-1111-111111111109', 'Metalcraft & Fabrication', 'धातुकला एवं वेल्डिंग', 'metalcraft-fabrication', 'TIG/MIG precision welding, structural trusses, laser sheet bending, and CNC tooling.', 4, 'ShieldCheck', true),
-('11111111-1111-1111-1111-111111111110', 'Home Healthcare & Caregiving', 'गृह स्वास्थ्य सेवा एवं देखभाल', 'home-healthcare', 'Post-operative bedside care, geriatric mobility therapy, vitals monitoring, and palliative assistance.', 4, 'Users', true);
+('11111111-1111-1111-1111-111111111110', 'Home Healthcare & Caregiving', 'गृह स्वास्थ्य सेवा एवं देखभाल', 'home-healthcare', 'Post-operative bedside care, geriatric mobility therapy, vitals monitoring, and palliative assistance.', 4, 'Users', true)
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, is_active = EXCLUDED.is_active;
 
 -- ----------------------------------------------------------------------------
 -- 2. SKILLS (Comprehensive Competencies for Each Occupation)
@@ -64,7 +84,8 @@ INSERT INTO public.skills (id, occupation_id, name, hindi_name, slug, category) 
 ('22222222-2222-2222-2222-222222220902', '11111111-1111-1111-1111-111111111109', 'Heavy Industrial Truss Erection', 'औद्योगिक शेड ट्रस्ट निर्माण', 'industrial-truss', 'Specialization'),
 -- Healthcare
 ('22222222-2222-2222-2222-222222221001', '11111111-1111-1111-1111-111111111110', 'Post-Op Patient Mobilization', 'ऑपरेशन के बाद फिजियो देखभाल', 'post-op-mobility', 'Core Craft'),
-('22222222-2222-2222-2222-222222221002', '11111111-1111-1111-1111-111111111110', 'Clinical Vitals & Oxygen Telemetry', 'ऑक्सीजन एवं वाइटल्स निगरानी', 'vitals-telemetry', 'Safety & Standards');
+('22222222-2222-2222-2222-222222221002', '11111111-1111-1111-1111-111111111110', 'Clinical Vitals & Oxygen Telemetry', 'ऑक्सीजन एवं वाइटल्स निगरानी', 'vitals-telemetry', 'Safety & Standards')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 
 -- ----------------------------------------------------------------------------
 -- 3. USERS & PROFILES (Mock Auth IDs for Workers and Customers)
@@ -90,11 +111,11 @@ INSERT INTO public.profiles (id, role, full_name, phone, is_verified) VALUES
 ('33333333-3333-3333-3333-333333330009', 'worker', 'Vikram Thakur', '+919816022198', true),
 -- Worker 10: Sister Preeti Kulkarni (Home Care - Draft/Unpublished to test RLS!)
 ('33333333-3333-3333-3333-333333330010', 'worker', 'Preeti Kulkarni', '+919820011400', false),
-
 -- Customers
 ('44444444-4444-4444-4444-444444440001', 'customer', 'Vikrant Singhania', '+919811099881', true),
 ('44444444-4444-4444-4444-444444440002', 'contractor', 'DLF Luxury Projects Lead', '+919810055442', true),
-('44444444-4444-4444-4444-444444440003', 'customer', 'Pooja Agarwal', '+919920044113', true);
+('44444444-4444-4444-4444-444444440003', 'customer', 'Pooja Agarwal', '+919920044113', true)
+ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name, phone = EXCLUDED.phone, role = EXCLUDED.role;
 
 -- ----------------------------------------------------------------------------
 -- 4. WORKER PROFILES (Covering 9+ Occupations with Unique Slugs)
@@ -162,7 +183,8 @@ INSERT INTO public.worker_profiles (
 ('55555555-5555-5555-5555-555555550010', '33333333-3333-3333-3333-333333330010', 'IN-MH-2026-9901-KS', 'preeti-kulkarni-mumbai',
  '11111111-1111-1111-1111-111111111110', 'Geriatric Care & Post-Operative Nurse Assistant',
  'Draft profile undergoing Aadhaar verification. Must NOT appear in public searches.',
- 7, 850.00, 1400.00, 'Mumbai', 'Maharashtra', '400001', ARRAY['Marathi', 'Hindi', 'English'], 540, 1, false, false, false, 'unavailable');
+ 7, 850.00, 1400.00, 'Mumbai', 'Maharashtra', '400001', ARRAY['Marathi', 'Hindi', 'English'], 540, 1, false, false, false, 'unavailable')
+ON CONFLICT (id) DO UPDATE SET is_published = EXCLUDED.is_published, kaamscore = EXCLUDED.kaamscore;
 
 -- ----------------------------------------------------------------------------
 -- 5. WORKER SKILLS JUNCTION
@@ -179,7 +201,8 @@ INSERT INTO public.worker_skills (worker_profile_id, skill_id, years_practiced, 
 ('55555555-5555-5555-5555-555555550006', '22222222-2222-2222-2222-222222220401', 15, true, 13),
 ('55555555-5555-5555-5555-555555550007', '22222222-2222-2222-2222-222222220201', 17, true, 15),
 ('55555555-5555-5555-5555-555555550008', '22222222-2222-2222-2222-222222220801', 11, true, 6),
-('55555555-5555-5555-5555-555555550009', '22222222-2222-2222-2222-222222220901', 13, true, 9);
+('55555555-5555-5555-5555-555555550009', '22222222-2222-2222-2222-222222220901', 13, true, 9)
+ON CONFLICT (worker_profile_id, skill_id) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
 -- 6. PORTFOLIO SHOWCASE
@@ -213,7 +236,8 @@ INSERT INTO public.bookings (
 ('66666666-6666-6666-6666-666666660003', 'BK-2025-9921',
  '44444444-4444-4444-4444-444444440003', '55555555-5555-5555-5555-555555550002',
  'Commission of 2 Heritage Kadwa Brocades', 'Pure mulberry silk with antique gold zardozi patterns for wedding trousseau.',
- 'Ghat Road, Godowlia', 'Varanasi', '2025-08-01 11:00:00+05:30', 48000.00, 48000.00, 'completed');
+ 'Ghat Road, Godowlia', 'Varanasi', '2025-08-01 11:00:00+05:30', 48000.00, 48000.00, 'completed')
+ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status;
 
 -- ----------------------------------------------------------------------------
 -- 8. REVIEWS (Tied to Completed Bookings)
@@ -227,7 +251,23 @@ INSERT INTO public.reviews (
 
 -- Review 2 for Sunita Devi (Tied to Booking 3)
 ('66666666-6666-6666-6666-666666660003', '44444444-4444-4444-4444-444444440003', '55555555-5555-5555-5555-555555550002',
- 5, 5, 5, 'The Banarasi silk brocade delivered by Sunita Devi is pure museum quality. Every weft and motif is impeccable. Honored to have her work in our family.', true);
+ 5, 5, 5, 'The Banarasi silk brocade delivered by Sunita Devi is pure museum quality. Every weft and motif is impeccable. Honored to have her work in our family.', true)
+ON CONFLICT (booking_id) DO NOTHING;
+
+-- ----------------------------------------------------------------------------
+-- 9. WORK RECORDS (Verified Cryptographic Experience Log)
+-- ----------------------------------------------------------------------------
+INSERT INTO public.work_records (
+  worker_profile_id, booking_id, project_title, contractor_or_client, location,
+  start_date, end_date, hours_logged, trade_category, verified_by_contractor, verification_hash
+) VALUES
+('55555555-5555-5555-5555-555555550001', '66666666-6666-6666-6666-666666660001',
+ 'Commercial Solar Grid Inverter Sync', 'Rajasthan Warehousing Corp', 'Sitapura, Jaipur',
+ '2025-10-01', '2025-10-10', 48.00, 'Electrical & Solar', true, 'sha256_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+
+('55555555-5555-5555-5555-555555550002', '66666666-6666-6666-6666-666666660003',
+ 'Heritage Silk Bridal Commission', 'Varanasi Artisan Cooperative', 'Kashi, Varanasi',
+ '2025-05-01', '2025-08-01', 280.00, 'Handloom & Heritage Textiles', true, 'sha256_f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2');
 
 -- ----------------------------------------------------------------------------
 -- 9. WORK RECORDS (Verified Cryptographic Experience Log)

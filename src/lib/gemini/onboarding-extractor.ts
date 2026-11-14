@@ -11,7 +11,7 @@ You are the AI Onboarding Engine for KAAMSETU, India's national sovereign skill 
 Your purpose is to listen to informal, skilled, and blue-collar craftspeople speaking in Indian languages and extract a dignified, structured, verified-ready profile.
 
 CRITICAL NON-INVENTION RULES:
-1. NEVER INVENT INFORMATION. If the worker did not mention years of experience, set experienceYears to 0 and add "Years of experience" to missingFields.
+1. NEVER INVENT INFORMATION. If the worker did not mention years of experience, set experienceYears to null and add "Years of experience" to missingFields. If they explicitly stated they just started or have 0 years, set to 0.
 2. If the worker did not mention their location/city, leave city and state empty and add "Operating city / district" to missingFields.
 3. If the worker did not mention their daily rate or charges, do NOT invent a price. Leave indicativeRate undefined and add "Daily rate expectation" to missingFields.
 4. Extract only skills, tools, and equipment explicitly stated or directly implied by their stated trade tasks.
@@ -22,7 +22,7 @@ SCHEMA TO RETURN (JSON):
 - occupation: Standardized trade title
 - category: One of "Electrical & Solar", "Carpentry & Joinery", "Plumbing & Sanitation", "Construction & Civil", "Handloom & Heritage Textiles", "Automotive & EV Tech", "Sustainable Agri & Farming", "HVAC & Cold Chain", "Metalcraft & Fabrication", "Home Healthcare & Caregiving"
 - ncoCode: Standard NCO-2015 classification code
-- experienceYears: Stated number of years of experience (integer, 0 if not stated)
+- experienceYears: Stated number of years of experience (integer, or null if not stated)
 - employmentType: "self_employed", "contract_worker", "salaried", or "guild_master"
 - skills: Array of specific skills mentioned
 - equipmentHandled: Specific tools and machines explicitly mentioned (empty array if none stated)
@@ -76,10 +76,28 @@ Extract the structured profile according to the strict non-invention system rule
  * Deterministic parsing helper strictly adhering to the non-invention principle.
  * Extracts only what is actually present in the worker's testimony.
  */
+/**
+ * Converts native Indic numerals (Devanagari, Bengali/Assamese, Tamil, Telugu) to ASCII digits.
+ */
+function normalizeIndicDigits(text: string): string {
+  const indicDigits: Record<string, string> = {
+    // Devanagari (Hindi, Marathi)
+    "०": "0", "१": "1", "२": "2", "३": "3", "४": "4", "५": "5", "६": "6", "७": "7", "८": "8", "९": "9",
+    // Bengali & Assamese
+    "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4", "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+    // Telugu
+    "౦": "0", "౧": "1", "౨": "2", "౩": "3", "౪": "4", "౫": "5", "౬": "6", "౭": "7", "౮": "8", "౯": "9",
+    // Tamil
+    "௦": "0", "௧": "1", "௨": "2", "௩": "3", "௪": "4", "௫": "5", "௬": "6", "௭": "7", "௮": "8", "௯": "9",
+  };
+  return text.replace(/[०-९০-৯౦-౯௦-௯]/g, (ch) => indicDigits[ch] || ch);
+}
+
 export function extractDeterministicFallback(
-  transcript: string,
+  rawTranscript: string,
   language: string
 ): OnboardingExtractedProfile {
+  const transcript = normalizeIndicDigits(rawTranscript);
   const lower = transcript.toLowerCase();
   const missing: string[] = [];
 
@@ -105,8 +123,8 @@ export function extractDeterministicFallback(
     missing.push("Full Legal Name");
   }
 
-  // 2. Identify Experience Years (Strict: NEVER default to 5 years if unmentioned!)
-  let years = 0;
+  // 2. Identify Experience Years (Strict: NEVER default if unmentioned; return null for unstated)
+  let years: number | null = null;
   const yearsMatch =
     transcript.match(/(\d+)\s*(?:saal|saalon|years|yrs|varsha|baras|varudangal|বছর|वर्ष|साल|సంవత్సరాల|বছৰ)/i) ||
     transcript.match(/(\d+)\s*(?:साल|वर्षा|वर्ष)/);
@@ -282,9 +300,9 @@ export function extractDeterministicFallback(
     missing.push("Formal Certification / Apprenticeship Proof (optional)");
   }
 
-  const expText = years > 0 ? `${years} Years Stated Mastery` : "Skilled Practitioner";
+  const expText = years !== null && years > 0 ? `${years} Years Stated Mastery` : "Skilled Practitioner";
   const headline = `${occupation} (${expText})`;
-  const bio = `${name} is a skilled ${occupation.toLowerCase()}${city ? ` based in ${city}, ${state}` : ""}${years > 0 ? ` with ${years} years of trade practice` : ""}. Profile extracted from spoken voice attestation and awaiting worker confirmation.`;
+  const bio = `${name} is a skilled ${occupation.toLowerCase()}${city ? ` based in ${city}, ${state}` : ""}${years !== null && years > 0 ? ` with ${years} years of trade practice` : ""}. Profile extracted from spoken voice attestation and awaiting worker confirmation.`;
 
   return {
     fullName: name,

@@ -1,9 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    --font-plus-jakarta: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     /* Sovereign Trust: Warm Ivory Foundation & Forest Green Anchor */
     --background: 43 30% 96%; /* #F7F5F0 Warm Ivory */
     --foreground: 150 12% 10%; /* #171D1A Deep Charcoal */

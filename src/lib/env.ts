@@ -76,6 +76,22 @@ function validateEnv() {
 export const env = validateEnv();
 
 /**
+ * Validates that production environments never have insecure demo flags or stub keys enabled.
+ */
+export function validateEnvironmentSafety(): void {
+  if (process.env.NODE_ENV === "production") {
+    if (
+      process.env.ENABLE_DEMO_AUTH === "true" ||
+      process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true"
+    ) {
+      throw new Error(
+        "FATAL SECURITY VIOLATION: Demo authentication (ENABLE_DEMO_AUTH) cannot be enabled in production."
+      );
+    }
+  }
+}
+
+/**
  * Helper to check if actual production credentials are wired up
  */
 export const isConfigured = {
@@ -85,5 +101,8 @@ export const isConfigured = {
   gemini:
     Boolean(process.env.GEMINI_API_KEY) &&
     !process.env.GEMINI_API_KEY?.includes("placeholder"),
-  demoAuth: env.ENABLE_DEMO_AUTH,
+  demoAuth:
+    process.env.NODE_ENV === "production" ? false : Boolean(env.ENABLE_DEMO_AUTH),
+  demoAllowed:
+    process.env.NODE_ENV !== "production" && Boolean(env.ENABLE_DEMO_AUTH),
 };

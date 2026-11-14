@@ -125,7 +125,7 @@ export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
                   {worker.location.city}, {worker.location.state}
                 </span>
                 <span>•</span>
-                <span>{worker.yearsExperience} Years Hands-on</span>
+                <span>{worker.yearsExperience !== null && worker.yearsExperience !== undefined ? `${worker.yearsExperience} Years Hands-on` : "Experience Unreported"}</span>
                 {worker.dailyRateEstimate && (
                   <>
                     <span>•</span>
@@ -194,8 +194,8 @@ export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
                 <strong className="text-forest">{worker.kaamScore.breakdown.sovereignDigiLocker} / 150</strong>
               </div>
               <div className="p-2 rounded-xs bg-sand/20 border border-sand/40">
-                <span className="text-[10px] text-sand-800 block">Percentile Rank</span>
-                <strong className="text-forest font-bold">Top {100 - worker.kaamScore.percentileRank}% India</strong>
+                <span className="text-[10px] text-sand-800 block">Verification Tier</span>
+                <strong className="text-forest font-bold">Tier {worker.kaamScore.level} Verified</strong>
               </div>
             </div>
           </div>
@@ -260,7 +260,7 @@ export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
               )}
               <div>
                 <span className="text-[10px] font-bold text-forest block">
-                  CRYPTOGRAPHIC ON-CHAIN RECORD
+                  KAAMSETU WORKFORCE CREDENTIAL (DIGITALLY SIGNED)
                 </span>
                 <span className="text-[10px] font-mono text-charcoal-muted">
                   Registry: {worker.registryId} • Live Scannable

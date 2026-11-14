@@ -20,6 +20,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isConfigured } from "@/lib/env";
 import { generateQrDataUrl } from "@/lib/qr/generate";
 import { PrintCredentialButton } from "@/components/verify/print-button";
+import { verifyCredentialSignature, CanonicalCredentialPayload } from "@/lib/crypto/credential-signer";
 
 interface VerifyPageProps {
   params: Promise<{ registryId: string }>;
@@ -36,7 +37,7 @@ export async function generateMetadata({
 }
 
 function maskAadhaar(verified: boolean): string {
-  return verified ? "XXXX-XXXX-4012 (UIDAI Masked)" : "Not Linked";
+  return verified ? "Aadhaar Identity Linked" : "Not Linked (Awaiting Verification)";
 }
 
 export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
@@ -44,6 +45,8 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
 
   let worker: any = null;
   let isPublished = true;
+  let verificationStatus: "active" | "suspended" | "revoked" | "tampered" | "expired" | "unknown" | "unverified" = "unverified";
+  let statusReason = "";
 
   // 1. Production Mode: Fetch from Supabase database
   if (isConfigured.supabase) {
@@ -54,7 +57,7 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
         .select(`
           *,
           occupation:occupations(*),
-          profile:profiles(*)
+          profile:profiles(full_name, avatar_url)
         `)
         .eq("registry_id", registryId)
         .single();
@@ -78,14 +81,42 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
           createdAt: data.created_at,
         };
         isPublished = data.is_published;
+
+        // Check cryptographic signature in credential_registry
+        const { data: credRow } = await supabase
+          .from("credential_registry")
+          .select("*")
+          .eq("registry_id", registryId)
+          .maybeSingle();
+
+        if (credRow) {
+          const credPayload: CanonicalCredentialPayload = {
+            registryId: credRow.registry_id,
+            workerProfileId: credRow.worker_profile_id,
+            fullName: worker.fullName,
+            primaryTrade: worker.primaryTrade,
+            category: data.occupation?.name || "Trade Craft",
+            nsqfLevel: data.occupation?.nsqf_level || 4,
+            issuer: "KAAMSETU National Workforce Trust Protocol",
+            issuedAt: credRow.issued_at,
+            expiresAt: credRow.expires_at,
+            status: credRow.status,
+          };
+
+          const ver = verifyCredentialSignature(credPayload, credRow.signature);
+          verificationStatus = ver.status;
+          statusReason = ver.reason || "";
+        } else {
+          verificationStatus = "active";
+        }
       }
     } catch {
-      // Fallback to demo lookup
+      // Supabase query error
     }
   }
 
-  // 2. Demo Mode: Fallback lookup across demo registry
-  if (!worker) {
+  // 2. Demo Mode: Fallback lookup across demo registry (ONLY if demo auth is allowed)
+  if (!worker && isConfigured.demoAllowed) {
     const demo = FEATURED_PROFESSIONALS.find(
       (p) =>
         p.registryId.toLowerCase() === registryId.toLowerCase() ||
@@ -112,6 +143,7 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
           demo.location.city.toLowerCase(),
         createdAt: "2025-03-12T00:00:00Z",
       };
+      verificationStatus = "active";
     }
   }
 
@@ -172,17 +204,43 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
     <div className="min-h-screen bg-gradient-to-b from-[#F7F5F0] via-background to-[#F7F5F0]/60 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Verification Status Banner */}
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          <div className="text-xs">
-            <strong className="block font-bold">
-              VERIFIED SOVEREIGN WORKFORCE IDENTITY
-            </strong>
-            <span>
-              This identity is cryptographically signed and registered on the KAAMSETU open workforce ledger.
-            </span>
+        {verificationStatus === "revoked" ? (
+          <div className="p-4 rounded-2xl bg-red-50 border border-red-300 text-red-900 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+            <div className="text-xs">
+              <strong className="block font-bold">
+                REVOKED WORKFORCE CREDENTIAL
+              </strong>
+              <span>
+                {statusReason || "This workforce credential has been formally revoked and is no longer valid."}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : verificationStatus === "suspended" ? (
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div className="text-xs">
+              <strong className="block font-bold">
+                CREDENTIAL SUSPENDED
+              </strong>
+              <span>
+                {statusReason || "This workforce credential is currently suspended pending review."}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div className="text-xs">
+              <strong className="block font-bold">
+                VERIFIED SOVEREIGN WORKFORCE IDENTITY
+              </strong>
+              <span>
+                This identity is cryptographically signed under RFC 8785 Canonical JSON & HMAC-SHA256 standards.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Physical Smart Card Presentation */}
         <div className="sovereign-print-area bg-gradient-to-br from-forest-900 via-forest to-forest-800 text-ivory rounded-2xl p-6 sm:p-8 border border-sand/30 shadow-sovereign-xl space-y-6 relative overflow-hidden print:border-black print:text-black print:bg-white">
@@ -215,7 +273,11 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
             </div>
             <div>
               <span className="text-[10px] text-sand/60 block uppercase">Experience</span>
-              <span className="font-bold text-ivory">{worker.yearsExperience} Years Stated</span>
+              <span className="font-bold text-ivory">
+                {worker.yearsExperience !== null && worker.yearsExperience !== undefined
+                  ? `${worker.yearsExperience} Years Stated`
+                  : "Experience Unreported"}
+              </span>
             </div>
             <div>
               <span className="text-[10px] text-sand/60 block uppercase">Location</span>

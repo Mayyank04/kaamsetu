@@ -7,6 +7,8 @@
 -- 1. HARDEN PROFILES PRIVACY
 -- Drop overly broad SELECT policy that exposed phone numbers to everyone
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Public can view published worker basic profiles" ON public.profiles;
 
 -- Allow users to view their own complete private profile (including phone)
 CREATE POLICY "Users can view own profile"
@@ -65,6 +67,9 @@ GRANT SELECT ON public.public_worker_profiles TO anon, authenticated;
 -- 2. HARDEN STORAGE RLS POLICIES (OWNERSHIP ENFORCEMENT)
 DROP POLICY IF EXISTS "Workers can upload portfolio images" ON storage.objects;
 DROP POLICY IF EXISTS "Workers can delete their own portfolio images" ON storage.objects;
+DROP POLICY IF EXISTS "Workers can upload portfolio images to own folder only" ON storage.objects;
+DROP POLICY IF EXISTS "Workers can update own portfolio images only" ON storage.objects;
+DROP POLICY IF EXISTS "Workers can delete own portfolio images only" ON storage.objects;
 
 -- Enforce folder ownership matching auth.uid() in predictable path: user_id/worker_profile_id/filename
 CREATE POLICY "Workers can upload portfolio images to own folder only"
@@ -94,11 +99,13 @@ CREATE POLICY "Workers can delete own portfolio images only"
 -- 3. HARDEN WORK RECORDS PRIVACY
 -- Only genuinely verified work records belonging to published profiles are visible to the public
 DROP POLICY IF EXISTS "Public work records are viewable by everyone" ON public.work_records;
+DROP POLICY IF EXISTS "Verified work records of published workers are viewable by public" ON public.work_records;
+DROP POLICY IF EXISTS "Workers can view all own work records" ON public.work_records;
 
 CREATE POLICY "Verified work records of published workers are viewable by public"
   ON public.work_records FOR SELECT
   USING (
-    is_verified = true AND
+    verified_by_contractor = true AND
     verification_hash IS NOT NULL AND
     EXISTS (
       SELECT 1 FROM public.worker_profiles
