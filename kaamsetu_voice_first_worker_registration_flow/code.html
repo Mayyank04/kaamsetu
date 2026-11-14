@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KAAMSETU | Voice-First Worker Registration Flow</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Plus Jakarta Sans Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with configuration -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "error": "#ba1a1a",
+            "tertiary-container": "#652107",
+            "primary-container": "#153e35",
+            "primary-fixed": "#c1ecde",
+            "secondary-fixed": "#fedead",
+            "inverse-surface": "#2c322f",
+            "on-tertiary-fixed": "#390b00",
+            "on-primary-fixed": "#00201a",
+            "surface-tint": "#3e665b",
+            "surface-container": "#e9efea",
+            "secondary-container": "#fbdbaa",
+            "on-secondary": "#ffffff",
+            "on-error-container": "#93000a",
+            "outline": "#717976",
+            "surface-bright": "#f5fbf6",
+            "on-tertiary-fixed-variant": "#7a3015",
+            "primary": "#002820",
+            "error-container": "#ffdad6",
+            "tertiary-fixed": "#ffdbd0",
+            "on-secondary": "#ffffff",
+            "on-surface-variant": "#414846",
+            "on-primary": "#ffffff",
+            "secondary-fixed-dim": "#e1c293",
+            "on-secondary-fixed": "#271900",
+            "on-primary-fixed-variant": "#264e44",
+            "inverse-primary": "#a5cfc3",
+            "on-secondary-container": "#765f38",
+            "background": "#f5fbf6",
+            "surface-container-low": "#eff5f0",
+            "surface-container-high": "#e4eae5",
+            "surface-dim": "#d6dbd7",
+            "surface": "#f5fbf6",
+            "surface-variant": "#dee4df",
+            "on-background": "#171d1a",
+            "outline-variant": "#c0c8c4",
+            "tertiary": "#440f00",
+            "on-primary-container": "#80a99d",
+            "on-secondary-fixed-variant": "#58431f",
+            "inverse-on-surface": "#ecf2ed",
+            "surface-container-highest": "#dee4df",
+            "surface-container-lowest": "#ffffff",
+            "on-error": "#ffffff",
+            "on-surface": "#171d1a",
+            "on-tertiary-container": "#ea8665",
+            "secondary": "#725b34",
+            "primary-fixed-dim": "#a5cfc3",
+            "tertiary-fixed-dim": "#ffb59d"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2.5rem",
+            "gutter": "1.5rem",
+            "gutter-mobile": "1rem",
+            "margin": "2rem",
+            "margin-mobile": "1rem"
+          },
+          "fontFamily": {
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "display-md-mobile": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "display-md": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "display-lg-mobile": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "700" }],
+            "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "display-lg": ["48px", { "lineHeight": "56px", "fontWeight": "700" }],
+            "body-sm": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "headline-lg": ["30px", { "lineHeight": "38px", "fontWeight": "600" }],
+            "display-md-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+            "body-md": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "display-md": ["38px", { "lineHeight": "46px", "fontWeight": "700" }],
+            "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+            "label-lg": ["15px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+            "display-lg-mobile": ["34px", { "lineHeight": "42px", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .waveform-bar {
+      transition: height 0.12s ease-in-out;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.25; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .mic-pulse {
+      animation: pulse-ring 2.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+<!-- TOP BAR: Branded KAAMSETU DPI Navigation Shell -->
+<header class="bg-surface-container-lowest border-b border-outline-variant/30 sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-6 lg:px-12 max-w-7xl mx-auto h-20">
+<!-- Brand & Step Indicator -->
+<div class="flex items-center gap-6">
+<a class="text-headline-md font-headline-md font-bold tracking-tight text-primary flex items-center gap-2" href="#">
+<span class="w-8 h-8 rounded-lg bg-primary text-surface-container-lowest flex items-center justify-center font-display-md text-label-lg">K</span>
+<span>KAAMSETU</span>
+</a>
+<div class="h-6 w-px bg-outline-variant/50 hidden sm:block"></div>
+<div class="hidden sm:flex flex-col">
+<span class="text-label-sm font-label-sm text-primary tracking-wider uppercase">India DPI • Skill Registry</span>
+<span class="text-label-md font-label-md text-on-surface-variant font-semibold">Step 2 of 4: Voice Registration &amp; AI Skill Structuring</span>
+</div>
+</div>
+<!-- Controls: Audio Language Selector & Manual Form Switch -->
+<div class="flex items-center gap-3">
+<!-- Audio Input Language -->
+<div class="relative inline-flex items-center">
+<span class="material-symbols-outlined text-on-surface-variant absolute left-3 pointer-events-none text-body-md" data-icon="translate">translate</span>
+<select class="bg-surface-container-low text-on-surface text-label-md font-label-md pl-9 pr-8 py-2 rounded-lg border border-outline-variant/40 focus:border-primary focus:ring-1 focus:ring-secondary-fixed appearance-none cursor-pointer" id="voiceLanguageSelect">
+<option selected="" value="hi">हिंदी (Hindi)</option>
+<option value="ta">தமிழ் (Tamil)</option>
+<option value="bn">বাংলা (Bengali)</option>
+<option value="te">తెలుగు (Telugu)</option>
+<option value="en">English (Indian)</option>
+</select>
+<span class="material-symbols-outlined text-on-surface-variant absolute right-2 pointer-events-none text-label-md" data-icon="arrow_drop_down">arrow_drop_down</span>
+</div>
+<!-- Manual Fallback Mode -->
+<button class="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-label-md font-label-md text-on-surface-variant hover:text-primary rounded-lg border border-outline-variant/40 hover:bg-surface-container-low transition-colors duration-150">
+<span class="material-symbols-outlined text-label-md" data-icon="edit_note">edit_note</span>
+<span>Switch to Manual Form</span>
+</button>
+<!-- Help / Support icon -->
+<button class="p-2 text-on-surface-variant hover:text-primary rounded-lg hover:bg-surface-container-low transition-colors" title="Voice assistance audio guidance">
+<span class="material-symbols-outlined" data-icon="volume_up">volume_up</span>
+</button>
+</div>
+</div>
+</header>
+<!-- STEP PROGRESS TRACKER -->
+<nav class="bg-surface-container-low border-b border-outline-variant/30 py-3 px-6 lg:px-12">
+<div class="max-w-7xl mx-auto flex items-center justify-between text-body-sm overflow-x-auto gap-4">
+<!-- Step 1 (Completed) -->
+<div class="flex items-center gap-2 flex-shrink-0 text-primary opacity-80">
+<span class="w-6 h-6 rounded-full bg-primary text-surface-container-lowest flex items-center justify-center text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</span>
+<span class="font-label-md text-label-md">1. Language &amp; Worker Identity</span>
+</div>
+<div class="h-0.5 w-12 bg-primary/30 flex-shrink-0 hidden md:block"></div>
+<!-- Step 2 (Active) -->
+<div class="flex items-center gap-2 flex-shrink-0 text-primary font-semibold">
+<span class="w-6 h-6 rounded-full bg-primary text-surface-container-lowest flex items-center justify-center text-label-sm font-label-sm ring-2 ring-secondary-fixed ring-offset-2 ring-offset-surface-container-low">
+          2
+        </span>
+<span class="font-label-md text-label-md text-primary">2. Voice Story &amp; Live Speech-to-Text</span>
+</div>
+<div class="h-0.5 w-12 bg-outline-variant/60 flex-shrink-0 hidden md:block"></div>
+<!-- Step 3 (Live Preview / Active) -->
+<div class="flex items-center gap-2 flex-shrink-0 text-secondary font-medium">
+<span class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-label-sm font-label-sm">
+          3
+        </span>
+<span class="font-label-md text-label-md">3. AI Skill Extraction &amp; Verification</span>
+</div>
+<div class="h-0.5 w-12 bg-outline-variant/40 flex-shrink-0 hidden md:block"></div>
+<!-- Step 4 (Pending) -->
+<div class="flex items-center gap-2 flex-shrink-0 text-on-surface-variant opacity-60">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-label-sm font-label-sm">
+          4
+        </span>
+<span class="font-label-md text-label-md">4. Profile Confirmation &amp; Sovereign ID</span>
+</div>
+</div>
+</nav>
+<!-- MAIN WORKFLOW CANVAS -->
+<main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-12 py-8 space-y-8">
+<!-- CONTEXT BANNER: Sovereign Trust Framework -->
+<div class="bg-surface-container-lowest border border-primary/10 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined" data-icon="mic" data-weight="fill" style="font-variation-settings: 'FILL' 1;">mic</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h1 class="text-headline-sm font-headline-sm text-primary">Voice-Assisted Self Declaration</h1>
+<span class="bg-secondary-container/50 text-on-secondary-container text-label-sm font-label-sm px-2 py-0.5 rounded border border-secondary/20">AI NCO-2015 ENGINE</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">
+            KAAMSETU translates your natural spoken account into verifiable industrial skill credentials without complex typing.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-2 text-label-sm font-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/30 flex-shrink-0 self-start md:self-auto">
+<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+<span>Aadhaar Link: <strong class="text-on-surface font-semibold">Verified (UIDAI XXXX 4192)</strong></span>
+</div>
+</div>
+<!-- MAIN TWO-COLUMN SPLIT PANE -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- LEFT COLUMN: Main Voice Recording Console (Hero Card) -->
+<section class="lg:col-span-6 space-y-6">
+<div class="bg-surface-container-lowest rounded-xl border border-primary/10 shadow-sm overflow-hidden">
+<!-- Card Header & Prompts in Hindi -->
+<div class="p-6 border-b border-outline-variant/30 bg-surface-container-low/40">
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-primary font-bold">Natural Speech Audio Capture</span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-100 text-red-800 text-label-sm font-label-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+                LIVE RECORDER
+              </span>
+</div>
+<h2 class="text-headline-md font-headline-md text-primary mb-1">
+              अपनी मातृभाषा में बोलें
+            </h2>
+<p class="text-body-md font-body-md text-on-surface-variant">
+              अपने काम, औजारों, बड़े प्रोजेक्ट्स और अनुभव के बारे में बताएं। (Speak freely about your craft, machinery, and daily projects).
+            </p>
+<!-- Guide Prompt Chips -->
+<div class="mt-4 pt-3 border-t border-outline-variant/30">
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-2">Need ideas on what to say? Tap a prompt to speak:</p>
+<div class="flex flex-wrap gap-2">
+<button class="text-label-sm font-label-sm bg-surface-container-lowest hover:bg-secondary-container/40 text-on-surface-variant hover:text-primary border border-outline-variant/40 px-2.5 py-1 rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="construction">construction</span> What tools do you own?
+                </button>
+<button class="text-label-sm font-label-sm bg-surface-container-lowest hover:bg-secondary-container/40 text-on-surface-variant hover:text-primary border border-outline-variant/40 px-2.5 py-1 rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="apartment">apartment</span> Biggest project completed
+                </button>
+<button class="text-label-sm font-label-sm bg-surface-container-lowest hover:bg-secondary-container/40 text-on-surface-variant hover:text-primary border border-outline-variant/40 px-2.5 py-1 rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="payments">payments</span> Daily / Project rates
+                </button>
+<button class="text-label-sm font-label-sm bg-surface-container-lowest hover:bg-secondary-container/40 text-on-surface-variant hover:text-primary border border-outline-variant/40 px-2.5 py-1 rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="pin_drop">pin_drop</span> Areas you travel to
+                </button>
+</div>
+</div>
+</div>
+<!-- Live Simulated Audio Visualizer Section -->
+<div class="p-6 flex flex-col items-center bg-surface-bright border-b border-outline-variant/30 relative">
+<!-- Floating Mic Button with Ripple Effect -->
+<div class="relative mb-6">
+<div class="absolute -inset-4 bg-primary-container/20 rounded-full mic-pulse"></div>
+<button class="relative z-10 w-20 h-20 rounded-full bg-primary-container text-surface-container-lowest flex items-center justify-center shadow-lg active:scale-95 transition-transform duration-150 group" id="recordingToggleBtn">
+<span class="material-symbols-outlined text-4xl group-hover:scale-105 transition-transform" data-icon="mic" data-weight="fill" id="recordingIcon" style="font-variation-settings: 'FILL' 1;">mic</span>
+</button>
+</div>
+<!-- Waveform Visualizer Display -->
+<div class="w-full max-w-md h-16 flex items-center justify-center gap-1.5 px-4 bg-surface-container-low rounded-lg border border-outline-variant/30 mb-4" id="waveformContainer">
+<!-- Dynamically generated bars or visual fallback -->
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-4"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-8"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-12"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-6"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-10"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-14"></span>
+<span class="waveform-bar w-1.5 bg-secondary rounded-full h-8"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-12"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-10"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-14"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-7"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-11"></span>
+<span class="waveform-bar w-1.5 bg-secondary rounded-full h-14"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-6"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-9"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-13"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-5"></span>
+<span class="waveform-bar w-1.5 bg-primary rounded-full h-8"></span>
+</div>
+<!-- Status Indicator & Timer -->
+<div class="flex items-center justify-between w-full max-w-md text-label-md font-label-md">
+<span class="flex items-center gap-1.5 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-[16px] text-emerald-700" data-icon="graphic_eq">graphic_eq</span>
+<span>Bitrate: 48kHz FLAC (Lossless)</span>
+</span>
+<span class="font-mono text-label-lg font-bold text-primary" id="timerDisplay">01:42 / 03:00 max</span>
+</div>
+<!-- Audio Control Toolbar -->
+<div class="flex items-center gap-3 mt-5">
+<button class="flex items-center gap-1 px-4 py-2 rounded-lg bg-surface-container-lowest text-on-surface text-label-md font-label-md border border-outline-variant/40 hover:bg-surface-container-high transition-colors" id="pauseBtn">
+<span class="material-symbols-outlined text-label-md" data-icon="pause">pause</span>
+<span>Pause</span>
+</button>
+<button class="flex items-center gap-1 px-4 py-2 rounded-lg bg-surface-container-lowest text-on-surface text-label-md font-label-md border border-outline-variant/40 hover:bg-surface-container-high transition-colors" id="retryBtn">
+<span class="material-symbols-outlined text-label-md" data-icon="refresh">refresh</span>
+<span>Restart Recording</span>
+</button>
+<button class="flex items-center gap-1 px-4 py-2 rounded-lg bg-secondary-container/40 text-on-secondary-container text-label-md font-label-md border border-secondary/20 hover:bg-secondary-container/70 transition-colors" id="listenReplayBtn">
+<span class="material-symbols-outlined text-label-md" data-icon="play_arrow">play_arrow</span>
+<span>Play Sample</span>
+</button>
+</div>
+</div>
+<!-- Real-Time Speech Transcript Streaming Box -->
+<div class="p-6">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-label-lg" data-icon="subtitles">subtitles</span>
+<h3 class="text-label-lg font-label-lg text-primary font-bold">Live Stream Transcript</h3>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-label-sm font-label-sm text-primary hover:text-primary-container flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded border border-outline-variant/30" id="toggleTranslateBtn">
+<span class="material-symbols-outlined text-[14px]" data-icon="sync_alt">sync_alt</span>
+<span id="transModeText">Show English Translation</span>
+</button>
+</div>
+</div>
+<!-- Transcript Canvas -->
+<div class="p-4 rounded-lg bg-surface-container-low/70 border border-outline-variant/30 text-body-md font-body-md text-on-surface space-y-2.5">
+<p class="leading-relaxed text-on-surface" id="transcriptHindi">
+<span class="text-primary font-bold">“</span>मैं पिछले <span class="bg-secondary-container/60 px-1 rounded font-semibold text-primary">12 वर्षों</span> से राजस्थान हाउसिंग बोर्ड और रीको इंडस्ट्रियल एरिया में <span class="bg-primary-fixed/50 px-1 rounded font-semibold text-primary">3-फेज हेवी इंडस्ट्रियल वायरिंग</span>, <span class="bg-primary-fixed/50 px-1 rounded font-semibold text-primary">मोटर कंट्रोल पैनल</span> और <span class="bg-primary-fixed/50 px-1 rounded font-semibold text-primary">रूफटॉप सोलर इन्वर्टर</span> इंस्टॉलेशन का काम करता हूँ। मेरे पास अपना खुद का मेगर (Megger) मीटर, crimping टूल्स और 440V टेस्टिंग किट उपलब्ध है।<span class="text-primary font-bold">”</span>
+</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant border-t border-outline-variant/20 pt-2 italic" id="transcriptEnglish">
+                Translation: “I have been working for the past 12 years across Rajasthan Housing Board and RIICO Industrial Area handling 3-phase heavy industrial wiring, motor control panels (MCC), and rooftop solar inverter installations. I possess my own Megger meter, crimping tools, and 440V diagnostic kit.”
+              </p>
+<div class="flex items-center gap-2 pt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Continuous Acoustic Match Score: <strong>99.4% Verified</strong></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Privacy & DPI Sovereign Trust Notice -->
+<div class="rounded-xl p-4 bg-surface-container-low border border-outline-variant/40 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-xl flex-shrink-0 mt-0.5" data-icon="verified_user">verified_user</span>
+<div class="space-y-1">
+<h4 class="text-label-md font-label-md text-primary font-bold">Sovereign Data Protection &amp; W3C Standards</h4>
+<p class="text-body-sm font-body-sm text-on-surface-variant">
+              No raw voice samples are shared with third-party advertisers. All voice claims are converted into cryptographically verifiable schema conforming to <strong>National Classification of Occupations (NCO-2015)</strong> and <strong>W3C Verifiable Credentials</strong>.
+            </p>
+</div>
+</div>
+</section>
+<!-- RIGHT COLUMN: Real-Time AI Extraction & Field Confirmation Split-Pane -->
+<section class="lg:col-span-6 space-y-6">
+<div class="bg-surface-container-lowest rounded-xl border border-primary/10 shadow-sm p-6 space-y-6">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-4">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-label-lg" data-icon="psychology">psychology</span>
+<h2 class="text-headline-sm font-headline-sm text-primary">Live AI Skill Extraction</h2>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">
+                Structured fields extracted directly from worker narrative. Review &amp; confirm below.
+              </p>
+</div>
+<span class="text-label-sm font-label-sm bg-surface-container px-2.5 py-1 rounded text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="bolt">bolt</span> 6 Fields Parsed
+            </span>
+</div>
+<!-- Structured Extracted Cards -->
+<div class="space-y-4">
+<!-- Field 1: Primary Profession & NCO Code -->
+<div class="p-4 rounded-lg bg-surface-bright border border-outline-variant/40 space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Primary Profession &amp; NCO Standard</span>
+<div class="flex items-center gap-1.5">
+<span class="bg-emerald-100 text-emerald-800 text-label-sm font-label-sm px-2 py-0.5 rounded font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="check_circle">check_circle</span> Worker Approved
+                  </span>
+<button class="text-on-surface-variant hover:text-primary p-1" title="Edit Field">
+<span class="material-symbols-outlined text-label-md" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+<div class="flex items-baseline justify-between flex-wrap gap-2">
+<div>
+<h4 class="text-headline-sm font-headline-sm text-primary font-bold">Industrial Electrician &amp; Solar Technician</h4>
+<p class="text-label-md font-label-md text-secondary font-mono mt-0.5">NCO-2015 Code: 7411.0100 (Electrical Mechanics &amp; Cable Jointing)</p>
+</div>
+<span class="text-label-sm font-label-sm bg-primary-fixed/40 text-on-primary-fixed px-2 py-1 rounded font-semibold">98% AI Match</span>
+</div>
+</div>
+<!-- Field 2: Experience Tenure & Operating Model -->
+<div class="p-4 rounded-lg bg-surface-bright border border-outline-variant/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Total Verified Experience</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-label-lg" data-icon="history_toggle_off">history_toggle_off</span>
+<span class="text-label-lg font-label-lg text-primary font-bold">12 Years</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">(Self-Employed)</span>
+</div>
+</div>
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Primary Jurisdiction / Zone</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-label-lg" data-icon="location_on">location_on</span>
+<span class="text-body-md font-body-md text-on-surface font-semibold">Jaipur &amp; RIICO Industrial Zone, RJ</span>
+</div>
+</div>
+</div>
+<!-- Field 3: Core Extracted Skills Tags -->
+<div class="p-4 rounded-lg bg-surface-bright border border-outline-variant/40 space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Validated Core Skills</span>
+<span class="text-label-sm font-label-sm text-primary font-medium cursor-pointer hover:underline">+ Add Custom Skill</span>
+</div>
+<div class="flex flex-wrap gap-2 pt-1">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-surface-container-low text-primary text-label-md font-label-md border border-outline-variant/30">
+<span class="material-symbols-outlined text-[14px]" data-icon="task_alt">task_alt</span> 3-Phase Busbar Wiring
+                </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-surface-container-low text-primary text-label-md font-label-md border border-outline-variant/30">
+<span class="material-symbols-outlined text-[14px]" data-icon="task_alt">task_alt</span> Solar Grid-Tie Inverters
+                </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-surface-container-low text-primary text-label-md font-label-md border border-outline-variant/30">
+<span class="material-symbols-outlined text-[14px]" data-icon="task_alt">task_alt</span> Motor Control Centers (MCC)
+                </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-surface-container-low text-primary text-label-md font-label-md border border-outline-variant/30">
+<span class="material-symbols-outlined text-[14px]" data-icon="task_alt">task_alt</span> LT/HT Cable Jointing
+                </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-surface-container-low text-primary text-label-md font-label-md border border-outline-variant/30">
+<span class="material-symbols-outlined text-[14px]" data-icon="task_alt">task_alt</span> Fault Diagnostics (Megger 440V)
+                </span>
+</div>
+</div>
+<!-- Field 4: Services Offered with Indicative Rates -->
+<div class="p-4 rounded-lg bg-surface-bright border border-outline-variant/40 space-y-3">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant block">Offered Services &amp; Rate Card</span>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-2.5 rounded bg-surface-container-lowest border border-outline-variant/20 text-body-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-label-md" data-icon="handyman">handyman</span>
+<span class="font-medium text-on-surface">Industrial Panel Commissioning</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-semibold text-primary font-mono">₹1,500 / visit</span>
+<span class="bg-amber-100 text-amber-900 text-label-sm font-label-sm px-1.5 py-0.5 rounded">AI Inferred</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded bg-surface-container-lowest border border-outline-variant/20 text-body-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-label-md" data-icon="solar_power">solar_power</span>
+<span class="font-medium text-on-surface">Rooftop Solar Inverter Setup &amp; Testing</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-semibold text-primary font-mono">₹2,200 / unit</span>
+<span class="bg-amber-100 text-amber-900 text-label-sm font-label-sm px-1.5 py-0.5 rounded">AI Inferred</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Field 5: Languages Spoken -->
+<div class="p-4 rounded-lg bg-surface-bright border border-outline-variant/40 flex items-center justify-between">
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Working Communication Languages</span>
+<p class="text-body-md font-body-md text-primary font-medium">हिंदी (Fluent), Marwari (Native), Basic English (Technical Manuals)</p>
+</div>
+<span class="bg-emerald-100 text-emerald-800 text-label-sm font-label-sm px-2 py-0.5 rounded font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="check">check</span> Confirmed
+              </span>
+</div>
+</div>
+<!-- KAAMSCORE Foundation Tier Indicator -->
+<div class="p-4 rounded-lg bg-secondary-container/20 border border-secondary/30 space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-label-md font-label-md font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+<span class="material-symbols-outlined text-label-lg" data-icon="award_star">award_star</span>
+                KAAMSCORE Foundation Tier Impact
+              </span>
+<span class="text-label-lg font-label-lg font-bold text-primary font-mono">+120 Points</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">
+              Voice claims supported by uncompressed audio signatures establish <strong>Tier 1 Audio Credibility</strong> on your National Skill Card, increasing direct contractor outreach by 3.8x.
+            </p>
+</div>
+</div>
+</section>
+</div>
+<!-- STICKY ACTION BAR & BOTTOM NAVIGATION -->
+<div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-5 shadow-md flex flex-col md:flex-row items-center justify-between gap-4 sticky bottom-4 z-40">
+<div class="flex items-center gap-4 w-full md:w-auto">
+<div class="w-12 h-12 rounded-lg bg-primary text-surface-container-lowest flex items-center justify-center font-display-md text-headline-sm flex-shrink-0">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+</div>
+<div>
+<h3 class="text-label-lg font-label-lg text-primary font-bold">Ready to Generate Sovereign Skill Card?</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">You can modify or add video proofs of tools at any time later.</p>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto justify-end">
+<button class="flex-1 md:flex-initial px-4 py-3 rounded-lg border border-primary/20 text-primary text-label-md font-label-md hover:bg-surface-container-low transition-colors duration-150 flex items-center justify-center gap-1.5" id="addMoreVoiceBtn">
+<span class="material-symbols-outlined text-label-md" data-icon="mic_external_on">mic_external_on</span>
+<span>Record More Experience</span>
+</button>
+<button class="flex-1 md:flex-initial px-6 py-3 rounded-lg bg-primary text-surface-container-lowest hover:bg-primary-container text-label-lg font-label-lg shadow-sm transition-all duration-150 flex items-center justify-center gap-2 group" id="confirmCtaBtn">
+<span>Approve &amp; Generate Sovereign Skill Card</span>
+<span class="material-symbols-outlined text-label-md group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+<!-- FOOTER: Institutional Blueprint Architecture -->
+<footer class="bg-primary text-on-primary-container mt-12 border-t border-primary-container">
+<div class="w-full px-6 lg:px-12 py-12 max-w-7xl mx-auto space-y-8">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-outline/20 pb-8">
+<div>
+<span class="text-headline-md font-headline-md font-bold text-surface-container-lowest tracking-tight">KAAMSETU</span>
+<p class="text-body-sm font-body-sm text-on-primary-container mt-1">Open Innovation Digital Public Infrastructure for India's Skilled Workforce.</p>
+</div>
+<div class="flex flex-wrap gap-4 text-label-md font-label-md">
+<a class="text-on-primary-container hover:text-surface-container-lowest transition-colors" href="#">Universal Taxonomy Explorer</a>
+<a class="text-on-primary-container hover:text-surface-container-lowest transition-colors" href="#">National Skill Registry</a>
+<a class="text-on-primary-container hover:text-surface-container-lowest transition-colors" href="#">Trust &amp; Verification Architecture</a>
+<a class="text-on-primary-container hover:text-surface-container-lowest transition-colors" href="#">Open API Standards</a>
+</div>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-center text-body-sm font-body-sm text-on-primary-container/80 gap-4">
+<p>© 2025 KAAMSETU. Open Innovation Digital Public Infrastructure for India's Skilled Workforce.</p>
+<div class="flex items-center gap-6 text-label-sm font-label-sm">
+<a class="hover:text-surface-container-lowest" href="#">Privacy Policy</a>
+<a class="hover:text-surface-container-lowest" href="#">Terms of Service</a>
+<a class="hover:text-surface-container-lowest" href="#">NCO-2015 Concordance</a>
+</div>
+</div>
+</div>
+</footer>
+<!-- INTERACTIVE CLIENT SCRIPT -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let isRecording = true;
+      let timerSeconds = 102; // 01:42
+      const timerDisplay = document.getElementById('timerDisplay');
+      const recordingToggleBtn = document.getElementById('recordingToggleBtn');
+      const recordingIcon = document.getElementById('recordingIcon');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const retryBtn = document.getElementById('retryBtn');
+      const toggleTranslateBtn = document.getElementById('toggleTranslateBtn');
+      const transModeText = document.getElementById('transModeText');
+      const transcriptEnglish = document.getElementById('transcriptEnglish');
+      const waveformBars = document.querySelectorAll('.waveform-bar');
+      const confirmCtaBtn = document.getElementById('confirmCtaBtn');
+
+      // Live waveform simulation
+      const waveformInterval = setInterval(() => {
+        if (!isRecording) return;
+        waveformBars.forEach(bar => {
+          const randomHeight = Math.floor(Math.random() * 40) + 12;
+          bar.style.height = `${randomHeight}px`;
+        });
+      }, 180);
+
+      // Recording timer ticker
+      const timerInterval = setInterval(() => {
+        if (!isRecording) return;
+        if (timerSeconds >= 180) {
+          isRecording = false;
+          return;
+        }
+        timerSeconds++;
+        const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+        const secs = (timerSeconds % 60).toString().padStart(2, '0');
+        timerDisplay.textContent = `${mins}:${secs} / 03:00 max`;
+      }, 1000);
+
+      // Toggle Pause/Play
+      function toggleRecording() {
+        isRecording = !isRecording;
+        if (isRecording) {
+          recordingIcon.textContent = 'mic';
+          recordingToggleBtn.classList.remove('bg-surface-variant', 'text-on-surface');
+          recordingToggleBtn.classList.add('bg-primary-container', 'text-surface-container-lowest');
+          pauseBtn.innerHTML = `<span class="material-symbols-outlined text-label-md" data-icon="pause">pause</span><span>Pause</span>`;
+        } else {
+          recordingIcon.textContent = 'mic_off';
+          recordingToggleBtn.classList.remove('bg-primary-container', 'text-surface-container-lowest');
+          recordingToggleBtn.classList.add('bg-surface-variant', 'text-on-surface');
+          pauseBtn.innerHTML = `<span class="material-symbols-outlined text-label-md" data-icon="play_arrow">play_arrow</span><span>Resume</span>`;
+          waveformBars.forEach(bar => bar.style.height = '6px');
+        }
+      }
+
+      recordingToggleBtn.addEventListener('click', toggleRecording);
+      pauseBtn.addEventListener('click', toggleRecording);
+
+      // Restart Recording
+      retryBtn.addEventListener('click', () => {
+        timerSeconds = 0;
+        timerDisplay.textContent = `00:00 / 03:00 max`;
+        isRecording = true;
+        recordingIcon.textContent = 'mic';
+        recordingToggleBtn.classList.remove('bg-surface-variant', 'text-on-surface');
+        recordingToggleBtn.classList.add('bg-primary-container', 'text-surface-container-lowest');
+      });
+
+      // Toggle Translation visibility
+      let showingEnglish = true;
+      toggleTranslateBtn.addEventListener('click', () => {
+        showingEnglish = !showingEnglish;
+        if (showingEnglish) {
+          transcriptEnglish.classList.remove('hidden');
+          transModeText.textContent = 'Hide English Translation';
+        } else {
+          transcriptEnglish.classList.add('hidden');
+          transModeText.textContent = 'Show English Translation';
+        }
+      });
+
+      // Audio Sample Replay feedback
+      const listenReplayBtn = document.getElementById('listenReplayBtn');
+      listenReplayBtn.addEventListener('click', () => {
+        listenReplayBtn.classList.add('ring-2', 'ring-primary');
+        setTimeout(() => {
+          listenReplayBtn.classList.remove('ring-2', 'ring-primary');
+        }, 800);
+      });
+
+      // Final CTA interactive toast
+      confirmCtaBtn.addEventListener('click', () => {
+        confirmCtaBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-label-md">progress_activity</span> Generating Sovereign Credential...`;
+        setTimeout(() => {
+          confirmCtaBtn.innerHTML = `<span class="material-symbols-outlined text-label-md">check_circle</span> Card Generated Successfully!`;
+          confirmCtaBtn.classList.remove('bg-primary');
+          confirmCtaBtn.classList.add('bg-emerald-800');
+        }, 1200);
+      });
+    });
+  </script>
+</body></html>

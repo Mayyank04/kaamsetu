@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Sovereign Trust: Warm Ivory Foundation & Forest Green Anchor */
+    --background: 43 30% 96%; /* #F7F5F0 Warm Ivory */
+    --foreground: 150 12% 10%; /* #171D1A Deep Charcoal */
+
+    --card: 0 0% 100%; /* Pure White Credential Canvas */
+    --card-foreground: 150 12% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 12% 10%;
+
+    --primary: 167 49% 16%; /* #153E35 Forest Green */
+    --primary-foreground: 43 30% 96%; /* #F7F5F0 Warm Ivory */
+
+    --secondary: 36 63% 75%; /* #E8C999 Warm Sand */
+    --secondary-foreground: 167 49% 16%;
+
+    --muted: 150 10% 92%; /* Subtle tinted surface */
+    --muted-foreground: 150 6% 35%; /* #414846 */
+
+    --accent: 36 50% 90%; /* Soft sand highlight */
+    --accent-foreground: 167 49% 16%;
+
+    --destructive: 0 74% 42%; /* Institutional error red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 167 15% 86%; /* Calibrated 1px subtle rule */
+    --input: 167 15% 86%;
+    --ring: 167 49% 16%;
+
+    --radius: 0.375rem; /* Level 1 Soft Precision: 6px */
+  }
+
+  .dark {
+    --background: 160 30% 5%;
+    --foreground: 43 30% 96%;
+    --card: 160 25% 8%;
+    --card-foreground: 43 30% 96%;
+    --popover: 160 25% 8%;
+    --popover-foreground: 43 30% 96%;
+    --primary: 167 40% 45%;
+    --primary-foreground: 160 30% 5%;
+    --secondary: 36 63% 75%;
+    --secondary-foreground: 160 30% 5%;
+    --muted: 160 15% 15%;
+    --muted-foreground: 150 10% 70%;
+    --accent: 160 20% 18%;
+    --accent-foreground: 43 30% 96%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 20% 20%;
+    --input: 160 20% 20%;
+    --ring: 167 40% 45%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-sand selection:text-forest;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer utilities {
+  /* Precision Institutional Micro-Borders */
+  .border-micro {
+    border-width: 1px;
+    border-color: rgba(21, 62, 53, 0.08);
+  }
+
+  .border-micro-strong {
+    border-width: 1px;
+    border-color: rgba(21, 62, 53, 0.16);
+  }
+
+  /* Paper texture feel */
+  .bg-paper-grid {
+    background-size: 24px 24px;
+    background-image: 
+      linear-gradient(to right, rgba(21, 62, 53, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(21, 62, 53, 0.03) 1px, transparent 1px);
+  }
+
+  /* Sovereign Hologram Shimmer */
+  .hologram-seal {
+    background: linear-gradient(
+      135deg,
+      rgba(232, 201, 153, 0.4) 0%,
+      rgba(247, 245, 240, 0.8) 25%,
+      rgba(94, 130, 113, 0.3) 50%,
+      rgba(232, 201, 153, 0.5) 75%,
+      rgba(21, 62, 53, 0.2) 100%
+    );
+    background-size: 200% 200%;
+  }
+}
