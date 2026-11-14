@@ -115,6 +115,12 @@ export function validateEnvironmentSafety(): void {
     // Validate Rate Limiting HMAC Secret Quality
     const rateLimitSecret = process.env.RATE_LIMIT_HMAC_SECRET;
     assertCryptographicKeyQuality(rateLimitSecret, "RATE_LIMIT_HMAC_SECRET");
+
+    // Validate Payment Gateway Secret Quality if live payments enabled
+    if (process.env.ENABLE_LIVE_PAYMENTS === "true") {
+      const paymentSecret = process.env.PAYMENT_GATEWAY_SECRET || process.env.RAZORPAY_KEY_SECRET;
+      assertCryptographicKeyQuality(paymentSecret, "PAYMENT_GATEWAY_SECRET");
+    }
   }
 }
 

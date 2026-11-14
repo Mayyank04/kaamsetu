@@ -165,7 +165,7 @@ export default function HowItWorksPage() {
                 <span>ONTOLOGY NORMALIZATION</span>
                 <span className="text-forest font-bold">NSQF LEVEL 4</span>
               </div>
-              <div>Input: "Pichhle 14 saalon se teakwood furniture aur modular kitchen assembly..."</div>
+              <div>Input: &quot;Pichhle 14 saalon se teakwood furniture aur modular kitchen assembly...&quot;</div>
               <div className="text-forest font-bold">↳ Mapped Trade: Master Teak Wood Carpenter & Joiner (QP-CON/Q0104)</div>
               <div>↳ Core Competencies: Precision Mitering, Pocket Hole Joinery, Concealed Hinges</div>
               <div>↳ Equipment Confirmed: Bosch GKS 190, Makita Router, DeWalt Laser</div>
@@ -197,7 +197,7 @@ export default function HowItWorksPage() {
             </h2>
             <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
               Resumes can lie; peer craftspeople cannot. Other certified workers in the same geographic
-              circle stake their own KAAMSCORE reputation when vouching for a colleague's technical skill.
+              circle stake their own KAAMSCORE reputation when vouching for a colleague&apos;s technical skill.
             </p>
             <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
               When projects finish, licensed site supervisors or homeowners digitally sign off on punctuality and craftsmanship.
@@ -216,7 +216,7 @@ export default function HowItWorksPage() {
                 <span className="font-mono text-[10px]">IN-HR-2025-1029-KS</span>
               </div>
               <p className="text-charcoal-muted">
-                "Verified 18 months continuous tenure on DLF Phase 5 luxury towers. Zero electrical callbacks."
+                &quot;Verified 18 months continuous tenure on DLF Phase 5 luxury towers. Zero electrical callbacks.&quot;
               </p>
             </div>
 

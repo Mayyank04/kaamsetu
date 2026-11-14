@@ -44,12 +44,14 @@ export async function runBackendVerification() {
   const migration2Path = path.join(projectRoot, "supabase/migrations/20261114000002_row_level_security.sql");
   const migration7Path = path.join(projectRoot, "supabase/migrations/20261114000007_contractor_and_institutional_platform.sql");
   const migration8Path = path.join(projectRoot, "supabase/migrations/20261114000008_commercial_launch_and_workforce_consent.sql");
+  const migration9Path = path.join(projectRoot, "supabase/migrations/20261114000009_production_operations_crm_and_webhooks.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
   assert(fs.existsSync(migration2Path), "1. SQL Migrations", "Migration 02 (Row Level Security) exists");
   assert(fs.existsSync(migration7Path), "1. SQL Migrations", "Migration 07 (Contractor Pro & Institutional Platform) exists");
   assert(fs.existsSync(migration8Path), "1. SQL Migrations", "Migration 08 (Commercial Launch & Workforce Consent) exists");
+  assert(fs.existsSync(migration9Path), "1. SQL Migrations", "Migration 09 (Production Operations, CRM & Webhooks) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
@@ -119,6 +121,22 @@ export async function runBackendVerification() {
     );
   }
 
+  const m9Content = fs.readFileSync(migration9Path, "utf-8");
+  const phase8Tables = [
+    "crm_contractor_leads",
+    "payment_webhook_events",
+    "worker_association_events",
+  ];
+
+  for (const table of phase8Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m9Content),
+      "1. SQL Migrations",
+      `Phase 8 Table public.${table} defined in schema`
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // TEST SUITE 2: Row Level Security (RLS) Policies
   // ---------------------------------------------------------------------------
@@ -145,6 +163,14 @@ export async function runBackendVerification() {
       m8Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
       "2. Row Level Security",
       `RLS enabled on Phase 7 public.${table}`
+    );
+  }
+
+  for (const table of phase8Tables) {
+    assert(
+      m9Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `RLS enabled on Phase 8 public.${table}`
     );
   }
 

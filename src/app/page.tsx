@@ -66,7 +66,7 @@ export default function HomePage() {
               {/* Sovereign Sub-badge */}
               <div className="inline-flex items-center gap-2 rounded-xs bg-forest/10 px-3.5 py-1.5 border border-forest/20 text-xs font-bold text-forest uppercase tracking-wider shadow-2xs">
                 <ShieldCheck className="h-4 w-4 text-forest" />
-                <span>India's Sovereign Digital Workforce Infrastructure</span>
+                <span>India&apos;s Sovereign Digital Workforce Infrastructure</span>
               </div>
 
               {/* Required Exact Headline */}
@@ -418,7 +418,7 @@ export default function HomePage() {
             Closing the Trillion-Dollar Trust Deficit
           </h2>
           <p className="text-sm sm:text-base text-charcoal-muted leading-relaxed">
-            India's informal labor ecosystem suffers from middlemen cuts, unproven skill claims,
+            India&apos;s informal labor ecosystem suffers from middlemen cuts, unproven skill claims,
             and complete financial exclusion. KAAMSETU fixes the root cause: verifiable identity.
           </p>
         </div>
@@ -433,7 +433,7 @@ export default function HomePage() {
               Eliminating the Middleman Tax
             </h3>
             <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
-              Subcontractors routinely extract 30% to 45% of worker wages simply for "vouching" for reliability.
+              Subcontractors routinely extract 30% to 45% of worker wages simply for &quot;vouching&quot; for reliability.
               With KAAMSETU, workers carry their own unforgeable reputation directly to enterprise contractors.
             </p>
             <div className="pt-2 text-xs font-semibold text-forest">
@@ -608,7 +608,7 @@ export default function HomePage() {
               Informal Craftspeople
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Representing 93% of India's non-agricultural workforce currently uncredentialed on formal registries.
+              Representing 93% of India&apos;s non-agricultural workforce currently uncredentialed on formal registries.
             </p>
           </div>
 

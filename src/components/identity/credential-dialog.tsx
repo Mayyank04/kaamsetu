@@ -236,7 +236,7 @@ export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
                       Registry ID: {end.endorserRegistryId}
                     </span>
                   </div>
-                  <p className="text-charcoal-muted italic">"{end.comment}"</p>
+                  <p className="text-charcoal-muted italic">&quot;{end.comment}&quot;</p>
                 </div>
               ))}
             </div>

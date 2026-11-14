@@ -11,11 +11,11 @@ export function InstitutionalFooter() {
           <div className="flex items-center gap-2 text-sand-300">
             <ShieldCheck className="h-4 w-4 text-sand" />
             <span className="font-semibold tracking-wide">
-              National Digital Credential Infrastructure for India's Skilled Workforce
+              National Digital Credential Infrastructure for India&apos;s Skilled Workforce
             </span>
           </div>
           <div className="flex items-center gap-4 text-ivory/70 text-[11px]">
-            <span>DigiLocker Integrated</span>
+            <span>DigiLocker Integration Ready</span>
             <span>•</span>
             <span>Open Skill Trust Protocol</span>
             <span>•</span>
@@ -38,7 +38,7 @@ export function InstitutionalFooter() {
               </span>
             </div>
             <p className="text-xs text-ivory/70 leading-relaxed">
-              Equipping India's 450M+ skilled craftspeople, trades workers, and independent contractors with unforgeable, sovereign digital identities and verifiable creditworthiness.
+              Equipping India&apos;s 450M+ skilled craftspeople, trades workers, and independent contractors with unforgeable, sovereign digital identities and verifiable creditworthiness.
             </p>
             <div className="pt-2 text-[11px] font-mono text-sand-300">
               [DEMO ENVIRONMENT ACTIVE]
@@ -136,7 +136,7 @@ export function InstitutionalFooter() {
         {/* Bottom Strip */}
         <div className="mt-12 pt-6 border-t border-forest-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-ivory/60">
           <div>
-            © {new Date().getFullYear()} KAAMSETU Sovereign Trust Infrastructure. Built for India's Skilled Workforce.
+            © {new Date().getFullYear()} KAAMSETU Sovereign Trust Infrastructure. Built for India&apos;s Skilled Workforce.
           </div>
           <div className="flex items-center gap-4">
             <span>Server: Supabase SSR</span>

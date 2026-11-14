@@ -49,7 +49,7 @@ export default function AboutPage() {
               The Informal Workforce Dilemma
             </span>
             <h2 className="text-3xl font-bold tracking-tight text-forest">
-              93% of India's skilled hands operate without proof.
+              93% of India&apos;s skilled hands operate without proof.
             </h2>
             <p className="text-sm text-charcoal-muted leading-relaxed">
               In India, a carpenter with two decades of master joinery experience is treated by banks

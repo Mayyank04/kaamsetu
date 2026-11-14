@@ -8,3 +8,4 @@ export * from "./contractors";
 export * from "./institutions";
 export * from "./invitations";
 export * from "./institutional-ops";
+export * from "./crm";

@@ -19,8 +19,14 @@ import {
   BillingCycle,
   PRICING_PLANS,
 } from "@/lib/config/pricing-plans";
-import { SubscriptionOrder, ContractorOrganization } from "@/types/database.types";
+import {
+  SubscriptionOrder,
+  ContractorOrganization,
+  PaymentWebhookEvent,
+  WorkerAssociationEvent,
+} from "@/types/database.types";
 import { logger } from "@/lib/security/privacy-logger";
+import { assertCryptographicKeyQuality } from "@/lib/crypto/key-validator";
 
 export interface CreateOrderParams {
   organizationId: string;
@@ -44,12 +50,46 @@ export interface PaymentVerificationResult {
   errorMessage?: string;
 }
 
+export interface WebhookProcessingResult {
+  success: boolean;
+  duplicate: boolean;
+  event?: PaymentWebhookEvent;
+  order?: SubscriptionOrder;
+  organization?: ContractorOrganization;
+  error?: string;
+}
+
+/**
+ * Timing-safe string comparison that guarantees buffers have equal length
+ * and never throws runtime RangeError on malformed hex strings.
+ */
+export function safeTimingEqual(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  if (a.length !== b.length || a.length === 0) return false;
+  try {
+    const bufA = Buffer.from(a, "hex");
+    const bufB = Buffer.from(b, "hex");
+    if (bufA.length !== bufB.length || bufA.length === 0) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Secret key for sandbox and webhook verification.
- * In production, fetched from RAZORPAY_KEY_SECRET or STRIPE_WEBHOOK_SECRET.
+ * In production, strictly requires PAYMENT_GATEWAY_SECRET or RAZORPAY_KEY_SECRET with >=32 bytes of entropy.
  */
-function getPaymentSecret(): string {
-  return process.env.PAYMENT_GATEWAY_SECRET || process.env.AUTH_SECRET || "kaamsetu-sandbox-secret-key-32bytes-min";
+export function getPaymentSecret(): string {
+  const secret = process.env.PAYMENT_GATEWAY_SECRET || process.env.RAZORPAY_KEY_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    if (!secret) {
+      throw new Error("FATAL CONFIGURATION ERROR: PAYMENT_GATEWAY_SECRET is required in production.");
+    }
+    assertCryptographicKeyQuality(secret, "PAYMENT_GATEWAY_SECRET");
+    return secret;
+  }
+  return secret || process.env.AUTH_SECRET || "kaamsetu-sandbox-secret-key-32bytes-min";
 }
 
 /**
@@ -140,11 +180,8 @@ export async function verifyAndCapturePayment(
     .update(payload)
     .digest("hex");
 
-  // In sandbox testing mode, accept expectedSignature or designated test signature
-  const isMatch = crypto.timingSafeEqual(
-    Buffer.from(params.gatewaySignature, "hex"),
-    Buffer.from(expectedSignature, "hex")
-  );
+  // In sandbox testing mode, accept expectedSignature using timing-safe comparison
+  const isMatch = safeTimingEqual(params.gatewaySignature.trim(), expectedSignature);
 
   if (!isMatch) {
     logger.warn("Payment signature verification failed. Potential tampering attempt.", {
@@ -243,6 +280,254 @@ export async function verifyAndCapturePayment(
     order: updatedOrder,
     organization: updatedOrg,
   };
+}
+
+/**
+ * Validates cryptographic webhook signature (X-Razorpay-Signature)
+ */
+export function verifyWebhookSignature(
+  rawBody: string,
+  signatureHeader: string | undefined | null,
+  secretOverride?: string
+): { isValid: boolean; error?: string } {
+  if (!signatureHeader || typeof signatureHeader !== "string") {
+    return { isValid: false, error: "Missing webhook signature header." };
+  }
+  const secret = secretOverride || getPaymentSecret();
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody)
+    .digest("hex");
+
+  const isValid = safeTimingEqual(signatureHeader.trim(), expectedSignature);
+  return {
+    isValid,
+    error: isValid ? undefined : "Cryptographic webhook signature mismatch.",
+  };
+}
+
+/**
+ * Replay defense: ensures webhook timestamp is within allowed tolerance window (default 300 seconds).
+ */
+export function verifyWebhookReplayDefense(
+  timestampHeader: string | number | undefined | null,
+  maxAgeSeconds: number = 300
+): { isValid: boolean; error?: string } {
+  if (!timestampHeader) {
+    if (process.env.NODE_ENV === "production") {
+      return { isValid: false, error: "Missing required webhook timestamp header in production." };
+    }
+    return { isValid: true };
+  }
+  const tsNum = typeof timestampHeader === "number" ? timestampHeader : parseInt(String(timestampHeader), 10);
+  if (isNaN(tsNum)) {
+    return { isValid: false, error: "Malformed webhook timestamp." };
+  }
+  // Convert unix seconds to milliseconds if needed
+  const tsMs = tsNum > 1e11 ? tsNum : tsNum * 1000;
+  const now = Date.now();
+  const ageSeconds = Math.abs(now - tsMs) / 1000;
+
+  if (ageSeconds > maxAgeSeconds) {
+    return {
+      isValid: false,
+      error: `Webhook timestamp expired (${Math.round(ageSeconds)}s old, max allowed: ${maxAgeSeconds}s). Replay rejected.`,
+    };
+  }
+  return { isValid: true };
+}
+
+/**
+ * Processes incoming payment gateway webhook events with idempotency and state transitions.
+ */
+export async function processPaymentWebhookEvent(params: {
+  eventId: string;
+  eventType: string;
+  payload: any;
+  gateway?: string;
+}): Promise<WebhookProcessingResult> {
+  const gateway = params.gateway || "razorpay";
+
+  if (!isConfigured.supabase) {
+    return {
+      success: true,
+      duplicate: false,
+      event: {
+        id: `mock-evt-${params.eventId}`,
+        event_id: params.eventId,
+        event_type: params.eventType,
+        payment_gateway: gateway,
+        payload: params.payload,
+        status: "processed",
+        error_message: null,
+        processed_at: new Date().toISOString(),
+      },
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  // 1. Idempotency Check: Have we processed this eventId already?
+  const { data: existingEvent } = await supabase
+    .from("payment_webhook_events")
+    .select("*")
+    .eq("event_id", params.eventId)
+    .maybeSingle();
+
+  if (existingEvent && existingEvent.status === "processed") {
+    logger.info("Webhook event already processed (idempotent ignore)", { eventId: params.eventId });
+    return {
+      success: true,
+      duplicate: true,
+      event: existingEvent,
+    };
+  }
+
+  // 2. Insert event record in 'received' status
+  const { data: eventRecord, error: insertError } = await supabase
+    .from("payment_webhook_events")
+    .upsert({
+      event_id: params.eventId,
+      event_type: params.eventType,
+      payment_gateway: gateway,
+      payload: params.payload,
+      status: "received",
+    })
+    .select("*")
+    .single();
+
+  if (insertError) {
+    logger.error("Failed to insert webhook event record", { error: String(insertError) });
+    return { success: false, duplicate: false, error: String(insertError) };
+  }
+
+  // 3. Dispatch by event type
+  let updatedOrder: SubscriptionOrder | undefined;
+  let updatedOrg: ContractorOrganization | undefined;
+
+  try {
+    if (params.eventType === "payment.captured" || params.eventType === "order.paid") {
+      const orderRef = params.payload?.order_reference || params.payload?.notes?.order_reference;
+      const gatewayOrderId = params.payload?.order_id || params.payload?.id;
+      const gatewayPaymentId = params.payload?.payment_id || params.payload?.id;
+
+      if (orderRef) {
+        const verifyRes = await verifyAndCapturePayment({
+          orderReference: orderRef,
+          gatewayOrderId,
+          gatewayPaymentId,
+          gatewaySignature: params.payload?.signature || crypto.createHmac("sha256", getPaymentSecret()).update(`${gatewayOrderId}|${gatewayPaymentId}`).digest("hex"),
+        });
+        if (verifyRes.isVerified) {
+          updatedOrder = verifyRes.order;
+          updatedOrg = verifyRes.organization;
+        }
+      }
+    } else if (params.eventType === "payment.failed") {
+      const orderRef = params.payload?.order_reference || params.payload?.notes?.order_reference;
+      if (orderRef) {
+        const { data: failedOrder } = await supabase
+          .from("subscription_orders")
+          .update({
+            status: "failed",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("order_reference", orderRef)
+          .select("*")
+          .single();
+        updatedOrder = failedOrder || undefined;
+      }
+    } else if (params.eventType === "refund.processed") {
+      const orderRef = params.payload?.order_reference || params.payload?.notes?.order_reference;
+      if (orderRef) {
+        const { data: refundedOrder } = await supabase
+          .from("subscription_orders")
+          .update({
+            status: "refunded",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("order_reference", orderRef)
+          .select("*")
+          .single();
+        updatedOrder = refundedOrder || undefined;
+      }
+    }
+
+    // 4. Mark event as processed
+    await supabase
+      .from("payment_webhook_events")
+      .update({
+        status: "processed",
+        processed_at: new Date().toISOString(),
+      })
+      .eq("id", eventRecord.id);
+
+    return {
+      success: true,
+      duplicate: false,
+      event: { ...eventRecord, status: "processed" },
+      order: updatedOrder,
+      organization: updatedOrg,
+    };
+  } catch (err: any) {
+    logger.error("Error executing webhook event state transition", { error: String(err) });
+    await supabase
+      .from("payment_webhook_events")
+      .update({
+        status: "failed",
+        error_message: String(err.message || err),
+        processed_at: new Date().toISOString(),
+      })
+      .eq("id", eventRecord.id);
+
+    return {
+      success: false,
+      duplicate: false,
+      error: String(err.message || err),
+    };
+  }
+}
+
+/**
+ * Records a worker association event in the tamper-evident audit log.
+ */
+export async function recordWorkerAssociationEvent(params: {
+  workerId: string;
+  organizationId: string;
+  action: "joined" | "hidden" | "made_public" | "withdrawn" | "revoked";
+  actorUserId: string;
+  reason?: string;
+}): Promise<WorkerAssociationEvent> {
+  if (!isConfigured.supabase) {
+    return {
+      id: `assoc-evt-${Date.now()}`,
+      worker_id: params.workerId,
+      organization_id: params.organizationId,
+      action: params.action,
+      actor_user_id: params.actorUserId,
+      reason: params.reason || null,
+      created_at: new Date().toISOString(),
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("worker_association_events")
+    .insert({
+      worker_id: params.workerId,
+      organization_id: params.organizationId,
+      action: params.action,
+      actor_user_id: params.actorUserId,
+      reason: params.reason || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    logger.error("Failed to record worker association event", { error: String(error) });
+    throw error;
+  }
+  return data;
 }
 
 /**

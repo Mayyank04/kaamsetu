@@ -1007,6 +1007,126 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      crm_contractor_leads: {
+        Row: {
+          id: string;
+          prospect_code: string;
+          organization_name: string;
+          contact_name: string;
+          contact_phone: string | null;
+          district: string;
+          stage: "lead" | "contacted" | "qualified" | "demo_scheduled" | "demo_completed" | "trial_active" | "payment_pending" | "paid" | "lost" | "follow_up_required";
+          plan_pitch: "starter" | "pro" | "business";
+          willingness_to_pay: boolean;
+          roster_size_estimated: number;
+          notes: string | null;
+          converted_organization_id: string | null;
+          converted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          prospect_code: string;
+          organization_name: string;
+          contact_name: string;
+          contact_phone?: string | null;
+          district?: string;
+          stage?: "lead" | "contacted" | "qualified" | "demo_scheduled" | "demo_completed" | "trial_active" | "payment_pending" | "paid" | "lost" | "follow_up_required";
+          plan_pitch?: "starter" | "pro" | "business";
+          willingness_to_pay?: boolean;
+          roster_size_estimated?: number;
+          notes?: string | null;
+          converted_organization_id?: string | null;
+          converted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          prospect_code?: string;
+          organization_name?: string;
+          contact_name?: string;
+          contact_phone?: string | null;
+          district?: string;
+          stage?: "lead" | "contacted" | "qualified" | "demo_scheduled" | "demo_completed" | "trial_active" | "payment_pending" | "paid" | "lost" | "follow_up_required";
+          plan_pitch?: "starter" | "pro" | "business";
+          willingness_to_pay?: boolean;
+          roster_size_estimated?: number;
+          notes?: string | null;
+          converted_organization_id?: string | null;
+          converted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      payment_webhook_events: {
+        Row: {
+          id: string;
+          event_id: string;
+          event_type: string;
+          payment_gateway: string;
+          payload: Json;
+          status: "received" | "processed" | "ignored" | "failed";
+          error_message: string | null;
+          processed_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          event_type: string;
+          payment_gateway?: string;
+          payload?: Json;
+          status?: "received" | "processed" | "ignored" | "failed";
+          error_message?: string | null;
+          processed_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          event_type?: string;
+          payment_gateway?: string;
+          payload?: Json;
+          status?: "received" | "processed" | "ignored" | "failed";
+          error_message?: string | null;
+          processed_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_association_events: {
+        Row: {
+          id: string;
+          worker_id: string;
+          organization_id: string;
+          action: "joined" | "hidden" | "made_public" | "withdrawn" | "revoked";
+          actor_user_id: string;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_id: string;
+          organization_id: string;
+          action: "joined" | "hidden" | "made_public" | "withdrawn" | "revoked";
+          actor_user_id: string;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_id?: string;
+          organization_id?: string;
+          action?: "joined" | "hidden" | "made_public" | "withdrawn" | "revoked";
+          actor_user_id?: string;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -1045,3 +1165,6 @@ export type WorkforceInvitation = Database["public"]["Tables"]["workforce_invita
 export type SubscriptionOrder = Database["public"]["Tables"]["subscription_orders"]["Row"];
 export type CohortTraineeProgress = Database["public"]["Tables"]["cohort_trainee_progress"]["Row"];
 export type InstitutionAuditLog = Database["public"]["Tables"]["institution_audit_logs"]["Row"];
+export type CrmContractorLead = Database["public"]["Tables"]["crm_contractor_leads"]["Row"];
+export type PaymentWebhookEvent = Database["public"]["Tables"]["payment_webhook_events"]["Row"];
+export type WorkerAssociationEvent = Database["public"]["Tables"]["worker_association_events"]["Row"];
