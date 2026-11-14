@@ -23,6 +23,14 @@ const envSchema = z.object({
     .optional()
     .default("placeholder-gemini-api-key"),
 
+  // Cryptographic Credential Signing
+  CREDENTIAL_SIGNING_KEY: z.string().optional(),
+  ACTIVE_SIGNING_KEY_VERSION: z.string().default("v1"),
+  REVOKED_SIGNING_KEY_VERSIONS: z.string().default(""),
+
+  // Rate Limiting
+  ENABLE_IN_MEMORY_RATE_LIMIT_MOCK: z.string().optional(),
+
   // Application
   NEXT_PUBLIC_APP_URL: z
     .string()
@@ -53,6 +61,10 @@ function validateEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    CREDENTIAL_SIGNING_KEY: process.env.CREDENTIAL_SIGNING_KEY,
+    ACTIVE_SIGNING_KEY_VERSION: process.env.ACTIVE_SIGNING_KEY_VERSION,
+    REVOKED_SIGNING_KEY_VERSIONS: process.env.REVOKED_SIGNING_KEY_VERSIONS,
+    ENABLE_IN_MEMORY_RATE_LIMIT_MOCK: process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NODE_ENV: process.env.NODE_ENV,
     ENABLE_DEMO_AUTH: process.env.ENABLE_DEMO_AUTH,
@@ -86,6 +98,12 @@ export function validateEnvironmentSafety(): void {
     ) {
       throw new Error(
         "FATAL SECURITY VIOLATION: Demo authentication (ENABLE_DEMO_AUTH) cannot be enabled in production."
+      );
+    }
+    const signingKey = process.env.CREDENTIAL_SIGNING_KEY;
+    if (!signingKey || signingKey.length < 32) {
+      throw new Error(
+        "FATAL SECURITY VIOLATION: CREDENTIAL_SIGNING_KEY must be configured with at least 32 characters (256 bits) in production."
       );
     }
   }

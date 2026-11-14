@@ -9,7 +9,8 @@
     "lint": "next lint",
     "verify:db": "tsx src/lib/supabase/db/verify-backend.ts",
     "test:rls": "tsx test/rls-integration.test.ts",
-    "test:crypto": "tsx test/credential-signature.test.ts"
+    "test:crypto": "tsx test/credential-signature.test.ts",
+    "test:ratelimit": "tsx test/rate-limiter.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

@@ -247,12 +247,12 @@ export async function POST(request: NextRequest) {
               {
                 registry_id: registryId,
                 worker_profile_id: targetWorkerProfileId,
-                canonical_hash: signed.canonicalHash,
+                canonical_payload_hash: signed.canonicalHash,
                 signature: signed.signature,
-                status: "active",
                 algorithm: "HMAC-SHA256",
+                status: "active",
+                key_version: signed.keyVersion,
                 issued_at: credentialPayload.issuedAt,
-                expires_at: credentialPayload.expiresAt,
               },
               { onConflict: "registry_id" }
             );

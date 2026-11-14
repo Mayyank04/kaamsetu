@@ -101,9 +101,12 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
             issuedAt: credRow.issued_at,
             expiresAt: credRow.expires_at,
             status: credRow.status,
+            keyVersion: credRow.key_version || "v1",
           };
 
-          const ver = verifyCredentialSignature(credPayload, credRow.signature);
+          const ver = verifyCredentialSignature(credPayload, credRow.signature, {
+            keyVersion: credRow.key_version || "v1",
+          });
           verificationStatus = ver.status;
           statusReason = ver.reason || "";
         } else {
