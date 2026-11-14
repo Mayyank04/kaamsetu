@@ -573,6 +573,9 @@ export interface Database {
           status: "active" | "inactive" | "on_leave";
           project_role: string;
           daily_wage_rate: number | null;
+          is_public_on_roster: boolean;
+          invitation_id: string | null;
+          joined_at: string;
           added_at: string;
         };
         Insert: {
@@ -582,6 +585,9 @@ export interface Database {
           status?: "active" | "inactive" | "on_leave";
           project_role?: string;
           daily_wage_rate?: number | null;
+          is_public_on_roster?: boolean;
+          invitation_id?: string | null;
+          joined_at?: string;
           added_at?: string;
         };
         Update: {
@@ -591,6 +597,9 @@ export interface Database {
           status?: "active" | "inactive" | "on_leave";
           project_role?: string;
           daily_wage_rate?: number | null;
+          is_public_on_roster?: boolean;
+          invitation_id?: string | null;
+          joined_at?: string;
           added_at?: string;
         };
         Relationships: [];
@@ -811,6 +820,193 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      workforce_invitations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          worker_profile_id: string;
+          invited_by: string;
+          proposed_role: string;
+          proposed_daily_wage: number | null;
+          message: string | null;
+          status: "pending" | "accepted" | "rejected" | "cancelled" | "expired";
+          token: string;
+          expires_at: string;
+          responded_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          worker_profile_id: string;
+          invited_by: string;
+          proposed_role?: string;
+          proposed_daily_wage?: number | null;
+          message?: string | null;
+          status?: "pending" | "accepted" | "rejected" | "cancelled" | "expired";
+          token?: string;
+          expires_at?: string;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          worker_profile_id?: string;
+          invited_by?: string;
+          proposed_role?: string;
+          proposed_daily_wage?: number | null;
+          message?: string | null;
+          status?: "pending" | "accepted" | "rejected" | "cancelled" | "expired";
+          token?: string;
+          expires_at?: string;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      subscription_orders: {
+        Row: {
+          id: string;
+          organization_id: string;
+          order_reference: string;
+          plan_tier: "starter" | "pro" | "business";
+          billing_cycle: "monthly" | "annual";
+          base_amount: number;
+          gst_amount: number;
+          total_amount: number;
+          currency: string;
+          payment_gateway: "sandbox" | "razorpay" | "stripe" | "manual_invoice";
+          gateway_order_id: string | null;
+          gateway_payment_id: string | null;
+          gateway_signature: string | null;
+          status: "created" | "pending" | "authorized" | "captured" | "failed" | "refunded";
+          invoice_url: string | null;
+          metadata: Json | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          order_reference: string;
+          plan_tier: "starter" | "pro" | "business";
+          billing_cycle?: "monthly" | "annual";
+          base_amount: number;
+          gst_amount: number;
+          total_amount: number;
+          currency?: string;
+          payment_gateway?: "sandbox" | "razorpay" | "stripe" | "manual_invoice";
+          gateway_order_id?: string | null;
+          gateway_payment_id?: string | null;
+          gateway_signature?: string | null;
+          status?: "created" | "pending" | "authorized" | "captured" | "failed" | "refunded";
+          invoice_url?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          order_reference?: string;
+          plan_tier?: "starter" | "pro" | "business";
+          billing_cycle?: "monthly" | "annual";
+          base_amount?: number;
+          gst_amount?: number;
+          total_amount?: number;
+          currency?: string;
+          payment_gateway?: "sandbox" | "razorpay" | "stripe" | "manual_invoice";
+          gateway_order_id?: string | null;
+          gateway_payment_id?: string | null;
+          gateway_signature?: string | null;
+          status?: "created" | "pending" | "authorized" | "captured" | "failed" | "refunded";
+          invoice_url?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      cohort_trainee_progress: {
+        Row: {
+          id: string;
+          participant_id: string;
+          module_name: string;
+          hours_attended: number;
+          assessment_score: number | null;
+          practical_demonstration_verified: boolean;
+          evaluator_name: string | null;
+          placement_status: "training" | "completed" | "placed" | "self_employed" | "seeking_opportunity";
+          employer_or_contractor_name: string | null;
+          monthly_stipend_or_wage: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          participant_id: string;
+          module_name: string;
+          hours_attended?: number;
+          assessment_score?: number | null;
+          practical_demonstration_verified?: boolean;
+          evaluator_name?: string | null;
+          placement_status?: "training" | "completed" | "placed" | "self_employed" | "seeking_opportunity";
+          employer_or_contractor_name?: string | null;
+          monthly_stipend_or_wage?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          participant_id?: string;
+          module_name?: string;
+          hours_attended?: number;
+          assessment_score?: number | null;
+          practical_demonstration_verified?: boolean;
+          evaluator_name?: string | null;
+          placement_status?: "training" | "completed" | "placed" | "self_employed" | "seeking_opportunity";
+          employer_or_contractor_name?: string | null;
+          monthly_stipend_or_wage?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institution_audit_logs: {
+        Row: {
+          id: string;
+          institution_id: string;
+          actor_id: string;
+          action: string;
+          target_type: string;
+          target_id: string;
+          details: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          actor_id: string;
+          action: string;
+          target_type: string;
+          target_id: string;
+          details?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_id?: string;
+          actor_id?: string;
+          action?: string;
+          target_type?: string;
+          target_id?: string;
+          details?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -845,3 +1041,7 @@ export type InstitutionalCohort = Database["public"]["Tables"]["institutional_co
 export type CohortParticipant = Database["public"]["Tables"]["cohort_participants"]["Row"];
 export type AbuseReport = Database["public"]["Tables"]["abuse_reports"]["Row"];
 export type ProfileCorrection = Database["public"]["Tables"]["profile_corrections"]["Row"];
+export type WorkforceInvitation = Database["public"]["Tables"]["workforce_invitations"]["Row"];
+export type SubscriptionOrder = Database["public"]["Tables"]["subscription_orders"]["Row"];
+export type CohortTraineeProgress = Database["public"]["Tables"]["cohort_trainee_progress"]["Row"];
+export type InstitutionAuditLog = Database["public"]["Tables"]["institution_audit_logs"]["Row"];

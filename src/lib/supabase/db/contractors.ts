@@ -160,6 +160,9 @@ export async function getContractorWorkforce(orgId: string): Promise<WorkforceMe
         status: "active",
         project_role: "Lead Solar Electrician",
         daily_wage_rate: 1500,
+        is_public_on_roster: true,
+        invitation_id: null,
+        joined_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
         added_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
         worker: {
           id: "55555555-5555-5555-5555-555555550001",
@@ -181,6 +184,9 @@ export async function getContractorWorkforce(orgId: string): Promise<WorkforceMe
         status: "active",
         project_role: "Master Artisan",
         daily_wage_rate: 1800,
+        is_public_on_roster: true,
+        invitation_id: null,
+        joined_at: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
         added_at: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
         worker: {
           id: "55555555-5555-5555-5555-555555550002",
@@ -249,6 +255,9 @@ export async function getContractorWorkforce(orgId: string): Promise<WorkforceMe
       status: row.status,
       project_role: row.project_role,
       daily_wage_rate: row.daily_wage_rate,
+      is_public_on_roster: row.is_public_on_roster ?? true,
+      invitation_id: row.invitation_id || null,
+      joined_at: row.joined_at || row.added_at,
       added_at: row.added_at,
       worker: {
         id: wp?.id || row.worker_profile_id,
@@ -284,6 +293,9 @@ export async function addWorkerToWorkforce(
       status: "active",
       project_role: projectRole,
       daily_wage_rate: dailyWageRate || 1200,
+      is_public_on_roster: true,
+      invitation_id: null,
+      joined_at: new Date().toISOString(),
       added_at: new Date().toISOString(),
     };
   }

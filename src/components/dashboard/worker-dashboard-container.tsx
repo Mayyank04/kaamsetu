@@ -27,7 +27,12 @@ import {
   Clock,
   Star,
   FileText,
+  Mail,
+  Building2,
+  Check,
+  X as XIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface WorkerDashboardContainerProps {
   initialData: WorkerDashboardData;
@@ -42,6 +47,33 @@ export function WorkerDashboardContainer({
   >("overview");
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [isPublishing, setIsPublishing] = React.useState(false);
+  const [pendingInvitations, setPendingInvitations] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    fetch("/api/worker/invitations")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.data) setPendingInvitations(res.data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleRespondInvitation = async (invitationId: string, action: "accept" | "reject") => {
+    try {
+      const res = await fetch(`/api/worker/invitations/${invitationId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error?.message || "Failed to respond");
+
+      toast.success(json.meta?.message || "Response recorded");
+      setPendingInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to process invitation");
+    }
+  };
 
   // Toggle publish / unpublish
   const handleTogglePublish = async (newStatus: boolean) => {
@@ -290,6 +322,58 @@ export function WorkerDashboardContainer({
       <div className="space-y-8">
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {pendingInvitations.length > 0 && (
+              <div className="lg:col-span-2 bg-sand-50/80 border border-sand-300 rounded-2xl p-5 space-y-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-5 h-5 text-forest" />
+                    <h3 className="font-bold text-forest text-sm">
+                      Incoming Enterprise Crew Invitations ({pendingInvitations.length})
+                    </h3>
+                  </div>
+                  <span className="text-[11px] bg-forest text-sand px-2.5 py-0.5 rounded-full font-bold">
+                    Explicit Worker Consent Required
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {pendingInvitations.map((inv) => (
+                    <div
+                      key={inv.id}
+                      className="bg-card border border-sand-200 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                    >
+                      <div>
+                        <div className="font-bold text-forest text-sm flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-forest/70" />
+                          {inv.organizationName} ({inv.organizationCity})
+                        </div>
+                        <div className="text-xs text-charcoal mt-1">
+                          Enterprise Role: <strong className="font-semibold text-forest">{inv.proposed_role}</strong> • Offered Daily Wage:{" "}
+                          <strong className="text-forest font-semibold">₹{inv.proposed_daily_wage || "Standard"} / day</strong>
+                        </div>
+                        {inv.message && (
+                          <p className="text-xs text-charcoal-muted mt-1 italic">&ldquo;{inv.message}&rdquo;</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleRespondInvitation(inv.id, "reject")}
+                          className="px-3 py-1.5 rounded-lg border border-forest/20 text-xs font-semibold text-charcoal hover:bg-forest/5"
+                        >
+                          Decline
+                        </button>
+                        <button
+                          onClick={() => handleRespondInvitation(inv.id, "accept")}
+                          className="px-4 py-1.5 rounded-lg bg-forest text-sand text-xs font-bold hover:bg-forest-600 shadow-xs"
+                        >
+                          Accept & Join Crew
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <IdentityWidget profile={data.profile} />
             <AvailabilitySettings
               currentStatus={data.profile.availabilityStatus}

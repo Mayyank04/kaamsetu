@@ -13,7 +13,8 @@
     "test:ratelimit": "tsx test/rate-limiter.test.ts",
     "test:ai": "tsx test/ai-accuracy-ground-truth.test.ts",
     "test:perf": "tsx test/network-resilience.test.ts",
-    "test:multitenant": "tsx test/contractor-institution-security.test.ts"
+    "test:multitenant": "tsx test/contractor-institution-security.test.ts",
+    "test:commercial": "tsx test/commercial-billing-invitation.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

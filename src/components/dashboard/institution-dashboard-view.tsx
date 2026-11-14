@@ -242,8 +242,16 @@ export function InstitutionDashboardView({
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <div className="flex items-center gap-2 flex-wrap">
+              <a
+                href={`/api/institution/cohorts/${selectedCohort.id}/export?format=csv`}
+                download
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-sand-100 hover:bg-sand-200 text-forest-900 border border-sand-300 transition-colors"
+              >
+                <FileCheck2 className="w-3.5 h-3.5 text-sand-700" />
+                Export CSV Dossier
+              </a>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <Award className="w-3.5 h-3.5" />
                 {selectedCohort.credentialsIssuedCount} Credentials Minted
               </span>
