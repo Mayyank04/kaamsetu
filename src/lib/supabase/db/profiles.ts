@@ -4,8 +4,13 @@ import { WorkerProfile, Occupation, Skill, PortfolioItem, Review, WorkRecord } f
 import { FEATURED_PROFESSIONALS } from "@/lib/data/professionals";
 
 export interface WorkerFilterParams {
+  search?: string;
   categorySlug?: string;
+  skill?: string;
   city?: string;
+  minExperience?: number;
+  maxExperience?: number;
+  availability?: "all" | "available" | "on_site";
   minKaamScore?: number;
   limit?: number;
   offset?: number;
@@ -36,7 +41,7 @@ export async function getPublishedWorkerProfiles(
       headline: p.primaryTrade,
       bio: p.bio,
       years_experience: p.yearsExperience,
-      hourly_rate: 150.00,
+      hourly_rate: 150.0,
       daily_rate_min: p.dailyRateEstimate?.min || 1000,
       daily_rate_max: p.dailyRateEstimate?.max || 1800,
       city: p.location.city,
@@ -52,16 +57,65 @@ export async function getPublishedWorkerProfiles(
       availability_status: p.availabilityStatus as "available",
       created_at: p.createdAt,
       updated_at: p.updatedAt,
+      subTrades: p.subTrades,
+      photoUrl: p.photoUrl,
     }));
 
-    if (filters.city && filters.city !== "all") {
-      result = result.filter((w) => w.city.toLowerCase() === filters.city!.toLowerCase());
+    if (filters.search && filters.search.trim()) {
+      const q = filters.search.toLowerCase().trim();
+      result = result.filter(
+        (w) =>
+          w.headline.toLowerCase().includes(q) ||
+          w.bio.toLowerCase().includes(q) ||
+          w.city.toLowerCase().includes(q) ||
+          w.state.toLowerCase().includes(q) ||
+          w.registry_id.toLowerCase().includes(q) ||
+          w.subTrades?.some((s) => s.toLowerCase().includes(q))
+      );
     }
+
+    if (filters.categorySlug && filters.categorySlug !== "all") {
+      const q = filters.categorySlug.toLowerCase().replace(/-/g, " ");
+      result = result.filter(
+        (w) =>
+          w.headline.toLowerCase().includes(q) ||
+          w.subTrades?.some((s) => s.toLowerCase().includes(q))
+      );
+    }
+
+    if (filters.skill && filters.skill !== "all") {
+      const sk = filters.skill.toLowerCase();
+      result = result.filter((w) =>
+        w.subTrades?.some((s) => s.toLowerCase().includes(sk))
+      );
+    }
+
+    if (filters.city && filters.city !== "all") {
+      result = result.filter(
+        (w) => w.city.toLowerCase() === filters.city!.toLowerCase()
+      );
+    }
+
+    if (filters.minExperience !== undefined) {
+      result = result.filter((w) => w.years_experience >= filters.minExperience!);
+    }
+
+    if (filters.maxExperience !== undefined) {
+      result = result.filter((w) => w.years_experience <= filters.maxExperience!);
+    }
+
+    if (filters.availability && filters.availability !== "all") {
+      result = result.filter((w) => w.availability_status === filters.availability);
+    }
+
     if (filters.minKaamScore) {
       result = result.filter((w) => w.kaamscore >= filters.minKaamScore!);
     }
 
-    return result.slice(filters.offset || 0, (filters.offset || 0) + (filters.limit || 20));
+    return result.slice(
+      filters.offset || 0,
+      (filters.offset || 0) + (filters.limit || 20)
+    );
   }
 
   const supabase = await createServerSupabaseClient();
@@ -74,8 +128,25 @@ export async function getPublishedWorkerProfiles(
     .eq("is_published", true)
     .order("kaamscore", { ascending: false });
 
+  if (filters.search && filters.search.trim()) {
+    const q = `%${filters.search.trim()}%`;
+    query = query.or(`headline.ilike.${q},bio.ilike.${q},city.ilike.${q}`);
+  }
+
   if (filters.city && filters.city !== "all") {
     query = query.ilike("city", filters.city);
+  }
+
+  if (filters.minExperience !== undefined) {
+    query = query.gte("years_experience", filters.minExperience);
+  }
+
+  if (filters.maxExperience !== undefined) {
+    query = query.lte("years_experience", filters.maxExperience);
+  }
+
+  if (filters.availability && filters.availability !== "all") {
+    query = query.eq("availability_status", filters.availability);
   }
 
   if (filters.minKaamScore) {
@@ -104,17 +175,25 @@ export async function getPublishedWorkerProfiles(
  */
 export async function getWorkerProfileBySlug(slug: string): Promise<WorkerProfileWithRelations | null> {
   if (!isConfigured.supabase) {
-    const demo = FEATURED_PROFESSIONALS[0];
+    const demo =
+      FEATURED_PROFESSIONALS.find((p) => {
+        const pSlug =
+          p.fullName.toLowerCase().replace(/\s+/g, "-") +
+          "-" +
+          p.location.city.toLowerCase();
+        return pSlug === slug || p.id === slug || p.registryId === slug;
+      }) || FEATURED_PROFESSIONALS[0];
+
     return {
       id: demo.id,
-      user_id: "33333333-3333-3333-3333-333333330001",
+      user_id: `33333333-3333-3333-3333-33333333000${demo.id.slice(-1)}`,
       registry_id: demo.registryId,
       slug: slug || "rameshwar-sharma-jaipur",
       occupation_id: "11111111-1111-1111-1111-111111111101",
       headline: demo.primaryTrade,
       bio: demo.bio,
       years_experience: demo.yearsExperience,
-      hourly_rate: 150.00,
+      hourly_rate: 150.0,
       daily_rate_min: demo.dailyRateEstimate?.min || 1100,
       daily_rate_max: demo.dailyRateEstimate?.max || 1700,
       city: demo.location.city,
@@ -127,15 +206,15 @@ export async function getWorkerProfileBySlug(slug: string): Promise<WorkerProfil
       aadhaar_verified: demo.aadhaarVerified,
       digilocker_linked: demo.digiLockerLinked,
       is_published: true,
-      availability_status: "available",
+      availability_status: (demo.availabilityStatus as any) || "available",
       created_at: demo.createdAt,
       updated_at: demo.updatedAt,
       occupation: {
         id: "11111111-1111-1111-1111-111111111101",
-        name: "Electrical & Solar",
+        name: demo.primaryTrade.split("&")[0].trim(),
         hindi_name: "विद्युत एवं सौर ऊर्जा",
         slug: "electrical-solar",
-        description: "Industrial wiring & solar.",
+        description: demo.primaryTrade,
         nsqf_level: 4,
         icon_name: "Zap",
         is_active: true,

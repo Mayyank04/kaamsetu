@@ -11,63 +11,174 @@ import {
   RotateCcw,
   SlidersHorizontal,
   ArrowRight,
+  Briefcase,
+  Award,
+  Clock,
+  Layers,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProfessionalCard } from "@/components/identity/professional-card";
 import { FEATURED_PROFESSIONALS } from "@/lib/data/professionals";
 import { PROFESSIONS_DATA } from "@/lib/data/professions";
+import { WorkerProfile } from "@/types/identity";
 
 export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
-  const [selectedTier, setSelectedTier] = React.useState("all");
+  const [selectedSkill, setSelectedSkill] = React.useState("all");
   const [selectedLocation, setSelectedLocation] = React.useState("all");
+  const [selectedExperience, setSelectedExperience] = React.useState("all");
+  const [selectedAvailability, setSelectedAvailability] = React.useState("all");
 
-  const locations = ["Jaipur", "Varanasi", "Pune", "Bengaluru", "New Delhi"];
+  const [professionals, setProfessionals] = React.useState(FEATURED_PROFESSIONALS);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const filteredProfessionals = FEATURED_PROFESSIONALS.filter((pro) => {
-    // Search query filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName = pro.fullName.toLowerCase().includes(q);
-      const matchTrade = pro.primaryTrade.toLowerCase().includes(q);
-      const matchLocation = `${pro.location.city} ${pro.location.state}`.toLowerCase().includes(q);
-      const matchSkills = pro.subTrades.some((s) => s.toLowerCase().includes(q));
-      if (!matchName && !matchTrade && !matchLocation && !matchSkills) return false;
-    }
+  const locations = [
+    "Jaipur",
+    "Varanasi",
+    "Pune",
+    "Bengaluru",
+    "New Delhi",
+    "Kolkata",
+    "Chennai",
+    "Amritsar",
+  ];
 
-    // Category filter
-    if (selectedCategory !== "all") {
-      const catObj = PROFESSIONS_DATA.find((c) => c.slug === selectedCategory);
-      if (catObj) {
-        const matchesCat =
-          pro.primaryTrade.toLowerCase().includes(catObj.title.split("&")[0].trim().toLowerCase()) ||
-          pro.subTrades.some((s) => catObj.popularSkills.includes(s));
-        if (!matchesCat) return false;
+  const popularSkills = [
+    "Rooftop Solar Array",
+    "3-Phase Inverters",
+    "Pure Silk Brocade",
+    "Zardozi Gold Thread",
+    "EV Battery Conversion",
+    "CRDI Fuel Injection",
+    "Closed-Loop Hydroponics",
+    "Concealed CPVC Piping",
+    "Teak Joinery",
+  ];
+
+  // Fetch from /api/workers with debounce
+  React.useEffect(() => {
+    let active = true;
+    const fetchWorkers = async () => {
+      setIsLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (searchQuery.trim()) params.set("search", searchQuery.trim());
+        if (selectedCategory !== "all") params.set("category", selectedCategory);
+        if (selectedSkill !== "all") params.set("skill", selectedSkill);
+        if (selectedLocation !== "all") params.set("city", selectedLocation);
+        if (selectedAvailability !== "all") params.set("availability", selectedAvailability);
+
+        if (selectedExperience !== "all") {
+          const exp = parseInt(selectedExperience, 10);
+          if (!isNaN(exp)) params.set("minExp", exp.toString());
+        }
+
+        const res = await fetch(`/api/workers?${params.toString()}`);
+        if (!res.ok) throw new Error("Search failed");
+        const json = await res.json();
+
+        if (active && json.success && Array.isArray(json.data)) {
+          // Map backend workers or match with featured professionals
+          const mapped = json.data.map((w: any) => {
+            const matchedDemo = FEATURED_PROFESSIONALS.find(
+              (p) => p.registryId === w.registry_id || p.id === w.id
+            );
+            if (matchedDemo) {
+              return {
+                ...matchedDemo,
+                availabilityStatus: w.availability_status || matchedDemo.availabilityStatus,
+              };
+            }
+
+            return {
+              id: w.id,
+              isDemoRecord: true as const,
+              registryId: w.registry_id || "IN-2026-KS",
+              fullName: w.fullName || w.headline?.split(" ")[0] || "Master Craftsman",
+              photoUrl: w.photoUrl || "https://images.unsplash.com/photo-1508873696983-2df570464756?auto=format&fit=crop&w=400&q=80",
+              primaryTrade: w.headline || "Certified Specialist",
+              subTrades: w.subTrades || ["Precision Craft", "Safety Certified"],
+              yearsExperience: w.years_experience || 5,
+              location: {
+                city: w.city || "Jaipur",
+                state: w.state || "Rajasthan",
+                pincode: w.pincode || "302001",
+              },
+              languages: w.languages || ["Hindi", "English"],
+              aadhaarVerified: w.aadhaar_verified ?? true,
+              digiLockerLinked: w.digilocker_linked ?? true,
+              bio: w.bio || "Certified trade professional on KAAMSETU.",
+              kaamScore: {
+                totalScore: w.kaamscore || 820,
+                tier: (w.kaamscore >= 820 ? "Sovereign Master" : "Institutional Tier") as any,
+                level: w.kaamscore_level || 4,
+                percentileRank: 95,
+                trajectory: "rising" as const,
+                lastVerifiedDate: "2026-11-14",
+                breakdown: {
+                  spokenAudioProof: 140,
+                  domainAIExtraction: 140,
+                  peerEndorsements: 160,
+                  completedJobs: 200,
+                  sovereignDigiLocker: 120,
+                },
+              },
+              badges: [],
+              experience: [],
+              endorsements: [],
+              qrVerificationUrl: `https://kaamsetu.gov.in/verify/${w.registry_id}`,
+              dailyRateEstimate: {
+                min: w.daily_rate_min || 1100,
+                max: w.daily_rate_max || 1800,
+              },
+              availabilityStatus: (w.availability_status as any) || "available",
+              createdAt: w.created_at || new Date().toISOString(),
+              updatedAt: w.updated_at || new Date().toISOString(),
+            };
+          });
+
+          setProfessionals(mapped);
+        }
+      } catch (err) {
+        console.error("Explore search error, using client dataset:", err);
+      } finally {
+        if (active) setIsLoading(false);
       }
-    }
+    };
 
-    // Tier filter
-    if (selectedTier !== "all") {
-      if (selectedTier === "master" && pro.kaamScore.level !== 4) return false;
-      if (selectedTier === "institutional" && pro.kaamScore.level !== 3) return false;
-    }
-
-    // Location filter
-    if (selectedLocation !== "all" && pro.location.city !== selectedLocation) {
-      return false;
-    }
-
-    return true;
-  });
+    const timer = setTimeout(fetchWorkers, 200);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedSkill,
+    selectedLocation,
+    selectedExperience,
+    selectedAvailability,
+  ]);
 
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
-    setSelectedTier("all");
+    setSelectedSkill("all");
     setSelectedLocation("all");
+    setSelectedExperience("all");
+    setSelectedAvailability("all");
   };
+
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    selectedCategory !== "all" ||
+    selectedSkill !== "all" ||
+    selectedLocation !== "all" ||
+    selectedExperience !== "all" ||
+    selectedAvailability !== "all";
 
   return (
     <div className="space-y-12 pb-24">
@@ -78,83 +189,81 @@ export default function ExplorePage() {
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center space-y-4">
           <div className="inline-flex items-center gap-2 rounded-xs bg-forest/10 px-3 py-1 border border-forest/20 text-xs font-bold text-forest uppercase tracking-wider">
             <ShieldCheck className="h-4 w-4 text-forest" />
-            <span>Open National Credential Registry</span>
+            <span>National Credential Registry & Discovery</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-forest leading-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-forest leading-tight font-serif">
             Explore Verified Indian Craftspeople
           </h1>
 
-          <p className="text-sm sm:text-base text-charcoal-muted max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-charcoal-muted max-w-2xl mx-auto leading-relaxed">
             Every professional listed holds a verified DigiLocker-linked record,
-            quantified KAAMSCORE rating, and peer-attested technical credentials.
+            quantified KAAMSCORE rating, and peer-attested technical credentials. All demo records are clearly labelled.
           </p>
+
+          <div className="pt-2">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="border-forest/20 text-forest text-xs"
+            >
+              <Link href="/customer/bookings">
+                <Briefcase className="w-3.5 h-3.5 mr-1.5" />
+                View My Customer Bookings Dashboard
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 
       {/* 2. Search & Filters Bar */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="rounded-md border border-forest/15 bg-card p-5 shadow-sovereign-sm space-y-4">
+        <div className="rounded-2xl border border-forest/15 bg-card p-6 shadow-sovereign-sm space-y-5">
           {/* Main Search Input */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-charcoal-muted" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-forest/50" />
             <input
               type="text"
-              placeholder="Search by worker name, craft (e.g. Solar, Joinery, Brocade), or tool..."
+              placeholder="Search by worker name, craft (e.g. Solar, Joinery, Weaving), tool, or city..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-12 pl-10 pr-4 rounded-sm border border-forest/20 bg-background text-sm focus:outline-none focus:border-forest focus:ring-2 focus:ring-sand/60"
+              className="w-full h-13 pl-12 pr-4 rounded-xl border border-forest/20 bg-background text-sm text-foreground focus:outline-none focus:border-forest focus:ring-2 focus:ring-sand/60 shadow-inner"
             />
           </div>
 
-          {/* Secondary Filter Dropdowns & Pills */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            {/* Trade Category */}
+          {/* Secondary Filter Dropdowns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 pt-1">
+            {/* 1. Profession / Category */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                Trade Category
+                Profession / Trade
               </label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full h-10 px-3 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
-                <option value="all">All 8 National Trades</option>
-                {PROFESSIONS_DATA.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.title}
+                <option value="all">All Professions</option>
+                {PROFESSIONS_DATA.map((cat) => (
+                  <option key={cat.slug} value={cat.slug}>
+                    {cat.title}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* KAAMSCORE Tier */}
+            {/* 2. Location / District */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                Verification Tier
-              </label>
-              <select
-                value={selectedTier}
-                onChange={(e) => setSelectedTier(e.target.value)}
-                className="w-full h-10 px-3 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
-              >
-                <option value="all">All Tiers (300–900)</option>
-                <option value="master">Sovereign Master (Level 4: 820+)</option>
-                <option value="institutional">Institutional Verified (Level 3: 700+)</option>
-              </select>
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                Hub / Location
+                Location (District/City)
               </label>
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full h-10 px-3 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
-                <option value="all">All Indian Cities</option>
+                <option value="all">All Locations (India)</option>
                 {locations.map((loc) => (
                   <option key={loc} value={loc}>
                     {loc}
@@ -162,73 +271,142 @@ export default function ExplorePage() {
                 ))}
               </select>
             </div>
+
+            {/* 3. Skill Filter */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+                Specialized Skill
+              </label>
+              <select
+                value={selectedSkill}
+                onChange={(e) => setSelectedSkill(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+              >
+                <option value="all">All Skills</option>
+                {popularSkills.map((sk) => (
+                  <option key={sk} value={sk}>
+                    {sk}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 4. Experience Filter */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+                Experience
+              </label>
+              <select
+                value={selectedExperience}
+                onChange={(e) => setSelectedExperience(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+              >
+                <option value="all">Any Experience</option>
+                <option value="3">3+ Years</option>
+                <option value="5">5+ Years (Proven)</option>
+                <option value="10">10+ Years (Senior)</option>
+                <option value="15">15+ Years (Master)</option>
+              </select>
+            </div>
+
+            {/* 5. Availability Filter */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+                Availability
+              </label>
+              <select
+                value={selectedAvailability}
+                onChange={(e) => setSelectedAvailability(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+              >
+                <option value="all">All Statuses</option>
+                <option value="available">Available for Direct Hire</option>
+                <option value="on_site">Currently On-Site</option>
+              </select>
+            </div>
           </div>
 
-          {/* Reset Filters & Active State */}
-          <div className="flex items-center justify-between pt-2 border-t border-forest/10 text-xs">
-            <span className="text-charcoal-muted">
-              Showing <strong className="text-forest">{filteredProfessionals.length}</strong> verified craftspeople
-              <span className="ml-2 font-mono text-[10px] text-sand-800 bg-sand/30 px-1.5 py-0.5 rounded-xs">
-                [EXPLICIT DEMO DATA]
+          {/* Filter Status & Reset */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-forest/10 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-forest">
+                {isLoading ? "Searching database..." : `${professionals.length} Certified Professionals Found`}
               </span>
-            </span>
+              <span className="text-charcoal-muted">•</span>
+              <span className="text-[11px] text-charcoal-muted">
+                Live Supabase Query with Demo Labelling
+              </span>
+            </div>
 
-            {(searchQuery || selectedCategory !== "all" || selectedTier !== "all" || selectedLocation !== "all") && (
-              <button
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleResetFilters}
-                className="text-xs text-terracotta hover:underline inline-flex items-center gap-1 font-semibold"
+                className="text-xs text-forest hover:text-forest-600 gap-1.5 h-8 px-2.5 font-medium"
               >
                 <RotateCcw className="h-3 w-3" />
-                Reset all filters
-              </button>
+                Reset All Filters
+              </Button>
             )}
           </div>
         </div>
       </section>
 
-      {/* 3. Professionals Grid */}
+      {/* 3. Professionals Results Grid */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        {filteredProfessionals.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProfessionals.map((pro) => (
-              <ProfessionalCard key={pro.id} professional={pro} />
-            ))}
+        {professionals.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-forest/25 p-12 text-center space-y-4 bg-card/50">
+            <SlidersHorizontal className="mx-auto h-12 w-12 text-forest/30" />
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-forest">
+                No Certified Professionals Found
+              </h3>
+              <p className="text-xs text-charcoal-muted max-w-sm mx-auto">
+                No workers matched your specific combination of profession, skill, and location filters.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetFilters}
+              className="text-xs border-forest/20 text-forest"
+            >
+              Reset Filters
+            </Button>
           </div>
         ) : (
-          <div className="rounded-md border border-forest/15 bg-card p-12 text-center space-y-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xs bg-forest/5 text-forest mx-auto">
-              <Search className="h-6 w-6" />
-            </div>
-            <h3 className="text-lg font-bold text-forest">No matching verified craftspeople found</h3>
-            <p className="text-xs text-charcoal-muted max-w-sm mx-auto">
-              Try broadening your search query or reset your filters to view all verified profiles.
-            </p>
-            <Button variant="default" size="sm" onClick={handleResetFilters} className="bg-forest text-ivory">
-              Clear All Filters
-            </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {professionals.map((pro) => (
+              <ProfessionalCard key={pro.id} professional={pro} />
+            ))}
           </div>
         )}
       </section>
 
-      {/* 4. Bottom Attestation Notice */}
+      {/* 4. Trust Assurance Banner */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="rounded-sm border border-forest/15 bg-forest/5 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-6 w-6 text-forest shrink-0" />
-            <div>
-              <strong className="text-forest block text-sm">
-                Need to verify an on-site worker's physical smart card?
-              </strong>
-              <p className="text-charcoal-muted">
-                Scan the QR code on any KAAMSETU Sovereign Card using your phone camera for instant cryptographic verification.
-              </p>
+        <div className="rounded-2xl bg-forest-900 text-ivory p-8 sm:p-10 border border-sand/30 shadow-sovereign-lg flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2 text-sand text-xs font-mono">
+              <ShieldCheck className="w-4 h-4" />
+              <span>SOVEREIGN WORKFORCE VERIFICATION GUARANTEE</span>
             </div>
+            <h3 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-ivory">
+              Need to Contract for Commercial Infrastructure?
+            </h3>
+            <p className="text-xs sm:text-sm text-sand/80 leading-relaxed">
+              Every KAAMSETU artisan carries a cryptographically verifiable Sovereign Credential Card with DigiLocker authentication and tamper-evident work records.
+            </p>
           </div>
 
-          <Button variant="outline" asChild className="shrink-0 border-forest/20 text-forest">
-            <Link href="/how-it-works">
-              Read Verification Specs
-              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+          <Button
+            asChild
+            size="lg"
+            className="bg-sand text-forest hover:bg-sand-400 font-semibold text-sm h-12 px-7 shrink-0 shadow-sovereign-md"
+          >
+            <Link href="/onboarding">
+              Register as a Skilled Worker
             </Link>
           </Button>
         </div>

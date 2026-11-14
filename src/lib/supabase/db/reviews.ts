@@ -69,6 +69,22 @@ export async function checkReviewEligibility(
  * Policy enforces that the booking belongs to the customer and is completed.
  */
 export async function createReview(input: InsertReview): Promise<Review> {
+  if (!isConfigured.supabase) {
+    return {
+      id: "rev-demo-" + Date.now(),
+      booking_id: input.booking_id,
+      customer_id: input.customer_id,
+      worker_profile_id: input.worker_profile_id,
+      rating: input.rating,
+      quality_rating: input.quality_rating ?? 5,
+      punctuality_rating: input.punctuality_rating ?? 5,
+      comment: input.comment,
+      contractor_signed: input.contractor_signed ?? true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
   const supabase = await createServerSupabaseClient();
 
   // Pre-validate eligibility before insert
@@ -90,6 +106,8 @@ export async function createReview(input: InsertReview): Promise<Review> {
 
   return data;
 }
+
+export const addReview = createReview;
 
 /**
  * Fetch public reviews for a worker profile.
