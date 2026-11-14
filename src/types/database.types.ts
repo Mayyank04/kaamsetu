@@ -733,6 +733,7 @@ export interface Database {
           consent_for_institution: boolean;
           training_completed: boolean;
           credential_issued: boolean;
+          lifecycle_stage: "enrolled" | "training_in_progress" | "assessment_attempted" | "assessment_passed" | "credential_issued" | "employer_introduced" | "placement_confirmed";
           enrolled_at: string;
         };
         Insert: {
@@ -742,6 +743,7 @@ export interface Database {
           consent_for_institution?: boolean;
           training_completed?: boolean;
           credential_issued?: boolean;
+          lifecycle_stage?: "enrolled" | "training_in_progress" | "assessment_attempted" | "assessment_passed" | "credential_issued" | "employer_introduced" | "placement_confirmed";
           enrolled_at?: string;
         };
         Update: {
@@ -751,6 +753,7 @@ export interface Database {
           consent_for_institution?: boolean;
           training_completed?: boolean;
           credential_issued?: boolean;
+          lifecycle_stage?: "enrolled" | "training_in_progress" | "assessment_attempted" | "assessment_passed" | "credential_issued" | "employer_introduced" | "placement_confirmed";
           enrolled_at?: string;
         };
         Relationships: [];
@@ -1297,6 +1300,347 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      operational_regions: {
+        Row: {
+          id: string;
+          region_code: string;
+          state: string;
+          district: string;
+          subdistrict_blocks: string[];
+          primary_city: string;
+          pin_codes: string[];
+          supported_languages: string[];
+          trade_aliases: Record<string, string[]>;
+          discovery_radius_km: number;
+          status: "planning" | "active" | "suspended" | "deactivated";
+          feature_flags: Record<string, boolean>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_code: string;
+          state: string;
+          district: string;
+          subdistrict_blocks?: string[];
+          primary_city: string;
+          pin_codes?: string[];
+          supported_languages?: string[];
+          trade_aliases?: Record<string, string[]>;
+          discovery_radius_km?: number;
+          status?: "planning" | "active" | "suspended" | "deactivated";
+          feature_flags?: Record<string, boolean>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_code?: string;
+          state?: string;
+          district?: string;
+          subdistrict_blocks?: string[];
+          primary_city?: string;
+          pin_codes?: string[];
+          supported_languages?: string[];
+          trade_aliases?: Record<string, string[]>;
+          discovery_radius_km?: number;
+          status?: "planning" | "active" | "suspended" | "deactivated";
+          feature_flags?: Record<string, boolean>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_administrators: {
+        Row: {
+          id: string;
+          user_id: string;
+          region_id: string;
+          role: "regional_director" | "field_coordinator" | "compliance_auditor" | "support_agent";
+          is_active: boolean;
+          assigned_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          region_id: string;
+          role: "regional_director" | "field_coordinator" | "compliance_auditor" | "support_agent";
+          is_active?: boolean;
+          assigned_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          region_id?: string;
+          role?: "regional_director" | "field_coordinator" | "compliance_auditor" | "support_agent";
+          is_active?: boolean;
+          assigned_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_identity_access_grants: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          grantee_name: string;
+          grantee_type: "contractor" | "institution" | "prospective_employer" | "verifier";
+          access_token_hash: string;
+          disclosed_sections: Record<string, boolean>;
+          status: "active" | "revoked" | "expired";
+          expires_at: string;
+          revoked_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          grantee_name: string;
+          grantee_type: "contractor" | "institution" | "prospective_employer" | "verifier";
+          access_token_hash: string;
+          disclosed_sections?: Record<string, boolean>;
+          status?: "active" | "revoked" | "expired";
+          expires_at: string;
+          revoked_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          grantee_name?: string;
+          grantee_type?: "contractor" | "institution" | "prospective_employer" | "verifier";
+          access_token_hash?: string;
+          disclosed_sections?: Record<string, boolean>;
+          status?: "active" | "revoked" | "expired";
+          expires_at?: string;
+          revoked_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      identity_access_audit_logs: {
+        Row: {
+          id: string;
+          grant_id: string | null;
+          worker_profile_id: string;
+          accessor_ip_hash: string | null;
+          accessor_user_agent: string | null;
+          action: "view" | "download" | "verify" | "revoke";
+          accessed_at: string;
+        };
+        Insert: {
+          id?: string;
+          grant_id?: string | null;
+          worker_profile_id: string;
+          accessor_ip_hash?: string | null;
+          accessor_user_agent?: string | null;
+          action: "view" | "download" | "verify" | "revoke";
+          accessed_at?: string;
+        };
+        Update: {
+          id?: string;
+          grant_id?: string | null;
+          worker_profile_id?: string;
+          accessor_ip_hash?: string | null;
+          accessor_user_agent?: string | null;
+          action?: "view" | "download" | "verify" | "revoke";
+          accessed_at?: string;
+        };
+        Relationships: [];
+      };
+
+      partner_crm_records: {
+        Row: {
+          id: string;
+          partner_name: string;
+          partner_type: "contractor" | "institution" | "industry_association" | "training_ngo";
+          region_id: string | null;
+          stage: "lead" | "contacted" | "discovery_completed" | "proposal_sent" | "pilot_agreed" | "agreement_signed" | "active" | "renewal_due" | "renewed" | "churned";
+          decision_maker_name: string;
+          decision_maker_role: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          expected_contract_value: number;
+          actual_invoiced_value: number;
+          renewal_date: string | null;
+          implementation_status: "initial_contact" | "needs_assessment" | "pilot_setup" | "fully_deployed" | "needs_attention" | "paused";
+          support_tier: "standard" | "dedicated_lead" | "priority_24_7";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          partner_name: string;
+          partner_type: "contractor" | "institution" | "industry_association" | "training_ngo";
+          region_id?: string | null;
+          stage?: "lead" | "contacted" | "discovery_completed" | "proposal_sent" | "pilot_agreed" | "agreement_signed" | "active" | "renewal_due" | "renewed" | "churned";
+          decision_maker_name: string;
+          decision_maker_role?: string | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          expected_contract_value?: number;
+          actual_invoiced_value?: number;
+          renewal_date?: string | null;
+          implementation_status?: "initial_contact" | "needs_assessment" | "pilot_setup" | "fully_deployed" | "needs_attention" | "paused";
+          support_tier?: "standard" | "dedicated_lead" | "priority_24_7";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          partner_name?: string;
+          partner_type?: "contractor" | "institution" | "industry_association" | "training_ngo";
+          region_id?: string | null;
+          stage?: "lead" | "contacted" | "discovery_completed" | "proposal_sent" | "pilot_agreed" | "agreement_signed" | "active" | "renewal_due" | "renewed" | "churned";
+          decision_maker_name?: string;
+          decision_maker_role?: string | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          expected_contract_value?: number;
+          actual_invoiced_value?: number;
+          renewal_date?: string | null;
+          implementation_status?: "initial_contact" | "needs_assessment" | "pilot_setup" | "fully_deployed" | "needs_attention" | "paused";
+          support_tier?: "standard" | "dedicated_lead" | "priority_24_7";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      workforce_opportunities: {
+        Row: {
+          id: string;
+          organization_id: string | null;
+          region_id: string;
+          title: string;
+          trade_category: string;
+          required_skills: string[];
+          location_district: string;
+          location_pincode: string | null;
+          expected_duration_days: number;
+          daily_wage_range_min: number | null;
+          daily_wage_range_max: number | null;
+          payment_terms: string;
+          status: "open" | "matching" | "filled" | "cancelled";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id?: string | null;
+          region_id: string;
+          title: string;
+          trade_category: string;
+          required_skills?: string[];
+          location_district: string;
+          location_pincode?: string | null;
+          expected_duration_days?: number;
+          daily_wage_range_min?: number | null;
+          daily_wage_range_max?: number | null;
+          payment_terms?: string;
+          status?: "open" | "matching" | "filled" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string | null;
+          region_id?: string;
+          title?: string;
+          trade_category?: string;
+          required_skills?: string[];
+          location_district?: string;
+          location_pincode?: string | null;
+          expected_duration_days?: number;
+          daily_wage_range_min?: number | null;
+          daily_wage_range_max?: number | null;
+          payment_terms?: string;
+          status?: "open" | "matching" | "filled" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_opportunity_applications: {
+        Row: {
+          id: string;
+          opportunity_id: string;
+          worker_profile_id: string;
+          match_score: number;
+          match_explanation: Json;
+          status: "matched" | "viewed" | "applied" | "shortlisted" | "accepted" | "declined" | "withdrawn";
+          worker_consent_given: boolean;
+          applied_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          opportunity_id: string;
+          worker_profile_id: string;
+          match_score: number;
+          match_explanation?: Json;
+          status?: "matched" | "viewed" | "applied" | "shortlisted" | "accepted" | "declined" | "withdrawn";
+          worker_consent_given?: boolean;
+          applied_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          opportunity_id?: string;
+          worker_profile_id?: string;
+          match_score?: number;
+          match_explanation?: Json;
+          status?: "matched" | "viewed" | "applied" | "shortlisted" | "accepted" | "declined" | "withdrawn";
+          worker_consent_given?: boolean;
+          applied_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      skills_gap_recommendations: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          target_trade: string;
+          missing_skill: string;
+          evidence_rationale: string;
+          learning_resource_title: string;
+          learning_resource_url: string;
+          institution_provider: string;
+          is_ai_generated: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          target_trade: string;
+          missing_skill: string;
+          evidence_rationale: string;
+          learning_resource_title: string;
+          learning_resource_url: string;
+          institution_provider: string;
+          is_ai_generated?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          target_trade?: string;
+          missing_skill?: string;
+          evidence_rationale?: string;
+          learning_resource_title?: string;
+          learning_resource_url?: string;
+          institution_provider?: string;
+          is_ai_generated?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -1343,3 +1687,11 @@ export type ProjectCrewAssignment = Database["public"]["Tables"]["project_crew_a
 export type ContractorCustomerHealth = Database["public"]["Tables"]["contractor_customer_health"]["Row"];
 export type WorkerIdentityExport = Database["public"]["Tables"]["worker_identity_exports"]["Row"];
 export type RegionalExpansionReadiness = Database["public"]["Tables"]["regional_expansion_readiness"]["Row"];
+export type OperationalRegion = Database["public"]["Tables"]["operational_regions"]["Row"];
+export type RegionalAdministrator = Database["public"]["Tables"]["regional_administrators"]["Row"];
+export type WorkerIdentityAccessGrant = Database["public"]["Tables"]["worker_identity_access_grants"]["Row"];
+export type IdentityAccessAuditLog = Database["public"]["Tables"]["identity_access_audit_logs"]["Row"];
+export type PartnerCrmRecord = Database["public"]["Tables"]["partner_crm_records"]["Row"];
+export type WorkforceOpportunity = Database["public"]["Tables"]["workforce_opportunities"]["Row"];
+export type WorkerOpportunityApplication = Database["public"]["Tables"]["worker_opportunity_applications"]["Row"];
+export type SkillsGapRecommendation = Database["public"]["Tables"]["skills_gap_recommendations"]["Row"];

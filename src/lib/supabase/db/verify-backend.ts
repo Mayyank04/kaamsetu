@@ -46,6 +46,7 @@ export async function runBackendVerification() {
   const migration8Path = path.join(projectRoot, "supabase/migrations/20261114000008_commercial_launch_and_workforce_consent.sql");
   const migration9Path = path.join(projectRoot, "supabase/migrations/20261114000009_production_operations_crm_and_webhooks.sql");
   const migration10Path = path.join(projectRoot, "supabase/migrations/20261114000010_scale_multi_cohort_and_retention.sql");
+  const migration11Path = path.join(projectRoot, "supabase/migrations/20261114000011_national_multi_region_network.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
@@ -54,6 +55,7 @@ export async function runBackendVerification() {
   assert(fs.existsSync(migration8Path), "1. SQL Migrations", "Migration 08 (Commercial Launch & Workforce Consent) exists");
   assert(fs.existsSync(migration9Path), "1. SQL Migrations", "Migration 09 (Production Operations, CRM & Webhooks) exists");
   assert(fs.existsSync(migration10Path), "1. SQL Migrations", "Migration 10 (Scale, Multi-Cohort & Retention) exists");
+  assert(fs.existsSync(migration11Path), "1. SQL Migrations", "Migration 11 (National Multi-Region Network) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
@@ -157,6 +159,27 @@ export async function runBackendVerification() {
     );
   }
 
+  const m11Content = fs.readFileSync(migration11Path, "utf-8");
+  const phase10Tables = [
+    "operational_regions",
+    "regional_administrators",
+    "worker_identity_access_grants",
+    "identity_access_audit_logs",
+    "partner_crm_records",
+    "workforce_opportunities",
+    "worker_opportunity_applications",
+    "skills_gap_recommendations",
+  ];
+
+  for (const table of phase10Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m11Content),
+      "1. SQL Migrations",
+      `Phase 10 Table public.${table} defined in schema`
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // TEST SUITE 2: Row Level Security (RLS) Policies
   // ---------------------------------------------------------------------------
@@ -199,6 +222,14 @@ export async function runBackendVerification() {
       m10Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
       "2. Row Level Security",
       `RLS enabled on Phase 9 public.${table}`
+    );
+  }
+
+  for (const table of phase10Tables) {
+    assert(
+      m11Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `RLS enabled on Phase 10 public.${table}`
     );
   }
 

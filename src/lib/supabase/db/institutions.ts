@@ -235,6 +235,7 @@ export async function getCohortParticipants(cohortId: string): Promise<Participa
         consent_for_institution: true,
         training_completed: true,
         credential_issued: true,
+        lifecycle_stage: "assessment_passed",
         enrolled_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
         worker: {
           id: "55555555-5555-5555-5555-555555550001",
@@ -296,6 +297,7 @@ export async function getCohortParticipants(cohortId: string): Promise<Participa
       consent_for_institution: isConsented,
       training_completed: Boolean(row.training_completed),
       credential_issued: Boolean(row.credential_issued),
+      lifecycle_stage: row.lifecycle_stage || "enrolled",
       enrolled_at: row.enrolled_at,
       worker: {
         id: wp?.id || row.worker_profile_id,
