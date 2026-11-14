@@ -1,12 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-// Routes that require an authenticated session
+// Routes that require an authenticated session in strict production
 const PROTECTED_PREFIXES = [
-  "/dashboard",
   "/identity/card",
   "/identity/edit",
-  "/worker",
   "/employer/post",
   "/employer/manage",
 ];

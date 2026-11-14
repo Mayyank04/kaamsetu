@@ -14,6 +14,7 @@ export function InstitutionalHeader() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/explore", label: "Explore Professions" },
+    { href: "/dashboard", label: "Worker Dashboard" },
     { href: "/how-it-works", label: "How It Works" },
     { href: "/about", label: "About" },
   ];

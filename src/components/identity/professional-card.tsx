@@ -18,6 +18,8 @@ interface ProfessionalCardProps {
 }
 
 export function ProfessionalCard({ professional }: ProfessionalCardProps) {
+  const workerSlug = `${professional.fullName.toLowerCase().replace(/\s+/g, "-")}-${professional.location.city.toLowerCase()}`;
+
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-md border border-forest/15 bg-card shadow-sovereign-sm hover:shadow-sovereign-md hover:border-forest/35 transition-all duration-300">
       {/* Top Banner Ribbon */}
@@ -53,9 +55,12 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
 
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="font-bold text-forest text-base leading-snug truncate">
+              <a
+                href={`/profile/${workerSlug}`}
+                className="font-bold text-forest text-base leading-snug truncate hover:underline hover:text-forest-600 transition-colors"
+              >
                 {professional.fullName}
-              </h3>
+              </a>
               {professional.aadhaarVerified && (
                 <CheckCircle2
                   className="h-3.5 w-3.5 text-sage fill-sage/20 shrink-0"

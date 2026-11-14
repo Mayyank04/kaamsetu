@@ -47,6 +47,20 @@ export async function getWorkerPortfolio(workerProfileId: string): Promise<Portf
 export async function addPortfolioItem(
   item: InsertPortfolio
 ): Promise<PortfolioItem> {
+  if (!isConfigured.supabase) {
+    return {
+      id: `port-demo-${Date.now()}`,
+      worker_profile_id: item.worker_profile_id,
+      title: item.title,
+      description: item.description || null,
+      image_url: item.image_url,
+      project_date: item.project_date || new Date().toISOString().split("T")[0],
+      category: item.category || "General Craft",
+      client_testimony: item.client_testimony || null,
+      created_at: new Date().toISOString(),
+    };
+  }
+
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("portfolio")
@@ -67,6 +81,10 @@ export async function addPortfolioItem(
  * Protected by RLS: caller must own the worker profile.
  */
 export async function deletePortfolioItem(portfolioId: string): Promise<boolean> {
+  if (!isConfigured.supabase) {
+    return true;
+  }
+
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("portfolio")

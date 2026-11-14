@@ -246,9 +246,20 @@ export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
               </div>
             </div>
 
-            <Button variant="default" size="sm" onClick={() => setOpen(false)}>
-              Close Sovereign Card
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="sm" className="text-xs border-forest/20 text-forest">
+                <a
+                  href={`/profile/${worker.fullName.toLowerCase().replace(/\s+/g, "-")}-${worker.location.city.toLowerCase()}`}
+                  onClick={() => setOpen(false)}
+                >
+                  <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                  Full Profile
+                </a>
+              </Button>
+              <Button variant="default" size="sm" onClick={() => setOpen(false)}>
+                Close
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

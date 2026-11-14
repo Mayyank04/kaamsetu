@@ -99,6 +99,27 @@ export async function updateBookingStatus(
   status: BookingStatus,
   cancellationReason?: string
 ): Promise<Booking> {
+  if (!isConfigured.supabase) {
+    return {
+      id: bookingId,
+      booking_reference: "BK-2026-4821",
+      customer_id: "22222222-2222-2222-2222-222222220001",
+      worker_profile_id: "w-pro-01",
+      service_title: "Solar Array Annual Inverter Inspection & Earthing",
+      description: null,
+      location_address: "Plot C-14, Sitapura Industrial Area, Phase II",
+      location_city: "Jaipur",
+      scheduled_start: "2026-11-18T10:00:00Z",
+      scheduled_end: null,
+      estimated_cost: 3500,
+      final_cost: status === "completed" ? 3500 : null,
+      status,
+      cancellation_reason: cancellationReason || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("bookings")

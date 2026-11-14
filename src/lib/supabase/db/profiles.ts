@@ -165,6 +165,11 @@ export async function getWorkerProfileBySlug(slug: string): Promise<WorkerProfil
  * Fetch a worker profile by ID.
  */
 export async function getWorkerProfileById(id: string): Promise<WorkerProfile | null> {
+  if (!isConfigured.supabase) {
+    const p = await getWorkerProfileBySlug("rameshwar-sharma-jaipur");
+    return p;
+  }
+
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("worker_profiles")
@@ -174,4 +179,159 @@ export async function getWorkerProfileById(id: string): Promise<WorkerProfile | 
 
   if (error || !data) return null;
   return data;
+}
+
+/**
+ * Update worker profile details (headline, bio, rates, service radius, languages).
+ * Worker self-sovereignty: ensures worker owns and controls their profile.
+ */
+export async function updateWorkerProfile(
+  id: string,
+  updates: Partial<WorkerProfile>
+): Promise<WorkerProfile | null> {
+  if (!isConfigured.supabase) {
+    const existing = await getWorkerProfileBySlug("rameshwar-sharma-jaipur");
+    if (!existing) return null;
+    return {
+      ...existing,
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("worker_profiles")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error updating worker profile:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Toggle publish status of the worker profile.
+ * When is_published is false, profile is hidden from all public explore searches.
+ */
+export async function setWorkerPublished(
+  id: string,
+  isPublished: boolean
+): Promise<boolean> {
+  if (!isConfigured.supabase) {
+    return true;
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase
+    .from("worker_profiles")
+    .update({
+      is_published: isPublished,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error setting worker publish status:", error);
+    throw error;
+  }
+
+  return true;
+}
+
+/**
+ * Update worker availability status ("available" | "on_site" | "unavailable").
+ */
+export async function updateWorkerAvailability(
+  id: string,
+  status: "available" | "on_site" | "unavailable"
+): Promise<boolean> {
+  if (!isConfigured.supabase) {
+    return true;
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase
+    .from("worker_profiles")
+    .update({
+      availability_status: status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating availability status:", error);
+    throw error;
+  }
+
+  return true;
+}
+
+/**
+ * Add a skill to the worker profile.
+ */
+export async function addWorkerSkill(
+  workerProfileId: string,
+  skillId: string,
+  isPrimary: boolean = false
+) {
+  if (!isConfigured.supabase) {
+    return {
+      id: `ws-${Date.now()}`,
+      worker_profile_id: workerProfileId,
+      skill_id: skillId,
+      is_primary: isPrimary,
+      verified_by_peer_count: 0,
+      created_at: new Date().toISOString(),
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("worker_skills")
+    .insert({
+      worker_profile_id: workerProfileId,
+      skill_id: skillId,
+      is_primary: isPrimary,
+      verified_by_peer_count: 0,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error adding worker skill:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Remove a skill from the worker profile.
+ */
+export async function removeWorkerSkill(workerSkillId: string): Promise<boolean> {
+  if (!isConfigured.supabase) {
+    return true;
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase
+    .from("worker_skills")
+    .delete()
+    .eq("id", workerSkillId);
+
+  if (error) {
+    console.error("Error removing worker skill:", error);
+    throw error;
+  }
+
+  return true;
 }
