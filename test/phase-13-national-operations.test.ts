@@ -1123,14 +1123,14 @@ async function runPhase13NationalOperationsSuite() {
       const total = parseInt(tables[0].total_tables, 10);
       const rls = parseInt(rlsTables[0].rls_tables, 10);
 
-      const passed = total === 53 && rls === 53;
+      const passed = total >= 53 && rls === total;
 
       recordTest(
         29,
         "Disaster Recovery Non-Destructive Backup & Schema Verification",
         "Pillar J: National Security and Governance Certification",
         passed,
-        `PostgreSQL catalog verified: exactly 53 tables with 100% RLS enforcement (${rls}/${total})`
+        `PostgreSQL catalog verified: ${total} tables with 100% RLS enforcement (${rls}/${total})`
       );
     }
 

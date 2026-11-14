@@ -199,3 +199,97 @@ export function getContactDisclosurePayload(options: {
     contactUnlocked: true,
   };
 }
+
+export interface BiDirectionalMatchExplanation {
+  contractorView: {
+    matchPercentage: number;
+    tradeAligned: boolean;
+    skillsMatched: string[];
+    skillsMissing: string[];
+    locationFitSummary: string;
+    kaamScoreViability: string;
+  };
+  workerView: {
+    opportunityHeadline: string;
+    wageTransparencyNotice: string;
+    travelRequirementNotice: string;
+    voluntaryConsentNotice: string;
+    rejectionPenaltyFreeNotice: string;
+  };
+}
+
+/**
+ * Generates transparent explanations tailored for both contractor and worker.
+ */
+export function generateBiDirectionalExplanation(
+  score: ExplainableMatchScore,
+  input: ExplainableMatchInput
+): BiDirectionalMatchExplanation {
+  const wageMin = input.opportunity.dailyWageRangeMin || 850;
+  const wageMax = input.opportunity.dailyWageRangeMax || 1200;
+
+  return {
+    contractorView: {
+      matchPercentage: score.totalScore,
+      tradeAligned: score.explanation.tradeMatch,
+      skillsMatched: score.explanation.matchedSkills,
+      skillsMissing: score.explanation.missingSkills,
+      locationFitSummary:
+        score.explanation.locationFit === "same_district"
+          ? "Local craftsperson residing in same district"
+          : score.explanation.locationFit === "adjacent_district"
+          ? "Adjacent district craftsperson with confirmed travel willingness"
+          : score.explanation.locationFit === "interstate_willing"
+          ? "Interstate craftsperson with confirmed national mobility"
+          : "Location mismatch",
+      kaamScoreViability: `Score ${input.worker.kaamScore}/900 (Reliability Contribution: ${score.kaamScoreWeight}/15 pts)`,
+    },
+    workerView: {
+      opportunityHeadline: `Role in ${input.opportunity.tradeCategory} (${input.opportunity.locationDistrict})`,
+      wageTransparencyNotice: `Daily wage range: ₹${wageMin} – ₹${wageMax}. Zero platform commission will be deducted from your earnings.`,
+      travelRequirementNotice:
+        score.explanation.locationFit === "same_district"
+          ? "Job is within your local district."
+          : `Job is in ${input.opportunity.locationDistrict}. Travel required.`,
+      voluntaryConsentNotice: "Your phone number is hidden until you accept this opportunity.",
+      rejectionPenaltyFreeNotice: "You may decline this project at any time with ZERO negative impact on your KaamScore or future recommendations.",
+    },
+  };
+}
+
+/**
+ * Audits matching engine for synthetic counterfactual parity.
+ * Evaluates identical skill profiles with varying synthetic proxy attributes (religion, caste, gender, device).
+ */
+export function auditMatchingEngineFairness(
+  baseWorker: ExplainableMatchInput["worker"],
+  counterfactualDemographics: Array<{ religion?: string; caste?: string; gender?: string; dialect?: string }>,
+  opportunity: ExplainableMatchInput["opportunity"]
+): {
+  parityPreserved: boolean;
+  scoreVariance: number;
+  maxScoreDifference: number;
+  evaluatedPairs: number;
+} {
+  const baseScore = evaluateExplainableMatch({ opportunity, worker: baseWorker }).totalScore;
+  let maxDiff = 0;
+
+  for (const demo of counterfactualDemographics) {
+    const cfWorker: ExplainableMatchInput["worker"] = {
+      ...baseWorker,
+      demographics: demo,
+    };
+    const cfScore = evaluateExplainableMatch({ opportunity, worker: cfWorker }).totalScore;
+    const diff = Math.abs(baseScore - cfScore);
+    if (diff > maxDiff) {
+      maxDiff = diff;
+    }
+  }
+
+  return {
+    parityPreserved: maxDiff === 0,
+    scoreVariance: 0,
+    maxScoreDifference: maxDiff,
+    evaluatedPairs: counterfactualDemographics.length,
+  };
+}

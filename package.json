@@ -20,7 +20,8 @@
     "test:phase10": "tsx test/national-network-and-infrastructure.test.ts",
     "test:phase11": "tsx test/interstate-expansion-and-ecosystem.test.ts",
     "test:phase12": "tsx test/repeatable-national-network.test.ts",
-    "test:phase13": "tsx test/phase-13-national-operations.test.ts"
+    "test:phase13": "tsx test/phase-13-national-operations.test.ts",
+    "test:phase14": "tsx test/phase-14-operational-proof.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

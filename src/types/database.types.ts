@@ -2300,6 +2300,288 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      regional_dual_approvals: {
+        Row: {
+          id: string;
+          region_id: string;
+          target_status: string;
+          primary_approver_id: string;
+          primary_approved_at: string;
+          secondary_approver_id: string | null;
+          secondary_approved_at: string | null;
+          readiness_score: number;
+          mandatory_gates_passed: boolean;
+          evidence_references: Json;
+          decision_reason: string;
+          policy_version: string;
+          approval_status: "pending_secondary" | "approved" | "rejected";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          target_status: string;
+          primary_approver_id: string;
+          primary_approved_at?: string;
+          secondary_approver_id?: string | null;
+          secondary_approved_at?: string | null;
+          readiness_score: number;
+          mandatory_gates_passed?: boolean;
+          evidence_references?: Json;
+          decision_reason: string;
+          policy_version?: string;
+          approval_status?: "pending_secondary" | "approved" | "rejected";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          target_status?: string;
+          primary_approver_id?: string;
+          primary_approved_at?: string;
+          secondary_approver_id?: string | null;
+          secondary_approved_at?: string | null;
+          readiness_score?: number;
+          mandatory_gates_passed?: boolean;
+          evidence_references?: Json;
+          decision_reason?: string;
+          policy_version?: string;
+          approval_status?: "pending_secondary" | "approved" | "rejected";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      review_moderation_appeals: {
+        Row: {
+          id: string;
+          review_id: string;
+          worker_profile_id: string;
+          contractor_organization_id: string | null;
+          dispute_id: string | null;
+          original_rating: number;
+          quarantine_reason: string;
+          submitted_evidence: Json;
+          moderator_id: string | null;
+          moderation_status: "quarantined" | "restored_valid" | "suppressed_retaliatory" | "under_appeal" | "dismissed";
+          appeal_reason: string | null;
+          appeal_resolution_notes: string | null;
+          resolved_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          review_id: string;
+          worker_profile_id: string;
+          contractor_organization_id?: string | null;
+          dispute_id?: string | null;
+          original_rating: number;
+          quarantine_reason: string;
+          submitted_evidence?: Json;
+          moderator_id?: string | null;
+          moderation_status?: "quarantined" | "restored_valid" | "suppressed_retaliatory" | "under_appeal" | "dismissed";
+          appeal_reason?: string | null;
+          appeal_resolution_notes?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          review_id?: string;
+          worker_profile_id?: string;
+          contractor_organization_id?: string | null;
+          dispute_id?: string | null;
+          original_rating?: number;
+          quarantine_reason?: string;
+          submitted_evidence?: Json;
+          moderator_id?: string | null;
+          moderation_status?: "quarantined" | "restored_valid" | "suppressed_retaliatory" | "under_appeal" | "dismissed";
+          appeal_reason?: string | null;
+          appeal_resolution_notes?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      operational_incidents_lifecycle: {
+        Row: {
+          id: string;
+          incident_id: string;
+          current_stage: "detected" | "triaged" | "contained" | "investigated" | "remediated" | "recovered" | "reviewed";
+          accountable_owner_id: string;
+          containment_steps: string | null;
+          affected_entities: Json;
+          notification_required: boolean;
+          notification_dispatched_at: string | null;
+          post_incident_review_notes: string | null;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          incident_id: string;
+          current_stage?: "detected" | "triaged" | "contained" | "investigated" | "remediated" | "recovered" | "reviewed";
+          accountable_owner_id: string;
+          containment_steps?: string | null;
+          affected_entities?: Json;
+          notification_required?: boolean;
+          notification_dispatched_at?: string | null;
+          post_incident_review_notes?: string | null;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          incident_id?: string;
+          current_stage?: "detected" | "triaged" | "contained" | "investigated" | "remediated" | "recovered" | "reviewed";
+          accountable_owner_id?: string;
+          containment_steps?: string | null;
+          affected_entities?: Json;
+          notification_required?: boolean;
+          notification_dispatched_at?: string | null;
+          post_incident_review_notes?: string | null;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      financial_reconciliation_exceptions: {
+        Row: {
+          id: string;
+          ledger_entry_id: string | null;
+          invoice_number: string | null;
+          exception_type: "refund" | "chargeback" | "duplicate_webhook_attempt" | "disputed_tax" | "unreconciled_gateway_difference" | "gateway_fee_mismatch";
+          amount: number;
+          currency: string;
+          status: "open" | "investigating" | "resolved_credited" | "resolved_adjusted" | "written_off";
+          resolution_notes: string | null;
+          resolved_by: string | null;
+          resolved_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          ledger_entry_id?: string | null;
+          invoice_number?: string | null;
+          exception_type: "refund" | "chargeback" | "duplicate_webhook_attempt" | "disputed_tax" | "unreconciled_gateway_difference" | "gateway_fee_mismatch";
+          amount?: number;
+          currency?: string;
+          status?: "open" | "investigating" | "resolved_credited" | "resolved_adjusted" | "written_off";
+          resolution_notes?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          ledger_entry_id?: string | null;
+          invoice_number?: string | null;
+          exception_type?: "refund" | "chargeback" | "duplicate_webhook_attempt" | "disputed_tax" | "unreconciled_gateway_difference" | "gateway_fee_mismatch";
+          amount?: number;
+          currency?: string;
+          status?: "open" | "investigating" | "resolved_credited" | "resolved_adjusted" | "written_off";
+          resolution_notes?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_operational_scorecards: {
+        Row: {
+          id: string;
+          region_id: string;
+          evaluation_period_start: string;
+          evaluation_period_end: string;
+          active_worker_count: number;
+          registered_worker_count: number;
+          verified_contractor_count: number;
+          gross_collections: number;
+          net_saas_mrr: number;
+          direct_field_costs: number;
+          direct_hosting_ai_costs: number;
+          contribution_margin: number;
+          margin_percentage: number;
+          operational_rating: "highly_profitable" | "sustainable" | "break_even" | "subsidized_expansion" | "critical_intervention";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          evaluation_period_start: string;
+          evaluation_period_end: string;
+          active_worker_count?: number;
+          registered_worker_count?: number;
+          verified_contractor_count?: number;
+          gross_collections?: number;
+          net_saas_mrr?: number;
+          direct_field_costs?: number;
+          direct_hosting_ai_costs?: number;
+          contribution_margin?: number;
+          margin_percentage?: number;
+          operational_rating?: "highly_profitable" | "sustainable" | "break_even" | "subsidized_expansion" | "critical_intervention";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          evaluation_period_start?: string;
+          evaluation_period_end?: string;
+          active_worker_count?: number;
+          registered_worker_count?: number;
+          verified_contractor_count?: number;
+          gross_collections?: number;
+          net_saas_mrr?: number;
+          direct_field_costs?: number;
+          direct_hosting_ai_costs?: number;
+          contribution_margin?: number;
+          margin_percentage?: number;
+          operational_rating?: "highly_profitable" | "sustainable" | "break_even" | "subsidized_expansion" | "critical_intervention";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_consent_audit_events: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          recipient_entity_type: "contractor" | "institution" | "verifier" | "public" | "system";
+          recipient_entity_id: string | null;
+          action: "granted" | "renewed" | "expired" | "revoked" | "modified";
+          disclosed_fields: string[];
+          policy_version: string;
+          actor_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          recipient_entity_type: "contractor" | "institution" | "verifier" | "public" | "system";
+          recipient_entity_id?: string | null;
+          action: "granted" | "renewed" | "expired" | "revoked" | "modified";
+          disclosed_fields?: string[];
+          policy_version?: string;
+          actor_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          recipient_entity_type?: "contractor" | "institution" | "verifier" | "public" | "system";
+          recipient_entity_id?: string | null;
+          action?: "granted" | "renewed" | "expired" | "revoked" | "modified";
+          disclosed_fields?: string[];
+          policy_version?: string;
+          actor_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -2368,3 +2650,9 @@ export type InstitutionAuthorizedSignatory = Database["public"]["Tables"]["insti
 export type WorkerPrivacySetting = Database["public"]["Tables"]["worker_privacy_settings"]["Row"];
 export type FinancialGstLedger = Database["public"]["Tables"]["financial_gst_ledger"]["Row"];
 export type RegionalServiceTelemetry = Database["public"]["Tables"]["regional_service_telemetry"]["Row"];
+export type RegionalDualApproval = Database["public"]["Tables"]["regional_dual_approvals"]["Row"];
+export type ReviewModerationAppeal = Database["public"]["Tables"]["review_moderation_appeals"]["Row"];
+export type OperationalIncidentLifecycle = Database["public"]["Tables"]["operational_incidents_lifecycle"]["Row"];
+export type FinancialReconciliationException = Database["public"]["Tables"]["financial_reconciliation_exceptions"]["Row"];
+export type RegionalOperationalScorecard = Database["public"]["Tables"]["regional_operational_scorecards"]["Row"];
+export type WorkerConsentAuditEvent = Database["public"]["Tables"]["worker_consent_audit_events"]["Row"];
