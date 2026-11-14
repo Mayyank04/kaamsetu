@@ -40,6 +40,9 @@ export function InstitutionalFooter() {
             <p className="text-xs text-ivory/70 leading-relaxed">
               Equipping India's 450M+ skilled craftspeople, trades workers, and independent contractors with unforgeable, sovereign digital identities and verifiable creditworthiness.
             </p>
+            <div className="pt-2 text-[11px] font-mono text-sand-300">
+              [DEMO ENVIRONMENT ACTIVE]
+            </div>
           </div>
 
           {/* Identity Infrastructure */}
@@ -49,22 +52,22 @@ export function InstitutionalFooter() {
             </h4>
             <ul className="space-y-2 text-ivory/80">
               <li>
-                <Link href="/#kaamscore" className="hover:text-sand transition-colors">
+                <Link href="/how-it-works" className="hover:text-sand transition-colors">
                   KAAMSCORE™ Trust Index
                 </Link>
               </li>
               <li>
-                <Link href="/#voice-simulator" className="hover:text-sand transition-colors">
+                <Link href="/how-it-works#voice-registration" className="hover:text-sand transition-colors">
                   Multilingual Voice Attestation
                 </Link>
               </li>
               <li>
-                <Link href="/verify" className="hover:text-sand transition-colors">
+                <Link href="/explore" className="hover:text-sand transition-colors">
                   Sovereign QR Credential Check
                 </Link>
               </li>
               <li>
-                <Link href="/#categories" className="hover:text-sand transition-colors">
+                <Link href="/explore" className="hover:text-sand transition-colors">
                   32 National Trade Classifications
                 </Link>
               </li>
@@ -78,23 +81,23 @@ export function InstitutionalFooter() {
             </h4>
             <ul className="space-y-2 text-ivory/80">
               <li>
-                <Link href="/#how-it-works" className="hover:text-sand transition-colors">
-                  Direct Verification API
-                </Link>
-              </li>
-              <li>
-                <Link href="/#explore" className="hover:text-sand transition-colors">
+                <Link href="/explore" className="hover:text-sand transition-colors">
                   Search Master Craftspeople
                 </Link>
               </li>
               <li>
-                <Link href="/auth/register" className="hover:text-sand transition-colors">
-                  Enterprise Attestation Portal
+                <Link href="/how-it-works" className="hover:text-sand transition-colors">
+                  Verification API & Specifications
                 </Link>
               </li>
               <li>
-                <Link href="/safety" className="hover:text-sand transition-colors">
-                  Fraud Detection & Audit Logs
+                <Link href="/about" className="hover:text-sand transition-colors">
+                  The Trust Deficit Problem
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-sand transition-colors">
+                  Anti-Fraud Peer Vouching
                 </Link>
               </li>
             </ul>
@@ -103,22 +106,27 @@ export function InstitutionalFooter() {
           {/* Civic Governance */}
           <div className="space-y-3 text-xs">
             <h4 className="font-bold uppercase tracking-widest text-sand-300">
-              Governance & Privacy
+              Governance & Pages
             </h4>
             <ul className="space-y-2 text-ivory/80">
               <li>
-                <Link href="/privacy" className="hover:text-sand transition-colors">
-                  Worker Data Sovereignty
+                <Link href="/" className="hover:text-sand transition-colors">
+                  Home
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-sand transition-colors">
-                  Trust Framework & Ethics
+                <Link href="/explore" className="hover:text-sand transition-colors">
+                  Explore Professions
                 </Link>
               </li>
               <li>
-                <Link href="/accessibility" className="hover:text-sand transition-colors">
-                  Vernacular Accessibility Standard
+                <Link href="/how-it-works" className="hover:text-sand transition-colors">
+                  How It Works
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-sand transition-colors">
+                  About KAAMSETU
                 </Link>
               </li>
             </ul>
@@ -135,7 +143,7 @@ export function InstitutionalFooter() {
             <span>•</span>
             <span>Intelligence: Google Gemini</span>
             <span>•</span>
-            <span>Theme: Forest & Sand</span>
+            <span>Palette: Deep Forest & Warm Sand</span>
           </div>
         </div>
       </div>
