@@ -147,6 +147,28 @@ export async function requireCustomerOrContractor(): Promise<AuthenticatedUser> 
 }
 
 /**
+ * Requires an authenticated contractor or admin.
+ */
+export async function requireContractor(): Promise<AuthenticatedUser> {
+  const user = await requireAuthenticatedUser();
+  if (user.role !== "contractor" && user.role !== "admin") {
+    throw new AuthError("Access denied: Contractor role required for this operation.", 403);
+  }
+  return user;
+}
+
+/**
+ * Requires an authenticated institutional partner or admin.
+ */
+export async function requireInstitution(): Promise<AuthenticatedUser> {
+  const user = await requireAuthenticatedUser();
+  if (user.role !== "institution" && user.role !== "admin") {
+    throw new AuthError("Access denied: Institutional partner role required.", 403);
+  }
+  return user;
+}
+
+/**
  * Requires an authenticated admin.
  */
 export async function requireAdmin(): Promise<AuthenticatedUser> {

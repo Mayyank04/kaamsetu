@@ -38,10 +38,10 @@ export function InstitutionalHeader() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/explore", label: "Explore Professions" },
+    { href: "/contractor/dashboard", label: "Contractor Pro" },
+    { href: "/institution/dashboard", label: "Institutions" },
     { href: "/customer/bookings", label: "My Bookings" },
     { href: "/dashboard", label: "Worker Dashboard" },
-    { href: "/how-it-works", label: "How It Works" },
-    { href: "/about", label: "About" },
   ];
 
   return (
@@ -172,6 +172,18 @@ export function InstitutionalHeader() {
                   <Link href="/dashboard" className="flex items-center gap-2">
                     <LayoutDashboard className="w-3.5 h-3.5 text-forest" />
                     <span>Worker Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/contractor/dashboard" className="flex items-center gap-2">
+                    <LayoutDashboard className="w-3.5 h-3.5 text-forest" />
+                    <span>Contractor Pro SaaS</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/institution/dashboard" className="flex items-center gap-2">
+                    <LayoutDashboard className="w-3.5 h-3.5 text-forest" />
+                    <span>Institutional Hub</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

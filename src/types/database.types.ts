@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type AppRole = "worker" | "customer" | "contractor" | "admin";
+export type AppRole = "worker" | "customer" | "contractor" | "admin" | "institution";
 export type BookingStatus = "requested" | "confirmed" | "in_progress" | "completed" | "cancelled";
 export type AvailabilityState = "available" | "on_site" | "unavailable";
 
@@ -515,6 +515,302 @@ export interface Database {
           }
         ];
       };
+
+      contractor_organizations: {
+        Row: {
+          id: string;
+          owner_id: string;
+          company_name: string;
+          gstin: string | null;
+          business_type: "proprietorship" | "partnership" | "private_limited" | "llp" | "individual";
+          operating_city: string;
+          operating_state: string;
+          subscription_tier: "starter" | "pro" | "business";
+          subscription_status: "active" | "past_due" | "cancelled" | "trialing";
+          subscription_expires_at: string | null;
+          max_roster_workers: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          company_name: string;
+          gstin?: string | null;
+          business_type?: "proprietorship" | "partnership" | "private_limited" | "llp" | "individual";
+          operating_city: string;
+          operating_state?: string;
+          subscription_tier?: "starter" | "pro" | "business";
+          subscription_status?: "active" | "past_due" | "cancelled" | "trialing";
+          subscription_expires_at?: string | null;
+          max_roster_workers?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          company_name?: string;
+          gstin?: string | null;
+          business_type?: "proprietorship" | "partnership" | "private_limited" | "llp" | "individual";
+          operating_city?: string;
+          operating_state?: string;
+          subscription_tier?: "starter" | "pro" | "business";
+          subscription_status?: "active" | "past_due" | "cancelled" | "trialing";
+          subscription_expires_at?: string | null;
+          max_roster_workers?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      contractor_workforce: {
+        Row: {
+          id: string;
+          organization_id: string;
+          worker_profile_id: string;
+          status: "active" | "inactive" | "on_leave";
+          project_role: string;
+          daily_wage_rate: number | null;
+          added_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          worker_profile_id: string;
+          status?: "active" | "inactive" | "on_leave";
+          project_role?: string;
+          daily_wage_rate?: number | null;
+          added_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          worker_profile_id?: string;
+          status?: "active" | "inactive" | "on_leave";
+          project_role?: string;
+          daily_wage_rate?: number | null;
+          added_at?: string;
+        };
+        Relationships: [];
+      };
+
+      contractor_projects: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          client_name: string;
+          location: string;
+          status: "planning" | "in_progress" | "completed" | "on_hold";
+          budget: number | null;
+          start_date: string;
+          end_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          client_name: string;
+          location: string;
+          status?: "planning" | "in_progress" | "completed" | "on_hold";
+          budget?: number | null;
+          start_date: string;
+          end_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          title?: string;
+          client_name?: string;
+          location?: string;
+          status?: "planning" | "in_progress" | "completed" | "on_hold";
+          budget?: number | null;
+          start_date?: string;
+          end_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institutions: {
+        Row: {
+          id: string;
+          name: string;
+          institution_type: "state_mission" | "vocational_iti" | "polytechnic" | "ngo" | "industry_association";
+          state: string;
+          district: string;
+          contact_email: string;
+          contact_phone: string | null;
+          partner_status: "identified" | "contacted" | "in_discussion" | "pilot_proposal" | "agreement_signed" | "operational";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          institution_type: "state_mission" | "vocational_iti" | "polytechnic" | "ngo" | "industry_association";
+          state?: string;
+          district: string;
+          contact_email: string;
+          contact_phone?: string | null;
+          partner_status?: "identified" | "contacted" | "in_discussion" | "pilot_proposal" | "agreement_signed" | "operational";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          institution_type?: "state_mission" | "vocational_iti" | "polytechnic" | "ngo" | "industry_association";
+          state?: string;
+          district?: string;
+          contact_email?: string;
+          contact_phone?: string | null;
+          partner_status?: "identified" | "contacted" | "in_discussion" | "pilot_proposal" | "agreement_signed" | "operational";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institutional_cohorts: {
+        Row: {
+          id: string;
+          institution_id: string;
+          name: string;
+          trade: string;
+          target_capacity: number;
+          start_date: string;
+          end_date: string | null;
+          status: "upcoming" | "active" | "completed" | "archived";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          name: string;
+          trade: string;
+          target_capacity?: number;
+          start_date: string;
+          end_date?: string | null;
+          status?: "upcoming" | "active" | "completed" | "archived";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_id?: string;
+          name?: string;
+          trade?: string;
+          target_capacity?: number;
+          start_date?: string;
+          end_date?: string | null;
+          status?: "upcoming" | "active" | "completed" | "archived";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      cohort_participants: {
+        Row: {
+          id: string;
+          cohort_id: string;
+          worker_profile_id: string;
+          consent_for_institution: boolean;
+          training_completed: boolean;
+          credential_issued: boolean;
+          enrolled_at: string;
+        };
+        Insert: {
+          id?: string;
+          cohort_id: string;
+          worker_profile_id: string;
+          consent_for_institution?: boolean;
+          training_completed?: boolean;
+          credential_issued?: boolean;
+          enrolled_at?: string;
+        };
+        Update: {
+          id?: string;
+          cohort_id?: string;
+          worker_profile_id?: string;
+          consent_for_institution?: boolean;
+          training_completed?: boolean;
+          credential_issued?: boolean;
+          enrolled_at?: string;
+        };
+        Relationships: [];
+      };
+
+      abuse_reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          target_type: "worker_profile" | "review" | "booking" | "contractor";
+          target_id: string;
+          reason: string;
+          details: string | null;
+          status: "pending" | "under_review" | "resolved" | "dismissed";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          target_type: "worker_profile" | "review" | "booking" | "contractor";
+          target_id: string;
+          reason: string;
+          details?: string | null;
+          status?: "pending" | "under_review" | "resolved" | "dismissed";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          reporter_id?: string;
+          target_type?: "worker_profile" | "review" | "booking" | "contractor";
+          target_id?: string;
+          reason?: string;
+          details?: string | null;
+          status?: "pending" | "under_review" | "resolved" | "dismissed";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      profile_corrections: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          requested_by: string;
+          field_name: string;
+          correction_reason: string;
+          status: "pending" | "approved" | "rejected";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          requested_by: string;
+          field_name: string;
+          correction_reason: string;
+          status?: "pending" | "approved" | "rejected";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          requested_by?: string;
+          field_name?: string;
+          correction_reason?: string;
+          status?: "pending" | "approved" | "rejected";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -541,3 +837,11 @@ export type PortfolioItem = Database["public"]["Tables"]["portfolio"]["Row"];
 export type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 export type Review = Database["public"]["Tables"]["reviews"]["Row"];
 export type WorkRecord = Database["public"]["Tables"]["work_records"]["Row"];
+export type ContractorOrganization = Database["public"]["Tables"]["contractor_organizations"]["Row"];
+export type ContractorWorkforce = Database["public"]["Tables"]["contractor_workforce"]["Row"];
+export type ContractorProject = Database["public"]["Tables"]["contractor_projects"]["Row"];
+export type Institution = Database["public"]["Tables"]["institutions"]["Row"];
+export type InstitutionalCohort = Database["public"]["Tables"]["institutional_cohorts"]["Row"];
+export type CohortParticipant = Database["public"]["Tables"]["cohort_participants"]["Row"];
+export type AbuseReport = Database["public"]["Tables"]["abuse_reports"]["Row"];
+export type ProfileCorrection = Database["public"]["Tables"]["profile_corrections"]["Row"];

@@ -72,3 +72,17 @@ export function sanitizeLogData(data: unknown): unknown {
 
   return sanitized;
 }
+
+export const logger = {
+  info(message: string, data?: unknown) {
+    if (process.env.NODE_ENV !== "test") {
+      console.log(JSON.stringify({ level: "info", message, ...(data ? { data: sanitizeLogData(data) } : {}) }));
+    }
+  },
+  warn(message: string, data?: unknown) {
+    console.warn(JSON.stringify({ level: "warn", message, ...(data ? { data: sanitizeLogData(data) } : {}) }));
+  },
+  error(message: string, data?: unknown) {
+    console.error(JSON.stringify({ level: "error", message, ...(data ? { data: sanitizeLogData(data) } : {}) }));
+  },
+};

@@ -1,8 +1,10 @@
 export type UserRole =
   | "worker"
+  | "customer"
   | "contractor"
   | "employer"
   | "verifier"
+  | "institution"
   | "admin";
 
 export interface UserProfile {

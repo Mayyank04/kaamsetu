@@ -42,10 +42,12 @@ export async function runBackendVerification() {
   // ---------------------------------------------------------------------------
   const migration1Path = path.join(projectRoot, "supabase/migrations/20261114000001_initial_schema.sql");
   const migration2Path = path.join(projectRoot, "supabase/migrations/20261114000002_row_level_security.sql");
+  const migration7Path = path.join(projectRoot, "supabase/migrations/20261114000007_contractor_and_institutional_platform.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
   assert(fs.existsSync(migration2Path), "1. SQL Migrations", "Migration 02 (Row Level Security) exists");
+  assert(fs.existsSync(migration7Path), "1. SQL Migrations", "Migration 07 (Contractor Pro & Institutional Platform) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
@@ -77,6 +79,27 @@ export async function runBackendVerification() {
     "Unique profile slug generation trigger function defined"
   );
 
+  const m7Content = fs.readFileSync(migration7Path, "utf-8");
+  const phase6Tables = [
+    "contractor_organizations",
+    "contractor_workforce",
+    "contractor_projects",
+    "institutions",
+    "institutional_cohorts",
+    "cohort_participants",
+    "abuse_reports",
+    "profile_corrections",
+  ];
+
+  for (const table of phase6Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m7Content),
+      "1. SQL Migrations",
+      `Phase 6 Table public.${table} defined in schema`
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // TEST SUITE 2: Row Level Security (RLS) Policies
   // ---------------------------------------------------------------------------
@@ -87,6 +110,14 @@ export async function runBackendVerification() {
       m2Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
       "2. Row Level Security",
       `RLS enabled on public.${table}`
+    );
+  }
+
+  for (const table of phase6Tables) {
+    assert(
+      m7Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `RLS enabled on Phase 6 public.${table}`
     );
   }
 
