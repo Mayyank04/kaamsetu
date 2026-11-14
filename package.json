@@ -10,7 +10,9 @@
     "verify:db": "tsx src/lib/supabase/db/verify-backend.ts",
     "test:rls": "tsx test/rls-integration.test.ts",
     "test:crypto": "tsx test/credential-signature.test.ts",
-    "test:ratelimit": "tsx test/rate-limiter.test.ts"
+    "test:ratelimit": "tsx test/rate-limiter.test.ts",
+    "test:ai": "tsx test/ai-accuracy-ground-truth.test.ts",
+    "test:perf": "tsx test/network-resilience.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

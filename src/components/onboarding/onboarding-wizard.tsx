@@ -229,21 +229,40 @@ export function OnboardingWizard() {
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <div className="flex-1 text-sm">
             <p className="font-semibold">
-              {language === "hi" ? "त्रुटि आई है" : "Action encountered an error"}
+              {language === "as"
+                ? "ত্ৰুটি ঘটিছে"
+                : language === "bn"
+                ? "ত্রুটি ঘটেছে"
+                : language === "hi"
+                ? "त्रुटि आई है"
+                : "Action encountered an error"}
             </p>
             <p className="mt-0.5 text-xs text-forest/80">
               {analysisError || submitError}
             </p>
           </div>
-          {analysisError && (
+          {analysisError ? (
             <Button
               size="sm"
               variant="outline"
               onClick={handleAnalyze}
-              className="border-terracotta text-terracotta hover:bg-terracotta/10 h-8 text-xs"
+              className="border-terracotta text-terracotta hover:bg-terracotta/10 h-8 text-xs shrink-0"
             >
               <RefreshCw className="w-3 h-3 mr-1.5" />
-              {language === "hi" ? "पुनः प्रयास करें" : "Retry"}
+              {language === "as"
+                ? "পুনৰ চেষ্টা"
+                : language === "hi"
+                ? "पुनः प्रयास करें"
+                : "Retry"}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSubmitError(null)}
+              className="text-terracotta hover:bg-terracotta/10 h-8 text-xs shrink-0"
+            >
+              Dismiss
             </Button>
           )}
         </div>

@@ -104,11 +104,11 @@ export function extractDeterministicFallback(
   // 1. Identify Name
   let name = "Craftsperson";
   const nameMatch =
-    transcript.match(/(?:naam|name|amra|naan|nanu|moi)\s+(?:hai|is|devi|sharma)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i) ||
-    transcript.match(/(?:Main|Mera naam|Hum|I am|Nanu|Naan)\s+([A-Za-z\s]+?)(?:\s+(?:hoon|hai|from|pichhle|past|se)|\.|\,)/i);
+    transcript.match(/(?:naam|name|amra|naan|nanu|moi|নাম|नाम)\s+(?:hai|is|devi|sharma|মোৰ|হৈছে|মই)?\s*([A-Za-z\u0980-\u09FF\u0900-\u097F]+(?:\s+[A-Za-z\u0980-\u09FF\u0900-\u097F]+)?)/i) ||
+    transcript.match(/(?:Main|Mera naam|Hum|I am|Nanu|Naan|মোৰ নাম|মই)\s+([A-Za-z\u0980-\u09FF\u0900-\u097F\s]+?)(?:\s+(?:hoon|hai|from|pichhle|past|se|ধৰি|হৈছে)|\.|\,)/i);
 
   if (nameMatch && nameMatch[1] && nameMatch[1].trim().length > 2) {
-    name = nameMatch[1].trim();
+    name = nameMatch[1].trim().replace(/[।\,\.\?\!]+$/, "").trim();
   } else if (lower.includes("rameshwar") || transcript.includes("रामेश्वर") || transcript.includes("ৰামেশ্বৰ")) {
     name = "Rameshwar Sharma";
   } else if (lower.includes("dipak") || transcript.includes("দীপক")) {
@@ -117,9 +117,11 @@ export function extractDeterministicFallback(
     name = "Bipul Das";
   } else if (lower.includes("ratan") || transcript.includes("ৰতন")) {
     name = "Ratan Gogoi";
+  } else if (lower.includes("pranab") || transcript.includes("প্ৰণৱ")) {
+    name = "Pranab Sarma";
   } else if (lower.includes("sunita") || transcript.includes("सुनीता")) {
     name = "Sunita Devi";
-  } else if (lower.includes("rafiq") || transcript.includes("रफीक")) {
+  } else if (lower.includes("rafiq") || transcript.includes("रफीक") || transcript.includes("रफ़ीक")) {
     name = "Mohammed Rafiq";
   } else if (lower.includes("ananya") || transcript.includes("அனன்யா")) {
     name = "Ananya Murugan";
@@ -155,12 +157,12 @@ export function extractDeterministicFallback(
 
   // 4. Stated Tools & Equipment (Only if mentioned)
   const equipment: string[] = [];
-  if (lower.includes("bosch") || transcript.includes("बॉश")) equipment.push("Bosch Power Tools");
-  if (lower.includes("megger") || transcript.includes("मेगर")) equipment.push("Megger Insulation Tester");
-  if (lower.includes("multimeter") || transcript.includes("मल्टीमीटर")) equipment.push("Digital Multimeter");
+  if (lower.includes("bosch") || transcript.includes("बॉश") || transcript.includes("বচ") || transcript.includes("বশ")) equipment.push("Bosch Power Tools");
+  if (lower.includes("megger") || transcript.includes("मेगर") || transcript.includes("মেগাৰ")) equipment.push("Megger Insulation Tester");
+  if (lower.includes("multimeter") || transcript.includes("मल्टीमीटर") || transcript.includes("মাল্টিমিটাৰ")) equipment.push("Digital Multimeter");
   if (lower.includes("loom") || transcript.includes("करघा") || transcript.includes("তাঁত")) equipment.push("Traditional Handloom");
   if (lower.includes("scanner") || lower.includes("obd")) equipment.push("OBD-II Diagnostic Scanner");
-  if (lower.includes("drill") || transcript.includes("ड्रिल")) equipment.push("Industrial Drill Rig");
+  if (lower.includes("drill") || transcript.includes("ड्रिल") || transcript.includes("ড্ৰিল")) equipment.push("Industrial Drill Rig");
 
   // 5. Trade & Occupation Classification
   let occupation = "Certified Trade Craftsman";
@@ -173,11 +175,15 @@ export function extractDeterministicFallback(
     lower.includes("solar") ||
     lower.includes("electric") ||
     lower.includes("wiring") ||
+    lower.includes("inverter") ||
     transcript.includes("सोलर") ||
     transcript.includes("वायरिंग") ||
     transcript.includes("बिजली") ||
     transcript.includes("विद्युत") ||
     transcript.includes("সৌৰ") ||
+    transcript.includes("ৱায়াৰিং") ||
+    transcript.includes("ইনভাৰ্টাৰ") ||
+    transcript.includes("বৈদ্যুতিক") ||
     transcript.includes("மின்") ||
     transcript.includes("విద్యుత్")
   ) {
@@ -185,8 +191,8 @@ export function extractDeterministicFallback(
     category = "Electrical & Solar";
     ncoCode = "7411.0100 - Electrical Mechanics & Solar Mounts";
     skills.push("3-Phase Busbar Wiring", "Rooftop Solar Grid Synchronization");
-    if (lower.includes("earthing") || transcript.includes("अर्थिंग")) skills.push("Industrial Earthing Testing");
-    if (lower.includes("panel") || transcript.includes("पैनल")) skills.push("MCB Distribution Panels");
+    if (lower.includes("earthing") || transcript.includes("अर्थिंग") || transcript.includes("আৰ্থিং")) skills.push("Industrial Earthing Testing");
+    if (lower.includes("panel") || transcript.includes("पैनल") || transcript.includes("পেনেল")) skills.push("MCB Distribution Panels");
     services.push({
       title: "Commercial Solar Inverter & Distribution Commissioning",
       indicativeRate: statedRate,
@@ -246,10 +252,35 @@ export function extractDeterministicFallback(
       indicativeRate: statedRate,
     });
   } else if (
+    lower.includes("weld") ||
+    lower.includes("fabricat") ||
+    lower.includes("metal") ||
+    transcript.includes("वेल्डिंग") ||
+    transcript.includes("ৱেল্ডিং") ||
+    transcript.includes("ফেব্রیکیشن") ||
+    transcript.includes("लोहा") ||
+    transcript.includes("লোহা")
+  ) {
+    occupation = "Structural Arc & TIG Welder";
+    category = "Metalcraft & Fabrication";
+    ncoCode = "7212.0100 - Welders & Flame Cutters";
+    skills.push("Shielded Metal Arc Welding", "TIG Precision Joints");
+    services.push({
+      title: "Structural Steel & MS Fabrication",
+      indicativeRate: statedRate,
+    });
+  } else if (
     lower.includes("plumb") ||
     lower.includes("pipe") ||
+    lower.includes("pump") ||
+    lower.includes("drain") ||
     transcript.includes("नल") ||
     transcript.includes("पाइप") ||
+    transcript.includes("পাম্প") ||
+    transcript.includes("পাইপ") ||
+    transcript.includes("পানী") ||
+    transcript.includes("ছাবমাৰ্চিবল") ||
+    transcript.includes("প্লাম্বাৰ") ||
     transcript.includes("குழாய்")
   ) {
     occupation = "Master Sanitary Engineer & High-Pressure Piping Specialist";
@@ -263,8 +294,16 @@ export function extractDeterministicFallback(
   } else if (
     lower.includes("carpenter") ||
     lower.includes("wood") ||
+    lower.includes("bamboo") ||
+    lower.includes("cane") ||
+    lower.includes("furniture") ||
     transcript.includes("बढ़ई") ||
     transcript.includes("लकड़ी") ||
+    transcript.includes("বাঁহ") ||
+    transcript.includes("বেত") ||
+    transcript.includes("কাঠ") ||
+    transcript.includes("আচবাব") ||
+    transcript.includes("আসবাব") ||
     transcript.includes("மரவேலை")
   ) {
     occupation = "Master Teak Wood Carpenter & Joiner";
@@ -296,7 +335,7 @@ export function extractDeterministicFallback(
   else if (lower.includes("mumbai") || transcript.includes("मुंबई")) { city = "Mumbai"; state = "Maharashtra"; }
   else if (lower.includes("kolkata") || transcript.includes("কলকাতা")) { city = "Kolkata"; state = "West Bengal"; }
   else if (lower.includes("tirupati") || transcript.includes("తిరుపతి")) { city = "Tirupati"; state = "Andhra Pradesh"; }
-  else if (lower.includes("guwahati") || lower.includes("dispur") || lower.includes("beltola") || lower.includes("kamrup") || transcript.includes("গুৱাহাটী") || transcript.includes("দিছপুৰ") || transcript.includes("বেলতলা") || transcript.includes("কামৰূপ")) { city = "Guwahati"; state = "Assam"; }
+  else if (lower.includes("guwahati") || lower.includes("dispur") || lower.includes("beltola") || lower.includes("ulubari") || lower.includes("kamrup") || transcript.includes("গুৱাহাটী") || transcript.includes("দিছপুৰ") || transcript.includes("বেলতলা") || transcript.includes("উলুবাৰী") || transcript.includes("কামৰূপ") || transcript.includes("गुवाहाटी") || transcript.includes("उलुबारी") || transcript.includes("दिसपुर")) { city = "Guwahati"; state = "Assam"; }
 
   if (!city) {
     missing.push("Operating City & Primary District");

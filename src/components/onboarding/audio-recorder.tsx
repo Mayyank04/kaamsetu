@@ -54,6 +54,7 @@ export function AudioRecorder({
   const [recordingSeconds, setRecordingSeconds] = React.useState(0);
   const [speechSupported, setSpeechSupported] = React.useState<boolean>(true);
   const [activeMode, setActiveMode] = React.useState<"voice" | "text">(inputMode);
+  const [micError, setMicError] = React.useState<string | null>(null);
 
   const recognitionRef = React.useRef<SpeechRecognitionInstance | null>(null);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -97,8 +98,26 @@ export function AudioRecorder({
         }
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (event: unknown) => {
         setIsRecording(false);
+        const errType = (event as { error?: string })?.error || "unknown";
+        if (errType === "not-allowed" || errType === "permission-denied") {
+          setMicError(
+            language === "as"
+              ? "মাইক্ৰ'ফ'ন অনুমতি পোৱা নগ'ল। ব্ৰাউজাৰ ছেটিংছত মাইকৰ অনুমতি দিয়ক বা তলত লিখক।"
+              : language === "hi"
+              ? "माइक्रोफोन की अनुमति नहीं मिली। कृपया ब्राउज़र सेटिंग्स में अनुमति दें या नीचे लिखें।"
+              : "Microphone permission was denied. Please allow microphone access or type below."
+          );
+        } else if (errType === "no-speech") {
+          setMicError(
+            language === "as"
+              ? "কোনো মাত ধৰা নপৰিল। অনুগ্ৰহ কৰি মাইকৰ ওচৰত স্পষ্টকৈ কওক।"
+              : language === "hi"
+              ? "कोई आवाज नहीं सुनाई दी। कृपया माइक के पास स्पष्ट रूप से बोलें।"
+              : "No speech detected. Please speak closer to the microphone."
+          );
+        }
       };
 
       recognition.onend = () => {
@@ -122,6 +141,7 @@ export function AudioRecorder({
   }, [language]);
 
   const toggleRecording = () => {
+    setMicError(null);
     if (!speechSupported) {
       setActiveMode("text");
       return;
@@ -209,6 +229,19 @@ export function AudioRecorder({
               )}
             </button>
           </div>
+
+          {micError && (
+            <div className="rounded-xs bg-terracotta/10 border border-terracotta/30 p-3 text-xs text-terracotta flex items-center justify-between gap-2 text-left">
+              <span>{micError}</span>
+              <button
+                type="button"
+                onClick={() => setMicError(null)}
+                className="font-bold underline text-[11px] shrink-0"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
             <span className="text-charcoal-muted">
