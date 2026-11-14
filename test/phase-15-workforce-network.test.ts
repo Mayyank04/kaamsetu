@@ -1384,14 +1384,14 @@ export async function runPhase15WorkforceNetworkSuite() {
       const total = parseInt(tables[0].total_tables, 10);
       const rls = parseInt(rlsTables[0].rls_tables, 10);
 
-      const passed = total === 65 && rls === 65;
+      const passed = total >= 65 && rls === total;
 
       recordTest(
         40,
         "Backup Validation & 100% RLS Catalog Verification",
         "Pillar J: Operational Governance",
         passed,
-        `PostgreSQL catalog verified: exactly 65 tables with 100% Row-Level Security (${rls}/${total})`
+        `PostgreSQL catalog verified: at least 65 tables with 100% Row-Level Security (${rls}/${total})`
       );
     }
 

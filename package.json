@@ -22,7 +22,8 @@
     "test:phase12": "tsx test/repeatable-national-network.test.ts",
     "test:phase13": "tsx test/phase-13-national-operations.test.ts",
     "test:phase14": "tsx test/phase-14-operational-proof.test.ts",
-    "test:phase15": "tsx test/phase-15-workforce-network.test.ts"
+    "test:phase15": "tsx test/phase-15-workforce-network.test.ts",
+    "test:phase16": "tsx test/phase-16-independent-verification.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
