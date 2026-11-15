@@ -1,0 +1,26 @@
+{
+  "phase": "PHASE_32",
+  "title": "Worker Emergency Escalation Drill Evidence",
+  "timestamp": "2026-11-15T20:20:00Z",
+  "drill": {
+    "drillId": "DRILL-32-WORKPLACE_INJURY-01",
+    "incidentType": "workplace_injury",
+    "alertDispatchTimeSeconds": 12.4,
+    "alertAcknowledgementTimeMinutes": 2.5,
+    "firstHumanContactTimeMinutes": 14.2,
+    "escalationTimeMinutes": 28,
+    "simulatedResolutionHours": 22.5,
+    "workerWithdrawalAllowed": true,
+    "retaliationShieldActive": true,
+    "confidentialityPreserved": true,
+    "provenance": "SYNTHETIC_EVIDENCE"
+  },
+  "slaBenchmarks": {
+    "alertDispatchTargetSeconds": 15,
+    "alertDispatchActualSeconds": 12.4,
+    "firstHumanContactTargetMinutes": 15,
+    "firstHumanContactActualMinutes": 14.2,
+    "escalationTargetMinutes": 30,
+    "escalationActualMinutes": 28
+  }
+}

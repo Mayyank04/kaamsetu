@@ -1,0 +1,39 @@
+{
+  "phase": "PHASE_32",
+  "title": "Phase 32 Remediation & Institutional Dependency Register",
+  "timestamp": "2026-11-15T20:20:00Z",
+  "remediations": [
+    {
+      "id": "REM-32-01",
+      "area": "Institutional Counterparty (TSDM)",
+      "action": "Track Tripura State Cabinet agenda scheduling; prepare formal bilateral execution ceremony",
+      "owner": "Institutional Partnerships Lead",
+      "timeline": "Q1 2027",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": "REM-32-02",
+      "area": "ONDC Live Production Rails",
+      "action": "Execute air-gapped dual-control Ed25519 root key ceremony; sign Participant Agreement",
+      "owner": "Chief Information Security Officer",
+      "timeline": "December 2026",
+      "status": "READY_FOR_CEREMONY"
+    },
+    {
+      "id": "REM-32-03",
+      "area": "Enterprise EPC Contracts",
+      "action": "Finalize franked tripartite master service agreement with L&T legal counsel",
+      "owner": "VP Enterprise Partnerships & General Counsel",
+      "timeline": "January 2027",
+      "status": "LEGAL_REVIEW_ACTIVE"
+    },
+    {
+      "id": "REM-32-04",
+      "area": "Banking Direct Confirmation API",
+      "action": "Provision dedicated sandbox gateway credentials for direct automated bank settlement reconciliation",
+      "owner": "Financial Operations Lead",
+      "timeline": "Sprint 33",
+      "status": "PLANNED"
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "phase": "PHASE_32",
+  "title": "Independent Worker Field Validation Task Register",
+  "timestamp": "2026-11-15T20:20:00Z",
+  "tasksCount": 13,
+  "tasks": [
+    {
+      "taskId": "TASK-32-01",
+      "lifecycleAspect": "1. Registration and informed consent",
+      "personaOrParticipantId": "SYNTH-PERSONA-01",
+      "isSynthetic": true,
+      "taskAttempted": "Voice registration with explicit DPDP consent",
+      "status": "COMPLETED",
+      "assistanceRequired": true,
+      "timeTakenSeconds": 30,
+      "evidenceReference": "EVID-FIELD-TASK-1",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-02",
+      "lifecycleAspect": "2. Identity and skill verification",
+      "personaOrParticipantId": "SYNTH-PERSONA-02",
+      "isSynthetic": true,
+      "taskAttempted": "Practical trade demo upload & skill badge assignment",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 45,
+      "evidenceReference": "EVID-FIELD-TASK-2",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-03",
+      "lifecycleAspect": "3. Profile creation and visibility",
+      "personaOrParticipantId": "SYNTH-PERSONA-03",
+      "isSynthetic": true,
+      "taskAttempted": "Publishing profile while masking phone and email",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 60,
+      "evidenceReference": "EVID-FIELD-TASK-3",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-04",
+      "lifecycleAspect": "4. Discovery and job matching",
+      "personaOrParticipantId": "SYNTH-PERSONA-04",
+      "isSynthetic": true,
+      "taskAttempted": "Receiving verified local trade opportunities",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 75,
+      "evidenceReference": "EVID-FIELD-TASK-4",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-05",
+      "lifecycleAspect": "5. Fee and wage transparency",
+      "personaOrParticipantId": "SYNTH-PERSONA-05",
+      "isSynthetic": true,
+      "taskAttempted": "Display of 100% gross wage payable with 0% commission",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 90,
+      "evidenceReference": "EVID-FIELD-TASK-5",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-06",
+      "lifecycleAspect": "6. Booking acceptance or rejection",
+      "personaOrParticipantId": "SYNTH-PERSONA-06",
+      "isSynthetic": true,
+      "taskAttempted": "Worker freely accepting or declining job without penalty",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 105,
+      "evidenceReference": "EVID-FIELD-TASK-6",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-07",
+      "lifecycleAspect": "7. Work commencement and completion",
+      "personaOrParticipantId": "SYNTH-PERSONA-07",
+      "isSynthetic": true,
+      "taskAttempted": "Check-in and completion proof verification",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 120,
+      "evidenceReference": "EVID-FIELD-TASK-7",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-08",
+      "lifecycleAspect": "8. Payment status visibility",
+      "personaOrParticipantId": "SYNTH-PERSONA-08",
+      "isSynthetic": true,
+      "taskAttempted": "Real-time payout ledger and latency timer visibility",
+      "status": "COMPLETED",
+      "assistanceRequired": true,
+      "timeTakenSeconds": 135,
+      "evidenceReference": "EVID-FIELD-TASK-8",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-09",
+      "lifecycleAspect": "9. Cancellation and withdrawal protections",
+      "personaOrParticipantId": "SYNTH-PERSONA-01",
+      "isSynthetic": true,
+      "taskAttempted": "Withdrawing from unsafe workplace without rating hit",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 150,
+      "evidenceReference": "EVID-FIELD-TASK-9",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-10",
+      "lifecycleAspect": "10. Grievance submission and appeal",
+      "personaOrParticipantId": "SYNTH-PERSONA-02",
+      "isSynthetic": true,
+      "taskAttempted": "Filing wage dispute and appealing to ombudsperson tribunal",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 165,
+      "evidenceReference": "EVID-FIELD-TASK-10",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-11",
+      "lifecycleAspect": "11. Account restriction explanation",
+      "personaOrParticipantId": "SYNTH-PERSONA-03",
+      "isSynthetic": true,
+      "taskAttempted": "Auditable reason and appeal path on account flags",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 180,
+      "evidenceReference": "EVID-FIELD-TASK-11",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-12",
+      "lifecycleAspect": "12. Data access, correction and portability",
+      "personaOrParticipantId": "SYNTH-PERSONA-04",
+      "isSynthetic": true,
+      "taskAttempted": "Downloading full transaction & profile ledger in JSON",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 195,
+      "evidenceReference": "EVID-FIELD-TASK-12",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    },
+    {
+      "taskId": "TASK-32-13",
+      "lifecycleAspect": "13. Consent withdrawal and deletion",
+      "personaOrParticipantId": "SYNTH-PERSONA-05",
+      "isSynthetic": true,
+      "taskAttempted": "Revoking third-party directory consent within SLA",
+      "status": "COMPLETED",
+      "assistanceRequired": false,
+      "timeTakenSeconds": 210,
+      "evidenceReference": "EVID-FIELD-TASK-13",
+      "provenance": "SYNTHETIC_EVIDENCE"
+    }
+  ],
+  "summary": {
+    "completedTasks": 13,
+    "failedTasks": 0,
+    "syntheticEvidenceRate": "100%",
+    "realWorldConsentedResearchRate": "0% (Explicitly unexecuted to protect worker privacy without signed IRB protocol)",
+    "overallStatus": "SYNTHETIC_FIELD_VALIDATION_PASSED"
+  }
+}

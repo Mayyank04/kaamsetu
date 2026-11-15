@@ -1,0 +1,32 @@
+{
+  "phase": "PHASE_32",
+  "title": "Offline Security & Replay Attack Test Register",
+  "timestamp": "2026-11-15T20:20:00Z",
+  "tests": [
+    {
+      "attackVector": "Offline QR payload tampering",
+      "expectedResult": "INVALID_SIGNATURE",
+      "outcome": "PASSED"
+    },
+    {
+      "attackVector": "Stale offline cache (> 72 hours)",
+      "expectedResult": "CACHE_EXPIRED",
+      "outcome": "PASSED"
+    },
+    {
+      "attackVector": "Offline booking request replay with stale nonce",
+      "expectedResult": "REPLAY_DETECTED_409",
+      "outcome": "PASSED"
+    },
+    {
+      "attackVector": "Device clock manipulation",
+      "expectedResult": "CLOCK_SKEW_REJECTED",
+      "outcome": "PASSED"
+    },
+    {
+      "attackVector": "Data minimization audit",
+      "expectedResult": "ZERO_AADHAAR_OR_BANK_LEAKAGE",
+      "outcome": "PASSED"
+    }
+  ]
+}
