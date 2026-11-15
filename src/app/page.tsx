@@ -63,25 +63,24 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             {/* Left Column: Hero Narrative */}
             <div className="lg:col-span-7 space-y-6">
-              {/* Sovereign Sub-badge */}
+              {/* Mission Sub-badge */}
               <div className="inline-flex items-center gap-2 rounded-xs bg-forest/10 px-3.5 py-1.5 border border-forest/20 text-xs font-bold text-forest uppercase tracking-wider shadow-2xs">
                 <ShieldCheck className="h-4 w-4 text-forest" />
-                <span>India&apos;s Sovereign Digital Workforce Infrastructure</span>
+                <span>Every skill deserves to be seen, even without a degree</span>
               </div>
 
-              {/* Required Exact Headline */}
+              {/* Approved Primary Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-forest leading-[1.1]">
-                Every skill deserves to be seen.
+                Your work. Your reputation. Your opportunities.
               </h1>
 
-              {/* Subtitle with Institutional Tone */}
+              {/* Approved Supporting Copy */}
               <p className="text-lg sm:text-xl text-charcoal-muted leading-relaxed max-w-2xl font-normal">
-                450 million skilled Indian craftspeople power the nation without proof of craft.
-                KAAMSETU bridges informal expertise with sovereign institutional trust—translating
-                spoken vernacular claims into unforgeable, DigiLocker-linked credentials.
+                Build a professional identity around the skills you use every day. Showcase your work,
+                share your experience and connect with people looking for your expertise.
               </p>
 
-              {/* Section 3: Two Required CTAs */}
+              {/* Two Direct CTAs */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-3">
                 <Button
                   variant="default"
@@ -91,7 +90,7 @@ export default function HomePage() {
                 >
                   <Link href="/onboarding">
                     <Mic className="mr-2.5 h-5 w-5 text-sand" />
-                    Create Your Identity
+                    Create Your Skill Profile
                   </Link>
                 </Button>
 
@@ -115,12 +114,12 @@ export default function HomePage() {
                   <div className="text-xs text-charcoal-muted mt-0.5">KAAMSCORE™ Trust Index</div>
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-forest">100%</div>
-                  <div className="text-xs text-charcoal-muted mt-0.5">DigiLocker & Aadhaar VID</div>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-forest">₹0.00</div>
+                  <div className="text-xs text-charcoal-muted mt-0.5">Zero Platform Commission</div>
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-forest">12+</div>
-                  <div className="text-xs text-charcoal-muted mt-0.5">Indian Vernacular Dialects</div>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-forest">100%</div>
+                  <div className="text-xs text-charcoal-muted mt-0.5">Direct Worker Entitlement</div>
                 </div>
               </div>
             </div>
@@ -148,8 +147,8 @@ export default function HomePage() {
               Discover Certified Master Crafts
             </h2>
             <p className="text-sm text-charcoal-muted max-w-xl">
-              Categorized according to NSQF and Ministry of Skill Development standards.
-              Each profession is backed by verifiable on-chain attestations.
+              Categorized according to recognized vocational trades.
+              Each professional profile is backed by documented work and genuine customer reviews.
             </p>
           </div>
 

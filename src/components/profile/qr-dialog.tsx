@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { X, QrCode, ShieldCheck, Download, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import QRCode from "qrcode";
@@ -78,9 +79,12 @@ export function QRDialog({
         {/* Genuine Camera-Scannable QR Presentation */}
         <div className="p-4 rounded-xl bg-[#F7F5F0] border-2 border-forest/20 max-w-[220px] mx-auto shadow-inner">
           {qrDataUrl ? (
-            <img
+            <Image
               src={qrDataUrl}
               alt={`Scannable verification QR for ${registryId}`}
+              width={200}
+              height={200}
+              unoptimized
               className="w-full h-full rounded"
             />
           ) : (

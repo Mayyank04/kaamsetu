@@ -247,9 +247,12 @@ export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
             <div className="flex items-center gap-3">
               {qrDataUrl ? (
                 <div className="relative h-12 w-12 rounded-xs overflow-hidden border border-forest/20 shrink-0 bg-white p-0.5 shadow-xs">
-                  <img
+                  <Image
                     src={qrDataUrl}
                     alt="Scannable QR Verification"
+                    width={48}
+                    height={48}
+                    unoptimized
                     className="w-full h-full object-contain"
                   />
                 </div>

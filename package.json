@@ -42,7 +42,8 @@
     "test:phase32": "tsx test/phase-32-field-validation.test.ts",
     "test:phase33": "tsx test/phase-33-final-assurance.test.ts",
     "test:phase34": "tsx test/phase-34-conditional-closure.test.ts",
-    "test:phase34a": "tsx test/phase-34a-gate-closure.test.ts"
+    "test:phase34a": "tsx test/phase-34a-gate-closure.test.ts",
+    "test:phase35": "tsx test/phase-35-security-and-authorization.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

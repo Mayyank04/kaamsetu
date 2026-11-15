@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   ShieldCheck,
@@ -141,7 +142,7 @@ export function InstitutionalHeader() {
                 >
                   <div className="w-7 h-7 rounded-lg bg-forest text-ivory font-bold text-xs flex items-center justify-center overflow-hidden shrink-0 border border-forest-600">
                     {user.avatarUrl ? (
-                      <img src={user.avatarUrl} alt={user.fullName} className="w-full h-full object-cover" />
+                      <Image src={user.avatarUrl} alt={user.fullName} width={28} height={28} unoptimized className="w-full h-full object-cover" />
                     ) : (
                       user.fullName.slice(0, 1)
                     )}
@@ -233,7 +234,7 @@ export function InstitutionalHeader() {
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-lg bg-forest text-ivory font-bold text-xs flex items-center justify-center overflow-hidden shrink-0">
                   {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.fullName} className="w-full h-full object-cover" />
+                    <Image src={user.avatarUrl} alt={user.fullName} width={36} height={36} unoptimized className="w-full h-full object-cover" />
                   ) : (
                     user.fullName.slice(0, 1)
                   )}

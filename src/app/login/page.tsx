@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ShieldCheck,
@@ -216,9 +217,12 @@ export default function LoginPage() {
                   >
                     <div className="w-12 h-12 rounded-xl bg-forest/10 border border-forest/15 shrink-0 overflow-hidden flex items-center justify-center">
                       {persona.avatarUrl ? (
-                        <img
+                        <Image
                           src={persona.avatarUrl}
                           alt={persona.fullName}
+                          width={48}
+                          height={48}
+                          unoptimized
                           className="w-full h-full object-cover"
                         />
                       ) : (

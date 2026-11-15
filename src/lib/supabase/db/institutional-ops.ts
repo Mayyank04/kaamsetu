@@ -126,6 +126,21 @@ export async function logInstitutionAction(params: {
 }
 
 /**
+ * Sanitizes CSV cell values to prevent Formula Injection (CSV Injection).
+ * Prefixes cells beginning with =, +, -, @, \t, or \r with a single quote.
+ */
+function sanitizeCsvValue(val: any): string {
+  if (val === null || val === undefined) return "N/A";
+  let str = String(val).trim();
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  // Escape internal double quotes
+  str = str.replace(/"/g, '""');
+  return `"${str}"`;
+}
+
+/**
  * Exports complete, privacy-compliant cohort outcome dossier in CSV or JSON.
  * PRIVACY INVARIANT: Trainees who have not provided consent (consent_for_institution = false)
  * are anonymized as "Private Trainee (Consent Withheld)" with 0 phone leakage.
@@ -170,15 +185,15 @@ export async function exportCohortOutcomeReport(
     ];
 
     const rows = records.map((r) => [
-      r.participantId,
-      `"${r.workerName}"`,
-      r.maskedPhone,
-      `"${r.trade}"`,
+      sanitizeCsvValue(r.participantId),
+      sanitizeCsvValue(r.workerName),
+      sanitizeCsvValue(r.maskedPhone),
+      sanitizeCsvValue(r.trade),
       r.hoursAttended,
       r.assessmentScore ?? "N/A",
       r.practicalVerified ? "YES" : "NO",
-      r.placementStatus,
-      `"${r.employer || 'N/A'}"`,
+      sanitizeCsvValue(r.placementStatus),
+      sanitizeCsvValue(r.employer),
       r.monthlyWage ?? "N/A",
       r.consentGranted ? "YES" : "NO",
     ]);

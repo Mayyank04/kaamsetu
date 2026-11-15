@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exportCohortOutcomeReport } from "@/lib/supabase/db/institutional-ops";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
+import { requireInstitutionCohortOwnership, AuthError } from "@/lib/auth/server";
 
 export async function GET(
   request: NextRequest,
@@ -8,6 +9,10 @@ export async function GET(
 ) {
   try {
     const { id: cohortId } = await params;
+    
+    // Strict institutional authorization and cohort ownership verification
+    await requireInstitutionCohortOwnership(cohortId);
+
     const { searchParams } = new URL(request.url);
     const format = (searchParams.get("format") || "json") as "json" | "csv";
 
@@ -24,7 +29,10 @@ export async function GET(
     }
 
     return createSuccessResponse(data, { cohortId, format });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.name === "AuthError" || error.statusCode) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode || 401 });
+    }
     return handleApiError(error);
   }
 }

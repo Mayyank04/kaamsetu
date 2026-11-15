@@ -77,6 +77,11 @@ export const approvedProfileSubmissionSchema = z.object({
   bio: z.string().min(10),
   languages: z.array(z.string()).min(1),
   voiceTranscript: z.string().optional(),
+  hasVoiceAttestation: z.boolean().optional(),
+  workerConfirmedVoice: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
 });
 
 export type ApprovedProfileSubmission = z.infer<typeof approvedProfileSubmissionSchema>;

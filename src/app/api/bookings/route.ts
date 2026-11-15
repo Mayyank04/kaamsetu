@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createBooking } from "@/lib/supabase/db/bookings";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
 import { requireAuthenticatedUser } from "@/lib/auth/server";
+import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
 import { z } from "zod";
 
 const createBookingSchema = z.object({
@@ -10,6 +11,10 @@ const createBookingSchema = z.object({
   description: z.string().optional().default(""),
   location_address: z.string().min(5, "Address must be at least 5 characters"),
   location_city: z.string().min(2, "City must be specified"),
+  location_state: z.string().optional().default("Assam"),
+  location_pincode: z.string().regex(/^[1-9][0-9]{5}$/, "Pincode must be 6 digits").optional(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
   scheduled_start: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid scheduled start timestamp",
   }),
@@ -20,11 +25,30 @@ const createBookingSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuthenticatedUser();
-
     const json = await request.json();
     const data = createBookingSchema.parse(json);
 
-    // Derive customer identity strictly from verified session
+    // Geographic boundary validation (Guwahati Urban & Shillong Urban permitted)
+    const geoValidation = GeographicAuthorizationService.validateLocation({
+      city: data.location_city,
+      state: data.location_state || "Assam",
+      pincode: data.location_pincode || (data.location_city.toLowerCase().includes("shillong") ? "793001" : "781001"),
+      latitude: data.latitude,
+      longitude: data.longitude,
+    });
+
+    if (!geoValidation.allowed) {
+      return NextResponse.json(
+        {
+          error: geoValidation.reason || "Booking location is outside the authorized Class B operating boundary.",
+          status: geoValidation.status,
+          district: geoValidation.district,
+        },
+        { status: 403 }
+      );
+    }
+
+    // Constitutional Invariant: 100% of estimated_cost belongs to worker, platform commission = 0.00
     const booking = await createBooking({
       customer_id: user.id,
       worker_profile_id: data.worker_profile_id,
@@ -39,7 +63,8 @@ export async function POST(request: NextRequest) {
     });
 
     return createSuccessResponse(booking, {
-      message: "Booking request transmitted to worker. You will receive SMS verification shortly.",
+      message: "Booking request transmitted to worker. 100% of payment goes directly to the professional with zero commission.",
+      platformCommissionAmount: 0.00,
     });
   } catch (error) {
     return handleApiError(error);
