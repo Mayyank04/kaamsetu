@@ -4688,6 +4688,180 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      audit_chain_checkpoints: {
+        Row: {
+          id: string;
+          chain_name: string;
+          checkpoint_sequence: number;
+          start_sequence: number;
+          end_sequence: number;
+          root_digest: string;
+          signing_key_id: string;
+          signature: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          chain_name: string;
+          checkpoint_sequence: number;
+          start_sequence: number;
+          end_sequence: number;
+          root_digest: string;
+          signing_key_id: string;
+          signature: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          chain_name?: string;
+          checkpoint_sequence?: number;
+          start_sequence?: number;
+          end_sequence?: number;
+          root_digest?: string;
+          signing_key_id?: string;
+          signature?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_payout_dispute_records: {
+        Row: {
+          id: string;
+          dispute_code: string;
+          worker_id: string;
+          booking_id: string | null;
+          payment_reference: string;
+          disputed_amount: number;
+          agreed_wage_amount: number;
+          dispute_reason:
+            | "missing_payment"
+            | "incorrect_amount"
+            | "incorrect_payment_reference"
+            | "duplicate_booking"
+            | "unauthorized_deduction"
+            | "incorrect_expense_deduction"
+            | "incorrect_job_completion"
+            | "unrecognized_customer_payment";
+          status:
+            | "opened"
+            | "acknowledged"
+            | "under_investigation"
+            | "resolved_worker_favorable"
+            | "resolved_employer_favorable"
+            | "appealed"
+            | "closed";
+          assigned_investigator_id: string | null;
+          retaliation_flag: boolean;
+          retaliatory_review_quarantined: boolean;
+          resolution_notes: string | null;
+          resolved_at: string | null;
+          worker_appeal_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          dispute_code: string;
+          worker_id: string;
+          booking_id?: string | null;
+          payment_reference: string;
+          disputed_amount: number;
+          agreed_wage_amount: number;
+          dispute_reason:
+            | "missing_payment"
+            | "incorrect_amount"
+            | "incorrect_payment_reference"
+            | "duplicate_booking"
+            | "unauthorized_deduction"
+            | "incorrect_expense_deduction"
+            | "incorrect_job_completion"
+            | "unrecognized_customer_payment";
+          status?:
+            | "opened"
+            | "acknowledged"
+            | "under_investigation"
+            | "resolved_worker_favorable"
+            | "resolved_employer_favorable"
+            | "appealed"
+            | "closed";
+          assigned_investigator_id?: string | null;
+          retaliation_flag?: boolean;
+          retaliatory_review_quarantined?: boolean;
+          resolution_notes?: string | null;
+          resolved_at?: string | null;
+          worker_appeal_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          dispute_code?: string;
+          worker_id?: string;
+          booking_id?: string | null;
+          payment_reference?: string;
+          disputed_amount?: number;
+          agreed_wage_amount?: number;
+          dispute_reason?:
+            | "missing_payment"
+            | "incorrect_amount"
+            | "incorrect_payment_reference"
+            | "duplicate_booking"
+            | "unauthorized_deduction"
+            | "incorrect_expense_deduction"
+            | "incorrect_job_completion"
+            | "unrecognized_customer_payment";
+          status?:
+            | "opened"
+            | "acknowledged"
+            | "under_investigation"
+            | "resolved_worker_favorable"
+            | "resolved_employer_favorable"
+            | "appealed"
+            | "closed";
+          assigned_investigator_id?: string | null;
+          retaliation_flag?: boolean;
+          retaliatory_review_quarantined?: boolean;
+          resolution_notes?: string | null;
+          resolved_at?: string | null;
+          worker_appeal_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_payout_dispute_events: {
+        Row: {
+          id: string;
+          dispute_id: string;
+          event_type: string;
+          actor_id: string | null;
+          actor_role: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          dispute_id: string;
+          event_type: string;
+          actor_id?: string | null;
+          actor_role: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          dispute_id?: string;
+          event_type?: string;
+          actor_id?: string | null;
+          actor_role?: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -4797,6 +4971,10 @@ export type WorkerImpactReplicationStudy = Database["public"]["Tables"]["worker_
 export type SustainedRegionalOperationsRecord = Database["public"]["Tables"]["sustained_regional_operations_records"]["Row"];
 export type InstitutionalBlockerTransitionAuditLog = Database["public"]["Tables"]["institutional_blocker_transition_audit_logs"]["Row"];
 export type W3CVerifiableCredentialRegistry = Database["public"]["Tables"]["w3c_verifiable_credential_registry"]["Row"];
+export type AuditChainCheckpoint = Database["public"]["Tables"]["audit_chain_checkpoints"]["Row"];
+export type WorkerPayoutDisputeRecord = Database["public"]["Tables"]["worker_payout_dispute_records"]["Row"];
+export type WorkerPayoutDisputeEvent = Database["public"]["Tables"]["worker_payout_dispute_events"]["Row"];
+
 
 
 

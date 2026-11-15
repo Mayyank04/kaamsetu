@@ -567,19 +567,20 @@ async function runPhase26Tests() {
     if (dbClient) {
       const res = await dbClient.query("SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';");
       const count = parseInt(res.rows[0].count, 10);
-      assertAtomic(count === 94, `Catalog has exactly 94 base tables (found ${count})`);
+      assertAtomic(count >= 94, `Catalog has at least 94 base tables (found ${count})`);
     } else {
       assertAtomic(true, "Mock catalog verified 94 base tables");
     }
   });
 
-  await runTest(58, "100.0% Row-Level Security: All 94 public base tables have RLS enabled (94/94)", async () => {
+  await runTest(58, "100.0% Row-Level Security: All public base tables have RLS enabled (100.0%)", async () => {
     if (dbClient) {
-      const res = await dbClient.query("SELECT count(*) FROM pg_tables t JOIN pg_class c ON c.relname = t.tablename WHERE t.schemaname = 'public' AND c.relrowsecurity = true;");
-      const count = parseInt(res.rows[0].count, 10);
-      assertAtomic(count === 94, `100% RLS enabled on all 94 tables (found ${count})`);
+      const res = await dbClient.query("SELECT count(*) as total, count(*) FILTER (WHERE c.relrowsecurity) as rls_enabled FROM information_schema.tables t JOIN pg_class c ON c.relname = t.table_name WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE';");
+      const total = parseInt(res.rows[0].total, 10);
+      const rlsEnabled = parseInt(res.rows[0].rls_enabled, 10);
+      assertAtomic(total >= 94 && total === rlsEnabled, `100% RLS enabled on all tables (${rlsEnabled}/${total})`);
     } else {
-      assertAtomic(true, "Mock verified 100% RLS on all 94 tables");
+      assertAtomic(true, "Mock verified 100% RLS on all tables");
     }
   });
 

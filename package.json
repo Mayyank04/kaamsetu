@@ -33,7 +33,8 @@
     "test:phase23": "tsx test/phase-23-production-transition.test.ts",
     "test:phase24": "tsx test/phase-24-gate-closure.test.ts",
     "test:phase25": "tsx test/phase-25-reconciliation.test.ts",
-    "test:phase26": "tsx test/phase-26-production-evidence.test.ts"
+    "test:phase26": "tsx test/phase-26-production-evidence.test.ts",
+    "test:phase27": "tsx test/phase-27-trust-assurance.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
