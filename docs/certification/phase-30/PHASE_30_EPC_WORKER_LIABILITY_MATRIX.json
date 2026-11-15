@@ -1,0 +1,40 @@
+{
+  "blockerId": "BLOCKER-03",
+  "title": "EPC Contractor Tripartite Liability & Worker Protection Matrix",
+  "lastUpdated": "2026-11-15T19:40:00Z",
+  "covenants": [
+    {
+      "covenantId": "EPC-COV-01",
+      "clause": "Permanent Zero Platform Wage Commission",
+      "requirement": "Contractor pays 100% agreed wage to worker; platform commission strictly 0.00%",
+      "status": "MANDATORY_IN_CONTRACT_DRAFT",
+      "enforceability": "Criminal and civil breach if violated"
+    },
+    {
+      "covenantId": "EPC-COV-02",
+      "clause": "Direct Escrow Wage Settlement",
+      "requirement": "Wages held in direct tripartite escrow prior to worker dispatch; immune from contractor lien or bankruptcy",
+      "status": "MANDATORY_IN_CONTRACT_DRAFT",
+      "enforceability": "Autonomous bank release on job completion"
+    },
+    {
+      "covenantId": "EPC-COV-03",
+      "clause": "Anti-Retaliation and Independent Grievance Redressal",
+      "requirement": "Contractor cannot suppress worker roster or rate defensively during open disputes; binding ombudsperson adjudication",
+      "status": "MANDATORY_IN_CONTRACT_DRAFT",
+      "enforceability": "Contractual forfeiture of performance bond"
+    },
+    {
+      "covenantId": "EPC-COV-04",
+      "clause": "Workplace Safety & Comprehensive Insurance",
+      "requirement": "Mandatory accidental insurance (minimum ₹5,00,000 coverage) and PPE provision prior to heavy site entry",
+      "status": "MANDATORY_IN_CONTRACT_DRAFT",
+      "enforceability": "Site entry prohibited without verified coverage"
+    }
+  ],
+  "dispatchContainment": {
+    "heavyConstructionDispatchActive": false,
+    "workersDeployedToActiveSites": 0,
+    "residentialCommercialDispatchOnly": true
+  }
+}

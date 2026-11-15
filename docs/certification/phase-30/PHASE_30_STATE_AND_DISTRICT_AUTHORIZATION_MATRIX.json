@@ -1,0 +1,85 @@
+{
+  "lastUpdated": "2026-11-15T19:40:00Z",
+  "regions": [
+    {
+      "stateCode": "IN-AS",
+      "stateName": "Assam",
+      "operationalStatus": "ACTIVE_CONTROLLED_PRODUCTION",
+      "authorizedDistricts": [
+        "Kamrup Metropolitan (Guwahati Urban)"
+      ],
+      "containedDistricts": [
+        "Kamrup Rural",
+        "Darrang",
+        "Nagaon",
+        "All other Assam districts"
+      ],
+      "onboardedWorkforce": 310,
+      "verifiedIdentityRate": "100%",
+      "languageSupport": [
+        "as",
+        "hi",
+        "en"
+      ],
+      "legalGrounding": "Assam Shops and Establishments Act & MSDE Skill Framework"
+    },
+    {
+      "stateCode": "IN-ML",
+      "stateName": "Meghalaya",
+      "operationalStatus": "ACTIVE_CONTROLLED_PRODUCTION",
+      "authorizedDistricts": [
+        "East Khasi Hills (Shillong Urban)"
+      ],
+      "containedDistricts": [
+        "West Khasi Hills",
+        "Ri-Bhoi",
+        "Jaintia Hills",
+        "Garo Hills"
+      ],
+      "onboardedWorkforce": 207,
+      "verifiedIdentityRate": "100%",
+      "languageSupport": [
+        "kha",
+        "en",
+        "hi"
+      ],
+      "legalGrounding": "Autonomous District Council (Khasi Hills ADC) Labor Compliance"
+    },
+    {
+      "stateCode": "IN-WB",
+      "stateName": "West Bengal (Siliguri Transit Corridor)",
+      "operationalStatus": "CONDITIONALLY_READY",
+      "authorizedDistricts": [],
+      "containedDistricts": [
+        "Darjeeling (Siliguri)",
+        "Jalpaiguri"
+      ],
+      "onboardedWorkforce": 0,
+      "verifiedIdentityRate": "N/A",
+      "languageSupport": [
+        "bn",
+        "hi",
+        "en"
+      ],
+      "legalGrounding": "Physical verification center lease pending execution"
+    },
+    {
+      "stateCode": "IN-TR",
+      "stateName": "Tripura",
+      "operationalStatus": "CANDIDATE_RESEARCH_ONLY",
+      "authorizedDistricts": [],
+      "containedDistricts": [
+        "West Tripura (Agartala)",
+        "All other Tripura districts"
+      ],
+      "onboardedWorkforce": 0,
+      "verifiedIdentityRate": "N/A",
+      "languageSupport": [
+        "bn",
+        "kok",
+        "en"
+      ],
+      "legalGrounding": "Awaiting TSDM bilateral MoU execution and Cabinet notification"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "manifest": {
+    "repository": "Mayyank04/kaamsetu",
+    "branch": "phase-30-institutional-authorization-and-market-readiness",
+    "baselineCommit": "9928ab2",
+    "parentCommit": "03ae818",
+    "migrations": {
+      "count": 29,
+      "range": "01 to 29",
+      "latestMigration": "20261115000029_independent_audit_attestations_and_dispute_appeals.sql",
+      "migrationDirectoryDigest": "4d1595d572aaf4b271e600512454ec1bf6a72736edc48341c193767b139e9d3f"
+    },
+    "lockfileDigest": "6259c05078bd12c2c4f32e383de88c60bbf69e71ef9dcdf964d6db92207a317d",
+    "testInventoryDigest": "05c6104168c89173ddcacf556b2cad0b6c0afa897b994d8e6b943e92f9039eca",
+    "environmentClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+    "toolchain": {
+      "nodeVersion": "v20.x (LTS) / v22.x",
+      "nextVersion": "15.1.7",
+      "typeScriptVersion": "5.x",
+      "postgresVersion": "15.x"
+    },
+    "documentationCount": 32,
+    "timestamp": "2026-11-15T19:40:00.000Z"
+  },
+  "canonicalDigest": "4635c26079b634f4593458ed1b6b2d61d8d6f49b0b1738c6deac2a191ba73b46",
+  "signature": "bd70238420f0ef9d0f3f8f0c77d79d6186da4e97f3592d5c6805d88d6d0abdf2bf6cff5326ad9b45ace23621afb40f6c7e75fecc1740259539b30d9baf2c330c",
+  "signingKeyId": "did:kaamsetu:release:phase-30-authority#key-1",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA1Ba/EFADEY+kDWWaRAej3MMWyjqc6xbl9S0Of0tTPiQ=\n-----END PUBLIC KEY-----\n",
+  "reproducibilityClassification": "reproducible_canonical_manifest"
+}

@@ -1,0 +1,39 @@
+{
+  "blockerId": "BLOCKER-01",
+  "counterparty": "Tripura Skill Development Mission (TSDM), Directorate of Skill Development, Govt. of Tripura",
+  "currentStage": "UNDER_REVIEW",
+  "legalInstrumentRef": "TSDM/EXP/2026/MOU-DRAFT-04",
+  "stateCabinetScheduling": {
+    "status": "PENDING_CABINET_SCHEDULE",
+    "anticipatedWindow": "Q1 2027",
+    "departmentalClearance": "Department of Industries & Commerce concurrence received (File Ref: DSD/EST/2026/4102)"
+  },
+  "evidenceItems": [
+    {
+      "itemCode": "TSDM-EV-01",
+      "description": "Draft Bilateral Memorandum of Understanding on Skill Verification and Artisan Onboarding",
+      "documentStatus": "DRAFT_COMPLETED",
+      "reviewedBy": "KAAMSETU General Counsel & TSDM Additional Director",
+      "date": "2026-10-18"
+    },
+    {
+      "itemCode": "TSDM-EV-02",
+      "description": "State Cabinet Memo & Inter-Departmental Concurrence Note",
+      "documentStatus": "SUBMITTED_FOR_REVIEW",
+      "reviewedBy": "Directorate of Skill Development",
+      "date": "2026-11-04"
+    },
+    {
+      "itemCode": "TSDM-EV-03",
+      "description": "Executed Bilateral MoU with State Government Seal and Signatures",
+      "documentStatus": "AWAITING_EXECUTION",
+      "reviewedBy": "Pending State Cabinet Notification",
+      "date": null
+    }
+  ],
+  "containmentStatus": {
+    "tripuraDispatchAllowed": false,
+    "pilotWorkersActive": 0,
+    "fieldOperationsMode": "RESEARCH_AND_PLANNING_ONLY"
+  }
+}

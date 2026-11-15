@@ -1,0 +1,40 @@
+{
+  "lastUpdated": "2026-11-15T19:40:00Z",
+  "integrations": [
+    {
+      "name": "ONDC_BPP_ADAPTER",
+      "type": "DECENTRALIZED_COMMERCE_PROTOCOL",
+      "environment": "STAGING_SANDBOX",
+      "owner": "Core Protocols Team",
+      "productionAccess": "GATED_BEHIND_BLOCKER_02",
+      "fallbackMechanism": "Internal platform dispatch routing only"
+    },
+    {
+      "name": "RAZORPAY_ROUTE_SPLIT",
+      "type": "DIRECT_PASS_THROUGH_PAYMENTS",
+      "environment": "PRODUCTION_CONTROLLED",
+      "owner": "Settlement Operations",
+      "productionAccess": "ACTIVE_IN_AS_ML",
+      "commissionDeduction": 0,
+      "fallbackMechanism": "Direct Cashfree payout fallback with zero nodal hold"
+    },
+    {
+      "name": "CASHFREE_PAYOUTS",
+      "type": "INSTANT_UPI_IMPS_RAILS",
+      "environment": "PRODUCTION_CONTROLLED",
+      "owner": "Settlement Operations",
+      "productionAccess": "ACTIVE_IN_AS_ML",
+      "commissionDeduction": 0,
+      "fallbackMechanism": "Manual NEFT batch settlement under ombudsperson supervision"
+    },
+    {
+      "name": "W3C_VC_ISSUER_SERVICE",
+      "type": "CRYPTOGRAPHIC_IDENTITY",
+      "environment": "PRODUCTION_CONTROLLED",
+      "owner": "Identity Security Team",
+      "productionAccess": "ACTIVE_IN_AS_ML",
+      "keyVersion": "v1",
+      "fallbackMechanism": "Offline QR fallback verified via public key multibase"
+    }
+  ]
+}

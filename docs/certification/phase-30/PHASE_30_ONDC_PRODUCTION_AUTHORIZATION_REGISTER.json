@@ -1,0 +1,40 @@
+{
+  "blockerId": "BLOCKER-02",
+  "counterparty": "Open Network for Digital Commerce (ONDC) Council & ONest Consortium Registry",
+  "currentStage": "APPROVED_PENDING_EXECUTION",
+  "authorizationRef": "ONDC/ONEST/BPP/2026/CERT-STAGE-778",
+  "stagingValidation": {
+    "stagingSandboxActive": true,
+    "protocolAdapterVersion": "v1.2.0-bpp",
+    "stagingEndpoint": "https://staging-bpp.kaamsetu.org/api/ondc/v1",
+    "testsPassed": 48,
+    "testsFailed": 0,
+    "stagingDrillsCompleted": 5
+  },
+  "keyCeremonyRequirements": {
+    "status": "AWAITING_CEREMONY_EXECUTION",
+    "custodyModel": "DUAL_CONTROL_HSM_AIRGAP",
+    "officers": [
+      {
+        "role": "CISO",
+        "jurisdiction": "Custody of Primary Seed Half",
+        "signedOff": true
+      },
+      {
+        "role": "Infrastructure Lead",
+        "jurisdiction": "Custody of Secondary Seed Half",
+        "signedOff": true
+      }
+    ],
+    "productionListingPrerequisites": [
+      "Live Ed25519 root key generation in air-gapped ceremony",
+      "Signing of ONDC Participant Agreement",
+      "Publication of verified public key to ONDC registry"
+    ]
+  },
+  "productionGatewayLock": {
+    "productionDispatchEnabled": false,
+    "networkOrdersAccepted": 0,
+    "stagingNetworkCallsIsolated": true
+  }
+}

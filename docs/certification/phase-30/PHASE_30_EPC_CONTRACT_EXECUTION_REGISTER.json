@@ -1,0 +1,34 @@
+{
+  "blockerId": "BLOCKER-03",
+  "counterparty": "L&T Construction (NE Circle) / NHIDCL Guwahati EPC Consortium",
+  "currentStage": "UNDER_REVIEW",
+  "agreementRef": "EPC/NE/2026/PILOT-MSA-REV03",
+  "executionMilestones": [
+    {
+      "milestone": "Drafting of Tripartite Master Service Agreement",
+      "status": "COMPLETED",
+      "date": "2026-10-15"
+    },
+    {
+      "milestone": "Worker Welfare and Escrow Clauses Legal Alignment",
+      "status": "COMPLETED",
+      "date": "2026-10-29"
+    },
+    {
+      "milestone": "Counterparty Legal Counsel Concurrence",
+      "status": "UNDER_REVIEW",
+      "date": "2026-11-10"
+    },
+    {
+      "milestone": "Physical Stamp Duty & Franking Execution",
+      "status": "PENDING",
+      "date": null
+    },
+    {
+      "milestone": "Authorized Board Signatures & Repository Listing",
+      "status": "PENDING",
+      "date": null
+    }
+  ],
+  "gateLockStatus": "LOCKED_PENDING_BILATERAL_EXECUTION"
+}
