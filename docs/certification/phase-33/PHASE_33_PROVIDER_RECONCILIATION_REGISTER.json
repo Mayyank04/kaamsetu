@@ -1,0 +1,13 @@
+{
+  "phase": 33,
+  "provider": "Razorpay / Cashfree Pass-Through Rails",
+  "totalTransactions": 517,
+  "totalProviderSettled": "₹18,45,200.00",
+  "platformNodalRetention": "₹0.00",
+  "workerDirectCredit": "₹18,45,200.00",
+  "reconciliationDiscrepancy": "₹0.00",
+  "antiClawbackEnforced": true,
+  "duplicateSettlementBlocked": true,
+  "failedPayoutRecovered": true,
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

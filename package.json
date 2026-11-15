@@ -39,7 +39,8 @@
     "test:phase29": "tsx test/phase-29-independent-challenge.test.ts",
     "test:phase30": "tsx test/phase-30-institutional-authorization.test.ts",
     "test:phase31": "tsx test/phase-31-operational-readiness.test.ts",
-    "test:phase32": "tsx test/phase-32-field-validation.test.ts"
+    "test:phase32": "tsx test/phase-32-field-validation.test.ts",
+    "test:phase33": "tsx test/phase-33-final-assurance.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

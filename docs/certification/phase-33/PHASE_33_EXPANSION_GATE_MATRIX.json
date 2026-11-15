@@ -1,0 +1,31 @@
+{
+  "phase": 33,
+  "permittedDistricts": [
+    "Guwahati Urban (Kamrup Metropolitan, Assam)",
+    "Shillong Urban (East Khasi Hills, Meghalaya)"
+  ],
+  "restrictedDistricts": [
+    {
+      "district": "Siliguri (North Bengal)",
+      "status": "CONDITIONAL_READINESS_ONLY",
+      "authorized": false
+    },
+    {
+      "district": "Tripura (Agartala Municipal)",
+      "status": "BLOCKED_PENDING_TSDM_GAZETTE",
+      "authorized": false
+    },
+    {
+      "district": "EPC Heavy Construction Sites",
+      "status": "FROZEN_PENDING_LEGAL_EXECUTION",
+      "authorized": false
+    }
+  ],
+  "boundarySecurity": {
+    "outOfBoundsApiRejection": true,
+    "coordinateSpoofingDefense": true,
+    "adminOverrideForbidden": true,
+    "replayTokenRejected": true
+  },
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

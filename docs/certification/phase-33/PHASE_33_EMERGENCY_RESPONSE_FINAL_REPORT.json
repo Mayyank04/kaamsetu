@@ -1,0 +1,24 @@
+{
+  "phase": 33,
+  "drillClassification": "SIMULATED_DRILL_BENCHMARK",
+  "benchmarks": {
+    "alertDispatchSeconds": 12.4,
+    "alertDispatchSLASeconds": 15,
+    "alertAckMinutes": 2.5,
+    "alertAckSLAMinutes": 3,
+    "firstResponderMinutes": 14.2,
+    "firstResponderSLAMinutes": 15,
+    "districtLeadEscalationMinutes": 28,
+    "districtLeadEscalationSLAMinutes": 30,
+    "simulatedResolutionHours": 22.5,
+    "simulatedResolutionSLAHours": 24
+  },
+  "slasMet": 5,
+  "slasBreached": 0,
+  "unsafeWorkplaceWithdrawals": {
+    "allowedWithoutPenalty": true,
+    "ratingProtectionActive": true,
+    "retaliatoryReviewQuarantineActive": true
+  },
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

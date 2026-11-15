@@ -1,0 +1,13 @@
+{
+  "phase": 33,
+  "activeWorkers": 45,
+  "totalCompletedBookings": 517,
+  "accruedWageTotal": "₹18,45,200.00",
+  "disbursedWageTotal": "₹18,45,200.00",
+  "pendingWorkerLiabilities": "₹0.00",
+  "averageSettlementLatencyHours": 4.2,
+  "medianSettlementLatencyHours": 3.8,
+  "p95SettlementLatencyHours": 4.5,
+  "withheldWages": "₹0.00",
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

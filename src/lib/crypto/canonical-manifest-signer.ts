@@ -324,6 +324,45 @@ export function buildPhase32ReleaseManifest(projectRoot: string): ReleaseManifes
 }
 
 /**
+ * Generates canonical release manifest data for Phase 33
+ */
+export function buildPhase33ReleaseManifest(projectRoot: string): ReleaseManifestData {
+  const migrationsDir = path.join(projectRoot, "supabase/migrations");
+  const lockfilePath = path.join(projectRoot, "package-lock.json");
+  const testInventoryPath = path.join(projectRoot, "docs/certification/phase-33/PHASE_33_FINAL_TEST_INVENTORY.json");
+
+  const migrationFiles = fs.existsSync(migrationsDir)
+    ? fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith(".sql") && f.substring(0, 14) <= "20261115000029")
+        .sort()
+    : [];
+
+  return {
+    repository: "Mayyank04/kaamsetu",
+    branch: "phase-33-final-independent-assurance-and-institutional-eligibility",
+    baselineCommit: "f62ad0d",
+    parentCommit: "036039b",
+    migrations: {
+      count: migrationFiles.length,
+      range: "01 to 29",
+      latestMigration: migrationFiles[migrationFiles.length - 1] || "none",
+      migrationDirectoryDigest: computeMigrationsDirectoryDigest(migrationsDir, "20261115000029"),
+    },
+    lockfileDigest: computeFileSha256(lockfilePath),
+    testInventoryDigest: computeFileSha256(testInventoryPath),
+    environmentClassification: "CLASS_B_CONTROLLED_ROLLOUT",
+    toolchain: {
+      nodeVersion: "v20.x (LTS) / v22.x",
+      nextVersion: "15.1.7",
+      typeScriptVersion: "5.x",
+      postgresVersion: "15.x",
+    },
+    documentationCount: 46,
+    timestamp: "2026-11-15T20:30:00.000Z",
+  };
+}
+
+/**
  * Computes canonical digest of release manifest data
  */
 export function computeManifestDigest(manifest: ReleaseManifestData): string {
