@@ -4094,6 +4094,262 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      production_release_manifests: {
+        Row: {
+          id: string;
+          commit_sha: string;
+          build_artifact: string;
+          migration_version: string;
+          environment: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          configuration_version: string;
+          dependency_versions: Record<string, unknown>;
+          security_scan_result: Record<string, unknown>;
+          approval_owner: string;
+          deployment_status: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          rollback_plan: string;
+          evidence_digest: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          commit_sha: string;
+          build_artifact: string;
+          migration_version: string;
+          environment: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          configuration_version: string;
+          dependency_versions?: Record<string, unknown>;
+          security_scan_result?: Record<string, unknown>;
+          approval_owner: string;
+          deployment_status: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          rollback_plan: string;
+          evidence_digest: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          commit_sha?: string;
+          build_artifact?: string;
+          migration_version?: string;
+          environment?: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          configuration_version?: string;
+          dependency_versions?: Record<string, unknown>;
+          security_scan_result?: Record<string, unknown>;
+          approval_owner?: string;
+          deployment_status?: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          rollback_plan?: string;
+          evidence_digest?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      enterprise_pilot_authorizations: {
+        Row: {
+          id: string;
+          pilot_name: string;
+          partner_name: string;
+          counterparty_verified: boolean;
+          authorized_signatory_verified: boolean;
+          executed_agreement_ref: string | null;
+          agreement_status: "draft" | "under_review" | "legal_clearance" | "pending_execution" | "executed_active" | "blocked";
+          approved_scope_summary: string;
+          worker_protection_provisions_verified: boolean;
+          wage_payment_responsibility_verified: boolean;
+          insurance_safety_obligations_verified: boolean;
+          data_privacy_terms_verified: boolean;
+          consented_worker_count: number;
+          authorized_deployment_record_ref: string | null;
+          pilot_authorization_status: "draft" | "scoping" | "pending_authorization" | "authorized_active" | "blocked" | "closed";
+          blocking_reasons: string[];
+          evidence_digest: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          pilot_name: string;
+          partner_name: string;
+          counterparty_verified?: boolean;
+          authorized_signatory_verified?: boolean;
+          executed_agreement_ref?: string | null;
+          agreement_status?: "draft" | "under_review" | "legal_clearance" | "pending_execution" | "executed_active" | "blocked";
+          approved_scope_summary: string;
+          worker_protection_provisions_verified?: boolean;
+          wage_payment_responsibility_verified?: boolean;
+          insurance_safety_obligations_verified?: boolean;
+          data_privacy_terms_verified?: boolean;
+          consented_worker_count?: number;
+          authorized_deployment_record_ref?: string | null;
+          pilot_authorization_status?: "draft" | "scoping" | "pending_authorization" | "authorized_active" | "blocked" | "closed";
+          blocking_reasons?: string[];
+          evidence_digest: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          pilot_name?: string;
+          partner_name?: string;
+          counterparty_verified?: boolean;
+          authorized_signatory_verified?: boolean;
+          executed_agreement_ref?: string | null;
+          agreement_status?: "draft" | "under_review" | "legal_clearance" | "pending_execution" | "executed_active" | "blocked";
+          approved_scope_summary?: string;
+          worker_protection_provisions_verified?: boolean;
+          wage_payment_responsibility_verified?: boolean;
+          insurance_safety_obligations_verified?: boolean;
+          data_privacy_terms_verified?: boolean;
+          consented_worker_count?: number;
+          authorized_deployment_record_ref?: string | null;
+          pilot_authorization_status?: "draft" | "scoping" | "pending_authorization" | "authorized_active" | "blocked" | "closed";
+          blocking_reasons?: string[];
+          evidence_digest?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_impact_evaluations: {
+        Row: {
+          id: string;
+          cohort_name: string;
+          region_code: string;
+          trade_category: string;
+          observation_period_start: string;
+          observation_period_end: string;
+          sample_size: number;
+          baseline_daily_earnings: number;
+          post_participation_daily_earnings: number;
+          monthly_paid_working_days_baseline: number;
+          monthly_paid_working_days_post: number;
+          average_direct_expenses: number;
+          average_net_take_home: number;
+          platform_commission_deduction: number;
+          average_payment_delay_hours: number;
+          repeat_work_retention_rate: number;
+          customer_concentration_top1_percent: number;
+          satisfaction_score_out_of_5: number;
+          worker_retention_percent: number;
+          confounding_factors: string[];
+          confidence_limitations: string;
+          evidence_digest: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          cohort_name: string;
+          region_code: string;
+          trade_category: string;
+          observation_period_start: string;
+          observation_period_end: string;
+          sample_size: number;
+          baseline_daily_earnings: number;
+          post_participation_daily_earnings: number;
+          monthly_paid_working_days_baseline: number;
+          monthly_paid_working_days_post: number;
+          average_direct_expenses?: number;
+          average_net_take_home: number;
+          platform_commission_deduction?: number;
+          average_payment_delay_hours: number;
+          repeat_work_retention_rate: number;
+          customer_concentration_top1_percent: number;
+          satisfaction_score_out_of_5: number;
+          worker_retention_percent: number;
+          confounding_factors?: string[];
+          confidence_limitations: string;
+          evidence_digest: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          cohort_name?: string;
+          region_code?: string;
+          trade_category?: string;
+          observation_period_start?: string;
+          observation_period_end?: string;
+          sample_size?: number;
+          baseline_daily_earnings?: number;
+          post_participation_daily_earnings?: number;
+          monthly_paid_working_days_baseline?: number;
+          monthly_paid_working_days_post?: number;
+          average_direct_expenses?: number;
+          average_net_take_home?: number;
+          platform_commission_deduction?: number;
+          average_payment_delay_hours?: number;
+          repeat_work_retention_rate?: number;
+          customer_concentration_top1_percent?: number;
+          satisfaction_score_out_of_5?: number;
+          worker_retention_percent?: number;
+          confounding_factors?: string[];
+          confidence_limitations?: string;
+          evidence_digest?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      class_a_readiness_audits: {
+        Row: {
+          id: string;
+          requirement_number: number;
+          requirement_title: string;
+          required_evidence: string;
+          evidence_received: string | null;
+          verification_method: string;
+          independent_reviewer: string;
+          audit_result: "pass" | "fail" | "conditional" | "blocked";
+          outstanding_dependency: string | null;
+          remediation_owner: string;
+          status: "not_started" | "in_progress" | "evidence_pending" | "under_review" | "passed" | "failed" | "blocked";
+          evidence_digest: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          requirement_number: number;
+          requirement_title: string;
+          required_evidence: string;
+          evidence_received?: string | null;
+          verification_method: string;
+          independent_reviewer: string;
+          audit_result: "pass" | "fail" | "conditional" | "blocked";
+          outstanding_dependency?: string | null;
+          remediation_owner: string;
+          status?: "not_started" | "in_progress" | "evidence_pending" | "under_review" | "passed" | "failed" | "blocked";
+          evidence_digest: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          requirement_number?: number;
+          requirement_title?: string;
+          required_evidence?: string;
+          evidence_received?: string | null;
+          verification_method?: string;
+          independent_reviewer?: string;
+          audit_result?: "pass" | "fail" | "conditional" | "blocked";
+          outstanding_dependency?: string | null;
+          remediation_owner?: string;
+          status?: "not_started" | "in_progress" | "evidence_pending" | "under_review" | "passed" | "failed" | "blocked";
+          evidence_digest?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -4194,6 +4450,11 @@ export type WorkerEconomicSnapshot = Database["public"]["Tables"]["worker_econom
 export type RegionalOperatingReview = Database["public"]["Tables"]["regional_operating_reviews"]["Row"];
 export type InstitutionalInstrumentReview = Database["public"]["Tables"]["institutional_instrument_reviews"]["Row"];
 export type AuditEvidenceReviewEvent = Database["public"]["Tables"]["audit_evidence_review_events"]["Row"];
+export type ProductionReleaseManifest = Database["public"]["Tables"]["production_release_manifests"]["Row"];
+export type EnterprisePilotAuthorization = Database["public"]["Tables"]["enterprise_pilot_authorizations"]["Row"];
+export type WorkerImpactEvaluation = Database["public"]["Tables"]["worker_impact_evaluations"]["Row"];
+export type ClassAReadinessAudit = Database["public"]["Tables"]["class_a_readiness_audits"]["Row"];
+
 
 
 
