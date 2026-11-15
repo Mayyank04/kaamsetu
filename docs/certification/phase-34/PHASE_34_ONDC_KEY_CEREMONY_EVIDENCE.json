@@ -1,0 +1,15 @@
+{
+  "phase": 34,
+  "blockerId": "BLOCKER-02",
+  "entity": "ONDC / ONest Network Registry",
+  "requiredEvidence": [
+    "Dual-control air-gapped Ed25519 root key ceremony",
+    "Named key custodians",
+    "Public registry publication"
+  ],
+  "currentStatus": "APPROVED_PENDING_EXECUTION",
+  "operationalStatus": "BLOCKED",
+  "authorizedBroadcast": false,
+  "antiMaskingAssessment": "Staging adapter passes 100%, but production registry signing key ceremony has not occurred. Live BPP broadcast remains frozen.",
+  "timestamp": "2026-11-15T20:40:00.000Z"
+}

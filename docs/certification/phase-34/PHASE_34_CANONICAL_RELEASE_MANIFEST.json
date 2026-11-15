@@ -1,0 +1,30 @@
+{
+  "manifest": {
+    "repository": "Mayyank04/kaamsetu",
+    "branch": "phase-34-institutional-closure-and-production-assurance",
+    "baselineCommit": "b0f79b2",
+    "parentCommit": "f62ad0d",
+    "migrations": {
+      "count": 29,
+      "range": "01 to 29",
+      "latestMigration": "20261115000029_independent_audit_attestations_and_dispute_appeals.sql",
+      "migrationDirectoryDigest": "4d1595d572aaf4b271e600512454ec1bf6a72736edc48341c193767b139e9d3f"
+    },
+    "lockfileDigest": "6259c05078bd12c2c4f32e383de88c60bbf69e71ef9dcdf964d6db92207a317d",
+    "testInventoryDigest": "11eb4a9633917a9b560f4959c25ec1e0b159400b904a3bba79b493296be90ff4",
+    "environmentClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+    "toolchain": {
+      "nodeVersion": "v20.x (LTS) / v22.x",
+      "nextVersion": "15.1.7",
+      "typeScriptVersion": "5.x",
+      "postgresVersion": "15.x"
+    },
+    "documentationCount": 40,
+    "timestamp": "2026-11-15T20:40:00.000Z"
+  },
+  "canonicalDigest": "62457990cb26fe6095990c06b75ed2ade81e445c0ecae30c001af51ca6fd50d1",
+  "signature": "70279f8e6d631b20dac451cfddf8022891f1f830ba9d67d6d6e995e7b45bcc6e935da523af4161f3bfc987850c99b91a030926889632f3af2e064fcc712ca800",
+  "signingKeyId": "key:ed25519:kaamsetu-phase-34-final",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAnj3LbcXb+oI0/Uo2vb8hJp17w+OdSG2CzRMz1ACZ6+Y=\n-----END PUBLIC KEY-----\n",
+  "reproducibilityClassification": "reproducible_canonical_manifest"
+}

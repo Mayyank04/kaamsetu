@@ -1,0 +1,15 @@
+{
+  "phase": 34,
+  "blockerId": "BLOCKER-01",
+  "entity": "Tripura Skill Development Mission (TSDM)",
+  "requiredEvidence": [
+    "Bilateral State MoU",
+    "State Cabinet gazetted notification",
+    "Signatory authority verification"
+  ],
+  "currentStatus": "UNDER_REVIEW",
+  "operationalStatus": "BLOCKED",
+  "authorizedToDispatch": false,
+  "antiMaskingAssessment": "State Cabinet meeting scheduling remains pending. Draft MoU cannot be treated as authorization. Tripura operations remain strictly disabled.",
+  "timestamp": "2026-11-15T20:40:00.000Z"
+}

@@ -1,0 +1,13 @@
+{
+  "phase": 34,
+  "gateId": "GATE-04",
+  "auditedBookings": 517,
+  "grossCustomerReceipts": "₹18,45,200.00",
+  "workerWageEntitlement": "₹18,45,200.00",
+  "platformCommission": "₹0.00",
+  "internalDiscrepancy": "₹0.00",
+  "directBankConfirmationStatus": "UNVERIFIED_PENDING_LIVE_BANK_KEYS",
+  "antiMaskingAssessment": "Application ledger and payment provider pass-through records reconcile with ₹0.00 discrepancy. Production direct banking API keys are not mounted in sandbox; direct bank statement confirmation remains segregated as unverified.",
+  "outstandingWorkerLiabilities": "₹0.00",
+  "timestamp": "2026-11-15T20:40:00.000Z"
+}

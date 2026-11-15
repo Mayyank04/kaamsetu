@@ -1,0 +1,203 @@
+{
+  "phase": 34,
+  "package": "docs/certification/phase-34",
+  "totalDeliverables": 40,
+  "files": [
+    {
+      "filename": "PHASE_34_BANK_EVIDENCE_REGISTER.json",
+      "sha256": "8df52ccf7e282de2beaabc11560ddd53f1fd41c4cda4c8baac95531fff3b08c1",
+      "bytes": 647
+    },
+    {
+      "filename": "PHASE_34_BASELINE_PROVENANCE.md",
+      "sha256": "185e3f8d2d1eb311d546585d94006474a0689cbbd4a4a7ab83cd83203588b524",
+      "bytes": 420
+    },
+    {
+      "filename": "PHASE_34_CAB_AUTHORIZATION_REGISTER.json",
+      "sha256": "60cde70405b44ae9239ba52450af236338ba6abd209b944917175b779be77f28",
+      "bytes": 392
+    },
+    {
+      "filename": "PHASE_34_CANONICAL_RELEASE_MANIFEST.json",
+      "sha256": "f3f1cdd4053056bfde38350749a568a38d2a96a59099b3532b0da01097c44a30",
+      "bytes": 1462
+    },
+    {
+      "filename": "PHASE_34_CLASS_A_ELIGIBILITY_MATRIX.json",
+      "sha256": "04b7abd5e899f26e3cadfdae308f8e964d1d56b9f866bb2ddb094da1ac9acdd1",
+      "bytes": 1290
+    },
+    {
+      "filename": "PHASE_34_COMMIT_GRAPH_VERIFICATION.md",
+      "sha256": "b0b12eccb86b3aee21d6cd2c8a8bb0834a3e23369cc1b87f0ca681d15500a4a0",
+      "bytes": 279
+    },
+    {
+      "filename": "PHASE_34_DIRECT_BANK_SETTLEMENT_AUDIT.md",
+      "sha256": "1e61d8dbdcf73e807edaa91af312cf2adc09e9f9b379a9f101ad281a0647f703",
+      "bytes": 303
+    },
+    {
+      "filename": "PHASE_34_EFFECTIVE_RLS_REPORT.md",
+      "sha256": "48ae009ee6ac1702e821ccd2e0eb587493dfb46fa06a94a083ebee63fce5bdb0",
+      "bytes": 195
+    },
+    {
+      "filename": "PHASE_34_EPC_CONTRACT_CLOSURE_AUDIT.md",
+      "sha256": "a542ceda21c77299c363d84ca56143f7baf999063aad283fd333b06f44d9f7d5",
+      "bytes": 275
+    },
+    {
+      "filename": "PHASE_34_EPC_COUNTERPARTY_EVIDENCE_REGISTER.json",
+      "sha256": "0113d48f1683291c580b8ea109f5f303589311e9cf28179c62ae5de51465c916",
+      "bytes": 525
+    },
+    {
+      "filename": "PHASE_34_EPC_WORKER_SAFETY_GATE.md",
+      "sha256": "4e79d4748a1be5a27c53dd75312b49d123cd3784c825a39006b4a16540a39bba",
+      "bytes": 194
+    },
+    {
+      "filename": "PHASE_34_EXECUTIVE_CERTIFICATION.md",
+      "sha256": "25feac72b284742d527f9b86adeac9e94c766561070d17ddf6ef90e214dacf4d",
+      "bytes": 1552
+    },
+    {
+      "filename": "PHASE_34_EXECUTIVE_SIGNOFF.md",
+      "sha256": "9f3dfe5060e6cf0c093eec0503ecc18bd14a1a9bfb43fc3b42d89dd6c5115e8e",
+      "bytes": 223
+    },
+    {
+      "filename": "PHASE_34_FINAL_CLASSIFICATION_DECISION.md",
+      "sha256": "8962b886e946f59239492f6813f4378470c46bc17c66865d396a912b91673d01",
+      "bytes": 190
+    },
+    {
+      "filename": "PHASE_34_FINAL_DELIVERABLE_INDEX.md",
+      "sha256": "2df20987f03971d705c3db29e1135a908b9255d951512cb6c9df1b3e3c7a2f97",
+      "bytes": 170
+    },
+    {
+      "filename": "PHASE_34_FINAL_SECURITY_REGRESSION.md",
+      "sha256": "ab1181a7d2844ddd924b91d54571eecd1721aa355fc9ef14b5e9227d0f8d4268",
+      "bytes": 217
+    },
+    {
+      "filename": "PHASE_34_FINANCIAL_INVARIANT_TESTS.json",
+      "sha256": "11eb4a9633917a9b560f4959c25ec1e0b159400b904a3bba79b493296be90ff4",
+      "bytes": 841
+    },
+    {
+      "filename": "PHASE_34_GRIEVANCE_INDEPENDENCE_ASSESSMENT.md",
+      "sha256": "97b6384821ac5ba004a0310794182edbff8ada7305d11ba344222b278dabf179",
+      "bytes": 188
+    },
+    {
+      "filename": "PHASE_34_OMBUDSPERSON_GOVERNANCE_AUDIT.md",
+      "sha256": "9c3cd0d515113868958d1416c809999495f379e3899fce1d0903b228af136fc3",
+      "bytes": 293
+    },
+    {
+      "filename": "PHASE_34_ONDC_KEY_CEREMONY_EVIDENCE.json",
+      "sha256": "366746f3c5dd8df4a5c5282ce4a20d043940d1e51a96dbf79371c8fe87789848",
+      "bytes": 554
+    },
+    {
+      "filename": "PHASE_34_ONDC_PRODUCTION_CLOSURE_AUDIT.md",
+      "sha256": "8cca6c8ca2ff865b889c0ebada121be511de8d61f4a93124d69e36c552a2e58e",
+      "bytes": 305
+    },
+    {
+      "filename": "PHASE_34_ONDC_REGISTRY_VERIFICATION.md",
+      "sha256": "e5bf49e16bdd6c9a2e62184a84bece0f82d11551da043910c33c7e0852c462c7",
+      "bytes": 220
+    },
+    {
+      "filename": "PHASE_34_PERMITTED_OPERATING_SCOPE.md",
+      "sha256": "dcc2c719f80b3b9c2d8350710b6f0e53f021d1870fa4dfbec0844f8d1ce2b198",
+      "bytes": 259
+    },
+    {
+      "filename": "PHASE_34_PHASE_33_ARTIFACT_RECONCILIATION.json",
+      "sha256": "181d914fd3f5675bad5c057a0478ba9c64d7bd9f0ff0580618f80fc33cd60497",
+      "bytes": 8580
+    },
+    {
+      "filename": "PHASE_34_PRODUCTION_BPP_RELEASE_GATE.md",
+      "sha256": "ee48f2160709af043bce6eea3b928eb1956a3c4c9b9e7e03a1d151b4f9f1cef8",
+      "bytes": 194
+    },
+    {
+      "filename": "PHASE_34_PRODUCTION_DR_EXECUTION_REPORT.md",
+      "sha256": "8022fb3980cb2d49c21d210a06723080c480bc82286fbc0b6d9262f921acb3f3",
+      "bytes": 239
+    },
+    {
+      "filename": "PHASE_34_PRODUCTION_DR_PLAN.md",
+      "sha256": "dd3401216f79d2cdb5774bb3b4e0924fd5eaf7c54d00495c46341cdf6dd577b5",
+      "bytes": 291
+    },
+    {
+      "filename": "PHASE_34_PROVIDER_TO_BANK_RECONCILIATION.json",
+      "sha256": "4bfe366fe7442561c16081dad9669d61dd72a889ebfda167277be6e653aa5757",
+      "bytes": 369
+    },
+    {
+      "filename": "PHASE_34_RECOVERY_DATA_INTEGRITY_AUDIT.md",
+      "sha256": "d4ea9b18049cb1fa17c9a212d43b0fa13eb128fe1afe4ac03e07079f7c58c860",
+      "bytes": 235
+    },
+    {
+      "filename": "PHASE_34_RELEASE_REPRODUCIBILITY_REPORT.md",
+      "sha256": "898026fcfc93458933d57c58fbe1d4940466b1d03652a6244f1434fed6c53d9a",
+      "bytes": 241
+    },
+    {
+      "filename": "PHASE_34_REMAINING_BLOCKER_REGISTER.json",
+      "sha256": "bcecd5781f26f694b63137523fe48cbf5c5d45a62f8b523059a1b4e30d09042a",
+      "bytes": 791
+    },
+    {
+      "filename": "PHASE_34_RTO_RPO_EVIDENCE.json",
+      "sha256": "8f4f908b0a1c7a4d33739b6e505eb8471b5dbef54c122b2a545f4444aba117e8",
+      "bytes": 329
+    },
+    {
+      "filename": "PHASE_34_TEST_EXECUTION_EVIDENCE.md",
+      "sha256": "bac1740d43af14f6ef474e185bb31812798bc2dc2ffdf7db309ca4874d4d4c67",
+      "bytes": 168
+    },
+    {
+      "filename": "PHASE_34_TRIPURA_AUTHORIZATION_GATE.md",
+      "sha256": "07480cde92897fef56e4531926b0a47f2184c220bbbd8d3f13c457501f4f12a6",
+      "bytes": 233
+    },
+    {
+      "filename": "PHASE_34_TSDM_APPROVAL_EVIDENCE_REGISTER.json",
+      "sha256": "d41f1a51db856cd985e8874e9e9a1797908e3da6fc236018c6712b3475e4cc68",
+      "bytes": 556
+    },
+    {
+      "filename": "PHASE_34_TSDM_DOCUMENTARY_CLOSURE_AUDIT.md",
+      "sha256": "f3ca5b7bc6cac0f2c3a5b2d41b1c764f8286da07f6725bd62f93adf02b81c9e3",
+      "bytes": 319
+    },
+    {
+      "filename": "PHASE_34_WORKER_ADJUDICATION_AUTHORITY_REGISTER.json",
+      "sha256": "0a122e64d47742a27f6cb3a1b74b8db2eb8477fe4b40a12e0180517db41d2ada",
+      "bytes": 476
+    },
+    {
+      "filename": "PHASE_34_WORKER_PAYOUT_FINAL_AUDIT.md",
+      "sha256": "e26b73a2274c70bcfb19a6e6c6eab0e5265c09af19ee73047cad40336f641f30",
+      "bytes": 209
+    },
+    {
+      "filename": "PHASE_34_ZERO_COMMISSION_REGRESSION_REPORT.md",
+      "sha256": "e148de1de72dbade84514bc45bfc5b78eb118c9cc9899167c13d12852ad2dd34",
+      "bytes": 258
+    }
+  ],
+  "timestamp": "2026-11-15T20:40:00.000Z"
+}

@@ -1,0 +1,13 @@
+{
+  "phase": 34,
+  "slaTargets": {
+    "recoveryTimeObjectiveMinutes": 15,
+    "recoveryPointObjectiveMinutes": 0
+  },
+  "stagingSimulationResults": {
+    "rtoAchievedMinutes": 8.4,
+    "rpoAchievedMinutes": 0
+  },
+  "productionVerificationStatus": "UNVERIFIED_PENDING_LIVE_CAB_DRILL",
+  "timestamp": "2026-11-15T20:40:00.000Z"
+}
