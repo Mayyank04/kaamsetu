@@ -1618,8 +1618,8 @@ async function runPhase18TestSuite() {
 
     // TEST 83: Token rotation generates new key pair while honoring grace period
     {
-      const keyPairOld = "key-v1-abc";
-      const keyPairNew = "key-v2-xyz";
+      const keyPairOld: string = "key-v1-abc";
+      const keyPairNew: string = "key-v2-xyz";
       const passed = keyPairOld !== keyPairNew;
       recordTest(
         83,
@@ -1887,10 +1887,10 @@ async function runPhase18TestSuite() {
       `);
       const total = parseInt(rows[0].total_tables);
       const rls = parseInt(rows[0].rls_enabled_tables);
-      const passed = total === 74 && rls === 74;
+      const passed = total >= 74 && rls === total;
       recordTest(
         100,
-        "PostgreSQL 100% Row-Level Security Coverage (74/74)",
+        `PostgreSQL 100% Row-Level Security Coverage (${rls}/${total})`,
         "Area 20: Worker Sovereignty",
         passed,
         `PostgreSQL catalog verified: exactly ${total} tables with 100% Row-Level Security (${rls}/${total})`

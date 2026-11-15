@@ -3425,6 +3425,123 @@ export interface Database {
         };
         Relationships: [];
       };
+      evidence_registry_records: {
+        Row: {
+          id: string;
+          claim_id: string;
+          claim_description: string;
+          category: "enterprise_pilot" | "erp_integration" | "ondc_network" | "onest_dsep" | "responsible_finance" | "worker_outcome" | "commercial_revenue" | "regional_gate" | "security_dpdp" | "multi_region_dr" | "observability" | "worker_sovereignty";
+          source_system: string;
+          evidence_location: string;
+          evidence_sha256: string;
+          collection_timestamp: string;
+          verification_timestamp: string | null;
+          verifier_role: string;
+          scope_and_limitations: string;
+          expiry_date: string | null;
+          status: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected";
+          is_public_safe: boolean;
+          redacted_summary: string;
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          claim_id: string;
+          claim_description: string;
+          category: "enterprise_pilot" | "erp_integration" | "ondc_network" | "onest_dsep" | "responsible_finance" | "worker_outcome" | "commercial_revenue" | "regional_gate" | "security_dpdp" | "multi_region_dr" | "observability" | "worker_sovereignty";
+          source_system: string;
+          evidence_location: string;
+          evidence_sha256: string;
+          collection_timestamp?: string;
+          verification_timestamp?: string | null;
+          verifier_role?: string;
+          scope_and_limitations: string;
+          expiry_date?: string | null;
+          status?: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected";
+          is_public_safe?: boolean;
+          redacted_summary: string;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          claim_id?: string;
+          claim_description?: string;
+          category?: "enterprise_pilot" | "erp_integration" | "ondc_network" | "onest_dsep" | "responsible_finance" | "worker_outcome" | "commercial_revenue" | "regional_gate" | "security_dpdp" | "multi_region_dr" | "observability" | "worker_sovereignty";
+          source_system?: string;
+          evidence_location?: string;
+          evidence_sha256?: string;
+          collection_timestamp?: string;
+          verification_timestamp?: string | null;
+          verifier_role?: string;
+          scope_and_limitations?: string;
+          expiry_date?: string | null;
+          status?: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected";
+          is_public_safe?: boolean;
+          redacted_summary?: string;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      worker_outcome_milestones: {
+        Row: {
+          id: string;
+          worker_id: string;
+          opportunity_id: string | null;
+          milestone_step: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_completed" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "disputed" | "retracted";
+          agreed_wage_amount: number | null;
+          paid_wage_amount: number | null;
+          platform_commission_amount: number;
+          provenance_state: "self_reported" | "worker_confirmed" | "customer_confirmed" | "payment_documented" | "independently_verified" | "disputed" | "retracted";
+          payment_evidence_ref: string | null;
+          payment_evidence_hash: string | null;
+          dispute_reason: string | null;
+          milestone_timestamp: string;
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_id: string;
+          opportunity_id?: string | null;
+          milestone_step: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_completed" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "disputed" | "retracted";
+          agreed_wage_amount?: number | null;
+          paid_wage_amount?: number | null;
+          platform_commission_amount?: number;
+          provenance_state?: "self_reported" | "worker_confirmed" | "customer_confirmed" | "payment_documented" | "independently_verified" | "disputed" | "retracted";
+          payment_evidence_ref?: string | null;
+          payment_evidence_hash?: string | null;
+          dispute_reason?: string | null;
+          milestone_timestamp?: string;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_id?: string;
+          opportunity_id?: string | null;
+          milestone_step?: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_completed" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "disputed" | "retracted";
+          agreed_wage_amount?: number | null;
+          paid_wage_amount?: number | null;
+          platform_commission_amount?: number;
+          provenance_state?: "self_reported" | "worker_confirmed" | "customer_confirmed" | "payment_documented" | "independently_verified" | "disputed" | "retracted";
+          payment_evidence_ref?: string | null;
+          payment_evidence_hash?: string | null;
+          dispute_reason?: string | null;
+          milestone_timestamp?: string;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -3514,4 +3631,7 @@ export type EnterpriseSyncLog = Database["public"]["Tables"]["enterprise_sync_lo
 export type LiveEcosystemParticipant = Database["public"]["Tables"]["live_ecosystem_participants"]["Row"];
 export type EnterprisePilotEngagement = Database["public"]["Tables"]["enterprise_pilot_engagements"]["Row"];
 export type ToolFinancingPilotApplication = Database["public"]["Tables"]["tool_financing_pilot_applications"]["Row"];
+export type EvidenceRegistryRecord = Database["public"]["Tables"]["evidence_registry_records"]["Row"];
+export type WorkerOutcomeMilestone = Database["public"]["Tables"]["worker_outcome_milestones"]["Row"];
+
 
