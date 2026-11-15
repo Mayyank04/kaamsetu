@@ -1,0 +1,35 @@
+{
+  "phase": 33,
+  "openDefectsCritical": 0,
+  "openDefectsMajor": 0,
+  "externalBlockers": 3,
+  "unverifiedExternalDependencies": 2,
+  "remediationItems": [
+    {
+      "item": "Schedule TSDM State Cabinet review",
+      "dependency": "Tripura State Government",
+      "status": "PENDING_EXTERNAL"
+    },
+    {
+      "item": "Perform dual-control Ed25519 root ceremony",
+      "dependency": "ONDC Technical Secretariat",
+      "status": "PENDING_EXTERNAL"
+    },
+    {
+      "item": "Execute Tripartite agreement with EPC general counsel",
+      "dependency": "Enterprise Partner",
+      "status": "PENDING_EXTERNAL"
+    },
+    {
+      "item": "Conduct live production disaster recovery exercise",
+      "dependency": "Change Advisory Board",
+      "status": "PENDING_APPROVAL"
+    },
+    {
+      "item": "Mount production direct banking API keys",
+      "dependency": "Bank Partner",
+      "status": "PENDING_APPROVAL"
+    }
+  ],
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

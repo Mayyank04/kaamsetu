@@ -1,0 +1,17 @@
+{
+  "phase": "PHASE_31",
+  "title": "Outstanding Worker Wage Liability Register",
+  "timestamp": "2026-11-15T20:00:00Z",
+  "completedBookingsTracked": 517,
+  "grossCustomerReceipts": 1845200,
+  "workerWageEntitlement": 1845200,
+  "confirmedDisbursements": 1845200,
+  "outstandingLiabilitiesCount": 0,
+  "outstandingLiabilitiesAmount": 0,
+  "unsettledDaysAging": {
+    "0-24h": 0,
+    "24-48h": 0,
+    "48h+": 0
+  },
+  "auditStatus": "ZERO_UNPAID_LIABILITIES"
+}

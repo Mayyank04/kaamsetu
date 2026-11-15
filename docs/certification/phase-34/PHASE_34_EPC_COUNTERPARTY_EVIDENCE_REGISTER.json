@@ -1,0 +1,15 @@
+{
+  "phase": 34,
+  "blockerId": "BLOCKER-03",
+  "entity": "Enterprise EPC Tripartite Counterparty",
+  "requiredEvidence": [
+    "Executed Tripartite Agreement",
+    "State stamp duty franking",
+    "Underwritten worker indemnity policy"
+  ],
+  "currentStatus": "UNDER_REVIEW",
+  "operationalStatus": "FROZEN",
+  "dispatchedArtisansCount": 0,
+  "antiMaskingAssessment": "Counterparty general counsel legal review ongoing. Heavy industrial artisan dispatch remains strictly frozen.",
+  "timestamp": "2026-11-15T20:40:00.000Z"
+}

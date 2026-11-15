@@ -1,0 +1,14 @@
+{
+  "phase": 33,
+  "workstream": "B_FINANCIAL_ASSURANCE",
+  "auditedBookings": 517,
+  "grossCustomerReceipts": "₹18,45,200.00",
+  "workerWageEntitlements": "₹18,45,200.00",
+  "platformCommissionAmount": "₹0.00",
+  "platformCommissionRate": "0.0000%",
+  "ledgerVariance": "₹0.00",
+  "settlementVerificationStatus": "UNVERIFIED_PENDING_LIVE_BANK_KEYS",
+  "antiMaskingAssessment": "Banking API keys not mounted in isolated sandbox. Application ledger and gateway receipts reconcile with zero discrepancy, but direct external bank statement confirmation remains segregated as unverified pending production bank key mount.",
+  "outstandingWorkerLiabilities": "₹0.00",
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

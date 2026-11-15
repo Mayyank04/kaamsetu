@@ -1,0 +1,30 @@
+{
+  "manifest": {
+    "repository": "Mayyank04/kaamsetu",
+    "branch": "phase-29-independent-challenge-and-evidence-assurance",
+    "baselineCommit": "03ae818",
+    "parentCommit": "8cd69c6",
+    "migrations": {
+      "count": 29,
+      "range": "01 to 29",
+      "latestMigration": "20261115000029_independent_audit_attestations_and_dispute_appeals.sql",
+      "migrationDirectoryDigest": "4d1595d572aaf4b271e600512454ec1bf6a72736edc48341c193767b139e9d3f"
+    },
+    "lockfileDigest": "6259c05078bd12c2c4f32e383de88c60bbf69e71ef9dcdf964d6db92207a317d",
+    "testInventoryDigest": "33bf3e5f84c62bf466a99bb5fd5ad2b6d8f796fce3b3e0e5cb4ffc460fda97ef",
+    "environmentClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+    "toolchain": {
+      "nodeVersion": "v20.x (LTS) / v22.x",
+      "nextVersion": "15.1.7",
+      "typeScriptVersion": "5.x",
+      "postgresVersion": "15.x"
+    },
+    "documentationCount": 41,
+    "timestamp": "2026-11-15T19:25:00.000Z"
+  },
+  "canonicalDigest": "c388b9bc299f0b46d092b2ca4fdab0c8039eb0551dc740ce7b7a0b7f04f1a9d4",
+  "signature": "1d2ca160cd8d8551b28bb2153d1ad8a55f872530c6b3ee0bc7e24640ea1aca6960feaf42f09d5aea983764b73d6bb64ff26cbd1aadb8d70632cce86d60815f05",
+  "signingKeyId": "did:kaamsetu:release:phase-29-signer",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEALK5svKtt46iNBTnup3f2TbKHU6o4uSiyCly1xkerYss=\n-----END PUBLIC KEY-----\n",
+  "reproducibilityClassification": "reproducible_canonical_manifest"
+}

@@ -1,0 +1,233 @@
+{
+  "phase": 33,
+  "package": "docs/certification/phase-33",
+  "totalDeliverables": 46,
+  "files": [
+    {
+      "filename": "PHASE_33_ACCESSIBILITY_AND_LANGUAGE_FINAL_AUDIT.md",
+      "sha256": "a6841c1cf2f03302234ff98d5a74ad4a4a8e99456e16c3e4b43e36358ca7ed93",
+      "bytes": 316
+    },
+    {
+      "filename": "PHASE_33_BANK_SETTLEMENT_EVIDENCE_REGISTER.json",
+      "sha256": "a6d97b945528be827daf4ab033247bb61132832f4ab372814ce33d29f316d494",
+      "bytes": 716
+    },
+    {
+      "filename": "PHASE_33_CANONICAL_RELEASE_MANIFEST.json",
+      "sha256": "66c3fad1e2d54aaf466d7e0ee8cc1435eafcdfae03b6b819b0cfac724f91cd97",
+      "bytes": 1473
+    },
+    {
+      "filename": "PHASE_33_CLAIM_TO_EVIDENCE_MATRIX.json",
+      "sha256": "85d35bfdcc4292aac3091f05b608445a79adc46de3e5e76f56712d8eb2b14f9d",
+      "bytes": 276
+    },
+    {
+      "filename": "PHASE_33_CLASS_A_ELIGIBILITY_MATRIX.json",
+      "sha256": "72d4fc42190c8f14f50efeacaf21f458a8a8fb84029f2d97c443cd43fb6099fe",
+      "bytes": 1471
+    },
+    {
+      "filename": "PHASE_33_CREDENTIAL_AND_OFFLINE_SECURITY_REPORT.md",
+      "sha256": "8244c313b613e2d8afdff69769f96955e36f3e200f2de7cdf3f5e6173ff9bbc3",
+      "bytes": 257
+    },
+    {
+      "filename": "PHASE_33_DISPATCH_AUTHORIZATION_FINAL_REPORT.md",
+      "sha256": "d5e113f9d944c30d973b156f054ec12bfb0fca62c7676abcfb46747f510e34dd",
+      "bytes": 182
+    },
+    {
+      "filename": "PHASE_33_EARNINGS_AND_RETENTION_FINAL_AUDIT.json",
+      "sha256": "170126456dde9332b77ebb9e4acb57a3d84546860ee1c20eed90d4da14991c08",
+      "bytes": 481
+    },
+    {
+      "filename": "PHASE_33_EFFECTIVE_RLS_FINAL_REPORT.md",
+      "sha256": "3936aec91098ca15ba95aefcf4a2395cde87a79e4df401be5812e3ac201b9f76",
+      "bytes": 222
+    },
+    {
+      "filename": "PHASE_33_EMERGENCY_RESPONSE_FINAL_REPORT.json",
+      "sha256": "80aa7e6e4d8264a30330d2ba02ef15f8107868cafcf618afbd2cebc32594c6d0",
+      "bytes": 688
+    },
+    {
+      "filename": "PHASE_33_EPC_EXECUTED_AGREEMENT_AUDIT.md",
+      "sha256": "94962e9329482ec4e767b61f246164d176fb22e18d4ea9cc2084a95543559dfa",
+      "bytes": 302
+    },
+    {
+      "filename": "PHASE_33_EXECUTIVE_CERTIFICATION.md",
+      "sha256": "afe15bd595ac80723f28dabbb0ca9b92539f2c07a5266ba4b8d90d1e09160031",
+      "bytes": 1482
+    },
+    {
+      "filename": "PHASE_33_EXECUTIVE_SIGNOFF.md",
+      "sha256": "08d3aaa50ba25de9499a65946c56ae68518c8637812115ec161e66ead9f2c516",
+      "bytes": 229
+    },
+    {
+      "filename": "PHASE_33_EXPANSION_GATE_MATRIX.json",
+      "sha256": "6c1bae44b6221e69938d84fdcaa4b09bfd07d6d7ec6480eafa742c7b6dcf7e87",
+      "bytes": 803
+    },
+    {
+      "filename": "PHASE_33_FINAL_CLASSIFICATION_DECISION.md",
+      "sha256": "fcaa7f534f5fa13f5674626c9b8ec285d6e9660cca1f68d18b37e7d247f9afea",
+      "bytes": 413
+    },
+    {
+      "filename": "PHASE_33_FINAL_DELIVERABLE_INDEX.md",
+      "sha256": "1faabbe35f1e597d8132ab78ecfc5b58b71f73e6947443ee59c534989c01eb47",
+      "bytes": 183
+    },
+    {
+      "filename": "PHASE_33_FINAL_RELEASE_GATE_MATRIX.json",
+      "sha256": "89bab30709ddf312edcc7937612903b0f10bf4aa2fa4b96eebd18cfdb9c23d09",
+      "bytes": 503
+    },
+    {
+      "filename": "PHASE_33_FINAL_SECURITY_ASSURANCE.md",
+      "sha256": "3b9578e98540a224ab80d7a82294981ef90765635cf288d10755a346c0689333",
+      "bytes": 275
+    },
+    {
+      "filename": "PHASE_33_FINAL_TEST_INVENTORY.json",
+      "sha256": "62e116b52c277e2b05a05622e32e1361e31f94752c6a3dfd7f358a2b55a38689",
+      "bytes": 1962
+    },
+    {
+      "filename": "PHASE_33_IMPACT_CLAIM_REGISTER.json",
+      "sha256": "f732bc624b98f8c62f997b0dc6e7b701eae6e3df046a0f39f689d8750960f6a9",
+      "bytes": 891
+    },
+    {
+      "filename": "PHASE_33_INDEPENDENT_EXECUTION_EVIDENCE.md",
+      "sha256": "56bd2ad920d8bd7173401a08980aad5e04c5e983330340a239e9274580d43b48",
+      "bytes": 221
+    },
+    {
+      "filename": "PHASE_33_INDEPENDENT_FINANCIAL_ASSURANCE.md",
+      "sha256": "e03467c407989a2d55308075cf16e19c791ea5465a259d023536fc97ed2bc4f8",
+      "bytes": 365
+    },
+    {
+      "filename": "PHASE_33_INSTITUTIONAL_CLOSURE_REGISTER.json",
+      "sha256": "be3bcaef947c8186af2b3d6accecbc3c1f645125be649beb1b4c54de539cd44b",
+      "bytes": 1161
+    },
+    {
+      "filename": "PHASE_33_LEDGER_IMMUTABILITY_REPORT.md",
+      "sha256": "019fb6a15aefa0aca929ecf7077633776249d6637b7789a0773f3caaff874ab3",
+      "bytes": 184
+    },
+    {
+      "filename": "PHASE_33_NON_RETALIATION_ASSURANCE.md",
+      "sha256": "b7dd75084f4ddae9377d80fe14fa10f44d866d65a374ef1cb87562ca3cb8440f",
+      "bytes": 240
+    },
+    {
+      "filename": "PHASE_33_OMBUDSPERSON_GOVERNANCE_EVIDENCE.md",
+      "sha256": "9b20071c3d750abdde6ce68b76359654d4563c0dd0a69c1f2894a277baf10a80",
+      "bytes": 278
+    },
+    {
+      "filename": "PHASE_33_ONDC_PRODUCTION_AUTHORIZATION_AUDIT.md",
+      "sha256": "e642621ac7c848a324c60387efa366a7403ad426ca2ddda265210afe335f1650",
+      "bytes": 315
+    },
+    {
+      "filename": "PHASE_33_PARTICIPANT_EVIDENCE_REGISTER.json",
+      "sha256": "06f470a6b3799181ff82e4401f29ba27867128a8b516bc2ada0111bad3d4f087",
+      "bytes": 733
+    },
+    {
+      "filename": "PHASE_33_PHASE_32_ARTIFACT_RECONCILIATION.json",
+      "sha256": "634c3b91e18319f696f6663e526d6f36b3cf3fd2d99229a3e8d22e4fe83f8098",
+      "bytes": 8989
+    },
+    {
+      "filename": "PHASE_33_PRIVILEGED_ACCESS_FINAL_AUDIT.md",
+      "sha256": "ae58fd8c92560984da1724a63ee3aa88bcf81857372adb040301da8bc36877c2",
+      "bytes": 200
+    },
+    {
+      "filename": "PHASE_33_PRODUCTION_DR_ASSURANCE.md",
+      "sha256": "79546b2e14983ad5b2f10873a10cae879fc43b2f2a0f61883b0a1646d90eccb0",
+      "bytes": 257
+    },
+    {
+      "filename": "PHASE_33_PROVIDER_RECONCILIATION_REGISTER.json",
+      "sha256": "40431cb650176a472fbd7dfc6d546fe198a9b97167771ad4b5fa33668f241384",
+      "bytes": 416
+    },
+    {
+      "filename": "PHASE_33_REGIONAL_SCOPE_FINAL_AUDIT.md",
+      "sha256": "269e2bace6250b93c87cd003bfd6e73b6345f01d6fdc1037ceed3eead2d6cabc",
+      "bytes": 266
+    },
+    {
+      "filename": "PHASE_33_REMEDIATION_REGISTER.json",
+      "sha256": "19824ff3fd2cfc4bb0cc45383b79f5e3c9f08fe3a83f92f1ab6f48c4f03ace65",
+      "bytes": 975
+    },
+    {
+      "filename": "PHASE_33_REPRODUCIBLE_BUILD_REPORT.md",
+      "sha256": "c08fecd9b9be855372767f84698db588d7c920c219827f54bc60b8689fc9bcdb",
+      "bytes": 326
+    },
+    {
+      "filename": "PHASE_33_SIGNATURE_VERIFICATION_REPORT.md",
+      "sha256": "e8c9d6f1aa091313fe24ad9ec4a80e3843c3f978c9800d329a474c1728064ca3",
+      "bytes": 383
+    },
+    {
+      "filename": "PHASE_33_SOURCE_PROVENANCE_AUDIT.md",
+      "sha256": "0b87d7a296063823f163191ab1c72ad1474f05e06bb856062351ca3283bfde90",
+      "bytes": 497
+    },
+    {
+      "filename": "PHASE_33_TSDM_FINAL_INSTITUTIONAL_AUDIT.md",
+      "sha256": "b5f4d70b16340937a5df503500d09e8b78fc330f0c7ea762f424cde801bc9174",
+      "bytes": 300
+    },
+    {
+      "filename": "PHASE_33_WORKER_FIELD_ASSURANCE_REPORT.md",
+      "sha256": "72419281da90f81401530df5b7c71a161cd5a51b396a5032b138857f1017365b",
+      "bytes": 319
+    },
+    {
+      "filename": "PHASE_33_WORKER_IMPACT_EVIDENCE_REPORT.md",
+      "sha256": "9dceeab7997ad3f91c0efa5670436e083acda10ba2cba80ee28fb57bae9e01bc",
+      "bytes": 226
+    },
+    {
+      "filename": "PHASE_33_WORKER_OUTCOME_REPRODUCTION.md",
+      "sha256": "72e2063bb68766f5bc0ae40de52e0da44ad6961107fb5d88f14d6e501abdd773",
+      "bytes": 334
+    },
+    {
+      "filename": "PHASE_33_WORKER_PROTECTION_FINAL_AUDIT.md",
+      "sha256": "e5e4ea1ba75ad0e6db35a8b4347acfdc12f385759152d43adcabc3a1917874a4",
+      "bytes": 318
+    },
+    {
+      "filename": "PHASE_33_WORKER_TASK_COMPLETION_ANALYSIS.json",
+      "sha256": "e8b427fd350b37f988b912a2c358a31f49bd51296870fcab96165788e3d26278",
+      "bytes": 2400
+    },
+    {
+      "filename": "PHASE_33_WORKER_WAGE_LIABILITY_FINAL_AUDIT.json",
+      "sha256": "40ef923ae01b7f5e6dbedfb7efd3362f37e550fba3736c79fb50aa59cb96815d",
+      "bytes": 386
+    },
+    {
+      "filename": "PHASE_33_ZERO_COMMISSION_FINAL_CERTIFICATION.md",
+      "sha256": "c6fd534e5b0769bba81fd916b96c8b5897f4ad5047059b2f13711b8da2ed8386",
+      "bytes": 331
+    }
+  ],
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

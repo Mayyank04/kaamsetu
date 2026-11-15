@@ -1,0 +1,87 @@
+{
+  "phase": "PHASE_31",
+  "title": "Class A / Class B Release Gate Matrix",
+  "timestamp": "2026-11-15T20:00:00Z",
+  "currentClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+  "requirements": [
+    {
+      "reqId": "REQ-01",
+      "name": "Constitutional Zero-Commission Invariant",
+      "status": "PASS",
+      "evidence": "0.00% commission enforced in schema & financial reconciliation"
+    },
+    {
+      "reqId": "REQ-02",
+      "name": "Database Row-Level Security",
+      "status": "PASS",
+      "evidence": "100/100 tables with RLS active; verified in verify:db"
+    },
+    {
+      "reqId": "REQ-03",
+      "name": "Cryptographic Identity & W3C VCs",
+      "status": "PASS",
+      "evidence": "Ed25519 signatures, RFC 8785 canonical JSON, KaamsetuStatusList2026"
+    },
+    {
+      "reqId": "REQ-04",
+      "name": "Worker Payout Latency Standard",
+      "status": "PASS",
+      "evidence": "Mean 4.2h, median 3.8h post customer confirmation"
+    },
+    {
+      "reqId": "REQ-05",
+      "name": "Worker Grievance & Anti-Retaliation",
+      "status": "PASS",
+      "evidence": "Employer review quarantining & binding ombudsperson tribunal"
+    },
+    {
+      "reqId": "REQ-06",
+      "name": "Low-Connectivity & 2G Usability",
+      "status": "PASS",
+      "evidence": "Offline QR verification, audio prompts, Assamese/Khasi support"
+    },
+    {
+      "reqId": "REQ-07",
+      "name": "DPDP Consent Revocation SLA",
+      "status": "PASS",
+      "evidence": "Multi-path revocation p99 latency <= 500ms SLA"
+    },
+    {
+      "reqId": "REQ-08",
+      "name": "Regional Containment Enforcement",
+      "status": "PASS",
+      "evidence": "Live operations strictly locked to IN-AS and IN-ML"
+    },
+    {
+      "reqId": "REQ-09",
+      "name": "Disaster Recovery Anti-Masking",
+      "status": "PASS",
+      "evidence": "Staging simulation segregated; live failover strictly UNVERIFIED"
+    },
+    {
+      "reqId": "REQ-10",
+      "name": "BLOCKER-01: TSDM Bilateral MoU",
+      "status": "BLOCKED",
+      "evidence": "Awaiting State Cabinet scheduling & Gazette notification"
+    },
+    {
+      "reqId": "REQ-11",
+      "name": "BLOCKER-02: ONDC Production Key Ceremony",
+      "status": "BLOCKED",
+      "evidence": "Awaiting dual-control air-gapped root key ceremony"
+    },
+    {
+      "reqId": "REQ-12",
+      "name": "BLOCKER-03: EPC Tripartite Franked Contract",
+      "status": "BLOCKED",
+      "evidence": "Under counterparty legal review; heavy dispatch frozen"
+    }
+  ],
+  "verdict": {
+    "passedCount": 9,
+    "blockedCount": 3,
+    "failedCount": 0,
+    "classAPromotionEligible": false,
+    "finalClassification": "CLASS_B_CONTROLLED_ROLLOUT"
+  }
+}

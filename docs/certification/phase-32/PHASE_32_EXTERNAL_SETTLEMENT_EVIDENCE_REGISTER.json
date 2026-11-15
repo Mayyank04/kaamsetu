@@ -1,0 +1,11 @@
+{
+  "phase": "PHASE_32",
+  "title": "External Settlement Evidence & Bank Confirmation Register",
+  "timestamp": "2026-11-15T20:20:00Z",
+  "applicationLedgerConfirmedAmount": 1845200,
+  "paymentProviderInitiatedAmount": 1845200,
+  "externalBankDirectConfirmationStatus": "UNVERIFIED_PENDING_LIVE_BANK_KEYS",
+  "classificationRationale": "Direct banking API credentials and live production webhook confirmations are isolated from test sandbox. Ledger and provider records match with zero platform deduction.",
+  "bankReversalRatePercent": 0,
+  "chargebackCount": 0
+}

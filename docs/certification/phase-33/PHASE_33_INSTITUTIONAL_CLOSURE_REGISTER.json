@@ -1,0 +1,34 @@
+{
+  "phase": 33,
+  "totalBlockers": 3,
+  "activeBlockersCount": 3,
+  "blockers": [
+    {
+      "id": "BLOCKER-01",
+      "entity": "Tripura Skill Development Mission (TSDM)",
+      "status": "UNDER_REVIEW",
+      "operationalStatus": "BLOCKED",
+      "missingEvidence": "State Cabinet meeting scheduling & official gazette publication",
+      "authorized": false
+    },
+    {
+      "id": "BLOCKER-02",
+      "entity": "ONDC / ONest Network Registry",
+      "status": "APPROVED_PENDING_EXECUTION",
+      "operationalStatus": "BLOCKED",
+      "missingEvidence": "Dual-control air-gapped Ed25519 root key ceremony execution",
+      "authorized": false
+    },
+    {
+      "id": "BLOCKER-03",
+      "entity": "Enterprise EPC Tripartite Contract",
+      "status": "UNDER_REVIEW",
+      "operationalStatus": "FROZEN",
+      "missingEvidence": "Counterparty general counsel execution & underwriting policy binding",
+      "authorized": false
+    }
+  ],
+  "classAEligible": false,
+  "antiMaskingAssessment": "Zero blockers manufactured, inferred, or internally waived. Platform strictly preserved behind institutional gates.",
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

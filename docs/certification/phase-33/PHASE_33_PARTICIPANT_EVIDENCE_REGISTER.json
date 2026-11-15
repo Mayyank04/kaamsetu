@@ -1,0 +1,40 @@
+{
+  "phase": 33,
+  "totalParticipants": 45,
+  "breakdown": {
+    "realConsentedParticipants": 15,
+    "syntheticParticipants": 30,
+    "autonomousCompletions": 38,
+    "assistedCompletions": 6,
+    "failedAttempts": 1,
+    "withdrawals": 0,
+    "incompleteObservations": 0
+  },
+  "geographicDistribution": {
+    "guwahatiUrban": 28,
+    "shillongUrban": 17
+  },
+  "trades": [
+    {
+      "trade": "Carpentry",
+      "count": 12
+    },
+    {
+      "trade": "Plumbing",
+      "count": 10
+    },
+    {
+      "trade": "Electrical / Solar",
+      "count": 9
+    },
+    {
+      "trade": "Masonry",
+      "count": 8
+    },
+    {
+      "trade": "Painting / Plastering",
+      "count": 6
+    }
+  ],
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

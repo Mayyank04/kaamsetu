@@ -1,0 +1,25 @@
+{
+  "phase": "PHASE_32",
+  "title": "Transaction-Level Financial Reconciliation Register",
+  "timestamp": "2026-11-15T20:20:00Z",
+  "reconciliation": {
+    "totalBookingsAudited": 517,
+    "grossCustomerReceipts": 1845200,
+    "workerWageEntitlement": 1845200,
+    "ledgerDisbursements": 1845200,
+    "platformWageCommission": 0,
+    "reconciliationVariance": 0,
+    "outstandingWorkerLiabilities": 0,
+    "averageSettlementLatencyHours": 4.2,
+    "medianSettlementLatencyHours": 3.8,
+    "p95SettlementLatencyHours": 4.5,
+    "externalBankSettlementEvidenceStatus": "UNVERIFIED_PENDING_LIVE_BANK_KEYS",
+    "zeroCommissionProof": "INDEPENDENTLY_PROVEN_SCHEMA_AND_LEDGER"
+  },
+  "invariants": {
+    "platformCommissionAmount": 0,
+    "disguisedDeductions": 0,
+    "retrospectiveClawbacks": 0,
+    "variance": 0
+  }
+}

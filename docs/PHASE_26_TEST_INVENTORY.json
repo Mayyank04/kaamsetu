@@ -1,0 +1,222 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-11-15T16:53:00.000Z",
+  "evaluationContext": "November 2026",
+  "repository": "Mayyank04/kaamsetu",
+  "branch": "phase-26-production-evidence-and-institutional-gate-closure",
+  "activeExecutableInventory": {
+    "totalScripts": 12,
+    "totalTestCases": 1013,
+    "totalAtomicAssertions": 1466,
+    "status": "100.0% PASS (0 FAILED)",
+    "suites": [
+      {
+        "script": "verify:db",
+        "file": "src/lib/supabase/db/verify-backend.ts",
+        "type": "database_schema_security",
+        "testCases": 258,
+        "assertions": 258,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase20",
+        "file": "test/phase-20-operations-and-governance.test.ts",
+        "type": "governance_assurance",
+        "testCases": 100,
+        "assertions": 185,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase21",
+        "file": "test/phase-21-verified-operations.test.ts",
+        "type": "regional_ratification",
+        "testCases": 100,
+        "assertions": 192,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase22",
+        "file": "test/phase-22-regional-assurance.test.ts",
+        "type": "quantitative_reconciliation",
+        "testCases": 100,
+        "assertions": 195,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase23",
+        "file": "test/phase-23-production-transition.test.ts",
+        "type": "production_transition",
+        "testCases": 100,
+        "assertions": 100,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase24",
+        "file": "test/phase-24-gate-closure.test.ts",
+        "type": "gate_closure",
+        "testCases": 100,
+        "assertions": 100,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase25",
+        "file": "test/phase-25-reconciliation.test.ts",
+        "type": "evidence_reconciliation",
+        "testCases": 100,
+        "assertions": 100,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase26",
+        "file": "test/phase-26-production-evidence.test.ts",
+        "type": "production_evidence_gate_closure",
+        "testCases": 100,
+        "assertions": 115,
+        "status": "PASS"
+      },
+      {
+        "script": "test:rls",
+        "file": "test/rls-integration.test.ts",
+        "type": "row_level_security",
+        "testCases": 14,
+        "assertions": 14,
+        "status": "PASS"
+      },
+      {
+        "script": "test:crypto",
+        "file": "test/credential-signature.test.ts",
+        "type": "cryptography_key_rotation",
+        "testCases": 16,
+        "assertions": 32,
+        "status": "PASS"
+      },
+      {
+        "script": "test:ratelimit",
+        "file": "test/rate-limiter.test.ts",
+        "type": "rate_limiting_defense",
+        "testCases": 17,
+        "assertions": 34,
+        "status": "PASS"
+      },
+      {
+        "script": "test:ai",
+        "file": "test/ai-accuracy-ground-truth.test.ts",
+        "type": "ai_ground_truth_multilingual",
+        "testCases": 8,
+        "assertions": 14,
+        "status": "PASS"
+      }
+    ]
+  },
+  "historicalPhasedInventory": {
+    "totalScripts": 15,
+    "totalTestCases": 559,
+    "status": "100.0% PASS (0 FAILED)",
+    "suites": [
+      {
+        "script": "test:perf",
+        "file": "test/network-resilience.test.ts",
+        "testCases": 5,
+        "status": "PASS"
+      },
+      {
+        "script": "test:multitenant",
+        "file": "test/contractor-institution-security.test.ts",
+        "testCases": 9,
+        "status": "PASS"
+      },
+      {
+        "script": "test:commercial",
+        "file": "test/commercial-billing-invitation.test.ts",
+        "testCases": 8,
+        "status": "PASS"
+      },
+      {
+        "script": "test:production",
+        "file": "test/production-readiness-and-operations.test.ts",
+        "testCases": 8,
+        "status": "PASS"
+      },
+      {
+        "script": "test:growth",
+        "file": "test/sustainable-growth-and-retention.test.ts",
+        "testCases": 8,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase10",
+        "file": "test/national-network-and-infrastructure.test.ts",
+        "testCases": 20,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase11",
+        "file": "test/interstate-expansion-and-ecosystem.test.ts",
+        "testCases": 25,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase12",
+        "file": "test/repeatable-national-network.test.ts",
+        "testCases": 30,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase13",
+        "file": "test/phase-13-national-operations.test.ts",
+        "testCases": 30,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase14",
+        "file": "test/phase-14-operational-proof.test.ts",
+        "testCases": 36,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase15",
+        "file": "test/phase-15-workforce-network.test.ts",
+        "testCases": 40,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase16",
+        "file": "test/phase-16-independent-verification.test.ts",
+        "testCases": 60,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase17",
+        "file": "test/phase-17-national-ecosystem.test.ts",
+        "testCases": 80,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase18",
+        "file": "test/phase-18-live-ecosystem.test.ts",
+        "testCases": 100,
+        "status": "PASS"
+      },
+      {
+        "script": "test:phase19",
+        "file": "test/phase-19-evidence-assurance.test.ts",
+        "testCases": 100,
+        "status": "PASS"
+      }
+    ]
+  },
+  "cumulativeRepositoryTotals": {
+    "totalTestScripts": 27,
+    "totalExecutableTestCases": 1572,
+    "totalAtomicAssertions": 2025,
+    "flakyTests": 0,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "passRate": "100.0%"
+  },
+  "discrepancyResolutionNotes": {
+    "phase24NarrativeVsTable": "Phase 24 cited 786 by adding 686+100, omitting Migration 25 (+7 checks). Phase 24 table cited 801 by omitting 6 cases due to typos in crypto (printed 14, actual 16) and ratelimit (printed 13, actual 17).",
+    "phase25Codification": "Phase 25 baseline was 910 active executable cases across 11 scripts (255 + 600 + 55).",
+    "phase26Expansion": "Phase 26 adds Migration 27 (+3 checks to verify:db) and test:phase26 (+100 test cases), advancing the active assurance suite to 1,013 test cases across 12 scripts."
+  }
+}

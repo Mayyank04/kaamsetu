@@ -1,0 +1,32 @@
+{
+  "phase": 34,
+  "totalOpenBlockers": 5,
+  "openGates": [
+    {
+      "id": "BLOCKER-01",
+      "name": "TSDM Bilateral MoU & Gazette",
+      "dependency": "Tripura State Cabinet"
+    },
+    {
+      "id": "BLOCKER-02",
+      "name": "ONDC Production Root Key Ceremony",
+      "dependency": "ONDC Technical Secretariat"
+    },
+    {
+      "id": "BLOCKER-03",
+      "name": "EPC Tripartite Executed Agreement",
+      "dependency": "Enterprise Partner Legal Counsel"
+    },
+    {
+      "id": "GATE-04",
+      "name": "Direct Bank Statement Confirmation",
+      "dependency": "Partner Bank Live API Keys"
+    },
+    {
+      "id": "GATE-05",
+      "name": "Production DR Live Maintenance Drill",
+      "dependency": "Change Advisory Board"
+    }
+  ],
+  "timestamp": "2026-11-15T20:40:00.000Z"
+}

@@ -1,0 +1,40 @@
+{
+  "phase": "PHASE_29",
+  "title": "Worker Protection Remediation Register",
+  "auditScope": "Comprehensive Worker Safeguards & Anti-Retaliation Controls",
+  "remediationItems": [
+    {
+      "id": "WPR-2026-01",
+      "riskCategory": "Employer Negative Review Retaliation",
+      "identifiedRisk": "Contractors submitting retaliatory 1-star reviews following wage dispute",
+      "remediationApplied": "Automated quarantine trigger trg_payout_dispute_closure_guard and review suppression during dispute",
+      "verificationMethod": "Adversarial Test 32 & Test 40",
+      "status": "REMEDIATED_AND_VERIFIED"
+    },
+    {
+      "id": "WPR-2026-02",
+      "riskCategory": "Unilateral Dispute Cancellation",
+      "identifiedRisk": "Contractors closing dispute tickets unilaterally without worker concurrence",
+      "remediationApplied": "PostgreSQL check constraint and service-level guard restricting closure solely to ombudsperson / worker",
+      "verificationMethod": "Test 33 in Phase 29 test suite",
+      "status": "REMEDIATED_AND_VERIFIED"
+    },
+    {
+      "id": "WPR-2026-03",
+      "riskCategory": "Disguised Platform Fees",
+      "identifiedRisk": "Platform taking convenience fees or lead generation fees from workers",
+      "remediationApplied": "Database schema constraint platform_commission_amount = 0.00 and zero worker fee policy",
+      "verificationMethod": "Adversarial Test 18 & 19",
+      "status": "REMEDIATED_AND_VERIFIED"
+    },
+    {
+      "id": "WPR-2026-04",
+      "riskCategory": "Unmasked PII in Public Offline QR Codes",
+      "identifiedRisk": "Full 12-digit Aadhaar or bank account numbers encoded into scannable QR tokens",
+      "remediationApplied": "Data minimization regex filter and selective disclosure payload generator (excluding Aadhaar and bank details)",
+      "verificationMethod": "Negative test fixture Test 55 and Test 80",
+      "status": "REMEDIATED_AND_VERIFIED"
+    }
+  ],
+  "verificationVerdict": "100% REMEDIATIONS OPERATIONAL IN PRODUCTION SUITE"
+}

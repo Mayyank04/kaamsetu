@@ -1,0 +1,127 @@
+{
+  "phase": 33,
+  "totalJourneysEvaluated": 15,
+  "journeys": [
+    {
+      "step": 1,
+      "name": "Registration",
+      "status": "PASS",
+      "autonomous": 41,
+      "assisted": 4,
+      "failed": 0
+    },
+    {
+      "step": 2,
+      "name": "Identity verification",
+      "status": "PASS",
+      "autonomous": 42,
+      "assisted": 3,
+      "failed": 0
+    },
+    {
+      "step": 3,
+      "name": "Skill assessment",
+      "status": "PASS",
+      "autonomous": 43,
+      "assisted": 2,
+      "failed": 0
+    },
+    {
+      "step": 4,
+      "name": "Profile creation",
+      "status": "PASS",
+      "autonomous": 40,
+      "assisted": 5,
+      "failed": 0
+    },
+    {
+      "step": 5,
+      "name": "Job discovery",
+      "status": "PASS",
+      "autonomous": 43,
+      "assisted": 2,
+      "failed": 0
+    },
+    {
+      "step": 6,
+      "name": "Fee & wage comprehension",
+      "status": "PASS",
+      "autonomous": 44,
+      "assisted": 1,
+      "failed": 0
+    },
+    {
+      "step": 7,
+      "name": "Booking acceptance",
+      "status": "PASS",
+      "autonomous": 43,
+      "assisted": 2,
+      "failed": 0
+    },
+    {
+      "step": 8,
+      "name": "Work commencement",
+      "status": "PASS",
+      "autonomous": 44,
+      "assisted": 1,
+      "failed": 0
+    },
+    {
+      "step": 9,
+      "name": "Work completion",
+      "status": "PASS",
+      "autonomous": 44,
+      "assisted": 1,
+      "failed": 0
+    },
+    {
+      "step": 10,
+      "name": "Payment visibility",
+      "status": "PASS",
+      "autonomous": 45,
+      "assisted": 0,
+      "failed": 0
+    },
+    {
+      "step": 11,
+      "name": "Grievance submission",
+      "status": "PASS",
+      "autonomous": 38,
+      "assisted": 6,
+      "failed": 1
+    },
+    {
+      "step": 12,
+      "name": "Unsafe-workplace withdrawal",
+      "status": "PASS",
+      "autonomous": 45,
+      "assisted": 0,
+      "failed": 0
+    },
+    {
+      "step": 13,
+      "name": "Appeal",
+      "status": "PASS",
+      "autonomous": 43,
+      "assisted": 2,
+      "failed": 0
+    },
+    {
+      "step": 14,
+      "name": "Consent revocation",
+      "status": "PASS",
+      "autonomous": 44,
+      "assisted": 1,
+      "failed": 0
+    },
+    {
+      "step": 15,
+      "name": "Data portability",
+      "status": "PASS",
+      "autonomous": 44,
+      "assisted": 1,
+      "failed": 0
+    }
+  ],
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

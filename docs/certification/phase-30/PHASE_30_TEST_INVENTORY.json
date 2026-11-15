@@ -1,0 +1,135 @@
+{
+  "phase": "PHASE_30",
+  "suiteTitle": "Master Institutional Authorization & Controlled Market Readiness Test Suite",
+  "testFilePath": "test/phase-30-institutional-authorization.test.ts",
+  "totalExecutableTests": 100,
+  "atomicAssertionsCount": 179,
+  "domainsCount": 20,
+  "domains": [
+    {
+      "domainNumber": 1,
+      "name": "Baseline Provenance & Git Lineage",
+      "testRange": "1-5",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 2,
+      "name": "Institutional Evidence Control Plane",
+      "testRange": "6-10",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 3,
+      "name": "BLOCKER-01 (Tripura / TSDM) Authorization",
+      "testRange": "11-15",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 4,
+      "name": "BLOCKER-02 (ONDC / ONest) Key Ceremony",
+      "testRange": "16-20",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 5,
+      "name": "BLOCKER-03 (EPC Contracts) & Heavy Dispatch Freeze",
+      "testRange": "21-25",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 6,
+      "name": "Assam Controlled Market Readiness",
+      "testRange": "26-30",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 7,
+      "name": "Meghalaya Controlled Market Readiness",
+      "testRange": "31-35",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 8,
+      "name": "Regional Restrictions & Containment",
+      "testRange": "36-40",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 9,
+      "name": "Zero-Commission Invariant & Financial Reconciliation",
+      "testRange": "41-45",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 10,
+      "name": "Worker Contractual Safeguards & Non-Retaliation",
+      "testRange": "46-50",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 11,
+      "name": "Worker Data Portability & Privacy (DPDP Act)",
+      "testRange": "51-55",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 12,
+      "name": "W3C Verifiable Credentials Data Model v1.1",
+      "testRange": "56-60",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 13,
+      "name": "Cryptographic Negative Security Fixtures",
+      "testRange": "61-65",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 14,
+      "name": "Offline 2G QR Verification",
+      "testRange": "66-70",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 15,
+      "name": "Append-Only Audit Integrity & Checkpoints",
+      "testRange": "71-75",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 16,
+      "name": "PostgreSQL Catalog & Database Security",
+      "testRange": "76-80",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 17,
+      "name": "Production Integration Boundaries & Rollback",
+      "testRange": "81-85",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 18,
+      "name": "Disaster Recovery Boundaries & Anti-Masking",
+      "testRange": "86-90",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 19,
+      "name": "Guwahati Carpentry Cohort Statistical Bounds",
+      "testRange": "91-95",
+      "status": "PASS"
+    },
+    {
+      "domainNumber": 20,
+      "name": "Institutional Gate Execution & Class A Refusal",
+      "testRange": "96-100",
+      "status": "PASS"
+    }
+  ],
+  "cumulativeHistoricalTests": {
+    "activeTestCases": 100,
+    "databaseAssertions": 275,
+    "totalVerifiedAssertions": 454
+  }
+}

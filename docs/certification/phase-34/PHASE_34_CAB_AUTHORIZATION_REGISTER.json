@@ -1,0 +1,11 @@
+{
+  "phase": 34,
+  "governingBody": "Change Advisory Board (CAB)",
+  "drillTarget": "Production Disaster Recovery Live Failover",
+  "cabApprovalStatus": "PENDING_CAB_SCHEDULE",
+  "namedIncidentCommander": "TBD upon CAB schedule",
+  "maintenanceWindowApproved": false,
+  "stagingDrStatus": "VERIFIED_BENCHMARK",
+  "productionDrStatus": "UNVERIFIED",
+  "timestamp": "2026-11-15T20:40:00.000Z"
+}

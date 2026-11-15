@@ -1,0 +1,42 @@
+{
+  "phase": "PHASE_29",
+  "title": "Database Privilege Matrix",
+  "catalogStatus": "100 base tables, 1 view, 100% RLS enabled",
+  "databaseEngine": "PostgreSQL 15 (Supabase hardened)",
+  "roles": [
+    {
+      "roleName": "anon",
+      "inherits": "none",
+      "tableAccess": "SELECT ONLY on public_worker_profiles view and published worker_profiles (where is_published = true)",
+      "mutationPrivilege": "NONE",
+      "superuser": false
+    },
+    {
+      "roleName": "authenticated",
+      "inherits": "none",
+      "tableAccess": "SELECT/INSERT/UPDATE gated strictly by auth.uid() = user_id or auth.uid() = worker_profile_id",
+      "mutationPrivilege": "Scoped to own profile, bookings, work records, and dispute appeals",
+      "superuser": false
+    },
+    {
+      "roleName": "service_role",
+      "inherits": "none",
+      "tableAccess": "Internal backend operations; blocked by immutability triggers on audit tables",
+      "mutationPrivilege": "Application automation; strictly cannot UPDATE or DELETE immutable audit events",
+      "superuser": false
+    },
+    {
+      "roleName": "postgres (superuser)",
+      "inherits": "superuser",
+      "tableAccess": "DB administration and schema migrations",
+      "threatMitigation": "All audit events cryptographically chained and signed with external Ed25519 checkpoints; raw SQL modifications break checkpoint verification",
+      "superuser": true
+    }
+  ],
+  "rlsCompleteness": {
+    "totalTables": 100,
+    "rlsEnabledTables": 100,
+    "rlsPercentage": 100.0,
+    "bypassPrivilegesRevokedForApplication": true
+  }
+}

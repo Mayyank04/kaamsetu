@@ -1,0 +1,30 @@
+{
+  "manifest": {
+    "repository": "Mayyank04/kaamsetu",
+    "branch": "phase-28-institutional-execution-and-production-assurance",
+    "baselineCommit": "8cd69c6",
+    "parentCommit": "6f8a488",
+    "migrations": {
+      "count": 29,
+      "range": "01 to 29",
+      "latestMigration": "20261115000029_independent_audit_attestations_and_dispute_appeals.sql",
+      "migrationDirectoryDigest": "4d1595d572aaf4b271e600512454ec1bf6a72736edc48341c193767b139e9d3f"
+    },
+    "lockfileDigest": "6259c05078bd12c2c4f32e383de88c60bbf69e71ef9dcdf964d6db92207a317d",
+    "testInventoryDigest": "7f3881572b18e36965dac7e00f2e457091fbc6774d7a7c84d0edca08e262fa03",
+    "environmentClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+    "toolchain": {
+      "nodeVersion": "v20.x (LTS) / v22.x",
+      "nextVersion": "15.1.7",
+      "typeScriptVersion": "5.x",
+      "postgresVersion": "15.x"
+    },
+    "documentationCount": 33,
+    "timestamp": "2026-11-15T18:30:00.000Z"
+  },
+  "canonicalDigest": "be5d35fe288be159259c8738a143f7a020e966cebf2db7ed8288cf689d93b5f1",
+  "signature": "e2f8a03b4faf40c6492636bec9fbe9e2201de6fd7ba6d34ed75eaeecc57bc1ffdba83685d78daacd4edd2fab10eddbb9b7141405285e667d796f0785c9035d09",
+  "signingKeyId": "did:kaamsetu:release:phase-28-signer",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAlSJTARW+KqoX5JzIUUxNNajURCNleBD/KPhzcF5xRxo=\n-----END PUBLIC KEY-----\n",
+  "reproducibilityClassification": "reproducible_canonical_manifest"
+}

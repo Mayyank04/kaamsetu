@@ -1,0 +1,51 @@
+{
+  "phase": "PHASE_29",
+  "title": "Institutional Blocker Register",
+  "auditTimestamp": "2026-11-15T19:25:00Z",
+  "classificationTarget": "CLASS_B_CONTROLLED_ROLLOUT",
+  "blockers": [
+    {
+      "blockerCode": "BLOCKER-01",
+      "title": "TSDM Bilateral MoU & Government Cabinet Approval",
+      "counterparty": "Tripura Skill Development Mission (TSDM), Directorate of Skill Development, Govt. of Tripura",
+      "currentLifecycleStatus": "cabinet_or_council_pending",
+      "authoritativeState": "UNDER_REVIEW",
+      "underlyingInstrumentRef": "TSDM/EXP/2026/MOU-DRAFT-04",
+      "resolutionCriteria": "Gazette notification or signed bilateral MoU registration in official state repository with dual authentication",
+      "isResolved": false,
+      "blockingRationale": "Field operations in Tripura remain in research-only status until bilateral execution is ratified by State Cabinet",
+      "remediationOwner": "Head of Institutional Partnerships & Legal Compliance"
+    },
+    {
+      "blockerCode": "BLOCKER-02",
+      "title": "ONDC & ONest Production Key Ceremony & Registry Listing",
+      "counterparty": "Open Network for Digital Commerce (ONDC) Council & ONest Consortium Registry",
+      "currentLifecycleStatus": "approved_pending_execution",
+      "authoritativeState": "APPROVED",
+      "underlyingInstrumentRef": "ONDC/PROD/CEREMONY/2026-Q4",
+      "resolutionCriteria": "Cryptographic key ceremony completion, production BAP/BPP credentials active, ONest registry production entry live",
+      "isResolved": false,
+      "blockingRationale": "Production network orders held until root key signing ceremony is finalized; staging sandbox integration isolated",
+      "remediationOwner": "Chief Information Security Officer & Core Infrastructure Lead"
+    },
+    {
+      "blockerCode": "BLOCKER-03",
+      "title": "Enterprise EPC Bi-Lateral Master Labor Contract",
+      "counterparty": "L&T Construction (NE Circle) / NHIDCL Guwahati EPC Consortium",
+      "currentLifecycleStatus": "counterparty_legal_review",
+      "authoritativeState": "UNDER_REVIEW",
+      "underlyingInstrumentRef": "EPC/NE/2026/PILOT-MSA-REV03",
+      "resolutionCriteria": "Stamped and executed bilateral master service agreement including direct worker wage escrow and non-retaliation covenants",
+      "isResolved": false,
+      "blockingRationale": "Enterprise construction worker placement held until institutional tripartite indemnification and escrow agreements are executed",
+      "remediationOwner": "VP Enterprise Partnerships & General Counsel"
+    }
+  ],
+  "summary": {
+    "totalBlockers": 3,
+    "resolvedBlockers": 0,
+    "activeBlockers": 3,
+    "gateReadinessVerdict": "RETAIN_CLASS_B_CONTROLLED_ROLLOUT",
+    "unilateralAdvancementPermitted": false
+  }
+}

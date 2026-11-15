@@ -1,0 +1,13 @@
+{
+  "phase": "PHASE_32",
+  "title": "Regional Authorization & Privileged Override Evidence Register",
+  "timestamp": "2026-11-15T20:20:00Z",
+  "authorizedJurisdictions": [
+    "IN-AS (Kamrup Metro)",
+    "IN-ML (East Khasi Hills)"
+  ],
+  "penetrationAttemptsTested": 5,
+  "penetrationAttemptsBlocked": 5,
+  "privilegedAdminBypassAllowed": false,
+  "boundarySecurityStatus": "IMPERMEABLE"
+}

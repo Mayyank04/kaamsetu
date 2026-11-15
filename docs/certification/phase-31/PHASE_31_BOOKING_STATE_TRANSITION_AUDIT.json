@@ -1,0 +1,72 @@
+{
+  "phase": "PHASE_31",
+  "title": "Customer Booking Lifecycle State Transition Audit",
+  "timestamp": "2026-11-15T20:00:00Z",
+  "transitions": [
+    {
+      "from": "DISCOVERY",
+      "to": "INITIATED",
+      "allowed": true,
+      "trigger": "Customer selects worker & service"
+    },
+    {
+      "from": "INITIATED",
+      "to": "WORKER_ASSIGNED",
+      "allowed": true,
+      "trigger": "Location boundary & availability validated"
+    },
+    {
+      "from": "WORKER_ASSIGNED",
+      "to": "WORK_IN_PROGRESS",
+      "allowed": true,
+      "trigger": "Worker arrives and begins work"
+    },
+    {
+      "from": "WORK_IN_PROGRESS",
+      "to": "WORK_COMPLETED",
+      "allowed": true,
+      "trigger": "Worker marks completion with proof"
+    },
+    {
+      "from": "WORK_COMPLETED",
+      "to": "CUSTOMER_CONFIRMED",
+      "allowed": true,
+      "trigger": "Customer inspects and signs off"
+    },
+    {
+      "from": "CUSTOMER_CONFIRMED",
+      "to": "PAYOUT_DISBURSED",
+      "allowed": true,
+      "trigger": "Automated instant pass-through settlement"
+    },
+    {
+      "from": "WORK_IN_PROGRESS",
+      "to": "DISPUTED",
+      "allowed": true,
+      "trigger": "Grievance filed or unsafe condition reported"
+    },
+    {
+      "from": "INITIATED",
+      "to": "CANCELLED",
+      "allowed": true,
+      "trigger": "Customer cancellation before dispatch"
+    },
+    {
+      "from": "WORKER_ASSIGNED",
+      "to": "REJECTED_BOUNDARY",
+      "allowed": true,
+      "trigger": "Address outside authorized perimeter"
+    }
+  ],
+  "geographicalContainment": {
+    "authorizedStates": [
+      "IN-AS",
+      "IN-ML"
+    ],
+    "authorizedDistricts": [
+      "Kamrup Metropolitan",
+      "East Khasi Hills"
+    ],
+    "prohibitedLocationsBlocked": 100
+  }
+}

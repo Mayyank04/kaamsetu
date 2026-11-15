@@ -1,0 +1,39 @@
+{
+  "phase": "PHASE_31",
+  "title": "Phase 31 Remediation & Operational Dependency Register",
+  "timestamp": "2026-11-15T20:00:00Z",
+  "remediations": [
+    {
+      "id": "REM-31-01",
+      "area": "Institutional Authorization (TSDM)",
+      "action": "Track State Cabinet agenda scheduling for TSDM bilateral MoU; coordinate joint demonstration",
+      "owner": "Institutional Partnerships Lead",
+      "targetTimeline": "Q1 2027",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": "REM-31-02",
+      "area": "ONDC Production Integration",
+      "action": "Conduct air-gapped dual-control Ed25519 root key ceremony; sign Participant Agreement",
+      "owner": "Chief Information Security Officer",
+      "targetTimeline": "December 2026",
+      "status": "READY_FOR_CEREMONY"
+    },
+    {
+      "id": "REM-31-03",
+      "area": "EPC Tripartite Escrow Agreement",
+      "action": "Finalize franked tripartite master service agreement with L&T legal counsel",
+      "owner": "VP Enterprise Partnerships & General Counsel",
+      "targetTimeline": "January 2027",
+      "status": "LEGAL_REVIEW_ACTIVE"
+    },
+    {
+      "id": "REM-31-04",
+      "area": "Low-RAM Android Performance",
+      "action": "Further compress SVG icons and voice audio chunks to ensure < 15MB initial asset bundle",
+      "owner": "Frontend Engineering Lead",
+      "targetTimeline": "Sprint 32",
+      "status": "PLANNED"
+    }
+  ]
+}

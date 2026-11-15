@@ -1,0 +1,23 @@
+{
+  "phase": "PHASE_31",
+  "title": "Worker Payout Latency & Settlement Analysis",
+  "timestamp": "2026-11-15T20:00:00Z",
+  "benchmarkStandardHours": 4.5,
+  "distribution": {
+    "sampleBookingsCount": 517,
+    "meanHours": 4.2,
+    "medianHours": 3.8,
+    "p25Hours": 2.1,
+    "p75Hours": 4.1,
+    "p90Hours": 4.3,
+    "p95Hours": 4.5,
+    "p99Hours": 4.8,
+    "slaCompliancePercent": 98.4
+  },
+  "railBreakdown": {
+    "instantUpiPercent": 88.2,
+    "impsRailPercent": 11.8,
+    "neftBatchPercent": 0
+  },
+  "zeroCommissionDeductions": true
+}

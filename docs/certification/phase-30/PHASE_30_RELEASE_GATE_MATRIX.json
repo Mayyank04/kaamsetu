@@ -1,0 +1,22 @@
+{
+  "lastUpdated": "2026-11-15T19:40:00Z",
+  "currentClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+  "gateStatus": {
+    "internalTechnicalGates": {
+      "zeroCommissionInvariant": "PASSED",
+      "databaseSecurityAndRLS": "PASSED",
+      "cryptographicSignatureVerification": "PASSED",
+      "financialLedgerReconciliation": "PASSED",
+      "workerGrievanceAndNonRetaliation": "PASSED",
+      "dpdpConsentRevocationLatency": "PASSED",
+      "offlineQrValidation": "PASSED"
+    },
+    "externalInstitutionalGates": {
+      "blocker01_TSDM_CabinetNotification": "BLOCKED_UNDER_REVIEW",
+      "blocker02_ONDC_KeyCeremonyExecution": "BLOCKED_APPROVED_PENDING_CEREMONY",
+      "blocker03_EPC_TripartiteExecutedContract": "BLOCKED_UNDER_REVIEW"
+    }
+  },
+  "classAPromotionEligible": false,
+  "verdictRationale": "Class A promotion strictly requires 100% resolution of all external institutional blockers. Retaining CLASS_B_CONTROLLED_ROLLOUT ensures safe, legal, and compliant operation in Assam and Meghalaya while external agreements mature."
+}

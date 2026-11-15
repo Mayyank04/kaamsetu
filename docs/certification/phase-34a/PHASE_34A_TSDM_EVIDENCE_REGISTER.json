@@ -1,0 +1,18 @@
+{
+  "phase": "34A",
+  "gateCode": "BLOCKER-01",
+  "counterparty": "Tripura Skill Development Mission (TSDM)",
+  "department": "Directorate of Skill Development, Govt. of Tripura",
+  "requiredEvidence": [
+    "Bilateral State Memorandum of Understanding (MoU)",
+    "State Cabinet gazetted notification authorizing digital marketplace operations",
+    "Signatory authority verification for departmental counterparty"
+  ],
+  "currentStatus": "UNDER_REVIEW",
+  "operationalStatus": "BLOCKED",
+  "authorizedToDispatch": false,
+  "dispatchedArtisansCount": 0,
+  "activeBookingsTripura": 0,
+  "antiMaskingAssessment": "State Cabinet meeting scheduling remains pending. Draft MoU cannot be treated as authorization. Non-authoritative verbal assurances are rejected. Tripura operations remain strictly disabled.",
+  "verificationTimestamp": "2026-11-15T23:35:00.000Z"
+}

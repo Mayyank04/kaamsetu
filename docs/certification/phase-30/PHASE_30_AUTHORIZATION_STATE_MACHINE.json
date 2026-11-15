@@ -1,0 +1,74 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-11-15T19:40:00Z",
+  "linearStages": [
+    {
+      "stage": "IDENTIFIED",
+      "order": 1,
+      "description": "Blocker formally recognized and assigned an identifier"
+    },
+    {
+      "stage": "DOCUMENTATION_PENDING",
+      "order": 2,
+      "description": "Required instruments drafted internally and pending legal review"
+    },
+    {
+      "stage": "SUBMITTED",
+      "order": 3,
+      "description": "Formal documentation submitted to counterparty for bilateral consideration"
+    },
+    {
+      "stage": "UNDER_REVIEW",
+      "order": 4,
+      "description": "Active evaluation by counterparty authorities, committees, or legal teams"
+    },
+    {
+      "stage": "APPROVED_PENDING_EXECUTION",
+      "order": 5,
+      "description": "Counterparty has issued conditional approval awaiting formal execution ceremony/signature"
+    },
+    {
+      "stage": "EXECUTED",
+      "order": 6,
+      "description": "All required instruments signed, sealed, and executed by authorized signatories"
+    },
+    {
+      "stage": "INDEPENDENTLY_VERIFIED",
+      "order": 7,
+      "description": "Execution independently verified through third-party registries or audits"
+    },
+    {
+      "stage": "CLOSED",
+      "order": 8,
+      "description": "Blocker fully resolved and gate unlocked for live production operations"
+    }
+  ],
+  "exceptionalStates": [
+    {
+      "state": "REJECTED",
+      "description": "Counterparty explicitly rejected proposal or agreement"
+    },
+    {
+      "state": "EXPIRED",
+      "description": "Submission or interim approval elapsed without execution"
+    },
+    {
+      "state": "WITHDRAWN",
+      "description": "KAAMSETU or counterparty voluntarily withdrew petition"
+    },
+    {
+      "state": "SUSPENDED",
+      "description": "Active execution paused due to compliance or operational dispute"
+    },
+    {
+      "state": "BLOCKED",
+      "description": "External impediment halts advancement indefinitely"
+    }
+  ],
+  "governanceInvariants": [
+    "No unilateral stage advancement by internal platform administrators",
+    "Advancement to EXECUTED requires cryptographic or physical counterparty evidence",
+    "Advancement to CLOSED requires independent third-party confirmation",
+    "Constitutional invariant platform_commission_amount = 0.00 is immutable across all states"
+  ]
+}

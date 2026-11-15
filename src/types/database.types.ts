@@ -1321,6 +1321,10 @@ export interface Database {
           discovery_radius_km: number;
           status: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags: Record<string, boolean>;
+          launch_owner_id: string | null;
+          accountable_partner_name: string | null;
+          active_incident_count: number;
+          readiness_score: number;
           created_at: string;
           updated_at: string;
         };
@@ -1337,6 +1341,10 @@ export interface Database {
           discovery_radius_km?: number;
           status?: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags?: Record<string, boolean>;
+          launch_owner_id?: string | null;
+          accountable_partner_name?: string | null;
+          active_incident_count?: number;
+          readiness_score?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -1353,6 +1361,10 @@ export interface Database {
           discovery_radius_km?: number;
           status?: "proposed" | "research_in_progress" | "partner_validation" | "worker_demand_validation" | "operational_preparation" | "controlled_pilot" | "operational_review" | "active" | "suspended" | "closed" | "planning" | "deactivated";
           feature_flags?: Record<string, boolean>;
+          launch_owner_id?: string | null;
+          accountable_partner_name?: string | null;
+          active_incident_count?: number;
+          readiness_score?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -1662,7 +1674,7 @@ export interface Database {
           authorized_issuer_name: string;
           authorized_issuer_role: string;
           learner_consent_obtained: boolean;
-          status: "issued" | "verified" | "suspended" | "revoked";
+          status: "issued" | "active" | "verified" | "suspended" | "revoked" | "expired";
           issued_at: string;
           verified_at: string | null;
           revoked_at: string | null;
@@ -1685,7 +1697,7 @@ export interface Database {
           authorized_issuer_name: string;
           authorized_issuer_role: string;
           learner_consent_obtained?: boolean;
-          status?: "issued" | "verified" | "suspended" | "revoked";
+          status?: "issued" | "active" | "verified" | "suspended" | "revoked" | "expired";
           issued_at?: string;
           verified_at?: string | null;
           revoked_at?: string | null;
@@ -1708,7 +1720,7 @@ export interface Database {
           authorized_issuer_name?: string;
           authorized_issuer_role?: string;
           learner_consent_obtained?: boolean;
-          status?: "issued" | "verified" | "suspended" | "revoked";
+          status?: "issued" | "active" | "verified" | "suspended" | "revoked" | "expired";
           issued_at?: string;
           verified_at?: string | null;
           revoked_at?: string | null;
@@ -1774,6 +1786,10 @@ export interface Database {
           resolution_summary: string | null;
           assigned_reviewer_id: string | null;
           resolved_at: string | null;
+          sla_due_at: string | null;
+          is_retaliatory_suspected: boolean;
+          confidential_evidence_urls: string[];
+          appeal_reason: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1789,6 +1805,10 @@ export interface Database {
           resolution_summary?: string | null;
           assigned_reviewer_id?: string | null;
           resolved_at?: string | null;
+          sla_due_at?: string | null;
+          is_retaliatory_suspected?: boolean;
+          confidential_evidence_urls?: string[];
+          appeal_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1804,6 +1824,10 @@ export interface Database {
           resolution_summary?: string | null;
           assigned_reviewer_id?: string | null;
           resolved_at?: string | null;
+          sla_due_at?: string | null;
+          is_retaliatory_suspected?: boolean;
+          confidential_evidence_urls?: string[];
+          appeal_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2024,6 +2048,3075 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      regional_launch_milestones: {
+        Row: {
+          id: string;
+          region_id: string;
+          stage: string;
+          milestone_name: string;
+          status: "pending" | "in_progress" | "completed" | "blocked" | "skipped";
+          accountable_owner_id: string | null;
+          target_date: string | null;
+          completed_at: string | null;
+          evidence_notes: string | null;
+          risk_assessment: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          stage: string;
+          milestone_name: string;
+          status?: "pending" | "in_progress" | "completed" | "blocked" | "skipped";
+          accountable_owner_id?: string | null;
+          target_date?: string | null;
+          completed_at?: string | null;
+          evidence_notes?: string | null;
+          risk_assessment?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          stage?: string;
+          milestone_name?: string;
+          status?: "pending" | "in_progress" | "completed" | "blocked" | "skipped";
+          accountable_owner_id?: string | null;
+          target_date?: string | null;
+          completed_at?: string | null;
+          evidence_notes?: string | null;
+          risk_assessment?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_operational_incidents: {
+        Row: {
+          id: string;
+          region_id: string;
+          title: string;
+          incident_type: "wage_theft" | "labor_violence" | "safety_violation" | "system_outage" | "credential_fraud" | "data_breach" | "regulatory_action";
+          severity: "low" | "medium" | "high" | "critical";
+          status: "open" | "investigating" | "mitigated" | "resolved" | "closed";
+          details: string;
+          reported_by: string | null;
+          resolved_by: string | null;
+          resolved_at: string | null;
+          resolution_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          title: string;
+          incident_type: "wage_theft" | "labor_violence" | "safety_violation" | "system_outage" | "credential_fraud" | "data_breach" | "regulatory_action";
+          severity?: "low" | "medium" | "high" | "critical";
+          status?: "open" | "investigating" | "mitigated" | "resolved" | "closed";
+          details: string;
+          reported_by?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          resolution_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          title?: string;
+          incident_type?: "wage_theft" | "labor_violence" | "safety_violation" | "system_outage" | "credential_fraud" | "data_breach" | "regulatory_action";
+          severity?: "low" | "medium" | "high" | "critical";
+          status?: "open" | "investigating" | "mitigated" | "resolved" | "closed";
+          details?: string;
+          reported_by?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          resolution_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institution_authorized_signatories: {
+        Row: {
+          id: string;
+          institution_id: string;
+          full_name: string;
+          designation: string;
+          signatory_key_fingerprint: string;
+          is_active: boolean;
+          authorized_from: string;
+          authorized_until: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          full_name: string;
+          designation: string;
+          signatory_key_fingerprint: string;
+          is_active?: boolean;
+          authorized_from?: string;
+          authorized_until?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_id?: string;
+          full_name?: string;
+          designation?: string;
+          signatory_key_fingerprint?: string;
+          is_active?: boolean;
+          authorized_from?: string;
+          authorized_until?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_privacy_settings: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          field_visibility: Record<string, boolean>;
+          consent_expires_at: string | null;
+          auto_renew_consent: boolean;
+          allow_cross_region_discovery: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          field_visibility?: Record<string, boolean>;
+          consent_expires_at?: string | null;
+          auto_renew_consent?: boolean;
+          allow_cross_region_discovery?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          field_visibility?: Record<string, boolean>;
+          consent_expires_at?: string | null;
+          auto_renew_consent?: boolean;
+          allow_cross_region_discovery?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      financial_gst_ledger: {
+        Row: {
+          id: string;
+          invoice_number: string;
+          organization_id: string;
+          region_id: string | null;
+          taxable_amount: number;
+          gst_rate: number;
+          cgst_amount: number;
+          sgst_amount: number;
+          igst_amount: number;
+          total_tax_amount: number;
+          grand_total: number;
+          state_code: string;
+          is_interstate: boolean;
+          payment_date: string;
+          reconciliation_status: "pending" | "reconciled" | "refunded" | "disputed";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          invoice_number: string;
+          organization_id: string;
+          region_id?: string | null;
+          taxable_amount: number;
+          gst_rate?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          total_tax_amount: number;
+          grand_total: number;
+          state_code: string;
+          is_interstate?: boolean;
+          payment_date?: string;
+          reconciliation_status?: "pending" | "reconciled" | "refunded" | "disputed";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          invoice_number?: string;
+          organization_id?: string;
+          region_id?: string | null;
+          taxable_amount?: number;
+          gst_rate?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          total_tax_amount?: number;
+          grand_total?: number;
+          state_code?: string;
+          is_interstate?: boolean;
+          payment_date?: string;
+          reconciliation_status?: "pending" | "reconciled" | "refunded" | "disputed";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_service_telemetry: {
+        Row: {
+          id: string;
+          region_id: string;
+          metric_name: string;
+          metric_value: number;
+          dimension_tags: Json;
+          is_simulated: boolean;
+          measured_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          metric_name: string;
+          metric_value: number;
+          dimension_tags?: Json;
+          is_simulated?: boolean;
+          measured_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          metric_name?: string;
+          metric_value?: number;
+          dimension_tags?: Json;
+          is_simulated?: boolean;
+          measured_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_dual_approvals: {
+        Row: {
+          id: string;
+          region_id: string;
+          target_status: string;
+          primary_approver_id: string;
+          primary_approved_at: string;
+          secondary_approver_id: string | null;
+          secondary_approved_at: string | null;
+          readiness_score: number;
+          mandatory_gates_passed: boolean;
+          evidence_references: Json;
+          decision_reason: string;
+          policy_version: string;
+          approval_status: "pending_secondary" | "approved" | "rejected";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          target_status: string;
+          primary_approver_id: string;
+          primary_approved_at?: string;
+          secondary_approver_id?: string | null;
+          secondary_approved_at?: string | null;
+          readiness_score: number;
+          mandatory_gates_passed?: boolean;
+          evidence_references?: Json;
+          decision_reason: string;
+          policy_version?: string;
+          approval_status?: "pending_secondary" | "approved" | "rejected";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          target_status?: string;
+          primary_approver_id?: string;
+          primary_approved_at?: string;
+          secondary_approver_id?: string | null;
+          secondary_approved_at?: string | null;
+          readiness_score?: number;
+          mandatory_gates_passed?: boolean;
+          evidence_references?: Json;
+          decision_reason?: string;
+          policy_version?: string;
+          approval_status?: "pending_secondary" | "approved" | "rejected";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      review_moderation_appeals: {
+        Row: {
+          id: string;
+          review_id: string;
+          worker_profile_id: string;
+          contractor_organization_id: string | null;
+          dispute_id: string | null;
+          original_rating: number;
+          quarantine_reason: string;
+          submitted_evidence: Json;
+          moderator_id: string | null;
+          moderation_status: "quarantined" | "restored_valid" | "suppressed_retaliatory" | "under_appeal" | "dismissed";
+          appeal_reason: string | null;
+          appeal_resolution_notes: string | null;
+          resolved_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          review_id: string;
+          worker_profile_id: string;
+          contractor_organization_id?: string | null;
+          dispute_id?: string | null;
+          original_rating: number;
+          quarantine_reason: string;
+          submitted_evidence?: Json;
+          moderator_id?: string | null;
+          moderation_status?: "quarantined" | "restored_valid" | "suppressed_retaliatory" | "under_appeal" | "dismissed";
+          appeal_reason?: string | null;
+          appeal_resolution_notes?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          review_id?: string;
+          worker_profile_id?: string;
+          contractor_organization_id?: string | null;
+          dispute_id?: string | null;
+          original_rating?: number;
+          quarantine_reason?: string;
+          submitted_evidence?: Json;
+          moderator_id?: string | null;
+          moderation_status?: "quarantined" | "restored_valid" | "suppressed_retaliatory" | "under_appeal" | "dismissed";
+          appeal_reason?: string | null;
+          appeal_resolution_notes?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      operational_incidents_lifecycle: {
+        Row: {
+          id: string;
+          incident_id: string;
+          current_stage: "detected" | "triaged" | "contained" | "investigated" | "remediated" | "recovered" | "reviewed";
+          accountable_owner_id: string;
+          containment_steps: string | null;
+          affected_entities: Json;
+          notification_required: boolean;
+          notification_dispatched_at: string | null;
+          post_incident_review_notes: string | null;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          incident_id: string;
+          current_stage?: "detected" | "triaged" | "contained" | "investigated" | "remediated" | "recovered" | "reviewed";
+          accountable_owner_id: string;
+          containment_steps?: string | null;
+          affected_entities?: Json;
+          notification_required?: boolean;
+          notification_dispatched_at?: string | null;
+          post_incident_review_notes?: string | null;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          incident_id?: string;
+          current_stage?: "detected" | "triaged" | "contained" | "investigated" | "remediated" | "recovered" | "reviewed";
+          accountable_owner_id?: string;
+          containment_steps?: string | null;
+          affected_entities?: Json;
+          notification_required?: boolean;
+          notification_dispatched_at?: string | null;
+          post_incident_review_notes?: string | null;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      financial_reconciliation_exceptions: {
+        Row: {
+          id: string;
+          ledger_entry_id: string | null;
+          invoice_number: string | null;
+          exception_type: "refund" | "chargeback" | "duplicate_webhook_attempt" | "disputed_tax" | "unreconciled_gateway_difference" | "gateway_fee_mismatch";
+          amount: number;
+          currency: string;
+          status: "open" | "investigating" | "resolved_credited" | "resolved_adjusted" | "written_off";
+          resolution_notes: string | null;
+          resolved_by: string | null;
+          resolved_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          ledger_entry_id?: string | null;
+          invoice_number?: string | null;
+          exception_type: "refund" | "chargeback" | "duplicate_webhook_attempt" | "disputed_tax" | "unreconciled_gateway_difference" | "gateway_fee_mismatch";
+          amount?: number;
+          currency?: string;
+          status?: "open" | "investigating" | "resolved_credited" | "resolved_adjusted" | "written_off";
+          resolution_notes?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          ledger_entry_id?: string | null;
+          invoice_number?: string | null;
+          exception_type?: "refund" | "chargeback" | "duplicate_webhook_attempt" | "disputed_tax" | "unreconciled_gateway_difference" | "gateway_fee_mismatch";
+          amount?: number;
+          currency?: string;
+          status?: "open" | "investigating" | "resolved_credited" | "resolved_adjusted" | "written_off";
+          resolution_notes?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_operational_scorecards: {
+        Row: {
+          id: string;
+          region_id: string;
+          evaluation_period_start: string;
+          evaluation_period_end: string;
+          active_worker_count: number;
+          registered_worker_count: number;
+          verified_contractor_count: number;
+          gross_collections: number;
+          net_saas_mrr: number;
+          direct_field_costs: number;
+          direct_hosting_ai_costs: number;
+          contribution_margin: number;
+          margin_percentage: number;
+          operational_rating: "highly_profitable" | "sustainable" | "break_even" | "subsidized_expansion" | "critical_intervention";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_id: string;
+          evaluation_period_start: string;
+          evaluation_period_end: string;
+          active_worker_count?: number;
+          registered_worker_count?: number;
+          verified_contractor_count?: number;
+          gross_collections?: number;
+          net_saas_mrr?: number;
+          direct_field_costs?: number;
+          direct_hosting_ai_costs?: number;
+          contribution_margin?: number;
+          margin_percentage?: number;
+          operational_rating?: "highly_profitable" | "sustainable" | "break_even" | "subsidized_expansion" | "critical_intervention";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_id?: string;
+          evaluation_period_start?: string;
+          evaluation_period_end?: string;
+          active_worker_count?: number;
+          registered_worker_count?: number;
+          verified_contractor_count?: number;
+          gross_collections?: number;
+          net_saas_mrr?: number;
+          direct_field_costs?: number;
+          direct_hosting_ai_costs?: number;
+          contribution_margin?: number;
+          margin_percentage?: number;
+          operational_rating?: "highly_profitable" | "sustainable" | "break_even" | "subsidized_expansion" | "critical_intervention";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_consent_audit_events: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          recipient_entity_type: "contractor" | "institution" | "verifier" | "public" | "system";
+          recipient_entity_id: string | null;
+          action: "granted" | "renewed" | "expired" | "revoked" | "modified";
+          disclosed_fields: string[];
+          policy_version: string;
+          actor_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          recipient_entity_type: "contractor" | "institution" | "verifier" | "public" | "system";
+          recipient_entity_id?: string | null;
+          action: "granted" | "renewed" | "expired" | "revoked" | "modified";
+          disclosed_fields?: string[];
+          policy_version?: string;
+          actor_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          recipient_entity_type?: "contractor" | "institution" | "verifier" | "public" | "system";
+          recipient_entity_id?: string | null;
+          action?: "granted" | "renewed" | "expired" | "revoked" | "modified";
+          disclosed_fields?: string[];
+          policy_version?: string;
+          actor_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_network_liquidity_snapshots: {
+        Row: {
+          id: string;
+          region_code: string;
+          snapshot_date: string;
+          reporting_window: "7d" | "30d" | "90d";
+          registered_workers: number;
+          confirmed_workers: number;
+          credential_verified_workers: number;
+          recently_active_workers: number;
+          available_workers: number;
+          interstate_mobility_workers: number;
+          job_completing_workers: number;
+          active_contractors: number;
+          active_customers: number;
+          projects_published: number;
+          qualified_matches: number;
+          accepted_opportunities: number;
+          confirmed_bookings: number;
+          completed_jobs: number;
+          avg_time_to_first_match_ms: number;
+          avg_time_to_first_booking_ms: number;
+          booking_completion_rate: number;
+          repeat_booking_rate: number;
+          opportunity_fulfilment_rate: number;
+          liquidity_status: "dormant" | "emerging" | "liquid" | "undersupplied" | "underdemanded";
+          action_recommendation: "continue_controlled_operations" | "increase_worker_acquisition" | "increase_customer_acquisition" | "improve_trade_coverage" | "improve_field_support" | "pause_expansion" | "enter_operational_review";
+          is_simulated: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_code: string;
+          snapshot_date: string;
+          reporting_window?: "7d" | "30d" | "90d";
+          registered_workers?: number;
+          confirmed_workers?: number;
+          credential_verified_workers?: number;
+          recently_active_workers?: number;
+          available_workers?: number;
+          interstate_mobility_workers?: number;
+          job_completing_workers?: number;
+          active_contractors?: number;
+          active_customers?: number;
+          projects_published?: number;
+          qualified_matches?: number;
+          accepted_opportunities?: number;
+          confirmed_bookings?: number;
+          completed_jobs?: number;
+          avg_time_to_first_match_ms?: number;
+          avg_time_to_first_booking_ms?: number;
+          booking_completion_rate?: number;
+          repeat_booking_rate?: number;
+          opportunity_fulfilment_rate?: number;
+          liquidity_status?: "dormant" | "emerging" | "liquid" | "undersupplied" | "underdemanded";
+          action_recommendation: "continue_controlled_operations" | "increase_worker_acquisition" | "increase_customer_acquisition" | "improve_trade_coverage" | "improve_field_support" | "pause_expansion" | "enter_operational_review";
+          is_simulated?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_code?: string;
+          snapshot_date?: string;
+          reporting_window?: "7d" | "30d" | "90d";
+          registered_workers?: number;
+          confirmed_workers?: number;
+          credential_verified_workers?: number;
+          recently_active_workers?: number;
+          available_workers?: number;
+          interstate_mobility_workers?: number;
+          job_completing_workers?: number;
+          active_contractors?: number;
+          active_customers?: number;
+          projects_published?: number;
+          qualified_matches?: number;
+          accepted_opportunities?: number;
+          confirmed_bookings?: number;
+          completed_jobs?: number;
+          avg_time_to_first_match_ms?: number;
+          avg_time_to_first_booking_ms?: number;
+          booking_completion_rate?: number;
+          repeat_booking_rate?: number;
+          opportunity_fulfilment_rate?: number;
+          liquidity_status?: "dormant" | "emerging" | "liquid" | "undersupplied" | "underdemanded";
+          action_recommendation?: "continue_controlled_operations" | "increase_worker_acquisition" | "increase_customer_acquisition" | "improve_trade_coverage" | "improve_field_support" | "pause_expansion" | "enter_operational_review";
+          is_simulated?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_payout_confirmations: {
+        Row: {
+          id: string;
+          payment_record_id: string | null;
+          worker_profile_id: string;
+          booking_id: string | null;
+          contractor_organization_id: string | null;
+          contractor_declared_amount: number;
+          worker_agreed_amount: number;
+          actual_payout_amount: number;
+          payout_method: "bank_transfer" | "upi" | "cash_voucher_verified";
+          payout_reference: string | null;
+          payout_date: string;
+          worker_confirmation_status: "pending" | "confirmed_received" | "disputed_amount" | "disputed_unpaid";
+          worker_confirmed_at: string | null;
+          worker_disputed_amount: number;
+          worker_notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          payment_record_id?: string | null;
+          worker_profile_id: string;
+          booking_id?: string | null;
+          contractor_organization_id?: string | null;
+          contractor_declared_amount: number;
+          worker_agreed_amount: number;
+          actual_payout_amount: number;
+          payout_method: "bank_transfer" | "upi" | "cash_voucher_verified";
+          payout_reference?: string | null;
+          payout_date?: string;
+          worker_confirmation_status?: "pending" | "confirmed_received" | "disputed_amount" | "disputed_unpaid";
+          worker_confirmed_at?: string | null;
+          worker_disputed_amount?: number;
+          worker_notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          payment_record_id?: string | null;
+          worker_profile_id?: string;
+          booking_id?: string | null;
+          contractor_organization_id?: string | null;
+          contractor_declared_amount?: number;
+          worker_agreed_amount?: number;
+          actual_payout_amount?: number;
+          payout_method?: "bank_transfer" | "upi" | "cash_voucher_verified";
+          payout_reference?: string | null;
+          payout_date?: string;
+          worker_confirmation_status?: "pending" | "confirmed_received" | "disputed_amount" | "disputed_unpaid";
+          worker_confirmed_at?: string | null;
+          worker_disputed_amount?: number;
+          worker_notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      contractor_customer_success_events: {
+        Row: {
+          id: string;
+          organization_id: string;
+          event_type: "trial_started" | "trial_converted" | "plan_renewed" | "plan_upgraded" | "plan_downgraded" | "churn_warning" | "cancellation_requested" | "support_ticket_resolved";
+          previous_tier: string | null;
+          new_tier: string | null;
+          health_score: number;
+          roster_utilization_percent: number;
+          active_projects_count: number;
+          churn_risk_level: "low" | "medium" | "high" | "critical";
+          cancellation_reason: string | null;
+          support_resolution_ms: number | null;
+          metadata: Record<string, any>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          event_type: "trial_started" | "trial_converted" | "plan_renewed" | "plan_upgraded" | "plan_downgraded" | "churn_warning" | "cancellation_requested" | "support_ticket_resolved";
+          previous_tier?: string | null;
+          new_tier?: string | null;
+          health_score?: number;
+          roster_utilization_percent?: number;
+          active_projects_count?: number;
+          churn_risk_level?: "low" | "medium" | "high" | "critical";
+          cancellation_reason?: string | null;
+          support_resolution_ms?: number | null;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          event_type?: "trial_started" | "trial_converted" | "plan_renewed" | "plan_upgraded" | "plan_downgraded" | "churn_warning" | "cancellation_requested" | "support_ticket_resolved";
+          previous_tier?: string | null;
+          new_tier?: string | null;
+          health_score?: number;
+          roster_utilization_percent?: number;
+          active_projects_count?: number;
+          churn_risk_level?: "low" | "medium" | "high" | "critical";
+          cancellation_reason?: string | null;
+          support_resolution_ms?: number | null;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institutional_onboarding_lifecycle: {
+        Row: {
+          id: string;
+          institution_id: string;
+          stage: "initial_application" | "organization_verified" | "signatory_validated" | "integration_review" | "sandbox_testing" | "security_approved" | "production_active" | "periodic_reverification";
+          stage_status: "in_progress" | "completed" | "blocked" | "failed";
+          completed_stages: string[];
+          mou_reference: string | null;
+          mou_signed_at: string | null;
+          technical_integration_verified: boolean;
+          sandbox_test_passed: boolean;
+          security_signoff_by: string | null;
+          authorized_signatory_name: string | null;
+          authorized_signatory_designation: string | null;
+          blockers: string[];
+          last_reverified_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          stage?: "initial_application" | "organization_verified" | "signatory_validated" | "integration_review" | "sandbox_testing" | "security_approved" | "production_active" | "periodic_reverification";
+          stage_status?: "in_progress" | "completed" | "blocked" | "failed";
+          completed_stages?: string[];
+          mou_reference?: string | null;
+          mou_signed_at?: string | null;
+          technical_integration_verified?: boolean;
+          sandbox_test_passed?: boolean;
+          security_signoff_by?: string | null;
+          authorized_signatory_name?: string | null;
+          authorized_signatory_designation?: string | null;
+          blockers?: string[];
+          last_reverified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_id?: string;
+          stage?: "initial_application" | "organization_verified" | "signatory_validated" | "integration_review" | "sandbox_testing" | "security_approved" | "production_active" | "periodic_reverification";
+          stage_status?: "in_progress" | "completed" | "blocked" | "failed";
+          completed_stages?: string[];
+          mou_reference?: string | null;
+          mou_signed_at?: string | null;
+          technical_integration_verified?: boolean;
+          sandbox_test_passed?: boolean;
+          security_signoff_by?: string | null;
+          authorized_signatory_name?: string | null;
+          authorized_signatory_designation?: string | null;
+          blockers?: string[];
+          last_reverified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_support_assignments: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          support_category: "immediate_safety_risk" | "wage_dispute" | "identity_theft" | "fraud" | "retaliation" | "discrimination" | "service_complaint";
+          priority: "tier_1_critical" | "tier_2_urgent" | "tier_3_standard";
+          assigned_coordinator_id: string | null;
+          region_code: string;
+          status: "submitted" | "acknowledged" | "action_taken" | "resolved" | "escalated" | "reopened";
+          intake_notes: string | null;
+          action_summary: string | null;
+          resolution_notes: string | null;
+          acknowledged_at: string | null;
+          first_action_at: string | null;
+          resolved_at: string | null;
+          worker_satisfaction_score: number | null;
+          is_whistleblower: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          support_category: "immediate_safety_risk" | "wage_dispute" | "identity_theft" | "fraud" | "retaliation" | "discrimination" | "service_complaint";
+          priority?: "tier_1_critical" | "tier_2_urgent" | "tier_3_standard";
+          assigned_coordinator_id?: string | null;
+          region_code: string;
+          status?: "submitted" | "acknowledged" | "action_taken" | "resolved" | "escalated" | "reopened";
+          intake_notes?: string | null;
+          action_summary?: string | null;
+          resolution_notes?: string | null;
+          acknowledged_at?: string | null;
+          first_action_at?: string | null;
+          resolved_at?: string | null;
+          worker_satisfaction_score?: number | null;
+          is_whistleblower?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          support_category?: "immediate_safety_risk" | "wage_dispute" | "identity_theft" | "fraud" | "retaliation" | "discrimination" | "service_complaint";
+          priority?: "tier_1_critical" | "tier_2_urgent" | "tier_3_standard";
+          assigned_coordinator_id?: string | null;
+          region_code?: string;
+          status?: "submitted" | "acknowledged" | "action_taken" | "resolved" | "escalated" | "reopened";
+          intake_notes?: string | null;
+          action_summary?: string | null;
+          resolution_notes?: string | null;
+          acknowledged_at?: string | null;
+          first_action_at?: string | null;
+          resolved_at?: string | null;
+          worker_satisfaction_score?: number | null;
+          is_whistleblower?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      analytics_provenance_events: {
+        Row: {
+          id: string;
+          event_name: string;
+          entity_type: "worker" | "contractor" | "institution" | "booking" | "match" | "opportunity";
+          entity_id: string;
+          region_code: string;
+          is_simulated: boolean;
+          model_version: string | null;
+          prompt_version: string | null;
+          extraction_confidence: number | null;
+          worker_confirmed: boolean | null;
+          worker_corrected: boolean | null;
+          payload_hash: string;
+          metadata: Record<string, any>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_name: string;
+          entity_type: "worker" | "contractor" | "institution" | "booking" | "match" | "opportunity";
+          entity_id: string;
+          region_code: string;
+          is_simulated?: boolean;
+          model_version?: string | null;
+          prompt_version?: string | null;
+          extraction_confidence?: number | null;
+          worker_confirmed?: boolean | null;
+          worker_corrected?: boolean | null;
+          payload_hash: string;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_name?: string;
+          entity_type?: "worker" | "contractor" | "institution" | "booking" | "match" | "opportunity";
+          entity_id?: string;
+          region_code?: string;
+          is_simulated?: boolean;
+          model_version?: string | null;
+          prompt_version?: string | null;
+          extraction_confidence?: number | null;
+          worker_confirmed?: boolean | null;
+          worker_corrected?: boolean | null;
+          payload_hash?: string;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      metric_evidence_records: {
+        Row: {
+          id: string;
+          metric_identifier: string;
+          reporting_period: string;
+          data_source: string;
+          calculation_method: string;
+          verification_status: "verified" | "partially_verified" | "self_reported" | "estimated" | "unavailable" | "disputed";
+          metric_value: Record<string, any>;
+          raw_evidence_hash: string;
+          verified_by: string | null;
+          verification_notes: string | null;
+          last_updated_at: string;
+          is_simulated: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          metric_identifier: string;
+          reporting_period: string;
+          data_source: string;
+          calculation_method: string;
+          verification_status: "verified" | "partially_verified" | "self_reported" | "estimated" | "unavailable" | "disputed";
+          metric_value: Record<string, any>;
+          raw_evidence_hash: string;
+          verified_by?: string | null;
+          verification_notes?: string | null;
+          last_updated_at?: string;
+          is_simulated?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          metric_identifier?: string;
+          reporting_period?: string;
+          data_source?: string;
+          calculation_method?: string;
+          verification_status?: "verified" | "partially_verified" | "self_reported" | "estimated" | "unavailable" | "disputed";
+          metric_value?: Record<string, any>;
+          raw_evidence_hash?: string;
+          verified_by?: string | null;
+          verification_notes?: string | null;
+          last_updated_at?: string;
+          is_simulated?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      worker_outcome_cohorts: {
+        Row: {
+          id: string;
+          worker_profile_id: string;
+          cohort_id: string;
+          baseline_period_start: string;
+          baseline_period_end: string;
+          follow_up_period_start: string;
+          follow_up_period_end: string;
+          worker_reported_monthly_income: number | null;
+          customer_confirmed_monthly_income: number | null;
+          payment_record_backed_monthly_income: number | null;
+          independently_reconciled_monthly_income: number | null;
+          outcome_tracking_opted_in: boolean;
+          completion_count: number;
+          repeat_customer_count: number;
+          avg_enquiry_to_booking_hours: number | null;
+          avg_booking_to_completion_hours: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_profile_id: string;
+          cohort_id: string;
+          baseline_period_start: string;
+          baseline_period_end: string;
+          follow_up_period_start: string;
+          follow_up_period_end: string;
+          worker_reported_monthly_income?: number | null;
+          customer_confirmed_monthly_income?: number | null;
+          payment_record_backed_monthly_income?: number | null;
+          independently_reconciled_monthly_income?: number | null;
+          outcome_tracking_opted_in?: boolean;
+          completion_count?: number;
+          repeat_customer_count?: number;
+          avg_enquiry_to_booking_hours?: number | null;
+          avg_booking_to_completion_hours?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_profile_id?: string;
+          cohort_id?: string;
+          baseline_period_start?: string;
+          baseline_period_end?: string;
+          follow_up_period_start?: string;
+          follow_up_period_end?: string;
+          worker_reported_monthly_income?: number | null;
+          customer_confirmed_monthly_income?: number | null;
+          payment_record_backed_monthly_income?: number | null;
+          independently_reconciled_monthly_income?: number | null;
+          outcome_tracking_opted_in?: boolean;
+          completion_count?: number;
+          repeat_customer_count?: number;
+          avg_enquiry_to_booking_hours?: number | null;
+          avg_booking_to_completion_hours?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      state_launch_gate_evaluations: {
+        Row: {
+          id: string;
+          region_code: string;
+          gate_number: number;
+          gate_name: string;
+          evaluation_status: "passed" | "failed" | "under_review" | "exempt";
+          evidence_document_uri: string | null;
+          evaluated_by: string | null;
+          evaluated_at: string;
+          notes: string | null;
+        };
+        Insert: {
+          id?: string;
+          region_code: string;
+          gate_number: number;
+          gate_name: string;
+          evaluation_status: "passed" | "failed" | "under_review" | "exempt";
+          evidence_document_uri?: string | null;
+          evaluated_by?: string | null;
+          evaluated_at?: string;
+          notes?: string | null;
+        };
+        Update: {
+          id?: string;
+          region_code?: string;
+          gate_number?: number;
+          gate_name?: string;
+          evaluation_status?: "passed" | "failed" | "under_review" | "exempt";
+          evidence_document_uri?: string | null;
+          evaluated_by?: string | null;
+          evaluated_at?: string;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
+      external_ecosystem_transactions: {
+        Row: {
+          id: string;
+          protocol_type: "ondc" | "onest" | "beckn_generic";
+          action: "search" | "on_search" | "select" | "on_select" | "init" | "on_init" | "confirm" | "on_confirm" | "status" | "on_status" | "track" | "on_track" | "cancel" | "on_cancel" | "update" | "on_update";
+          transaction_id: string;
+          message_id: string;
+          bap_id: string;
+          bpp_id: string;
+          signature_verified: boolean;
+          idempotency_key: string;
+          request_timestamp: string;
+          response_status: "acknowledged" | "nack" | "failed" | "timeout";
+          error_code: string | null;
+          error_message: string | null;
+          payload_hash: string;
+          worker_contact_masked: boolean;
+          metadata: Record<string, any>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          protocol_type: "ondc" | "onest" | "beckn_generic";
+          action: "search" | "on_search" | "select" | "on_select" | "init" | "on_init" | "confirm" | "on_confirm" | "status" | "on_status" | "track" | "on_track" | "cancel" | "on_cancel" | "update" | "on_update";
+          transaction_id: string;
+          message_id: string;
+          bap_id: string;
+          bpp_id: string;
+          signature_verified?: boolean;
+          idempotency_key: string;
+          request_timestamp: string;
+          response_status: "acknowledged" | "nack" | "failed" | "timeout";
+          error_code?: string | null;
+          error_message?: string | null;
+          payload_hash: string;
+          worker_contact_masked?: boolean;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          protocol_type?: "ondc" | "onest" | "beckn_generic";
+          action?: "search" | "on_search" | "select" | "on_select" | "init" | "on_init" | "confirm" | "on_confirm" | "status" | "on_status" | "track" | "on_track" | "cancel" | "on_cancel" | "update" | "on_update";
+          transaction_id?: string;
+          message_id?: string;
+          bap_id?: string;
+          bpp_id?: string;
+          signature_verified?: boolean;
+          idempotency_key?: string;
+          request_timestamp?: string;
+          response_status?: "acknowledged" | "nack" | "failed" | "timeout";
+          error_code?: string | null;
+          error_message?: string | null;
+          payload_hash?: string;
+          worker_contact_masked?: boolean;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      worker_financial_consents: {
+        Row: {
+          id: string;
+          worker_id: string;
+          partner_id: string;
+          partner_name: string;
+          partner_type: "rbi_regulated_nbfc" | "scheduled_commercial_bank" | "sidbi_micro_lender";
+          consented_categories: string[];
+          purpose: string;
+          data_freshness_days: number;
+          valid_until: string;
+          is_revoked: boolean;
+          revoked_at: string | null;
+          revocation_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_id: string;
+          partner_id: string;
+          partner_name: string;
+          partner_type: "rbi_regulated_nbfc" | "scheduled_commercial_bank" | "sidbi_micro_lender";
+          consented_categories?: string[];
+          purpose?: string;
+          data_freshness_days?: number;
+          valid_until: string;
+          is_revoked?: boolean;
+          revoked_at?: string | null;
+          revocation_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_id?: string;
+          partner_id?: string;
+          partner_name?: string;
+          partner_type?: "rbi_regulated_nbfc" | "scheduled_commercial_bank" | "sidbi_micro_lender";
+          consented_categories?: string[];
+          purpose?: string;
+          data_freshness_days?: number;
+          valid_until?: string;
+          is_revoked?: boolean;
+          revoked_at?: string | null;
+          revocation_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      enterprise_sync_logs: {
+        Row: {
+          id: string;
+          contractor_org_id: string;
+          system_type: "sap_successfactors" | "oracle_fusion_hcm" | "gem_procurement" | "generic_scim_erp";
+          sync_direction: "inbound" | "outbound" | "bidirectional";
+          external_job_reference: string | null;
+          records_synced: number;
+          status: "success" | "partial_success" | "failed" | "blocked_consent_missing";
+          idempotency_hash: string;
+          anonymized_telemetry: boolean;
+          error_summary: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          contractor_org_id: string;
+          system_type: "sap_successfactors" | "oracle_fusion_hcm" | "gem_procurement" | "generic_scim_erp";
+          sync_direction: "inbound" | "outbound" | "bidirectional";
+          external_job_reference?: string | null;
+          records_synced?: number;
+          status: "success" | "partial_success" | "failed" | "blocked_consent_missing";
+          idempotency_hash: string;
+          anonymized_telemetry?: boolean;
+          error_summary?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          contractor_org_id?: string;
+          system_type?: "sap_successfactors" | "oracle_fusion_hcm" | "gem_procurement" | "generic_scim_erp";
+          sync_direction?: "inbound" | "outbound" | "bidirectional";
+          external_job_reference?: string | null;
+          records_synced?: number;
+          status?: "success" | "partial_success" | "failed" | "blocked_consent_missing";
+          idempotency_hash?: string;
+          anonymized_telemetry?: boolean;
+          error_summary?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      live_ecosystem_participants: {
+        Row: {
+          id: string;
+          network_type: "ondc" | "onest" | "gem" | "dsep";
+          participant_id: string;
+          subscriber_id: string;
+          signing_public_key: string;
+          enc_public_key: string;
+          callback_url: string;
+          lifecycle_status: "not_started" | "research" | "prepared" | "submitted" | "awaiting_approval" | "sandbox_active" | "sandbox_validated" | "pre_prod_validated" | "production_approved" | "production_active" | "suspended" | "failed";
+          staging_passed: boolean;
+          staging_verified_at: string | null;
+          pre_prod_passed: boolean;
+          pre_prod_verified_at: string | null;
+          council_approval_ref: string | null;
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          network_type: "ondc" | "onest" | "gem" | "dsep";
+          participant_id: string;
+          subscriber_id: string;
+          signing_public_key: string;
+          enc_public_key: string;
+          callback_url: string;
+          lifecycle_status?: "not_started" | "research" | "prepared" | "submitted" | "awaiting_approval" | "sandbox_active" | "sandbox_validated" | "pre_prod_validated" | "production_approved" | "production_active" | "suspended" | "failed";
+          staging_passed?: boolean;
+          staging_verified_at?: string | null;
+          pre_prod_passed?: boolean;
+          pre_prod_verified_at?: string | null;
+          council_approval_ref?: string | null;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          network_type?: "ondc" | "onest" | "gem" | "dsep";
+          participant_id?: string;
+          subscriber_id?: string;
+          signing_public_key?: string;
+          enc_public_key?: string;
+          callback_url?: string;
+          lifecycle_status?: "not_started" | "research" | "prepared" | "submitted" | "awaiting_approval" | "sandbox_active" | "sandbox_validated" | "pre_prod_validated" | "production_approved" | "production_active" | "suspended" | "failed";
+          staging_passed?: boolean;
+          staging_verified_at?: string | null;
+          pre_prod_passed?: boolean;
+          pre_prod_verified_at?: string | null;
+          council_approval_ref?: string | null;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      enterprise_pilot_engagements: {
+        Row: {
+          id: string;
+          enterprise_name: string;
+          enterprise_tax_id: string;
+          region_code: string;
+          erp_system: "sap_successfactors" | "oracle_fusion" | "gem_contract" | "custom_odata";
+          pilot_agreement_ref: string;
+          status: "draft" | "consented" | "pilot_active" | "pilot_completed" | "suspended" | "terminated";
+          enrolled_worker_count: number;
+          consented_roster_count: number;
+          synced_records_count: number;
+          gem_form_b_certified: boolean;
+          pilot_start_date: string | null;
+          pilot_end_date: string | null;
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          enterprise_name: string;
+          enterprise_tax_id: string;
+          region_code?: string;
+          erp_system: "sap_successfactors" | "oracle_fusion" | "gem_contract" | "custom_odata";
+          pilot_agreement_ref: string;
+          status?: "draft" | "consented" | "pilot_active" | "pilot_completed" | "suspended" | "terminated";
+          enrolled_worker_count?: number;
+          consented_roster_count?: number;
+          synced_records_count?: number;
+          gem_form_b_certified?: boolean;
+          pilot_start_date?: string | null;
+          pilot_end_date?: string | null;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          enterprise_name?: string;
+          enterprise_tax_id?: string;
+          region_code?: string;
+          erp_system?: "sap_successfactors" | "oracle_fusion" | "gem_contract" | "custom_odata";
+          pilot_agreement_ref?: string;
+          status?: "draft" | "consented" | "pilot_active" | "pilot_completed" | "suspended" | "terminated";
+          enrolled_worker_count?: number;
+          consented_roster_count?: number;
+          synced_records_count?: number;
+          gem_form_b_certified?: boolean;
+          pilot_start_date?: string | null;
+          pilot_end_date?: string | null;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      tool_financing_pilot_applications: {
+        Row: {
+          id: string;
+          worker_id: string;
+          nbfc_partner_id: string;
+          toolkit_type: "electrical_tooling" | "solar_installation_kit" | "plumbing_kit" | "carpentry_power_set" | "masonry_precision_pack";
+          requested_amount: number;
+          approved_amount: number | null;
+          annual_percentage_rate: number;
+          tenure_months: number;
+          kfs_disclosed: boolean;
+          kfs_hash: string;
+          worker_consent_recorded: boolean;
+          worker_consent_timestamp: string;
+          cooling_off_period_days: number;
+          platform_commission_amount: number;
+          status: "applied" | "kfs_signed" | "underwriting_review" | "disbursed" | "active_repayment" | "closed" | "rejected" | "cancelled_in_cooling_off";
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_id: string;
+          nbfc_partner_id: string;
+          toolkit_type: "electrical_tooling" | "solar_installation_kit" | "plumbing_kit" | "carpentry_power_set" | "masonry_precision_pack";
+          requested_amount: number;
+          approved_amount?: number | null;
+          annual_percentage_rate: number;
+          tenure_months: number;
+          kfs_disclosed?: boolean;
+          kfs_hash: string;
+          worker_consent_recorded?: boolean;
+          worker_consent_timestamp?: string;
+          cooling_off_period_days?: number;
+          platform_commission_amount?: number;
+          status?: "applied" | "kfs_signed" | "underwriting_review" | "disbursed" | "active_repayment" | "closed" | "rejected" | "cancelled_in_cooling_off";
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_id?: string;
+          nbfc_partner_id?: string;
+          toolkit_type?: "electrical_tooling" | "solar_installation_kit" | "plumbing_kit" | "carpentry_power_set" | "masonry_precision_pack";
+          requested_amount?: number;
+          approved_amount?: number | null;
+          annual_percentage_rate?: number;
+          tenure_months?: number;
+          kfs_disclosed?: boolean;
+          kfs_hash?: string;
+          worker_consent_recorded?: boolean;
+          worker_consent_timestamp?: string;
+          cooling_off_period_days?: number;
+          platform_commission_amount?: number;
+          status?: "applied" | "kfs_signed" | "underwriting_review" | "disbursed" | "active_repayment" | "closed" | "rejected" | "cancelled_in_cooling_off";
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      evidence_registry_records: {
+        Row: {
+          id: string;
+          claim_id: string;
+          claim_description: string;
+          category: "enterprise_pilot" | "erp_integration" | "ondc_network" | "onest_dsep" | "responsible_finance" | "worker_outcome" | "commercial_revenue" | "regional_gate" | "security_dpdp" | "multi_region_dr" | "observability" | "worker_sovereignty";
+          source_system: string;
+          evidence_location: string;
+          evidence_sha256: string;
+          collection_timestamp: string;
+          verification_timestamp: string | null;
+          verifier_role: string;
+          scope_and_limitations: string;
+          expiry_date: string | null;
+          status: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected" | "revoked";
+          is_public_safe: boolean;
+          redacted_summary: string;
+          claim_owner: string | null;
+          verifier_identity: string | null;
+          verification_method: string | null;
+          revocation_reason: string | null;
+          access_classification: "public" | "internal" | "confidential" | "restricted";
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          claim_id: string;
+          claim_description: string;
+          category: "enterprise_pilot" | "erp_integration" | "ondc_network" | "onest_dsep" | "responsible_finance" | "worker_outcome" | "commercial_revenue" | "regional_gate" | "security_dpdp" | "multi_region_dr" | "observability" | "worker_sovereignty";
+          source_system: string;
+          evidence_location: string;
+          evidence_sha256: string;
+          collection_timestamp?: string;
+          verification_timestamp?: string | null;
+          verifier_role?: string;
+          scope_and_limitations: string;
+          expiry_date?: string | null;
+          status?: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected" | "revoked";
+          is_public_safe?: boolean;
+          redacted_summary: string;
+          claim_owner?: string | null;
+          verifier_identity?: string | null;
+          verification_method?: string | null;
+          revocation_reason?: string | null;
+          access_classification?: "public" | "internal" | "confidential" | "restricted";
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          claim_id?: string;
+          claim_description?: string;
+          category?: "enterprise_pilot" | "erp_integration" | "ondc_network" | "onest_dsep" | "responsible_finance" | "worker_outcome" | "commercial_revenue" | "regional_gate" | "security_dpdp" | "multi_region_dr" | "observability" | "worker_sovereignty";
+          source_system?: string;
+          evidence_location?: string;
+          evidence_sha256?: string;
+          collection_timestamp?: string;
+          verification_timestamp?: string | null;
+          verifier_role?: string;
+          scope_and_limitations?: string;
+          expiry_date?: string | null;
+          status?: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected" | "revoked";
+          is_public_safe?: boolean;
+          redacted_summary?: string;
+          claim_owner?: string | null;
+          verifier_identity?: string | null;
+          verification_method?: string | null;
+          revocation_reason?: string | null;
+          access_classification?: "public" | "internal" | "confidential" | "restricted";
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      worker_outcome_milestones: {
+        Row: {
+          id: string;
+          worker_id: string;
+          opportunity_id: string | null;
+          milestone_step: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_commenced" | "work_completed" | "worker_confirmed_completion" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "payment_evidence" | "disputed" | "resolution" | "reversal_correction" | "retracted";
+          agreed_wage_amount: number | null;
+          paid_wage_amount: number | null;
+          platform_commission_amount: number;
+          provenance_state: "self_reported" | "worker_confirmed" | "customer_confirmed" | "payment_documented" | "independently_verified" | "disputed" | "retracted";
+          payment_evidence_ref: string | null;
+          payment_evidence_hash: string | null;
+          dispute_reason: string | null;
+          milestone_timestamp: string;
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_id: string;
+          opportunity_id?: string | null;
+          milestone_step: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_commenced" | "work_completed" | "worker_confirmed_completion" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "payment_evidence" | "disputed" | "resolution" | "reversal_correction" | "retracted";
+          agreed_wage_amount?: number | null;
+          paid_wage_amount?: number | null;
+          platform_commission_amount?: number;
+          provenance_state?: "self_reported" | "worker_confirmed" | "customer_confirmed" | "payment_documented" | "independently_verified" | "disputed" | "retracted";
+          payment_evidence_ref?: string | null;
+          payment_evidence_hash?: string | null;
+          dispute_reason?: string | null;
+          milestone_timestamp?: string;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_id?: string;
+          opportunity_id?: string | null;
+          milestone_step?: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_commenced" | "work_completed" | "worker_confirmed_completion" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "payment_evidence" | "disputed" | "resolution" | "reversal_correction" | "retracted";
+          agreed_wage_amount?: number | null;
+          paid_wage_amount?: number | null;
+          platform_commission_amount?: number;
+          provenance_state?: "self_reported" | "worker_confirmed" | "customer_confirmed" | "payment_documented" | "independently_verified" | "disputed" | "retracted";
+          payment_evidence_ref?: string | null;
+          payment_evidence_hash?: string | null;
+          dispute_reason?: string | null;
+          milestone_timestamp?: string;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      evidence_attestation_events: {
+        Row: {
+          id: string;
+          claim_id: string;
+          attestation_type: "submitted" | "observed" | "attested" | "rejected" | "disputed" | "clarification_requested" | "revoked" | "expired";
+          actor_id: string;
+          actor_role: "worker" | "customer" | "contractor" | "enterprise_partner" | "institutional_partner" | "financial_partner" | "credential_issuer" | "independent_auditor" | "platform_admin";
+          methodology: string;
+          reviewed_artifacts: Record<string, unknown>[];
+          scope_and_limitations: string;
+          signature_digest: string;
+          dual_approved_by: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          claim_id: string;
+          attestation_type: "submitted" | "observed" | "attested" | "rejected" | "disputed" | "clarification_requested" | "revoked" | "expired";
+          actor_id: string;
+          actor_role: "worker" | "customer" | "contractor" | "enterprise_partner" | "institutional_partner" | "financial_partner" | "credential_issuer" | "independent_auditor" | "platform_admin";
+          methodology: string;
+          reviewed_artifacts?: Record<string, unknown>[];
+          scope_and_limitations: string;
+          signature_digest: string;
+          dual_approved_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          claim_id?: string;
+          attestation_type?: "submitted" | "observed" | "attested" | "rejected" | "disputed" | "clarification_requested" | "revoked" | "expired";
+          actor_id?: string;
+          actor_role?: "worker" | "customer" | "contractor" | "enterprise_partner" | "institutional_partner" | "financial_partner" | "credential_issuer" | "independent_auditor" | "platform_admin";
+          methodology?: string;
+          reviewed_artifacts?: Record<string, unknown>[];
+          scope_and_limitations?: string;
+          signature_digest?: string;
+          dual_approved_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      regional_market_evaluations: {
+        Row: {
+          id: string;
+          region_code: string;
+          district_name: string;
+          evaluation_date: string;
+          registered_workers_count: number;
+          consenting_workers_count: number;
+          discoverable_workers_count: number;
+          available_workers_count: number;
+          customer_enquiries_count: number;
+          confirmed_bookings_count: number;
+          completed_jobs_count: number;
+          confirmed_outcomes_count: number;
+          paid_work_count: number;
+          active_disputes_count: number;
+          mandatory_gates_satisfied: boolean;
+          operational_status: "research" | "candidate" | "readiness_assessment" | "conditionally_ready" | "controlled_pilot" | "active" | "suspended" | "closed";
+          evidence_sha256: string | null;
+          evaluator_identity: string;
+          limitations_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_code: string;
+          district_name: string;
+          evaluation_date?: string;
+          registered_workers_count?: number;
+          consenting_workers_count?: number;
+          discoverable_workers_count?: number;
+          available_workers_count?: number;
+          customer_enquiries_count?: number;
+          confirmed_bookings_count?: number;
+          completed_jobs_count?: number;
+          confirmed_outcomes_count?: number;
+          paid_work_count?: number;
+          active_disputes_count?: number;
+          mandatory_gates_satisfied?: boolean;
+          operational_status: "research" | "candidate" | "readiness_assessment" | "conditionally_ready" | "controlled_pilot" | "active" | "suspended" | "closed";
+          evidence_sha256?: string | null;
+          evaluator_identity: string;
+          limitations_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_code?: string;
+          district_name?: string;
+          evaluation_date?: string;
+          registered_workers_count?: number;
+          consenting_workers_count?: number;
+          discoverable_workers_count?: number;
+          available_workers_count?: number;
+          customer_enquiries_count?: number;
+          confirmed_bookings_count?: number;
+          completed_jobs_count?: number;
+          confirmed_outcomes_count?: number;
+          paid_work_count?: number;
+          active_disputes_count?: number;
+          mandatory_gates_satisfied?: boolean;
+          operational_status?: "research" | "candidate" | "readiness_assessment" | "conditionally_ready" | "controlled_pilot" | "active" | "suspended" | "closed";
+          evidence_sha256?: string | null;
+          evaluator_identity?: string;
+          limitations_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      institutional_ratification_records: {
+        Row: {
+          id: string;
+          institution_code: string;
+          institution_name: string;
+          institution_category: "open_network_ondc" | "open_network_onest" | "enterprise_epc" | "regulated_nbfc" | "state_skill_mission" | "training_partner";
+          legal_entity_verified: boolean;
+          authorized_signatory_verified: boolean;
+          instrument_type: "stamped_commercial_agreement" | "institutional_mou" | "tripartite_lsp_agreement" | "network_whitelisting_key" | "training_accreditation_charter";
+          execution_status: "uninitiated" | "drafting" | "legal_review" | "counterparty_pending" | "stamped_and_executed" | "production_whitelisted" | "suspended" | "terminated" | "disputed";
+          instrument_reference: string | null;
+          effective_date: string | null;
+          expiry_date: string | null;
+          production_key_identifier: string | null;
+          worker_data_protection_terms: boolean;
+          is_active: boolean;
+          evidence_sha256: string | null;
+          audit_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_code: string;
+          institution_name: string;
+          institution_category: "open_network_ondc" | "open_network_onest" | "enterprise_epc" | "regulated_nbfc" | "state_skill_mission" | "training_partner";
+          legal_entity_verified?: boolean;
+          authorized_signatory_verified?: boolean;
+          instrument_type: "stamped_commercial_agreement" | "institutional_mou" | "tripartite_lsp_agreement" | "network_whitelisting_key" | "training_accreditation_charter";
+          execution_status: "uninitiated" | "drafting" | "legal_review" | "counterparty_pending" | "stamped_and_executed" | "production_whitelisted" | "suspended" | "terminated" | "disputed";
+          instrument_reference?: string | null;
+          effective_date?: string | null;
+          expiry_date?: string | null;
+          production_key_identifier?: string | null;
+          worker_data_protection_terms?: boolean;
+          is_active?: boolean;
+          evidence_sha256?: string | null;
+          audit_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_code?: string;
+          institution_name?: string;
+          institution_category?: "open_network_ondc" | "open_network_onest" | "enterprise_epc" | "regulated_nbfc" | "state_skill_mission" | "training_partner";
+          legal_entity_verified?: boolean;
+          authorized_signatory_verified?: boolean;
+          instrument_type?: "stamped_commercial_agreement" | "institutional_mou" | "tripartite_lsp_agreement" | "network_whitelisting_key" | "training_accreditation_charter";
+          execution_status?: "uninitiated" | "drafting" | "legal_review" | "counterparty_pending" | "stamped_and_executed" | "production_whitelisted" | "suspended" | "terminated" | "disputed";
+          instrument_reference?: string | null;
+          effective_date?: string | null;
+          expiry_date?: string | null;
+          production_key_identifier?: string | null;
+          worker_data_protection_terms?: boolean;
+          is_active?: boolean;
+          evidence_sha256?: string | null;
+          audit_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      operational_claim_reconciliations: {
+        Row: {
+          id: string;
+          metric_name: string;
+          reported_value: string;
+          reconciled_value: string;
+          discrepancy_delta: string | null;
+          source_table_or_doc: string;
+          calculation_formula: string;
+          reconciliation_result: "verified_exact" | "reconciled_with_scope_clarification" | "corrected" | "disputed";
+          evidence_ref: string;
+          responsible_reviewer: string;
+          status: "draft" | "under_review" | "reconciled" | "superseded";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          metric_name: string;
+          reported_value: string;
+          reconciled_value: string;
+          discrepancy_delta?: string | null;
+          source_table_or_doc: string;
+          calculation_formula: string;
+          reconciliation_result: "verified_exact" | "reconciled_with_scope_clarification" | "corrected" | "disputed";
+          evidence_ref: string;
+          responsible_reviewer: string;
+          status?: "draft" | "under_review" | "reconciled" | "superseded";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          metric_name?: string;
+          reported_value?: string;
+          reconciled_value?: string;
+          discrepancy_delta?: string | null;
+          source_table_or_doc?: string;
+          calculation_formula?: string;
+          reconciliation_result?: "verified_exact" | "reconciled_with_scope_clarification" | "corrected" | "disputed";
+          evidence_ref?: string;
+          responsible_reviewer?: string;
+          status?: "draft" | "under_review" | "reconciled" | "superseded";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_payment_verification_events: {
+        Row: {
+          id: string;
+          booking_id: string | null;
+          worker_id: string | null;
+          customer_id: string | null;
+          wage_amount: number;
+          platform_commission: number;
+          verification_status: "worker_declared" | "customer_declared" | "payment_reference_submitted" | "bank_evidence_reviewed" | "settlement_confirmed" | "reversed_disputed_refunded";
+          bank_utr_masked: string | null;
+          evidence_document_ref: string | null;
+          verifier_identity: string | null;
+          dual_authorization_signoff: boolean;
+          secondary_verifier_identity: string | null;
+          settlement_timestamp: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id?: string | null;
+          worker_id?: string | null;
+          customer_id?: string | null;
+          wage_amount: number;
+          platform_commission?: number;
+          verification_status: "worker_declared" | "customer_declared" | "payment_reference_submitted" | "bank_evidence_reviewed" | "settlement_confirmed" | "reversed_disputed_refunded";
+          bank_utr_masked?: string | null;
+          evidence_document_ref?: string | null;
+          verifier_identity?: string | null;
+          dual_authorization_signoff?: boolean;
+          secondary_verifier_identity?: string | null;
+          settlement_timestamp?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string | null;
+          worker_id?: string | null;
+          customer_id?: string | null;
+          wage_amount?: number;
+          platform_commission?: number;
+          verification_status?: "worker_declared" | "customer_declared" | "payment_reference_submitted" | "bank_evidence_reviewed" | "settlement_confirmed" | "reversed_disputed_refunded";
+          bank_utr_masked?: string | null;
+          evidence_document_ref?: string | null;
+          verifier_identity?: string | null;
+          dual_authorization_signoff?: boolean;
+          secondary_verifier_identity?: string | null;
+          settlement_timestamp?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_economic_snapshots: {
+        Row: {
+          id: string;
+          worker_id: string | null;
+          region_code: string;
+          trade_code: string;
+          period_start: string;
+          period_end: string;
+          gross_customer_paid: number;
+          platform_commission_deducted: number;
+          worker_net_earnings: number;
+          worker_reported_expenses: number;
+          net_take_home: number;
+          paid_working_days: number;
+          completed_jobs_count: number;
+          repeat_customer_bookings_count: number;
+          avg_time_to_payment_hours: number | null;
+          evidence_sha256: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          worker_id?: string | null;
+          region_code: string;
+          trade_code: string;
+          period_start: string;
+          period_end: string;
+          gross_customer_paid?: number;
+          platform_commission_deducted?: number;
+          worker_net_earnings?: number;
+          worker_reported_expenses?: number;
+          net_take_home?: number;
+          paid_working_days?: number;
+          completed_jobs_count?: number;
+          repeat_customer_bookings_count?: number;
+          avg_time_to_payment_hours?: number | null;
+          evidence_sha256: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          worker_id?: string | null;
+          region_code?: string;
+          trade_code?: string;
+          period_start?: string;
+          period_end?: string;
+          gross_customer_paid?: number;
+          platform_commission_deducted?: number;
+          worker_net_earnings?: number;
+          worker_reported_expenses?: number;
+          net_take_home?: number;
+          paid_working_days?: number;
+          completed_jobs_count?: number;
+          repeat_customer_bookings_count?: number;
+          avg_time_to_payment_hours?: number | null;
+          evidence_sha256?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      regional_operating_reviews: {
+        Row: {
+          id: string;
+          region_code: string;
+          region_name: string;
+          district_name: string;
+          review_cycle: string;
+          operating_status: "research" | "candidate" | "readiness_assessment" | "conditionally_ready" | "controlled_pilot" | "active" | "suspended" | "closed";
+          registered_count: number;
+          contactable_count: number;
+          available_count: number;
+          verified_count: number;
+          recent_completed_count: number;
+          verified_paid_count: number;
+          inactive_count: number;
+          srop_conformance_score_pct: number;
+          lead_reviewer: string;
+          evidence_sha256: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_code: string;
+          region_name: string;
+          district_name: string;
+          review_cycle: string;
+          operating_status: "research" | "candidate" | "readiness_assessment" | "conditionally_ready" | "controlled_pilot" | "active" | "suspended" | "closed";
+          registered_count?: number;
+          contactable_count?: number;
+          available_count?: number;
+          verified_count?: number;
+          recent_completed_count?: number;
+          verified_paid_count?: number;
+          inactive_count?: number;
+          srop_conformance_score_pct?: number;
+          lead_reviewer: string;
+          evidence_sha256: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_code?: string;
+          region_name?: string;
+          district_name?: string;
+          review_cycle?: string;
+          operating_status?: "research" | "candidate" | "readiness_assessment" | "conditionally_ready" | "controlled_pilot" | "active" | "suspended" | "closed";
+          registered_count?: number;
+          contactable_count?: number;
+          available_count?: number;
+          verified_count?: number;
+          recent_completed_count?: number;
+          verified_paid_count?: number;
+          inactive_count?: number;
+          srop_conformance_score_pct?: number;
+          lead_reviewer?: string;
+          evidence_sha256?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institutional_instrument_reviews: {
+        Row: {
+          id: string;
+          institution_code: string;
+          institution_name: string;
+          category: string;
+          instrument_type: string;
+          legal_entity_name: string;
+          authorized_signatory: string;
+          document_reference: string | null;
+          execution_date: string | null;
+          effective_date: string | null;
+          expiry_date: string | null;
+          geographic_scope: string;
+          legal_review_status: "research_only" | "discussion" | "proposal_submitted" | "draft_under_review" | "awaiting_signature" | "executed" | "effective" | "suspended" | "expired" | "terminated";
+          independent_evidence_ref: string;
+          reviewed_by: string;
+          evidence_sha256: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_code: string;
+          institution_name: string;
+          category: string;
+          instrument_type: string;
+          legal_entity_name: string;
+          authorized_signatory: string;
+          document_reference?: string | null;
+          execution_date?: string | null;
+          effective_date?: string | null;
+          expiry_date?: string | null;
+          geographic_scope: string;
+          legal_review_status: "research_only" | "discussion" | "proposal_submitted" | "draft_under_review" | "awaiting_signature" | "executed" | "effective" | "suspended" | "expired" | "terminated";
+          independent_evidence_ref: string;
+          reviewed_by: string;
+          evidence_sha256: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          institution_code?: string;
+          institution_name?: string;
+          category?: string;
+          instrument_type?: string;
+          legal_entity_name?: string;
+          authorized_signatory?: string;
+          document_reference?: string | null;
+          execution_date?: string | null;
+          effective_date?: string | null;
+          expiry_date?: string | null;
+          geographic_scope?: string;
+          legal_review_status?: "research_only" | "discussion" | "proposal_submitted" | "draft_under_review" | "awaiting_signature" | "executed" | "effective" | "suspended" | "expired" | "terminated";
+          independent_evidence_ref?: string;
+          reviewed_by?: string;
+          evidence_sha256?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      audit_evidence_review_events: {
+        Row: {
+          id: string;
+          claim_id: string;
+          claim_description: string;
+          claim_category: string;
+          region_code: string;
+          reporting_period: string;
+          evidence_source: string;
+          evidence_owner: string;
+          verification_method: string;
+          reviewer_identity: string;
+          reviewer_role: string;
+          evidence_status: "not_submitted" | "submitted" | "under_review" | "verified" | "rejected" | "expired" | "superseded" | "disputed";
+          integrity_hash_sha256: string;
+          correction_notes: string | null;
+          review_timestamp: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          claim_id: string;
+          claim_description: string;
+          claim_category: string;
+          region_code: string;
+          reporting_period: string;
+          evidence_source: string;
+          evidence_owner: string;
+          verification_method: string;
+          reviewer_identity: string;
+          reviewer_role: string;
+          evidence_status: "not_submitted" | "submitted" | "under_review" | "verified" | "rejected" | "expired" | "superseded" | "disputed";
+          integrity_hash_sha256: string;
+          correction_notes?: string | null;
+          review_timestamp?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          claim_id?: string;
+          claim_description?: string;
+          claim_category?: string;
+          region_code?: string;
+          reporting_period?: string;
+          evidence_source?: string;
+          evidence_owner?: string;
+          verification_method?: string;
+          reviewer_identity?: string;
+          reviewer_role?: string;
+          evidence_status?: "not_submitted" | "submitted" | "under_review" | "verified" | "rejected" | "expired" | "superseded" | "disputed";
+          integrity_hash_sha256?: string;
+          correction_notes?: string | null;
+          review_timestamp?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      production_release_manifests: {
+        Row: {
+          id: string;
+          commit_sha: string;
+          build_artifact: string;
+          migration_version: string;
+          environment: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          configuration_version: string;
+          dependency_versions: Record<string, unknown>;
+          security_scan_result: Record<string, unknown>;
+          approval_owner: string;
+          deployment_status: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          rollback_plan: string;
+          evidence_digest: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          commit_sha: string;
+          build_artifact: string;
+          migration_version: string;
+          environment: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          configuration_version: string;
+          dependency_versions?: Record<string, unknown>;
+          security_scan_result?: Record<string, unknown>;
+          approval_owner: string;
+          deployment_status: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          rollback_plan: string;
+          evidence_digest: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          commit_sha?: string;
+          build_artifact?: string;
+          migration_version?: string;
+          environment?: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          configuration_version?: string;
+          dependency_versions?: Record<string, unknown>;
+          security_scan_result?: Record<string, unknown>;
+          approval_owner?: string;
+          deployment_status?: "development" | "staging" | "preproduction" | "production_ready" | "approved_for_release" | "deployed" | "rolled_back" | "blocked";
+          rollback_plan?: string;
+          evidence_digest?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      enterprise_pilot_authorizations: {
+        Row: {
+          id: string;
+          pilot_name: string;
+          partner_name: string;
+          counterparty_verified: boolean;
+          authorized_signatory_verified: boolean;
+          executed_agreement_ref: string | null;
+          agreement_status: "draft" | "under_review" | "legal_clearance" | "pending_execution" | "executed_active" | "blocked";
+          approved_scope_summary: string;
+          worker_protection_provisions_verified: boolean;
+          wage_payment_responsibility_verified: boolean;
+          insurance_safety_obligations_verified: boolean;
+          data_privacy_terms_verified: boolean;
+          consented_worker_count: number;
+          authorized_deployment_record_ref: string | null;
+          pilot_authorization_status: "draft" | "scoping" | "pending_authorization" | "authorized_active" | "blocked" | "closed";
+          blocking_reasons: string[];
+          evidence_digest: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          pilot_name: string;
+          partner_name: string;
+          counterparty_verified?: boolean;
+          authorized_signatory_verified?: boolean;
+          executed_agreement_ref?: string | null;
+          agreement_status?: "draft" | "under_review" | "legal_clearance" | "pending_execution" | "executed_active" | "blocked";
+          approved_scope_summary: string;
+          worker_protection_provisions_verified?: boolean;
+          wage_payment_responsibility_verified?: boolean;
+          insurance_safety_obligations_verified?: boolean;
+          data_privacy_terms_verified?: boolean;
+          consented_worker_count?: number;
+          authorized_deployment_record_ref?: string | null;
+          pilot_authorization_status?: "draft" | "scoping" | "pending_authorization" | "authorized_active" | "blocked" | "closed";
+          blocking_reasons?: string[];
+          evidence_digest: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          pilot_name?: string;
+          partner_name?: string;
+          counterparty_verified?: boolean;
+          authorized_signatory_verified?: boolean;
+          executed_agreement_ref?: string | null;
+          agreement_status?: "draft" | "under_review" | "legal_clearance" | "pending_execution" | "executed_active" | "blocked";
+          approved_scope_summary?: string;
+          worker_protection_provisions_verified?: boolean;
+          wage_payment_responsibility_verified?: boolean;
+          insurance_safety_obligations_verified?: boolean;
+          data_privacy_terms_verified?: boolean;
+          consented_worker_count?: number;
+          authorized_deployment_record_ref?: string | null;
+          pilot_authorization_status?: "draft" | "scoping" | "pending_authorization" | "authorized_active" | "blocked" | "closed";
+          blocking_reasons?: string[];
+          evidence_digest?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_impact_evaluations: {
+        Row: {
+          id: string;
+          cohort_name: string;
+          region_code: string;
+          trade_category: string;
+          observation_period_start: string;
+          observation_period_end: string;
+          sample_size: number;
+          baseline_daily_earnings: number;
+          post_participation_daily_earnings: number;
+          monthly_paid_working_days_baseline: number;
+          monthly_paid_working_days_post: number;
+          average_direct_expenses: number;
+          average_net_take_home: number;
+          platform_commission_deduction: number;
+          average_payment_delay_hours: number;
+          repeat_work_retention_rate: number;
+          customer_concentration_top1_percent: number;
+          satisfaction_score_out_of_5: number;
+          worker_retention_percent: number;
+          confounding_factors: string[];
+          confidence_limitations: string;
+          evidence_digest: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          cohort_name: string;
+          region_code: string;
+          trade_category: string;
+          observation_period_start: string;
+          observation_period_end: string;
+          sample_size: number;
+          baseline_daily_earnings: number;
+          post_participation_daily_earnings: number;
+          monthly_paid_working_days_baseline: number;
+          monthly_paid_working_days_post: number;
+          average_direct_expenses?: number;
+          average_net_take_home: number;
+          platform_commission_deduction?: number;
+          average_payment_delay_hours: number;
+          repeat_work_retention_rate: number;
+          customer_concentration_top1_percent: number;
+          satisfaction_score_out_of_5: number;
+          worker_retention_percent: number;
+          confounding_factors?: string[];
+          confidence_limitations: string;
+          evidence_digest: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          cohort_name?: string;
+          region_code?: string;
+          trade_category?: string;
+          observation_period_start?: string;
+          observation_period_end?: string;
+          sample_size?: number;
+          baseline_daily_earnings?: number;
+          post_participation_daily_earnings?: number;
+          monthly_paid_working_days_baseline?: number;
+          monthly_paid_working_days_post?: number;
+          average_direct_expenses?: number;
+          average_net_take_home?: number;
+          platform_commission_deduction?: number;
+          average_payment_delay_hours?: number;
+          repeat_work_retention_rate?: number;
+          customer_concentration_top1_percent?: number;
+          satisfaction_score_out_of_5?: number;
+          worker_retention_percent?: number;
+          confounding_factors?: string[];
+          confidence_limitations?: string;
+          evidence_digest?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      class_a_readiness_audits: {
+        Row: {
+          id: string;
+          requirement_number: number;
+          requirement_title: string;
+          required_evidence: string;
+          evidence_received: string | null;
+          verification_method: string;
+          independent_reviewer: string;
+          audit_result: "pass" | "fail" | "conditional" | "blocked";
+          outstanding_dependency: string | null;
+          remediation_owner: string;
+          status: "not_started" | "in_progress" | "evidence_pending" | "under_review" | "passed" | "failed" | "blocked";
+          evidence_digest: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          requirement_number: number;
+          requirement_title: string;
+          required_evidence: string;
+          evidence_received?: string | null;
+          verification_method: string;
+          independent_reviewer: string;
+          audit_result: "pass" | "fail" | "conditional" | "blocked";
+          outstanding_dependency?: string | null;
+          remediation_owner: string;
+          status?: "not_started" | "in_progress" | "evidence_pending" | "under_review" | "passed" | "failed" | "blocked";
+          evidence_digest: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          requirement_number?: number;
+          requirement_title?: string;
+          required_evidence?: string;
+          evidence_received?: string | null;
+          verification_method?: string;
+          independent_reviewer?: string;
+          audit_result?: "pass" | "fail" | "conditional" | "blocked";
+          outstanding_dependency?: string | null;
+          remediation_owner?: string;
+          status?: "not_started" | "in_progress" | "evidence_pending" | "under_review" | "passed" | "failed" | "blocked";
+          evidence_digest?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institutional_blocker_evaluations: {
+        Row: {
+          id: string;
+          blocker_code: string;
+          blocker_title: string;
+          counterparty_name: string;
+          current_status: "registered" | "scoping_completed" | "draft_circulated" | "counterparty_legal_review" | "cabinet_or_council_pending" | "approved_pending_execution" | "executed_active" | "blocked";
+          underlying_instrument_ref: string | null;
+          required_action: string;
+          responsible_remediation_owner: string;
+          external_counterparty_owner: string;
+          blocking_rationale: string;
+          resolution_criteria: string;
+          evidence_digest: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          blocker_code: string;
+          blocker_title: string;
+          counterparty_name: string;
+          current_status: "registered" | "scoping_completed" | "draft_circulated" | "counterparty_legal_review" | "cabinet_or_council_pending" | "approved_pending_execution" | "executed_active" | "blocked";
+          underlying_instrument_ref?: string | null;
+          required_action: string;
+          responsible_remediation_owner: string;
+          external_counterparty_owner: string;
+          blocking_rationale: string;
+          resolution_criteria: string;
+          evidence_digest: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          blocker_code?: string;
+          blocker_title?: string;
+          counterparty_name?: string;
+          current_status?: "registered" | "scoping_completed" | "draft_circulated" | "counterparty_legal_review" | "cabinet_or_council_pending" | "approved_pending_execution" | "executed_active" | "blocked";
+          underlying_instrument_ref?: string | null;
+          required_action?: string;
+          responsible_remediation_owner?: string;
+          external_counterparty_owner?: string;
+          blocking_rationale?: string;
+          resolution_criteria?: string;
+          evidence_digest?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_impact_replication_studies: {
+        Row: {
+          id: string;
+          study_code: string;
+          cohort_name: string;
+          region_code: string;
+          trade_category: string;
+          sample_size: number;
+          observation_period_start: string;
+          observation_period_end: string;
+          baseline_daily_mean: number;
+          baseline_daily_median: number;
+          post_daily_mean: number;
+          post_daily_median: number;
+          baseline_monthly_days_mean: number;
+          post_monthly_days_mean: number;
+          baseline_direct_expenses: number;
+          post_direct_expenses: number;
+          variable_expense_net_gain_percent: number;
+          fixed_expense_net_gain_percent: number;
+          platform_commission_amount: number;
+          confidence_interval_95: string;
+          missing_data_rate_percent: number;
+          attrition_rate_percent: number;
+          subgroup_breakdown: Json;
+          replication_verdict: "reproduced_exact" | "reproduced_within_confidence_band" | "inconclusive" | "failed";
+          evidence_digest: string;
+          study_type: "independent_new_cohort" | "cohort_reanalysis" | "longitudinal_followup" | "synthetic_simulation";
+          statistical_ci_method: string;
+          evaluated_metric: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          study_code: string;
+          cohort_name: string;
+          region_code: string;
+          trade_category: string;
+          sample_size: number;
+          observation_period_start: string;
+          observation_period_end: string;
+          baseline_daily_mean: number;
+          baseline_daily_median: number;
+          post_daily_mean: number;
+          post_daily_median: number;
+          baseline_monthly_days_mean: number;
+          post_monthly_days_mean: number;
+          baseline_direct_expenses: number;
+          post_direct_expenses: number;
+          variable_expense_net_gain_percent: number;
+          fixed_expense_net_gain_percent: number;
+          platform_commission_amount?: number;
+          confidence_interval_95: string;
+          missing_data_rate_percent?: number;
+          attrition_rate_percent?: number;
+          subgroup_breakdown?: Json;
+          replication_verdict: "reproduced_exact" | "reproduced_within_confidence_band" | "inconclusive" | "failed";
+          evidence_digest: string;
+          study_type?: "independent_new_cohort" | "cohort_reanalysis" | "longitudinal_followup" | "synthetic_simulation";
+          statistical_ci_method?: string;
+          evaluated_metric?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          study_code?: string;
+          cohort_name?: string;
+          region_code?: string;
+          trade_category?: string;
+          sample_size?: number;
+          observation_period_start?: string;
+          observation_period_end?: string;
+          baseline_daily_mean?: number;
+          baseline_daily_median?: number;
+          post_daily_mean?: number;
+          post_daily_median?: number;
+          baseline_monthly_days_mean?: number;
+          post_monthly_days_mean?: number;
+          baseline_direct_expenses?: number;
+          post_direct_expenses?: number;
+          variable_expense_net_gain_percent?: number;
+          fixed_expense_net_gain_percent?: number;
+          platform_commission_amount?: number;
+          confidence_interval_95?: string;
+          missing_data_rate_percent?: number;
+          attrition_rate_percent?: number;
+          subgroup_breakdown?: Json;
+          replication_verdict?: "reproduced_exact" | "reproduced_within_confidence_band" | "inconclusive" | "failed";
+          evidence_digest?: string;
+          study_type?: "independent_new_cohort" | "cohort_reanalysis" | "longitudinal_followup" | "synthetic_simulation";
+          statistical_ci_method?: string;
+          evaluated_metric?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      sustained_regional_operations_records: {
+        Row: {
+          id: string;
+          region_code: string;
+          reporting_month: string;
+          registered_workers: number;
+          verified_workers: number;
+          available_workers: number;
+          workers_with_recent_completed_work: number;
+          workers_with_verified_payments: number;
+          unique_active_customers: number;
+          repeat_customers: number;
+          booking_conversion_rate: number;
+          cancellation_rate: number;
+          dispute_rate: number;
+          grievance_rate: number;
+          average_payment_delay_hours: number;
+          regional_operating_cost_inr: number;
+          customer_acquisition_cost_inr: number;
+          operating_status: "candidate" | "conditionally_ready" | "controlled_active" | "active_verified" | "suspended";
+          regional_lead_owner: string;
+          evidence_digest: string;
+          temporal_classification: "completed_actual" | "partial_actual" | "forecast_projection" | "simulation_fixture";
+          period_start_date: string | null;
+          period_end_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          region_code: string;
+          reporting_month: string;
+          registered_workers: number;
+          verified_workers: number;
+          available_workers: number;
+          workers_with_recent_completed_work: number;
+          workers_with_verified_payments: number;
+          unique_active_customers: number;
+          repeat_customers: number;
+          booking_conversion_rate: number;
+          cancellation_rate: number;
+          dispute_rate: number;
+          grievance_rate: number;
+          average_payment_delay_hours: number;
+          regional_operating_cost_inr: number;
+          customer_acquisition_cost_inr: number;
+          operating_status: "candidate" | "conditionally_ready" | "controlled_active" | "active_verified" | "suspended";
+          regional_lead_owner: string;
+          evidence_digest: string;
+          temporal_classification?: "completed_actual" | "partial_actual" | "forecast_projection" | "simulation_fixture";
+          period_start_date?: string | null;
+          period_end_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          region_code?: string;
+          reporting_month?: string;
+          registered_workers?: number;
+          verified_workers?: number;
+          available_workers?: number;
+          workers_with_recent_completed_work?: number;
+          workers_with_verified_payments?: number;
+          unique_active_customers?: number;
+          repeat_customers?: number;
+          booking_conversion_rate?: number;
+          cancellation_rate?: number;
+          dispute_rate?: number;
+          grievance_rate?: number;
+          average_payment_delay_hours?: number;
+          regional_operating_cost_inr?: number;
+          customer_acquisition_cost_inr?: number;
+          operating_status?: "candidate" | "conditionally_ready" | "controlled_active" | "active_verified" | "suspended";
+          regional_lead_owner?: string;
+          evidence_digest?: string;
+          temporal_classification?: "completed_actual" | "partial_actual" | "forecast_projection" | "simulation_fixture";
+          period_start_date?: string | null;
+          period_end_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institutional_blocker_transition_audit_logs: {
+        Row: {
+          id: string;
+          blocker_code: string;
+          from_status: string;
+          to_status: string;
+          transition_authority: string;
+          evidence_reference: string;
+          evidence_digest: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          blocker_code: string;
+          from_status: string;
+          to_status: string;
+          transition_authority: string;
+          evidence_reference: string;
+          evidence_digest: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          blocker_code?: string;
+          from_status?: string;
+          to_status?: string;
+          transition_authority?: string;
+          evidence_reference?: string;
+          evidence_digest?: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      w3c_verifiable_credential_registry: {
+        Row: {
+          id: string;
+          credential_id: string;
+          issuer_did: string;
+          subject_did: string;
+          credential_type: string[];
+          nsqf_level: number | null;
+          primary_trade: string;
+          status: "active" | "suspended" | "revoked" | "expired";
+          revocation_reason: string | null;
+          revoked_at: string | null;
+          key_version: string;
+          public_key_multibase: string;
+          proof_type: string;
+          canonical_digest: string;
+          issued_at: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          credential_id: string;
+          issuer_did: string;
+          subject_did: string;
+          credential_type?: string[];
+          nsqf_level?: number | null;
+          primary_trade: string;
+          status?: "active" | "suspended" | "revoked" | "expired";
+          revocation_reason?: string | null;
+          revoked_at?: string | null;
+          key_version?: string;
+          public_key_multibase: string;
+          proof_type?: string;
+          canonical_digest: string;
+          issued_at?: string;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          credential_id?: string;
+          issuer_did?: string;
+          subject_did?: string;
+          credential_type?: string[];
+          nsqf_level?: number | null;
+          primary_trade?: string;
+          status?: "active" | "suspended" | "revoked" | "expired";
+          revocation_reason?: string | null;
+          revoked_at?: string | null;
+          key_version?: string;
+          public_key_multibase?: string;
+          proof_type?: string;
+          canonical_digest?: string;
+          issued_at?: string;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      audit_chain_checkpoints: {
+        Row: {
+          id: string;
+          chain_name: string;
+          checkpoint_sequence: number;
+          start_sequence: number;
+          end_sequence: number;
+          root_digest: string;
+          signing_key_id: string;
+          signature: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          chain_name: string;
+          checkpoint_sequence: number;
+          start_sequence: number;
+          end_sequence: number;
+          root_digest: string;
+          signing_key_id: string;
+          signature: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          chain_name?: string;
+          checkpoint_sequence?: number;
+          start_sequence?: number;
+          end_sequence?: number;
+          root_digest?: string;
+          signing_key_id?: string;
+          signature?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_payout_dispute_records: {
+        Row: {
+          id: string;
+          dispute_code: string;
+          worker_id: string;
+          booking_id: string | null;
+          payment_reference: string;
+          disputed_amount: number;
+          agreed_wage_amount: number;
+          dispute_reason:
+            | "missing_payment"
+            | "incorrect_amount"
+            | "incorrect_payment_reference"
+            | "duplicate_booking"
+            | "unauthorized_deduction"
+            | "incorrect_expense_deduction"
+            | "incorrect_job_completion"
+            | "unrecognized_customer_payment";
+          status:
+            | "opened"
+            | "acknowledged"
+            | "under_investigation"
+            | "resolved_worker_favorable"
+            | "resolved_employer_favorable"
+            | "appealed"
+            | "closed";
+          assigned_investigator_id: string | null;
+          retaliation_flag: boolean;
+          retaliatory_review_quarantined: boolean;
+          resolution_notes: string | null;
+          resolved_at: string | null;
+          worker_appeal_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          dispute_code: string;
+          worker_id: string;
+          booking_id?: string | null;
+          payment_reference: string;
+          disputed_amount: number;
+          agreed_wage_amount: number;
+          dispute_reason:
+            | "missing_payment"
+            | "incorrect_amount"
+            | "incorrect_payment_reference"
+            | "duplicate_booking"
+            | "unauthorized_deduction"
+            | "incorrect_expense_deduction"
+            | "incorrect_job_completion"
+            | "unrecognized_customer_payment";
+          status?:
+            | "opened"
+            | "acknowledged"
+            | "under_investigation"
+            | "resolved_worker_favorable"
+            | "resolved_employer_favorable"
+            | "appealed"
+            | "closed";
+          assigned_investigator_id?: string | null;
+          retaliation_flag?: boolean;
+          retaliatory_review_quarantined?: boolean;
+          resolution_notes?: string | null;
+          resolved_at?: string | null;
+          worker_appeal_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          dispute_code?: string;
+          worker_id?: string;
+          booking_id?: string | null;
+          payment_reference?: string;
+          disputed_amount?: number;
+          agreed_wage_amount?: number;
+          dispute_reason?:
+            | "missing_payment"
+            | "incorrect_amount"
+            | "incorrect_payment_reference"
+            | "duplicate_booking"
+            | "unauthorized_deduction"
+            | "incorrect_expense_deduction"
+            | "incorrect_job_completion"
+            | "unrecognized_customer_payment";
+          status?:
+            | "opened"
+            | "acknowledged"
+            | "under_investigation"
+            | "resolved_worker_favorable"
+            | "resolved_employer_favorable"
+            | "appealed"
+            | "closed";
+          assigned_investigator_id?: string | null;
+          retaliation_flag?: boolean;
+          retaliatory_review_quarantined?: boolean;
+          resolution_notes?: string | null;
+          resolved_at?: string | null;
+          worker_appeal_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_payout_dispute_events: {
+        Row: {
+          id: string;
+          dispute_id: string;
+          event_type: string;
+          actor_id: string | null;
+          actor_role: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          dispute_id: string;
+          event_type: string;
+          actor_id?: string | null;
+          actor_role: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          dispute_id?: string;
+          event_type?: string;
+          actor_id?: string | null;
+          actor_role?: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      independent_audit_attestations: {
+        Row: {
+          id: string;
+          attestation_code: string;
+          auditor_name: string;
+          auditor_organization: string;
+          auditor_accreditation: string;
+          report_reference: string;
+          evidence_digest_sha256: string;
+          scope_domains: string[];
+          findings_summary: Record<string, unknown>;
+          attestation_status:
+            | "PENDING_REVIEW"
+            | "ATTESTED"
+            | "CONDITIONALLY_ATTESTED"
+            | "REJECTED"
+            | "EXPIRED";
+          effective_from: string | null;
+          expires_at: string | null;
+          verified_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          attestation_code: string;
+          auditor_name: string;
+          auditor_organization: string;
+          auditor_accreditation: string;
+          report_reference: string;
+          evidence_digest_sha256: string;
+          scope_domains: string[];
+          findings_summary?: Record<string, unknown>;
+          attestation_status:
+            | "PENDING_REVIEW"
+            | "ATTESTED"
+            | "CONDITIONALLY_ATTESTED"
+            | "REJECTED"
+            | "EXPIRED";
+          effective_from?: string | null;
+          expires_at?: string | null;
+          verified_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          attestation_code?: string;
+          auditor_name?: string;
+          auditor_organization?: string;
+          auditor_accreditation?: string;
+          report_reference?: string;
+          evidence_digest_sha256?: string;
+          scope_domains?: string[];
+          findings_summary?: Record<string, unknown>;
+          attestation_status?:
+            | "PENDING_REVIEW"
+            | "ATTESTED"
+            | "CONDITIONALLY_ATTESTED"
+            | "REJECTED"
+            | "EXPIRED";
+          effective_from?: string | null;
+          expires_at?: string | null;
+          verified_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_dispute_appeals: {
+        Row: {
+          id: string;
+          appeal_code: string;
+          dispute_id: string;
+          worker_id: string;
+          appellant_role: "worker" | "contractor" | "customer";
+          tribunal_member_name: string;
+          tribunal_member_role:
+            | "independent_ombudsperson"
+            | "legal_counsel"
+            | "worker_advocate"
+            | "district_lead";
+          grounds_of_appeal: string;
+          prior_resolution_summary: string;
+          worker_relief_sought: number;
+          appeal_status:
+            | "filed"
+            | "under_tribunal_review"
+            | "hearing_scheduled"
+            | "evidence_requested"
+            | "upheld_worker"
+            | "upheld_partial"
+            | "denied"
+            | "settled";
+          final_determination: string | null;
+          relief_awarded_amount: number;
+          non_retaliation_certified: boolean;
+          filed_at: string;
+          resolved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          appeal_code: string;
+          dispute_id: string;
+          worker_id: string;
+          appellant_role: "worker" | "contractor" | "customer";
+          tribunal_member_name: string;
+          tribunal_member_role:
+            | "independent_ombudsperson"
+            | "legal_counsel"
+            | "worker_advocate"
+            | "district_lead";
+          grounds_of_appeal: string;
+          prior_resolution_summary: string;
+          worker_relief_sought: number;
+          appeal_status?:
+            | "filed"
+            | "under_tribunal_review"
+            | "hearing_scheduled"
+            | "evidence_requested"
+            | "upheld_worker"
+            | "upheld_partial"
+            | "denied"
+            | "settled";
+          final_determination?: string | null;
+          relief_awarded_amount?: number;
+          non_retaliation_certified?: boolean;
+          filed_at?: string;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          appeal_code?: string;
+          dispute_id?: string;
+          worker_id?: string;
+          appellant_role?: "worker" | "contractor" | "customer";
+          tribunal_member_name?: string;
+          tribunal_member_role?:
+            | "independent_ombudsperson"
+            | "legal_counsel"
+            | "worker_advocate"
+            | "district_lead";
+          grounds_of_appeal?: string;
+          prior_resolution_summary?: string;
+          worker_relief_sought?: number;
+          appeal_status?:
+            | "filed"
+            | "under_tribunal_review"
+            | "hearing_scheduled"
+            | "evidence_requested"
+            | "upheld_worker"
+            | "upheld_partial"
+            | "denied"
+            | "settled";
+          final_determination?: string | null;
+          relief_awarded_amount?: number;
+          non_retaliation_certified?: boolean;
+          filed_at?: string;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      production_dr_execution_log: {
+        Row: {
+          id: string;
+          drill_code: string;
+          environment_classification:
+            | "LOCAL_SANDBOX"
+            | "STAGING_SIMULATION"
+            | "PRODUCTION_FAILOVER";
+          drill_type:
+            | "PITR_RESTORE"
+            | "DATABASE_FAILOVER"
+            | "CROSS_REGION_STORAGE"
+            | "FULL_SYSTEM_RECOVERY";
+          authorized_by: string;
+          authorization_reference: string;
+          primary_region: string;
+          recovery_region: string;
+          target_rto_seconds: number;
+          actual_rto_seconds: number;
+          target_rpo_seconds: number;
+          actual_rpo_seconds: number;
+          data_integrity_verified: boolean;
+          verified_records_count: number;
+          checksum_verification_status: "PASSED" | "FAILED" | "PENDING";
+          findings: Record<string, unknown>;
+          executed_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          drill_code: string;
+          environment_classification:
+            | "LOCAL_SANDBOX"
+            | "STAGING_SIMULATION"
+            | "PRODUCTION_FAILOVER";
+          drill_type:
+            | "PITR_RESTORE"
+            | "DATABASE_FAILOVER"
+            | "CROSS_REGION_STORAGE"
+            | "FULL_SYSTEM_RECOVERY";
+          authorized_by: string;
+          authorization_reference: string;
+          primary_region: string;
+          recovery_region: string;
+          target_rto_seconds: number;
+          actual_rto_seconds: number;
+          target_rpo_seconds: number;
+          actual_rpo_seconds: number;
+          data_integrity_verified?: boolean;
+          verified_records_count?: number;
+          checksum_verification_status: "PASSED" | "FAILED" | "PENDING";
+          findings?: Record<string, unknown>;
+          executed_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          drill_code?: string;
+          environment_classification?:
+            | "LOCAL_SANDBOX"
+            | "STAGING_SIMULATION"
+            | "PRODUCTION_FAILOVER";
+          drill_type?:
+            | "PITR_RESTORE"
+            | "DATABASE_FAILOVER"
+            | "CROSS_REGION_STORAGE"
+            | "FULL_SYSTEM_RECOVERY";
+          authorized_by?: string;
+          authorization_reference?: string;
+          primary_region?: string;
+          recovery_region?: string;
+          target_rto_seconds?: number;
+          actual_rto_seconds?: number;
+          target_rpo_seconds?: number;
+          actual_rpo_seconds?: number;
+          data_integrity_verified?: boolean;
+          verified_records_count?: number;
+          checksum_verification_status?: "PASSED" | "FAILED" | "PENDING";
+          findings?: Record<string, unknown>;
+          executed_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -2086,3 +5179,61 @@ export type RegionalLaunchTransition = Database["public"]["Tables"]["regional_la
 export type CrossRegionProjectStaffing = Database["public"]["Tables"]["cross_region_project_staffing"]["Row"];
 export type PaymentRecordLedger = Database["public"]["Tables"]["payment_records_ledger"]["Row"];
 export type OfflineVerificationLog = Database["public"]["Tables"]["offline_verification_logs"]["Row"];
+export type RegionalLaunchMilestone = Database["public"]["Tables"]["regional_launch_milestones"]["Row"];
+export type RegionalOperationalIncident = Database["public"]["Tables"]["regional_operational_incidents"]["Row"];
+export type InstitutionAuthorizedSignatory = Database["public"]["Tables"]["institution_authorized_signatories"]["Row"];
+export type WorkerPrivacySetting = Database["public"]["Tables"]["worker_privacy_settings"]["Row"];
+export type FinancialGstLedger = Database["public"]["Tables"]["financial_gst_ledger"]["Row"];
+export type RegionalServiceTelemetry = Database["public"]["Tables"]["regional_service_telemetry"]["Row"];
+export type RegionalDualApproval = Database["public"]["Tables"]["regional_dual_approvals"]["Row"];
+export type ReviewModerationAppeal = Database["public"]["Tables"]["review_moderation_appeals"]["Row"];
+export type OperationalIncidentLifecycle = Database["public"]["Tables"]["operational_incidents_lifecycle"]["Row"];
+export type FinancialReconciliationException = Database["public"]["Tables"]["financial_reconciliation_exceptions"]["Row"];
+export type RegionalOperationalScorecard = Database["public"]["Tables"]["regional_operational_scorecards"]["Row"];
+export type WorkerConsentAuditEvent = Database["public"]["Tables"]["worker_consent_audit_events"]["Row"];
+export type RegionalNetworkLiquiditySnapshot = Database["public"]["Tables"]["regional_network_liquidity_snapshots"]["Row"];
+export type WorkerPayoutConfirmation = Database["public"]["Tables"]["worker_payout_confirmations"]["Row"];
+export type ContractorCustomerSuccessEvent = Database["public"]["Tables"]["contractor_customer_success_events"]["Row"];
+export type InstitutionalOnboardingLifecycle = Database["public"]["Tables"]["institutional_onboarding_lifecycle"]["Row"];
+export type WorkerSupportAssignment = Database["public"]["Tables"]["worker_support_assignments"]["Row"];
+export type AnalyticsProvenanceEvent = Database["public"]["Tables"]["analytics_provenance_events"]["Row"];
+export type MetricEvidenceRecord = Database["public"]["Tables"]["metric_evidence_records"]["Row"];
+export type WorkerOutcomeCohort = Database["public"]["Tables"]["worker_outcome_cohorts"]["Row"];
+export type StateLaunchGateEvaluation = Database["public"]["Tables"]["state_launch_gate_evaluations"]["Row"];
+export type ExternalEcosystemTransaction = Database["public"]["Tables"]["external_ecosystem_transactions"]["Row"];
+export type WorkerFinancialConsent = Database["public"]["Tables"]["worker_financial_consents"]["Row"];
+export type EnterpriseSyncLog = Database["public"]["Tables"]["enterprise_sync_logs"]["Row"];
+export type LiveEcosystemParticipant = Database["public"]["Tables"]["live_ecosystem_participants"]["Row"];
+export type EnterprisePilotEngagement = Database["public"]["Tables"]["enterprise_pilot_engagements"]["Row"];
+export type ToolFinancingPilotApplication = Database["public"]["Tables"]["tool_financing_pilot_applications"]["Row"];
+export type EvidenceRegistryRecord = Database["public"]["Tables"]["evidence_registry_records"]["Row"];
+export type WorkerOutcomeMilestone = Database["public"]["Tables"]["worker_outcome_milestones"]["Row"];
+export type EvidenceAttestationEvent = Database["public"]["Tables"]["evidence_attestation_events"]["Row"];
+export type RegionalMarketEvaluation = Database["public"]["Tables"]["regional_market_evaluations"]["Row"];
+export type InstitutionalRatificationRecord = Database["public"]["Tables"]["institutional_ratification_records"]["Row"];
+export type OperationalClaimReconciliation = Database["public"]["Tables"]["operational_claim_reconciliations"]["Row"];
+export type WorkerPaymentVerificationEvent = Database["public"]["Tables"]["worker_payment_verification_events"]["Row"];
+export type WorkerEconomicSnapshot = Database["public"]["Tables"]["worker_economic_snapshots"]["Row"];
+export type RegionalOperatingReview = Database["public"]["Tables"]["regional_operating_reviews"]["Row"];
+export type InstitutionalInstrumentReview = Database["public"]["Tables"]["institutional_instrument_reviews"]["Row"];
+export type AuditEvidenceReviewEvent = Database["public"]["Tables"]["audit_evidence_review_events"]["Row"];
+export type ProductionReleaseManifest = Database["public"]["Tables"]["production_release_manifests"]["Row"];
+export type EnterprisePilotAuthorization = Database["public"]["Tables"]["enterprise_pilot_authorizations"]["Row"];
+export type WorkerImpactEvaluation = Database["public"]["Tables"]["worker_impact_evaluations"]["Row"];
+export type ClassAReadinessAudit = Database["public"]["Tables"]["class_a_readiness_audits"]["Row"];
+export type InstitutionalBlockerEvaluation = Database["public"]["Tables"]["institutional_blocker_evaluations"]["Row"];
+export type WorkerImpactReplicationStudy = Database["public"]["Tables"]["worker_impact_replication_studies"]["Row"];
+export type SustainedRegionalOperationsRecord = Database["public"]["Tables"]["sustained_regional_operations_records"]["Row"];
+export type InstitutionalBlockerTransitionAuditLog = Database["public"]["Tables"]["institutional_blocker_transition_audit_logs"]["Row"];
+export type W3CVerifiableCredentialRegistry = Database["public"]["Tables"]["w3c_verifiable_credential_registry"]["Row"];
+export type AuditChainCheckpoint = Database["public"]["Tables"]["audit_chain_checkpoints"]["Row"];
+export type WorkerPayoutDisputeRecord = Database["public"]["Tables"]["worker_payout_dispute_records"]["Row"];
+export type WorkerPayoutDisputeEvent = Database["public"]["Tables"]["worker_payout_dispute_events"]["Row"];
+export type IndependentAuditAttestation = Database["public"]["Tables"]["independent_audit_attestations"]["Row"];
+export type WorkerDisputeAppeal = Database["public"]["Tables"]["worker_dispute_appeals"]["Row"];
+export type ProductionDrExecutionLog = Database["public"]["Tables"]["production_dr_execution_log"]["Row"];
+
+
+
+
+

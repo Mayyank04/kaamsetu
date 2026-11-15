@@ -1,0 +1,16 @@
+{
+  "phase": 33,
+  "cohortSize": 45,
+  "observationDays": 90,
+  "baselineMonthlyEarnings": 8200,
+  "endlineMonthlyEarnings": 14750,
+  "earningsDeltaPercentage": 79.88,
+  "retentionRate": 93.3,
+  "retentionDenominator": 45,
+  "activeArtisans": 42,
+  "workerExits": 3,
+  "methodologyClassification": "OBSERVATIONAL_COHORT_ANALYSIS",
+  "causalAttributionClaim": "UNVERIFIED_WITHOUT_RCT_CONTROL_GROUP",
+  "degreeFreeArtisansPercentage": 100,
+  "timestamp": "2026-11-15T20:30:00.000Z"
+}

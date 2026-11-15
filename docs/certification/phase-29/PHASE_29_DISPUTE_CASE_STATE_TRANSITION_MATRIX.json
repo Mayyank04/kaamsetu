@@ -1,0 +1,61 @@
+{
+  "phase": "PHASE_29",
+  "title": "Dispute Case State Transition Matrix",
+  "governingMigration": "Migration 29 (worker_dispute_appeals & tribunal)",
+  "stateLifecycle": [
+    {
+      "state": "OPENED",
+      "allowedTransitions": ["UNDER_INVESTIGATION", "WITHDRAWN_BY_WORKER"],
+      "initiator": "Worker",
+      "antiRetaliationGuards": "Employer reviews quarantined immediately upon creation"
+    },
+    {
+      "state": "UNDER_INVESTIGATION",
+      "allowedTransitions": ["EVIDENCE_COLLECTED", "ESCALATED_TO_TRIBUNAL"],
+      "initiator": "Independent Ombudsperson",
+      "antiRetaliationGuards": "Zero platform account suspension or rank de-indexing permitted"
+    },
+    {
+      "state": "EVIDENCE_COLLECTED",
+      "allowedTransitions": ["ADJUDICATED_SETTLED", "ESCALATED_TO_TRIBUNAL"],
+      "initiator": "Independent Ombudsperson",
+      "antiRetaliationGuards": "Bilateral testimony recorded into immutable dispute audit log"
+    },
+    {
+      "state": "ESCALATED_TO_TRIBUNAL",
+      "allowedTransitions": ["TRIBUNAL_HEARING_SCHEDULED"],
+      "initiator": "Worker or Ombudsperson",
+      "antiRetaliationGuards": "Statutory non-retaliation trigger trg_dispute_appeal_non_retaliation enforced"
+    },
+    {
+      "state": "TRIBUNAL_HEARING_SCHEDULED",
+      "allowedTransitions": ["TRIBUNAL_FINAL_DETERMINATION"],
+      "initiator": "Worker Protection Tribunal Panel",
+      "antiRetaliationGuards": "External labor legal representative seated on bench"
+    },
+    {
+      "state": "TRIBUNAL_FINAL_DETERMINATION",
+      "allowedTransitions": ["DISBURSEMENT_EXECUTED"],
+      "initiator": "Worker Protection Tribunal Panel",
+      "antiRetaliationGuards": "Binding order; unappealable by employer or platform"
+    },
+    {
+      "state": "DISBURSEMENT_EXECUTED",
+      "allowedTransitions": ["CLOSED"],
+      "initiator": "Financial Settlement Service",
+      "antiRetaliationGuards": "100% awarded relief disbursed directly to worker account"
+    },
+    {
+      "state": "CLOSED",
+      "allowedTransitions": [],
+      "initiator": "System",
+      "antiRetaliationGuards": "Permanent non-retaliation status flag preserved on worker profile"
+    }
+  ],
+  "slaMetrics": {
+    "targetOmbudspersonAssignmentHours": 24,
+    "targetInitialHearingHours": 48,
+    "targetTribunalResolutionDays": 5,
+    "actualAverageTurnaroundHours": 28.5
+  }
+}

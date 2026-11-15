@@ -1,0 +1,29 @@
+{
+  "lastUpdated": "2026-11-15T19:40:00Z",
+  "remediations": [
+    {
+      "remediationId": "REM-30-01",
+      "target": "BLOCKER-01",
+      "action": "Track State Cabinet agenda scheduling for TSDM bilateral MoU; prepare joint technical demonstration",
+      "owner": "Institutional Partnerships Lead",
+      "targetWindow": "Q1 2027",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "remediationId": "REM-30-02",
+      "target": "BLOCKER-02",
+      "action": "Execute dual-control Ed25519 root key ceremony in air-gapped facility; sign ONDC Participant Agreement",
+      "owner": "Chief Information Security Officer",
+      "targetWindow": "December 2026",
+      "status": "READY_FOR_CEREMONY"
+    },
+    {
+      "remediationId": "REM-30-03",
+      "target": "BLOCKER-03",
+      "action": "Finalize tripartite escrow agreement with L&T legal counsel; execute franked contract with zero-commission covenants",
+      "owner": "VP Enterprise Partnerships & General Counsel",
+      "targetWindow": "January 2027",
+      "status": "LEGAL_REVIEW_ACTIVE"
+    }
+  ]
+}

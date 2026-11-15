@@ -1,0 +1,93 @@
+{
+  "phase": "34A",
+  "package": "docs/certification/phase-34a",
+  "totalDeliverables": 18,
+  "files": [
+    {
+      "filename": "PHASE_34A_BANK_RECONCILIATION_REGISTER.json",
+      "sha256": "7e31229f363f31b798ffe08b659964d646be499d785ccbef90164654174446c0",
+      "bytes": 865
+    },
+    {
+      "filename": "PHASE_34A_BASELINE_PROVENANCE.md",
+      "sha256": "440f922aaf99a23edaeaa223c6cfe8e5b5f7563ddc0793e051eb814b6d9952cf",
+      "bytes": 1384
+    },
+    {
+      "filename": "PHASE_34A_CANONICAL_RELEASE_MANIFEST.json",
+      "sha256": "12da76275034b72f8b47752ebdca9b67429a40f89994617b3279b1fb9dbd4185",
+      "bytes": 1448
+    },
+    {
+      "filename": "PHASE_34A_EPC_EVIDENCE_REGISTER.json",
+      "sha256": "3f01907dff860a8dfffb8d90b0a45ef6b2e1c1bdbfc00f6d25b1502debe458e2",
+      "bytes": 843
+    },
+    {
+      "filename": "PHASE_34A_EXECUTIVE_CERTIFICATION.md",
+      "sha256": "91f535a6df8c87aae3309244305c5c1b5c8131e610f51640e23131c3eaa4bcb1",
+      "bytes": 2899
+    },
+    {
+      "filename": "PHASE_34A_FINAL_CLASSIFICATION_DECISION.md",
+      "sha256": "045ce284fa94f9624c675e112002ee0def6b6c07d837f481cd6637e4466a1ba8",
+      "bytes": 1601
+    },
+    {
+      "filename": "PHASE_34A_FINAL_DELIVERABLE_INDEX.md",
+      "sha256": "51f21ba0a5929847244f291b44f57019234c5c7b911c5189595898263def908d",
+      "bytes": 2144
+    },
+    {
+      "filename": "PHASE_34A_GATE_CLOSURE_MATRIX.json",
+      "sha256": "551c875443d5c0b13843be3e6a7f29f93a9288a31e295f13e2a020a33bd8e6fd",
+      "bytes": 5122
+    },
+    {
+      "filename": "PHASE_34A_GIT_ANCESTRY_VERIFICATION.md",
+      "sha256": "852ab4eaf7a631c837b3d75acdcc9014613b3b0ca847a8995a77040a11649645",
+      "bytes": 734
+    },
+    {
+      "filename": "PHASE_34A_ONDC_EVIDENCE_REGISTER.json",
+      "sha256": "0a4eefdecd8358ad61a5df9950f4f55d6d165b577fe0f126f6148410b69e0041",
+      "bytes": 891
+    },
+    {
+      "filename": "PHASE_34A_PRODUCTION_DR_EVIDENCE.md",
+      "sha256": "716e3a323ccdb987851b3a655694da355a5952c1ae64e024acf820bfea95ace1",
+      "bytes": 953
+    },
+    {
+      "filename": "PHASE_34A_RESTRICTED_SCOPE_REGISTER.json",
+      "sha256": "e5da364fca47dd9330b88ae78ad0c8b8893c2c96d71a29606e0588badb20808e",
+      "bytes": 1151
+    },
+    {
+      "filename": "PHASE_34A_RLS_EFFECTIVE_ISOLATION_REPORT.md",
+      "sha256": "578865e6274d0aa3379a124591dd78e67791de3b847fd11749117c3cd7b099a4",
+      "bytes": 1175
+    },
+    {
+      "filename": "PHASE_34A_SECURITY_REGRESSION_REPORT.md",
+      "sha256": "02110cb3cb97dbe59fc0da7d0438e063a5dc095e7ecebc64cd56b61e77aea3b6",
+      "bytes": 1294
+    },
+    {
+      "filename": "PHASE_34A_TSDM_EVIDENCE_REGISTER.json",
+      "sha256": "bfb53a39cc377a533223abb18d61786f991fd855a988a2391c0ca93a5b5f8b32",
+      "bytes": 862
+    },
+    {
+      "filename": "PHASE_34A_WORKER_GOVERNANCE_REPORT.md",
+      "sha256": "edf0cc060ceb0b4ae7ad698ad7b369542662f70f1cf52ee717ce060c810f92c5",
+      "bytes": 1524
+    },
+    {
+      "filename": "PHASE_34A_ZERO_COMMISSION_INVARIANT_REPORT.md",
+      "sha256": "756de67e41f479d90b6925f058520bb4a4d47065a7a903a7de7065144f2f504b",
+      "bytes": 1099
+    }
+  ],
+  "timestamp": "2026-11-15T23:35:00.000Z"
+}

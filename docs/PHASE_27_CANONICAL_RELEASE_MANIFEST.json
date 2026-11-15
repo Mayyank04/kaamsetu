@@ -1,0 +1,30 @@
+{
+  "manifest": {
+    "repository": "Mayyank04/kaamsetu",
+    "branch": "phase-27-cryptographic-trust-and-financial-assurance",
+    "baselineCommit": "6f8a488",
+    "parentCommit": "7226496",
+    "migrations": {
+      "count": 28,
+      "range": "01 to 28",
+      "latestMigration": "20261115000028_audit_hash_chaining_and_payout_disputes.sql",
+      "migrationDirectoryDigest": "06366bacf5570889d511e23e36b3e149f8876490d441fbcac3452551ae2c3bbb"
+    },
+    "lockfileDigest": "6259c05078bd12c2c4f32e383de88c60bbf69e71ef9dcdf964d6db92207a317d",
+    "testInventoryDigest": "99c4ec550b2e1016eca34210bd1502856bc209d2381df9794bddbae60fccc171",
+    "environmentClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+    "toolchain": {
+      "nodeVersion": "v20.x (LTS) / v22.x",
+      "nextVersion": "15.1.7",
+      "typeScriptVersion": "5.x",
+      "postgresVersion": "15.x"
+    },
+    "documentationCount": 20,
+    "timestamp": "2026-11-15T18:00:00.000Z"
+  },
+  "canonicalDigest": "ba364051ba48500c694502fd3a9dc970db38efd7625ac79efa20409f97aae6ab",
+  "signature": "878505d79641a04a42646721e98037710d8d2945c92a382106ca6c18ade86f2be9bade9805b19d82c53130d36328643b12d19469a388e3b4621921eced8edf0b",
+  "signingKeyId": "did:kaamsetu:release:signer-phase27-01",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4ue/CnZgCmSeHgZKHo7hPVgE28myout3WsG1csXaDBI=\n-----END PUBLIC KEY-----\n",
+  "reproducibilityClassification": "reproducible_canonical_manifest"
+}

@@ -1,0 +1,116 @@
+{
+  "phase": "34A",
+  "workstream": "CONDITIONAL_GATE_CLOSURE",
+  "timestamp": "2026-11-15T23:35:00.000Z",
+  "baselineCommit": "663c792d9d9762086b92f3e0f2c213c977cbac1e",
+  "parentCommit": "b0f79b2efd7fb6f81d77146f9e68ff9e7d485792",
+  "parentMainCommit": "3dff23c314eaba0f2eb66785033eda928146c0f8",
+  "operatingClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+  "classAEligible": false,
+  "totalGatesAudited": 5,
+  "closedGatesCount": 0,
+  "openGatesCount": 5,
+  "gates": [
+    {
+      "gateNumber": "01",
+      "gateCode": "BLOCKER-01",
+      "title": "TSDM Institutional Authorization",
+      "counterparty": "Tripura Skill Development Mission / Government of Tripura",
+      "requiredEvidence": [
+        "Executed bilateral MoU",
+        "Official Cabinet approval",
+        "Published Gazette notification",
+        "Authorized signatory verification",
+        "Territorial scope definition"
+      ],
+      "currentStatus": "UNDER_REVIEW",
+      "operationalState": "BLOCKED",
+      "antiMaskingFinding": "State Cabinet review scheduling remains pending. Draft MoU or verbal assurances cannot be treated as authorization. Operational dispatch in Tripura remains strictly blocked.",
+      "isClosed": false
+    },
+    {
+      "gateNumber": "02",
+      "gateCode": "BLOCKER-02",
+      "title": "ONDC / ONest Production Authorization",
+      "counterparty": "Open Network for Digital Commerce (ONDC)",
+      "requiredEvidence": [
+        "Executed participant agreement",
+        "Official production registry eligibility",
+        "Dual-control root key ceremony",
+        "Documented custody transfer and key fingerprints",
+        "Authorized operator identities"
+      ],
+      "currentStatus": "APPROVED_PENDING_EXECUTION",
+      "operationalState": "BLOCKED",
+      "antiMaskingFinding": "Staging adapter passes 100%, but live production dual-control root key ceremony has not been conducted. Production private keys are not created or exposed. BPP live broadcast remains blocked.",
+      "isClosed": false
+    },
+    {
+      "gateNumber": "03",
+      "gateCode": "BLOCKER-03",
+      "title": "EPC Tripartite Agreement",
+      "counterparty": "Enterprise EPC Partner",
+      "requiredEvidence": [
+        "Executed tripartite agreement",
+        "Verified counterparty authority",
+        "Worker protection obligations",
+        "Insurance and indemnity documentation",
+        "Occupational safety responsibilities"
+      ],
+      "currentStatus": "UNDER_REVIEW",
+      "operationalState": "FROZEN",
+      "antiMaskingFinding": "Commercial terms drafted; counterparty general counsel legal review ongoing. Heavy construction artisan dispatch remains strictly frozen (0 deployed).",
+      "isClosed": false
+    },
+    {
+      "gateNumber": "04",
+      "gateCode": "GATE-04",
+      "title": "Direct Bank Settlement Assurance",
+      "counterparty": "Partner Clearing Banks",
+      "requiredEvidence": [
+        "Authorized bank statement or bank transaction confirmation",
+        "Transaction reference matching",
+        "Beneficiary reconciliation",
+        "Settlement and value date reconciliation"
+      ],
+      "currentStatus": "UNVERIFIED_PENDING_LIVE_BANK_KEYS",
+      "operationalState": "UNVERIFIED",
+      "antiMaskingFinding": "Application ledger and payment provider pass-through records reconcile 517 bookings (₹18,45,200.00, ₹0.00 commission, ₹0.00 variance). Direct banking API keys are not mounted in sandbox; direct bank statement verification remains unverified.",
+      "isClosed": false
+    },
+    {
+      "gateNumber": "05",
+      "gateCode": "GATE-05",
+      "title": "Production Disaster Recovery",
+      "counterparty": "Production Operations / Change Advisory Board",
+      "requiredEvidence": [
+        "Approved CAB change ticket",
+        "Defined maintenance window",
+        "Named incident commander",
+        "Live production failover execution",
+        "RTO <= 15m and RPO = 0m verification"
+      ],
+      "currentStatus": "UNVERIFIED",
+      "operationalState": "UNVERIFIED",
+      "antiMaskingFinding": "Staging benchmarks achieved RTO: 8.4m, RPO: 0.0m. Staging simulation cannot certify production failover. Production failover remains unverified pending CAB schedule.",
+      "isClosed": false
+    }
+  ],
+  "verdict": {
+    "targetClassification": "CLASS_A_NATIONAL_PRODUCTION",
+    "classAEligible": false,
+    "reasonsClassARefused": [
+      "Gate 01 (TSDM MoU & Gazette): UNDER_REVIEW (State Cabinet scheduling pending)",
+      "Gate 02 (ONDC Root Key Ceremony): APPROVED_PENDING_EXECUTION (Air-gapped ceremony pending)",
+      "Gate 03 (EPC Tripartite Agreement): UNDER_REVIEW (Counterparty legal review pending)",
+      "Gate 04 (Direct Bank Settlement): UNVERIFIED (Production bank keys not mounted in sandbox)",
+      "Gate 05 (Production Disaster Recovery): UNVERIFIED (Awaiting CAB maintenance window approval)"
+    ],
+    "finalClassificationVerdict": "CLASS_B_CONTROLLED_ROLLOUT",
+    "permittedScope": [
+      "Guwahati Urban (Kamrup Metropolitan, Assam)",
+      "Shillong Urban (East Khasi Hills, Meghalaya)"
+    ],
+    "antiMaskingAdherence": true
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "lastUpdated": "2026-11-15T19:40:00Z",
+  "procedures": [
+    {
+      "component": "ONDC BPP Gateway",
+      "trigger": "Protocol drift, unauthorized request flood, or key compromise",
+      "rollbackAction": "Set ENABLE_ONDC_BPP=false; disconnect external webhook listeners; revert to direct web/app discovery",
+      "mttrSeconds": 60,
+      "dataImpact": "Zero; all order state persisted locally"
+    },
+    {
+      "component": "Payment Settlement Rails",
+      "trigger": "Gateway settlement delay > 4 hours or API connectivity failure",
+      "rollbackAction": "Switch active payout provider to secondary fallback gateway; engage automated circuit breaker",
+      "mttrSeconds": 120,
+      "dataImpact": "Zero; idempotent ledger keys prevent duplicate disbursement"
+    },
+    {
+      "component": "W3C Cryptographic Revocation List",
+      "trigger": "Status list sync disruption or false positive revocation report",
+      "rollbackAction": "Activate cached status list snapshot with 72-hour air-gapped validity; issue emergency bulletin",
+      "mttrSeconds": 180,
+      "dataImpact": "Zero; cryptographic signature remains tamper-evident"
+    }
+  ]
+}

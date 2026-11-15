@@ -49,6 +49,22 @@ export async function runBackendVerification() {
   const migration11Path = path.join(projectRoot, "supabase/migrations/20261114000011_national_multi_region_network.sql");
   const migration12Path = path.join(projectRoot, "supabase/migrations/20261114000012_interstate_expansion_and_ecosystem.sql");
   const migration13Path = path.join(projectRoot, "supabase/migrations/20261114000013_national_network_readiness.sql");
+  const migration14Path = path.join(projectRoot, "supabase/migrations/20261115000014_national_operations_scale.sql");
+  const migration15Path = path.join(projectRoot, "supabase/migrations/20261115000015_operational_proof_and_trust.sql");
+  const migration16Path = path.join(projectRoot, "supabase/migrations/20261115000016_verified_regional_growth.sql");
+  const migration17Path = path.join(projectRoot, "supabase/migrations/20261115000017_independent_verification_and_scale.sql");
+  const migration18Path = path.join(projectRoot, "supabase/migrations/20261115000018_national_ecosystem_and_responsible_finance.sql");
+  const migration19Path = path.join(projectRoot, "supabase/migrations/20261115000019_live_ecosystem_and_regional_activation.sql");
+  const migration20Path = path.join(projectRoot, "supabase/migrations/20261115000020_evidence_registry_and_outcome_verification.sql");
+  const migration21Path = path.join(projectRoot, "supabase/migrations/20261115000021_evidence_registry_v2_and_attestation.sql");
+  const migration22Path = path.join(projectRoot, "supabase/migrations/20261115000022_verified_regional_operations_and_ratification.sql");
+  const migration23Path = path.join(projectRoot, "supabase/migrations/20261115000023_independent_regional_assurance_and_audit.sql");
+  const migration24Path = path.join(projectRoot, "supabase/migrations/20261115000024_production_transition_and_institutional_execution.sql");
+  const migration25Path = path.join(projectRoot, "supabase/migrations/20261115000025_institutional_gate_closure_and_impact_replication.sql");
+  const migration26Path = path.join(projectRoot, "supabase/migrations/20261115000026_temporal_integrity_and_blocker_state_machine.sql");
+  const migration27Path = path.join(projectRoot, "supabase/migrations/20261115000027_w3c_credentials_and_dpdp_consent_enforcement.sql");
+  const migration28Path = path.join(projectRoot, "supabase/migrations/20261115000028_audit_hash_chaining_and_payout_disputes.sql");
+  const migration29Path = path.join(projectRoot, "supabase/migrations/20261115000029_independent_audit_attestations_and_dispute_appeals.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
@@ -60,6 +76,22 @@ export async function runBackendVerification() {
   assert(fs.existsSync(migration11Path), "1. SQL Migrations", "Migration 11 (National Multi-Region Network) exists");
   assert(fs.existsSync(migration12Path), "1. SQL Migrations", "Migration 12 (Interstate Expansion & Ecosystem) exists");
   assert(fs.existsSync(migration13Path), "1. SQL Migrations", "Migration 13 (National Network Readiness) exists");
+  assert(fs.existsSync(migration14Path), "1. SQL Migrations", "Migration 14 (National Operations & Scale) exists");
+  assert(fs.existsSync(migration15Path), "1. SQL Migrations", "Migration 15 (Operational Proof & Trust) exists");
+  assert(fs.existsSync(migration16Path), "1. SQL Migrations", "Migration 16 (Verified Regional Growth) exists");
+  assert(fs.existsSync(migration17Path), "1. SQL Migrations", "Migration 17 (Independent Verification & Scale) exists");
+  assert(fs.existsSync(migration18Path), "1. SQL Migrations", "Migration 18 (National Ecosystem & Responsible Finance) exists");
+  assert(fs.existsSync(migration19Path), "1. SQL Migrations", "Migration 19 (Live Ecosystem & Regional Activation) exists");
+  assert(fs.existsSync(migration20Path), "1. SQL Migrations", "Migration 20 (Evidence Registry & Outcome Verification) exists");
+  assert(fs.existsSync(migration21Path), "1. SQL Migrations", "Migration 21 (Evidence Registry V2 & Attestation) exists");
+  assert(fs.existsSync(migration22Path), "1. SQL Migrations", "Migration 22 (Verified Regional Operations & Ratification) exists");
+  assert(fs.existsSync(migration23Path), "1. SQL Migrations", "Migration 23 (Independent Regional Assurance & Audit) exists");
+  assert(fs.existsSync(migration24Path), "1. SQL Migrations", "Migration 24 (Production Transition & Institutional Execution) exists");
+  assert(fs.existsSync(migration25Path), "1. SQL Migrations", "Migration 25 (Institutional Gate Closure & Impact Replication) exists");
+  assert(fs.existsSync(migration26Path), "1. SQL Migrations", "Migration 26 (Temporal Data Integrity & Blocker State Machine) exists");
+  assert(fs.existsSync(migration27Path), "1. SQL Migrations", "Migration 27 (W3C Credentials Registry & DPDP Consent) exists");
+  assert(fs.existsSync(migration28Path), "1. SQL Migrations", "Migration 28 (Audit Hash Chaining & Payout Disputes) exists");
+  assert(fs.existsSync(migration29Path), "1. SQL Migrations", "Migration 29 (Independent Audit Attestations & Dispute Appeals) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
@@ -217,6 +249,368 @@ export async function runBackendVerification() {
       `Phase 12 Table public.${table} defined in schema`
     );
   }
+
+  const m14Content = fs.readFileSync(migration14Path, "utf-8");
+  const phase13Tables = [
+    "regional_launch_milestones",
+    "regional_operational_incidents",
+    "institution_authorized_signatories",
+    "worker_privacy_settings",
+    "financial_gst_ledger",
+    "regional_service_telemetry",
+  ];
+
+  for (const table of phase13Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m14Content),
+      "1. SQL Migrations",
+      `Phase 13 Table public.${table} defined in schema`
+    );
+    assert(
+      m14Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 13 RLS enabled on public.${table}`
+    );
+  }
+
+  const m15Content = fs.readFileSync(migration15Path, "utf-8");
+  const phase14Tables = [
+    "regional_dual_approvals",
+    "review_moderation_appeals",
+    "operational_incidents_lifecycle",
+    "financial_reconciliation_exceptions",
+    "regional_operational_scorecards",
+    "worker_consent_audit_events",
+  ];
+
+  for (const table of phase14Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m15Content),
+      "1. SQL Migrations",
+      `Phase 14 Table public.${table} defined in schema`
+    );
+    assert(
+      m15Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 14 RLS enabled on public.${table}`
+    );
+  }
+
+  const m16Content = fs.readFileSync(migration16Path, "utf-8");
+  const phase15Tables = [
+    "regional_network_liquidity_snapshots",
+    "worker_payout_confirmations",
+    "contractor_customer_success_events",
+    "institutional_onboarding_lifecycle",
+    "worker_support_assignments",
+    "analytics_provenance_events",
+  ];
+
+  for (const table of phase15Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m16Content),
+      "1. SQL Migrations",
+      `Phase 15 Table public.${table} defined in schema`
+    );
+    assert(
+      m16Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 15 RLS enabled on public.${table}`
+    );
+  }
+
+  const m17Content = fs.readFileSync(migration17Path, "utf-8");
+  const phase16Tables = [
+    "metric_evidence_records",
+    "worker_outcome_cohorts",
+    "state_launch_gate_evaluations",
+  ];
+
+  for (const table of phase16Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m17Content),
+      "1. SQL Migrations",
+      `Phase 16 Table public.${table} defined in schema`
+    );
+    assert(
+      m17Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 16 RLS enabled on public.${table}`
+    );
+  }
+
+  const m18Content = fs.readFileSync(migration18Path, "utf-8");
+  const phase17Tables = [
+    "external_ecosystem_transactions",
+    "worker_financial_consents",
+    "enterprise_sync_logs",
+  ];
+
+  for (const table of phase17Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m18Content),
+      "1. SQL Migrations",
+      `Phase 17 Table public.${table} defined in schema`
+    );
+    assert(
+      m18Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 17 RLS enabled on public.${table}`
+    );
+  }
+
+  const m19Content = fs.readFileSync(migration19Path, "utf-8");
+  const phase18Tables = [
+    "live_ecosystem_participants",
+    "enterprise_pilot_engagements",
+    "tool_financing_pilot_applications",
+  ];
+
+  for (const table of phase18Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m19Content),
+      "1. SQL Migrations",
+      `Phase 18 Table public.${table} defined in schema`
+    );
+    assert(
+      m19Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 18 RLS enabled on public.${table}`
+    );
+  }
+
+  const m20Content = fs.readFileSync(migration20Path, "utf-8");
+  const phase19Tables = [
+    "evidence_registry_records",
+    "worker_outcome_milestones",
+  ];
+
+  for (const table of phase19Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m20Content),
+      "1. SQL Migrations",
+      `Phase 19 Table public.${table} defined in schema`
+    );
+    assert(
+      m20Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 19 RLS enabled on public.${table}`
+    );
+  }
+
+  const m21Content = fs.readFileSync(migration21Path, "utf-8");
+  const phase20Tables = [
+    "evidence_attestation_events",
+  ];
+
+  for (const table of phase20Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m21Content),
+      "1. SQL Migrations",
+      `Phase 20 Table public.${table} defined in schema`
+    );
+    assert(
+      m21Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 20 RLS enabled on public.${table}`
+    );
+  }
+
+  const m22Content = fs.readFileSync(migration22Path, "utf-8");
+  const phase21Tables = [
+    "regional_market_evaluations",
+    "institutional_ratification_records",
+  ];
+
+  for (const table of phase21Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m22Content),
+      "1. SQL Migrations",
+      `Phase 21 Table public.${table} defined in schema`
+    );
+    assert(
+      m22Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 21 RLS enabled on public.${table}`
+    );
+  }
+
+  const m23Content = fs.readFileSync(migration23Path, "utf-8");
+  const phase22Tables = [
+    "operational_claim_reconciliations",
+    "worker_payment_verification_events",
+    "worker_economic_snapshots",
+    "regional_operating_reviews",
+    "institutional_instrument_reviews",
+    "audit_evidence_review_events",
+  ];
+
+  for (const table of phase22Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m23Content),
+      "1. SQL Migrations",
+      `Phase 22 Table public.${table} defined in schema`
+    );
+    assert(
+      m23Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 22 RLS enabled on public.${table}`
+    );
+  }
+
+  const m24Content = fs.readFileSync(migration24Path, "utf-8");
+  const phase23Tables = [
+    "production_release_manifests",
+    "enterprise_pilot_authorizations",
+    "worker_impact_evaluations",
+    "class_a_readiness_audits",
+  ];
+
+  for (const table of phase23Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m24Content),
+      "1. SQL Migrations",
+      `Phase 23 Table public.${table} defined in schema`
+    );
+    assert(
+      m24Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 23 RLS enabled on public.${table}`
+    );
+  }
+
+  const m25Content = fs.readFileSync(migration25Path, "utf-8");
+  const phase24Tables = [
+    "institutional_blocker_evaluations",
+    "worker_impact_replication_studies",
+    "sustained_regional_operations_records",
+  ];
+
+  for (const table of phase24Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m25Content),
+      "1. SQL Migrations",
+      `Phase 24 Table public.${table} defined in schema`
+    );
+    assert(
+      m25Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 24 RLS enabled on public.${table}`
+    );
+  }
+
+  const m26Content = fs.readFileSync(migration26Path, "utf-8");
+  const phase25Tables = [
+    "institutional_blocker_transition_audit_logs",
+  ];
+
+  for (const table of phase25Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m26Content),
+      "1. SQL Migrations",
+      `Phase 25 Table public.${table} defined in schema`
+    );
+    assert(
+      m26Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 25 RLS enabled on public.${table}`
+    );
+  }
+
+  const m27Content = fs.readFileSync(migration27Path, "utf-8");
+  const phase26Tables = [
+    "w3c_verifiable_credential_registry",
+  ];
+
+  for (const table of phase26Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m27Content),
+      "1. SQL Migrations",
+      `Phase 26 Table public.${table} defined in schema`
+    );
+    assert(
+      m27Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 26 RLS enabled on public.${table}`
+    );
+  }
+
+  const m28Content = fs.readFileSync(migration28Path, "utf-8");
+  const phase27Tables = [
+    "audit_chain_checkpoints",
+    "worker_payout_dispute_records",
+    "worker_payout_dispute_events"
+  ];
+
+  for (const table of phase27Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m28Content),
+      "1. SQL Migrations",
+      `Phase 27 Table public.${table} defined in schema`
+    );
+    assert(
+      m28Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 27 RLS enabled on public.${table}`
+    );
+  }
+
+  const m29Content = fs.readFileSync(migration29Path, "utf-8");
+  const phase28Tables = [
+    "independent_audit_attestations",
+    "worker_dispute_appeals",
+    "production_dr_execution_log"
+  ];
+
+  for (const table of phase28Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m29Content),
+      "1. SQL Migrations",
+      `Phase 28 Table public.${table} defined in schema`
+    );
+    assert(
+      m29Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 28 RLS enabled on public.${table}`
+    );
+  }
+
+  assert(
+    m29Content.includes("enforce_attestation_evidence_immutability") &&
+    m29Content.includes("trg_audit_attestation_immutability"),
+    "2. Row Level Security",
+    "Phase 28 Attestation evidence immutability trigger defined"
+  );
+
+  assert(
+    m29Content.includes("enforce_appeal_non_retaliation") &&
+    m29Content.includes("trg_dispute_appeal_non_retaliation"),
+    "2. Row Level Security",
+    "Phase 28 Worker dispute appeal anti-retaliation trigger defined"
+  );
+
+  assert(
+    m29Content.includes("enforce_dr_log_immutability") &&
+    m29Content.includes("trg_dr_log_immutability"),
+    "2. Row Level Security",
+    "Phase 28 Production DR execution log immutability trigger defined"
+  );
 
   // ---------------------------------------------------------------------------
   // TEST SUITE 2: Row Level Security (RLS) Policies
