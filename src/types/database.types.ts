@@ -4627,6 +4627,67 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      w3c_verifiable_credential_registry: {
+        Row: {
+          id: string;
+          credential_id: string;
+          issuer_did: string;
+          subject_did: string;
+          credential_type: string[];
+          nsqf_level: number | null;
+          primary_trade: string;
+          status: "active" | "suspended" | "revoked" | "expired";
+          revocation_reason: string | null;
+          revoked_at: string | null;
+          key_version: string;
+          public_key_multibase: string;
+          proof_type: string;
+          canonical_digest: string;
+          issued_at: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          credential_id: string;
+          issuer_did: string;
+          subject_did: string;
+          credential_type?: string[];
+          nsqf_level?: number | null;
+          primary_trade: string;
+          status?: "active" | "suspended" | "revoked" | "expired";
+          revocation_reason?: string | null;
+          revoked_at?: string | null;
+          key_version?: string;
+          public_key_multibase: string;
+          proof_type?: string;
+          canonical_digest: string;
+          issued_at?: string;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          credential_id?: string;
+          issuer_did?: string;
+          subject_did?: string;
+          credential_type?: string[];
+          nsqf_level?: number | null;
+          primary_trade?: string;
+          status?: "active" | "suspended" | "revoked" | "expired";
+          revocation_reason?: string | null;
+          revoked_at?: string | null;
+          key_version?: string;
+          public_key_multibase?: string;
+          proof_type?: string;
+          canonical_digest?: string;
+          issued_at?: string;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -4735,6 +4796,7 @@ export type InstitutionalBlockerEvaluation = Database["public"]["Tables"]["insti
 export type WorkerImpactReplicationStudy = Database["public"]["Tables"]["worker_impact_replication_studies"]["Row"];
 export type SustainedRegionalOperationsRecord = Database["public"]["Tables"]["sustained_regional_operations_records"]["Row"];
 export type InstitutionalBlockerTransitionAuditLog = Database["public"]["Tables"]["institutional_blocker_transition_audit_logs"]["Row"];
+export type W3CVerifiableCredentialRegistry = Database["public"]["Tables"]["w3c_verifiable_credential_registry"]["Row"];
 
 
 
