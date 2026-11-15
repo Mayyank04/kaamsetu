@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  requireAuthenticatedUser,
+  requireAdmin,
+  AuthError,
+} from "@/lib/auth/server";
 import {
   buildEvidenceRegistryRecord,
   validateEvidenceStatusTransition,
@@ -12,6 +18,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
     const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") as EvidenceCategory | null;
@@ -19,6 +26,11 @@ export async function GET(req: NextRequest) {
     const claimId = searchParams.get("claimId");
 
     let query = supabase.from("evidence_registry_records").select("*");
+
+    // If caller is not admin, strictly enforce data classification filter
+    if (user.role !== "admin") {
+      query = query.eq("is_public_safe", true);
+    }
 
     if (category) {
       query = query.eq("category", category);
@@ -72,12 +84,15 @@ export async function GET(req: NextRequest) {
       summary,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const status = err.statusCode || (err.name === "AuthError" ? 401 : 500);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // Only administrators can register or mutate evidence registry records
+    const admin = await requireAdmin();
     const body = await req.json();
     const supabase = createAdminClient();
 
@@ -121,6 +136,7 @@ export async function POST(req: NextRequest) {
               ? now
               : existing.verification_timestamp,
           updated_at: now,
+          verifier_identity: admin.id,
         })
         .eq("id", existing.id)
         .select("*")
@@ -147,12 +163,12 @@ export async function POST(req: NextRequest) {
       payloadToHash: body.payloadToHash,
       scopeAndLimitations: body.scopeAndLimitations,
       claimOwner: body.claimOwner,
-      verifierIdentity: body.verifierIdentity,
+      verifierIdentity: admin.id,
       verificationMethod: body.verificationMethod,
       revocationReason: body.revocationReason,
       accessClassification: body.accessClassification,
       expiryDate: body.expiryDate,
-      verifierRole: body.verifierRole,
+      verifierRole: "administrator",
       status: body.status,
       isPublicSafe: body.isPublicSafe,
       redactedSummary: body.redactedSummary,
@@ -200,6 +216,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    const status = err.statusCode || (err.name === "AuthError" ? 403 : 400);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }

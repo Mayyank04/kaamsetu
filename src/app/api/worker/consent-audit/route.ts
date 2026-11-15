@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  requireAuthenticatedUser,
+  requireOwnedWorkerProfile,
+  AuthError,
+} from "@/lib/auth/server";
 import { recordWorkerConsentAudit, getWorkerPrivacyExplanation } from "@/lib/worker/worker-trust-service";
+
+const recordConsentSchema = z.object({
+  workerProfileId: z.string().min(1, "workerProfileId is required"),
+  recipientEntityType: z.enum(["contractor", "institution", "verifier", "public", "system"]),
+  recipientEntityId: z.string().min(1, "recipientEntityId is required"),
+  action: z.enum(["granted", "renewed", "expired", "revoked", "modified"]),
+  disclosedFields: z.array(z.string()).default([]),
+  policyVersion: z.string().default("v2026.1"),
+});
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
     const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const workerProfileId = searchParams.get("workerProfileId");
@@ -13,6 +29,13 @@ export async function GET(req: NextRequest) {
 
     let auditEvents: any[] = [];
     if (workerProfileId) {
+      // Authorization check: Worker can only access their own consent audit history
+      if (user.role === "worker") {
+        await requireOwnedWorkerProfile(workerProfileId);
+      } else if (user.role !== "admin") {
+        throw new AuthError("Access denied: You do not have permission to view this consent history.", 403);
+      }
+
       const { data, error } = await supabase
         .from("worker_consent_audit_events")
         .select("*")
@@ -30,27 +53,41 @@ export async function GET(req: NextRequest) {
       consentHistory: auditEvents,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const status = err.statusCode || (err.name === "AuthError" ? 401 : 500);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createAdminClient();
+    const user = await requireAuthenticatedUser();
     const body = await req.json();
+    const parsed = recordConsentSchema.parse(body);
 
+    // If caller is worker, enforce ownership
+    if (user.role === "worker") {
+      await requireOwnedWorkerProfile(parsed.workerProfileId);
+    }
+
+    const supabase = createAdminClient();
+
+    // Actor ID is strictly set from authenticated session user.id, never client-supplied
     const result = await recordWorkerConsentAudit(supabase, {
-      workerProfileId: body.workerProfileId,
-      recipientEntityType: body.recipientEntityType,
-      recipientEntityId: body.recipientEntityId,
-      action: body.action,
-      disclosedFields: body.disclosedFields || [],
-      policyVersion: body.policyVersion,
-      actorId: body.actorId,
+      workerProfileId: parsed.workerProfileId,
+      recipientEntityType: parsed.recipientEntityType,
+      recipientEntityId: parsed.recipientEntityId,
+      action: parsed.action,
+      disclosedFields: parsed.disclosedFields,
+      policyVersion: parsed.policyVersion,
+      actorId: user.id,
     });
 
     return NextResponse.json(result, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation error", details: err.errors }, { status: 422 });
+    }
+    const status = err.statusCode || (err.name === "AuthError" ? 403 : 400);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }

@@ -6,25 +6,7 @@ import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
 import { requireAuthenticatedUser } from "@/lib/auth/server";
 import { calculateKaamScore } from "@/lib/scoring/kaamscore";
 import { signCredentialPayload, CanonicalCredentialPayload } from "@/lib/crypto/credential-signer";
-
-// Resolve appropriate valid PIN code adhering to regional context if not explicitly provided
-function resolvePincode(explicitPin?: string, city?: string, state?: string): string {
-  if (explicitPin && /^[1-9][0-9]{5}$/.test(explicitPin)) {
-    return explicitPin;
-  }
-  const s = (state || "").toLowerCase();
-  const c = (city || "").toLowerCase();
-  if (s.includes("assam") || c.includes("guwahati") || c.includes("dispur")) return "781001";
-  if (s.includes("rajasthan") || c.includes("jaipur")) return "302001";
-  if (s.includes("uttar pradesh") || c.includes("varanasi")) return "221001";
-  if (s.includes("maharashtra") || c.includes("pune") || c.includes("mumbai")) return "411001";
-  if (s.includes("karnataka") || c.includes("bengaluru") || c.includes("bangalore")) return "560001";
-  if (s.includes("tamil nadu") || c.includes("chennai")) return "600001";
-  if (s.includes("west bengal") || c.includes("kolkata")) return "700001";
-  if (s.includes("telangana") || c.includes("hyderabad")) return "500001";
-  if (s.includes("delhi")) return "110001";
-  return "781001"; // Default to Assam pilot region
-}
+import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,22 +14,47 @@ export async function POST(request: NextRequest) {
     const json = await request.json();
     const data = approvedProfileSubmissionSchema.parse(json);
 
-    // Generate Collision-Resistant Sovereign Registry ID
+    // 1. Strict Geographic Authorization Check (Class B Controlled Rollout)
+    const geoValidation = GeographicAuthorizationService.validateLocation({
+      city: data.city,
+      state: data.state,
+      pincode: data.pincode,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    });
+
+    if (!geoValidation.allowed) {
+      return NextResponse.json(
+        {
+          error: geoValidation.reason || "Location outside authorized operating zone.",
+          status: geoValidation.status,
+          district: geoValidation.district,
+        },
+        { status: 403 }
+      );
+    }
+
+    const resolvedPincode = geoValidation.pincode;
+
+    // 2. Generate Collision-Resistant Registry ID
     const statePrefix = data.state ? data.state.slice(0, 2).toUpperCase() : "IN";
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const registryId = `IN-${statePrefix}-2026-${randomSuffix}-KS`;
 
-    // Generate Safe, Unique Slug
+    // 3. Generate Safe, Unique Slug
     const baseSlug = `${data.fullName}-${data.city || "india"}`
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
     const slug = `${baseSlug}-${randomSuffix}`;
 
-    // Transparent, Documented KAAMSCORE Calculation strictly based on verified evidence
+    // 4. Evidence-driven KAAMSCORE Calculation based on actual user inputs
+    const hasVoice = Boolean(data.hasVoiceAttestation);
+    const workerConfirmed = Boolean(data.workerConfirmedVoice);
+
     const scoreResult = calculateKaamScore({
-      hasVoiceAttestation: true,
-      workerConfirmedVoice: true,
+      hasVoiceAttestation: hasVoice,
+      workerConfirmedVoice: workerConfirmed,
       yearsExperience: data.yearsExperience,
       verifiedSkillsCount: data.skills?.length || 0,
       completedBookingsCount: 0,
@@ -58,7 +65,9 @@ export async function POST(request: NextRequest) {
     const provisionalScore = scoreResult.totalScore;
     const scoreLevel = provisionalScore >= 500 ? 3 : 2;
     const scoreTier = scoreResult.tier;
-    const resolvedPincode = resolvePincode(data.pincode, data.city, data.state);
+
+    // Opt-in profile publication: worker must explicitly consent to publication
+    const isPublished = Boolean(data.isPublished);
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const qrVerificationUrl = `${appUrl}/verify/${registryId}`;
@@ -94,13 +103,13 @@ export async function POST(request: NextRequest) {
       },
       aadhaarVerified: false,
       digiLockerLinked: false,
-      isPublished: true,
+      isPublished,
       qrVerificationUrl,
       createdAt: new Date().toISOString(),
       isDemo: user.isDemo,
     };
 
-    // 1. Production Mode: Persist strictly to Supabase database
+    // 5. Database Persistence Mode
     if (isConfigured.supabase && !user.isDemo) {
       const supabase = await createServerSupabaseClient();
 
@@ -156,7 +165,7 @@ export async function POST(request: NextRequest) {
             languages: data.languages,
             kaamscore: provisionalScore,
             kaamscore_level: scoreLevel,
-            is_published: true,
+            is_published: isPublished,
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingProfile.id);
@@ -188,7 +197,7 @@ export async function POST(request: NextRequest) {
             languages: data.languages,
             kaamscore: provisionalScore,
             kaamscore_level: scoreLevel,
-            is_published: true,
+            is_published: isPublished,
           })
           .select("id")
           .single();
@@ -203,10 +212,13 @@ export async function POST(request: NextRequest) {
         targetWorkerProfileId = inserted.id;
       }
 
-      // Link confirmed skills to worker_skills table
+      // Link confirmed skills to worker_skills table with evidence-driven status
+      const initialVerificationType = hasVoice && workerConfirmed
+        ? "voice_submitted"
+        : "self_declared";
+
       if (targetWorkerProfileId && data.skills && data.skills.length > 0) {
         for (const skillName of data.skills) {
-          // Look up skill ID or insert into skills catalog
           const { data: existingSkill } = await supabase
             .from("skills")
             .select("id")
@@ -236,7 +248,7 @@ export async function POST(request: NextRequest) {
                 {
                   worker_profile_id: targetWorkerProfileId,
                   skill_id: skillId,
-                  verification_type: "voice_attested",
+                  verification_type: initialVerificationType,
                   is_primary: true,
                   years_practiced: data.yearsExperience || 2,
                 },
@@ -246,7 +258,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Anchor cryptographic credential in credential_registry
+      // Anchor initial cryptographic credential in credential_registry
+      // Note: nsqfLevel is null until official assessment is verified
       if (targetWorkerProfileId) {
         try {
           const credentialPayload: CanonicalCredentialPayload = {
@@ -255,7 +268,7 @@ export async function POST(request: NextRequest) {
             fullName: data.fullName,
             primaryTrade: data.occupation,
             category: data.category,
-            nsqfLevel: 4,
+            nsqfLevel: null as any,
             issuer: "KAAMSETU National Workforce Trust Protocol",
             issuedAt: new Date().toISOString(),
             expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
@@ -285,7 +298,7 @@ export async function POST(request: NextRequest) {
     }
 
     return createSuccessResponse(savedRecord, {
-      message: "Sovereign Skill Card successfully minted and anchored.",
+      message: "Professional profile successfully created and saved.",
       registryId,
       slug,
       isDemo: user.isDemo,

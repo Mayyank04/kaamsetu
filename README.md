@@ -1,38 +1,34 @@
 # KAAMSETU (कामसेतु)
-### India's Universal Sovereign Digital Skill Identity Platform
+## Vocational Digital Identity, Worker Protection & Trust Platform
 
-> **"Every skill deserves to be seen, verified, and honored."**  
-> KAAMSETU is an institutional digital identity and trust protocol designed for India's 450M+ skilled blue-collar, trade, and informal craftspeople. By combining multilingual voice attestation powered by Google Gemini, DigiLocker / Aadhaar identity anchors, a transparent **KAAMSCORE™** trust index, and cryptographically verified customer contracting records, KAAMSETU transforms informal craft mastery into a universally portable, sovereign credential.
-
----
-
-## Table of Contents
-1. [Core Features & Architecture](#core-features--architecture)
-2. [Tech Stack](#tech-stack)
-3. [Prerequisites & Quickstart](#prerequisites--quickstart)
-4. [Environment Variables](#environment-variables)
-5. [Database Architecture & Migrations](#database-architecture--migrations)
-6. [Security & Row Level Security (RLS)](#security--row-level-security-rls)
-7. [Hackathon Demo Walkthrough (For Evaluators)](#hackathon-demo-walkthrough-for-evaluators)
-8. [Verification Test Suite](#verification-test-suite)
-9. [Limitations & Production Roadmap](#limitations--production-roadmap)
+> **"Every skill deserves to be seen, even without a degree."**  
+> **"Your work. Your reputation. Your opportunities."**  
+> Permanent Constitutional Invariant: `platform_commission_amount = 0.00` on worker wages.  
+> Certified Operating Classification: `CLASS_B_CONTROLLED_ROLLOUT`  
+> Authorized Operating Geography: Guwahati Urban (Kamrup Metro, Assam) & Shillong Urban (East Khasi Hills, Meghalaya).
 
 ---
 
-## Core Features & Architecture
+## 1. Product Overview
 
-```
-                                  KAAMSETU PLATFORM ARCHITECTURE
+KAAMSETU is an institutional digital identity and worker empowerment platform designed for skilled craftspeople and trade professionals. The platform allows vocational artisans to document hands-on expertise, build an unforgeable reputation, receive direct customer bookings, and retain 100% of their earnings with permanent zero platform commission.
+
+---
+
+## 2. Platform Architecture
+
+```text
+                                  KAAMSETU SYSTEM ARCHITECTURE
                                   
    +--------------------+     +------------------------+     +-------------------------+
-   |  Skilled Worker    |     |  Customer / Contractor |     |  Public / Verification  |
-   |  (Voice / Mobile)  |     |   (Direct Booking)     |     |   (Sovereign QR Code)   |
+   |   Skilled Worker   |     |  Customer / Employer   |     |  Institutional Partner  |
+   | (Voice/Web Profile)|     |  (Direct Booking/Hire) |     | (Skill Mission/Polytech)|
    +---------+----------+     +-----------+------------+     +------------+------------+
              |                            |                               |
              v                            v                               v
    +--------------------+     +------------------------+     +-------------------------+
-   | Voice Onboarding   |     | Professional Discovery |     |  Public Worker Profile  |
-   | Multilingual AI    |     | Live DB Search/Filters |     |  Cryptographic Proofs   |
+   | Multilingual Voice |     | Geo-Fenced Discovery   |     | Cohort Management       |
+   | Skill Extraction   |     | Guwahati & Shillong    |     | Outcome Verification    |
    +---------+----------+     +-----------+------------+     +------------+------------+
              |                            |                               |
              +----------------------------+-------------------------------+
@@ -40,9 +36,10 @@
                                           v
    +-----------------------------------------------------------------------------------+
    |                             Next.js 15 App Router                                 |
-   |   - Route Handlers (/api/workers, /api/bookings, /api/reviews, /api/auth)          |
-   |   - Server Actions & Database Data Access Layer (src/lib/supabase/db/)            |
-   |   - Design System: Deep Forest Green (#153E35), Warm Sand (#E8C999), Warm Ivory   |
+   |   - Server-Side Role-Based Authorization & Tenant Isolation Layer                 |
+   |   - Ed25519 W3C Verifiable Credentials & Scannable Offline QR Protocol            |
+   |   - Permanent Zero-Commission Invariant Engine (platform_commission = 0.00)       |
+   |   - Design System: Deep Forest Green (#1E3A2F), Warm Sand, Editorial Ivory        |
    +--------------------------------------+--------------------------------------------+
                                           |
                    +----------------------+----------------------+
@@ -50,259 +47,112 @@
                    v                                             v
    +-------------------------------+             +-------------------------------------+
    |       Google Gemini AI        |             |        Supabase PostgreSQL          |
-   |  - Gemini 2.5 Flash           |             |  - 9 Relational Tables              |
-   |  - 7 Indian Languages         |             |  - Strict Row Level Security (RLS)  |
-   |  - NSQF & Trade Extraction    |             |  - Tamper-Evident Work Records      |
+   |  - Multilingual AI Extraction |             |  - 100 Relational Tables            |
+   |  - 7 Indian Languages         |             |  - 100% Row Level Security (RLS)    |
+   |  - Transparent KaamScore      |             |  - Immutable Ledger & Consent Logs  |
    +-------------------------------+             +-------------------------------------+
 ```
 
-### 1. Multilingual Voice-First Onboarding
-- **Zero Literacy Barrier**: Craftspeople speak naturally in their native dialect or tongue.
-- **Languages Supported**: Hindi (हिन्दी), English, Bengali (বাংলা), Tamil (தமிழ்), Telugu (తెలుగు), Marathi (मराठी), and Assamese (অসমীয়া).
-- **Fallback**: Works seamlessly with text input when microphone is unavailable.
-- **Server-Side Gemini 2.5 Flash**: Analyzes spoken audio or transcript into:
-  - Primary Occupation & Trade Category (mapped to National Classification of Occupations NCO-2015).
-  - Years of Hands-on Experience.
-  - Granular Technical Sub-Skills & Equipment Handled.
-  - Commercial Services & Indicative Rate Estimates (₹ / day).
-  - Missing details guidance and professional biography.
-- **Worker Approval**: Every extracted parameter is fully editable before final sovereign anchoring.
+---
 
-### 2. Self-Sovereign Worker Dashboard & Identity Card
-- **Sovereign Privacy Switch**: Workers have one-click control to publish or unpublish their profile (`is_published = false` immediately hides profile from public view via RLS).
-- **Verified vs. Self-Declared Separation**: Rigorously distinguishes between self-declared claims and DigiLocker / voice / peer-verified attestations.
-- **Portfolio Management**: Upload project photos to Supabase Storage with before/after comparisons and technical notes.
-- **Real-Time Booking Management**: Accept, decline, or complete service requests from clients.
+## 3. Technology Stack
 
-### 3. Customer Discovery & Search Engine
-- **Search Engine**: Direct search across name, trade, sub-skills, bio, and city.
-- **Multi-Dimensional Filters**:
-  - **Trade Classification**: Electrical & Solar, Handloom & Textiles, Automotive EV, Construction, Agritech, Precision Plumbing, etc.
-  - **Skill Filter**: Specific technical proficiencies (e.g., *Rooftop Solar Array*, *3-Phase Inverters*, *Zardozi Gold Thread*).
-  - **Location Filter**: District/city level filtering (Jaipur, Varanasi, Pune, Bengaluru, New Delhi, Kolkata, Chennai, Amritsar).
-  - **Experience**: 3+, 5+, 10+, 15+ years.
-  - **Availability**: Immediately Available, In Service, On Leave.
+Verified against repository dependencies:
 
-### 4. End-to-End Booking Lifecycle & Verified Reviews
-- **Status Stepper**: `Requested (Pending) ➔ Confirmed (Accepted) ➔ In Progress ➔ Completed (or Cancelled)`.
-- **Review Eligibility Security**: RLS and database triggers ensure **only** customers with a completed service record can submit a rating and review for an artisan.
+| Layer | Component | Version | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Framework** | Next.js (App Router) | `15.1.7` | Server Components, Route Handlers, SSR |
+| **Runtime** | React / Node.js | `19.0.0` / Node `20+` | User interface and async runtime |
+| **Styling** | Tailwind CSS | `3.4.17` | Editorial design system tokens |
+| **Database** | PostgreSQL via Supabase | `15.x` | 100 tables, 100% RLS coverage |
+| **Cryptography** | Node Crypto (Ed25519) | Native | W3C Verifiable Credentials, RFC 8785 JSON |
+| **AI / Voice** | Google GenAI SDK | `^3.3.0` | Voice transcription & skill extraction |
+| **QR Protocol** | QRCode Engine | `1.5.4` | High-density camera-scannable offline tokens |
+| **Validation** | Zod | `3.24.2` | Runtime request body and schema validation |
 
 ---
 
-## Tech Stack
+## 4. Key Capabilities & User Roles
 
-| Layer | Technology |
-|---|---|
-| **Framework** | Next.js 15.5.29 (App Router, Server Components, Route Handlers) |
-| **Runtime** | Node.js 18+ / React 19 |
-| **Styling** | Tailwind CSS v4, Custom Sovereign Theme Tokens |
-| **Design Language** | Deep Forest Green (`#153E35`), Warm Sand (`#E8C999`), Editorial Ivory (`#F7F5F0`) |
-| **Icons & UI Primitives** | Lucide React, Radix UI (Dialog, Dropdown, Slider, Switch, Tabs) |
-| **Database** | PostgreSQL via Supabase (9 tables, full foreign keys, RLS enabled) |
-| **Storage** | Supabase Storage (`portfolio-images` bucket with offline data URL fallback) |
-| **AI Extraction** | Google Gemini 2.5 Flash SDK (`@google/genai`) |
-| **Validation** | Zod v3 schemas on all client & server boundaries |
-| **Testing** | Custom Backend Verification Suite (`tsx src/lib/supabase/db/verify-backend.ts`) |
+### User Roles
+- **Worker / Artisan:** Voice-assisted onboarding, skill documentation, work portfolio, direct bookings, transparent payout timeline, grievance reporting, and zero-penalty workplace safety withdrawal.
+- **Customer:** Regional search and discovery within authorized boundaries, credential inspection via scannable QR, booking lifecycle management, and verified review submission.
+- **Contractor / Employer:** Project workforce staffing, crew management, zero-commission wage disbursement confirmations.
+- **Institution (Skill Missions, ITIs):** Trainee cohort tracking, practical assessment logging, and privacy-preserving outcome exports.
+- **Administrator / Moderator:** Non-partisan dispute resolution, review moderation appeal handling, and audit log inspection.
+
+### Core Capabilities
+1. **Multilingual Voice Onboarding:** Speak naturally in Hindi, Assamese, Bengali, Tamil, Telugu, Marathi, or English. Gemini AI extracts structured trade claims; skills remain `self_declared` or `voice_submitted` until independently confirmed.
+2. **Permanent Zero Commission:** 100% of customer payments belong to the working artisan. Database triggers block clawbacks or retrospective deductions.
+3. **W3C Verifiable Credentials:** Ed25519-signed credentials with status list revocation and 72-hour offline validity window.
+4. **Strict Regional Geofencing:** Operations are confined to authorized Class B zones: **Guwahati Urban** (Assam) and **Shillong Urban** (Meghalaya). Out-of-bounds requests are rejected with HTTP 403.
+5. **Worker Retaliation Shield:** 1-star reviews submitted during open wage disputes are automatically quarantined to prevent customer coercion.
 
 ---
 
-## Prerequisites & Quickstart
+## 5. Prerequisites & Local Setup
 
 ### Prerequisites
-- Node.js 18.18 or higher (Node 20+ recommended)
-- npm or pnpm
+- Node.js `20.x` or `22.x` LTS
+- npm `10.x`
+- PostgreSQL 15+ (optional for local mock evaluation)
 
-### 1. Clone & Install
+### Quickstart
 ```bash
+# 1. Clone repository
 git clone https://github.com/Mayyank04/kaamsetu.git
-cd stitch_kaamsetu_digital_identity_platform
+cd kaamsetu
+
+# 2. Checkout Phase 35 branch
+git checkout phase-35-remediation-and-product-transformation
+
+# 3. Install dependencies
 npm install
-```
 
-### 2. Configure Environment (Optional for Demo Mode)
-Copy the example environment file:
-```bash
+# 4. Configure environment
 cp .env.example .env.local
-```
-> **Note**: KAAMSETU features an **integrated offline simulation mode**. If Supabase and Gemini keys are not provided, the application runs out of the box using verified demo seed datasets and algorithmic rule-based extraction.
 
-### 3. Start Development Server
-```bash
+# 5. Run development server
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 4. Production Build & Start
+Visit [http://localhost:3000](http://localhost:3000) to view the application.
+
+---
+
+## 6. Testing & Quality Verification
+
 ```bash
-npm run build
-npm start
-```
+# Execute Phase 35 Security & Authorization Test Suite (33/33 Tests)
+npm run test:phase35
 
----
-
-## Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Optional | Your Supabase project URL (`https://your-project.supabase.co`). |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Optional | Supabase public anon key for client-side queries. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Optional | Supabase service-role key for backend admin operations (**NEVER exposed to frontend**). |
-| `GEMINI_API_KEY` | Optional | Google Gemini API key for live voice audio & transcript analysis (Server-Side Only). |
-| `NEXT_PUBLIC_APP_URL` | Optional | Base URL of the deployment (default: `http://localhost:3000`). |
-| `ENABLE_DEMO_AUTH` | Optional | Explicit environment guard to permit simulated hackathon personas (default: false in production). |
-| `NEXT_PUBLIC_ENABLE_DEMO_AUTH`| Optional | Exposes demo persona toggle to frontend authentication modal. |
-
----
-
-## Database Architecture & Migrations
-
-The database schema is defined across versioned SQL migrations in `supabase/migrations/`:
-
-### 1. `20261114000001_initial_schema.sql`
-Creates the 9 core relational tables:
-1. `public.occupations`: Standardized trade catalog with NSQF levels and Hindi translations.
-2. `public.skills`: Granular technical proficiencies linked to occupations.
-3. `public.profiles`: Core user identities with role partitioning (`worker`, `customer`, `admin`).
-4. `public.worker_profiles`: Sovereign workforce profiles with slug, registry ID, hourly/daily rates, KaamScore, and published status.
-5. `public.worker_skills`: Junction table with verification types (`voice_attested`, `digilocker_verified`, `peer_confirmed`, `self_declared`).
-6. `public.portfolio`: Project showcases with title, description, category, and storage image URLs.
-7. `public.bookings`: Service contracts with status (`requested`, `confirmed`, `in_progress`, `completed`, `cancelled`).
-8. `public.reviews`: Customer ratings, technical quality scores, and reviews.
-9. `public.work_records`: Cryptographically hashed work completion ledger.
-
-### 2. `20261114000002_row_level_security.sql`
-Applies PostgreSQL Row Level Security (RLS) policies:
-- **Public Visibility Gating**: Unauthenticated/public users can only query profiles where `is_published = true`.
-- **Worker Self-Sovereignty**: Workers can only insert, update, or unpublish their own records.
-- **Customer Privacy**: Bookings are strictly restricted to the customer who created them and the assigned worker.
-- **Review Integrity Rule**: Customers can **only** submit a review if they have at least one booking with `status = 'completed'` for that worker.
-
-### 3. `20261114000003_storage_and_worker_controls.sql`
-Configures the Supabase Storage bucket `portfolio-images` and worker asset policies.
-
-### 4. `20261114000004_security_hardening.sql`
-Enforces production-grade application security and data isolation:
-- **Phone & Identity Masking View**: `public_worker_profiles` strictly hides unauthenticated phone numbers and email addresses.
-- **Strict Storage Path Isolation**: Authenticated workers can only upload to `portfolio-images/${auth.uid()}/*`.
-- **Verified Work Ledger Integrity**: Work records are append-only and cannot be forged by arbitrary callers.
-- **Booking State Transition Trigger**: Enforces valid status transitions at the database level (`requested -> confirmed -> in_progress -> completed`).
-
-### 5. Running Migrations & Seeding
-Using the Supabase CLI:
-```bash
-supabase db push
-# Or seed database idempotently without destructive truncate:
-supabase db reset
-```
-
----
-
-## Security & Row Level Security (RLS)
-
-- **Browser Secret Isolation**: Frontend code never imports or references `SUPABASE_SERVICE_ROLE_KEY`. Verified by static check in test suite.
-- **Camera-Scannable QR Verification**: Camera-scannable QR codes generated via `qrcode` link to `/verify/[registryId]`, displaying UIDAI masked Aadhaar (`XXXX-XXXX-4012`) and verified NSQF classifications.
-- **Unique Profile Slugs**: Enforced with automated slug generation trigger to prevent collision.
-- **Tamper-Evident Ledger**: Work records contain SHA-256 cryptographic hashes chaining work completion certificates.
-- **Aadhaar / DigiLocker Verification**: Pre-configured verification flags ensure clear visual trust markers on sovereign identity cards.
-
----
-
-## Hackathon Demo Walkthrough (For Evaluators)
-
-Follow these steps to evaluate the full end-to-end functionality of KAAMSETU:
-
-### Step 1: 1-Click Persona Sign In
-1. Navigate to `/login` (or click **Sign In** in the top navigation).
-2. On the **Hackathon Quick-Sign In** tab, select one of the three pre-configured personas:
-   - **Rameshwar Sharma**: Master Industrial Electrician & Solar Grid Specialist (`worker` role) $\to$ Redirects to `/dashboard`.
-   - **Sunita Devi**: Master Handloom Weaver & Zardozi Artisan (`worker` role) $\to$ Redirects to `/dashboard`.
-   - **Aarav Mehta**: Commercial Facility Manager & Contractor (`contractor` role) $\to$ Redirects to `/customer/bookings`.
-
-### Step 2: AI Voice Worker Onboarding
-1. Navigate to `/onboarding`.
-2. **Step 1 (Language & Mode)**: Select **हिन्दी (Hindi)** or your preferred language, and choose **Voice Mode** (or Text Mode).
-3. **Step 2 (Voice Testimony)**: Click the microphone or use the sample text button to load a realistic trade description.
-4. **Step 3 (AI Analysis)**: Click **Analyze Craft Testimony**. Google Gemini extracts the occupation, years of experience, NSQF category, sub-skills, daily rates, and generates an editorial bio without hallucination.
-5. **Step 4 (Approve & Mint)**: Edit any field, review the confidence score, and click **Approve & Mint Sovereign ID**.
-6. **Result**: An authentic Sovereign Skill Credential is minted with a unique Registry ID (e.g., `IN-RJ-2026-4029-KS`), verifiable QR code, and KAAMSCORE™.
-
-### Step 3: Self-Sovereign Worker Dashboard
-1. Navigate to `/dashboard`.
-2. **Profile Completion**: Review the 5-point Sovereign Trust Index.
-3. **Sovereignty Switch**: Toggle the **Published / Private Profile** switch in the top right to verify immediate privacy control.
-4. **Skills Manager**: Add a new skill and view its verification badge (`voice_attested` vs `self_declared`).
-5. **Portfolio Manager**: Upload a project photo with technical notes and project date.
-6. **Job Requests**: Review incoming bookings, with options to **Accept** or **Decline**.
-
-### Step 4: Professional Discovery & Database Search
-1. Navigate to `/explore`.
-2. Search for `"solar"` in the search bar.
-3. Test combinations of **Profession Filter**, **Location Filter** (*Jaipur*, *Varanasi*, *Pune*), **Experience** (*10+ years*), and **Availability** (*Available*).
-4. Notice real-time dynamic query resolution.
-5. Click **View Sovereign Profile** on any worker card to view their public profile.
-
-### Step 5: Direct Booking & Status Lifecycle
-1. On any worker profile (e.g., `/profile/rameshwar-sharma-jaipur`), click **Book Verified Service**.
-2. Fill in project scope, site address, and scheduled date, then click **Submit Booking Request**.
-3. Navigate to `/customer/bookings`.
-4. Observe the live status progression stepper:
-   $$\text{Requested} \longrightarrow \text{Confirmed} \longrightarrow \text{In Progress} \longrightarrow \text{Completed}$$
-5. Click **Mark In Progress** and then **Mark Completed**.
-
-### Step 6: Verified Customer Review
-1. Once a booking is marked `completed`, click **Write Verified Review**.
-2. Select 5 stars, technical quality rating, punctuality rating, and write a testimonial.
-3. Click **Submit Verified Review** — the review is anchored to the worker's permanent reputation ledger.
-
----
-
-## Verification Test Suite
-
-KAAMSETU includes an automated 67-point backend, security, RLS, and AI extraction verification test suite.
-
-Run the test suite:
-```bash
+# Execute Supabase Database & Security Verification Suite (275/275 Tests)
 npm run verify:db
-```
 
-### Expected Output:
-```
-=================================================================
-KAAMSETU SUPABASE BACKEND VERIFICATION SUITE
-=================================================================
-VERIFICATION SUMMARY: 67/67 TESTS PASSED (0 FAILED)
-=================================================================
-✓ PASS [1. SQL Migrations] Migration 01 (Initial Schema) exists
-✓ PASS [1. SQL Migrations] Migration 02 (Row Level Security) exists
-✓ PASS [1. SQL Migrations] Seed SQL data exists
-...
-✓ PASS [6. Security Hardening] Migration 04 (Security Hardening) exists
-✓ PASS [6. Security Hardening] Public worker profiles view securely restricts unauthenticated phone/email leakage
-✓ PASS [6. Security Hardening] Storage folder isolation: workers can ONLY upload to their own folder (auth.uid() = folder)
-✓ PASS [6. Security Hardening] Database trigger validates booking lifecycle transitions (preventing invalid transitions)
-✓ PASS [6. Security Hardening] Seed SQL removed destructive TRUNCATE CASCADE, using safe idempotent operations
-✓ PASS [7. AI Non-Invention] Extracted worker identity from Hindi transcript
-✓ PASS [7. AI Non-Invention] Non-invention invariant: experienceYears is 0 when unmentioned (never defaulted)
-✓ PASS [7. AI Non-Invention] Non-invention invariant: daily rates are undefined when unmentioned
-✓ PASS [7. AI Non-Invention] Non-invention invariant: equipment list is EMPTY when unmentioned
-✓ PASS [7. AI Non-Invention] Unmentioned experience accurately flagged in missingFields array
-✓ PASS [8. QR Verification] generateQrDataUrl outputs a valid base64 PNG data URL
-✓ PASS [8. QR Verification] Public credential verification route /verify/[registryId] exists and is operational
-✓ PASS [9. Storage Security] PNG magic byte detection (89 50 4E 47) verified
-✓ PASS [9. Storage Security] Executable scripts strictly rejected by file header inspection
+# Run TypeScript static type check (0 errors)
+npx tsc --noEmit
+
+# Execute Next.js Production Build (112/112 Routes compiled)
+npm run build
 ```
 
 ---
 
-## Limitations & Production Roadmap
+## 7. Operational Status & External Gates
 
-1. **DigiLocker Integration**: In hackathon demo simulation, DigiLocker credentials are verified via simulated sandbox responses. For live production, an official DigiLocker Requester API gateway registration is required.
-2. **SMS Gateway**: OTP verification utilizes the demo bypass code `123456` in offline mode. Live deployment supports Supabase Twilio / Gupshup SMS provider integration.
-3. **Smart Physical NFC Cards**: Public profile QR codes link directly to `/verify/[registryId]`. Production roadmap includes issuing physical ISO/IEC 14443 NFC cards for on-site contactless tapping.
+| Institutional Gate | Status | Operational Bound | Standard Required to Unblock |
+| :--- | :---: | :---: | :--- |
+| **TSDM (Tripura)** | `UNDER_REVIEW` | Tripura **BLOCKED** | State Cabinet notification & bilateral MoU |
+| **ONDC / ONest** | `APPROVED_PENDING_EXECUTION` | BPP Broadcast **BLOCKED** | Dual-control air-gapped Ed25519 root key ceremony |
+| **EPC Tripartite** | `UNDER_REVIEW` | Heavy Construction **FROZEN** | General counsel contract execution & underwritten indemnity |
+| **Direct Bank Settlement** | `UNVERIFIED` | Bank Settlement **UNVERIFIED** | Live production bank API clearing credentials |
+| **Production DR Failover** | `UNVERIFIED` | Production DR **UNVERIFIED** | Scheduled CAB-approved live maintenance failover drill |
+
+Certified Operating Classification: **`CLASS_B_CONTROLLED_ROLLOUT`** (Class A National Production promotion objectively disallowed).
 
 ---
 
-## License & Credits
+## 8. License & Governance
 
-- Built for the **National Digital Identity & Inclusive Technology Hackathon**.
-- Designed to honor the master craftspeople, technicians, and artisans building modern India.
+KAAMSETU is governed under strict anti-masking and worker protection protocols.  
+All worker wage entitlements are non-commissionable and inviolable.

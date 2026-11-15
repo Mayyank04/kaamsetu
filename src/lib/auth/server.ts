@@ -158,12 +158,36 @@ export async function requireContractor(): Promise<AuthenticatedUser> {
 }
 
 /**
+ * Requires an authenticated customer or admin.
+ */
+export async function requireCustomer(): Promise<AuthenticatedUser> {
+  const user = await requireAuthenticatedUser();
+  if (user.role !== "customer" && user.role !== "admin") {
+    throw new AuthError("Access denied: Customer role required for this operation.", 403);
+  }
+  return user;
+}
+
+/**
  * Requires an authenticated institutional partner or admin.
  */
 export async function requireInstitution(): Promise<AuthenticatedUser> {
   const user = await requireAuthenticatedUser();
   if (user.role !== "institution" && user.role !== "admin") {
     throw new AuthError("Access denied: Institutional partner role required.", 403);
+  }
+  return user;
+}
+
+export const requireInstitutionMember = requireInstitution;
+
+/**
+ * Requires an authenticated moderator, ombudsperson, or administrator.
+ */
+export async function requireModerator(): Promise<AuthenticatedUser> {
+  const user = await requireAuthenticatedUser();
+  if (user.role !== "admin" && (user.role as string) !== "moderator" && (user.role as string) !== "ombudsperson") {
+    throw new AuthError("Access denied: Moderator or Ombudsperson role required.", 403);
   }
   return user;
 }
@@ -176,6 +200,96 @@ export async function requireAdmin(): Promise<AuthenticatedUser> {
   if (user.role !== "admin") {
     throw new AuthError("Access denied: Administrative privileges required.", 403);
   }
+  return user;
+}
+
+export const requireAdministrator = requireAdmin;
+
+/**
+ * Enforces that the authenticated institution owns the target cohort.
+ */
+export async function requireInstitutionCohortOwnership(cohortId: string): Promise<AuthenticatedUser> {
+  const user = await requireInstitution();
+  if (user.isDemo || user.role === "admin") {
+    return user;
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: institution } = await supabase
+    .from("institutions")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!institution) {
+    throw new AuthError("Forbidden: Institutional profile not found.", 403);
+  }
+
+  const { data: cohort, error } = await supabase
+    .from("institutional_cohorts")
+    .select("id, institution_id")
+    .eq("id", cohortId)
+    .single();
+
+  if (error || !cohort || cohort.institution_id !== institution.id) {
+    throw new AuthError("Forbidden: You do not own or have access to this institutional cohort.", 403);
+  }
+
+  return user;
+}
+
+/**
+ * Enforces generic resource ownership based on user_id or worker_profile_id.
+ */
+export async function requireResourceOwnership(
+  tableName: string,
+  resourceId: string,
+  ownerColumn: "user_id" | "worker_profile_id" = "user_id"
+): Promise<AuthenticatedUser> {
+  const user = await requireAuthenticatedUser();
+  if (user.isDemo || user.role === "admin") {
+    return user;
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from(tableName as any)
+    .select(ownerColumn)
+    .eq("id", resourceId)
+    .single();
+
+  if (error || !data) {
+    throw new AuthError("Resource not found or inaccessible.", 404);
+  }
+
+  const ownerVal = (data as any)[ownerColumn];
+  const expectedVal = ownerColumn === "user_id" ? user.id : user.workerProfileId;
+
+  if (ownerVal !== expectedVal) {
+    throw new AuthError("Forbidden: You do not own this resource.", 403);
+  }
+
+  return user;
+}
+
+/**
+ * Validates permission against user role capabilities.
+ */
+export async function requirePermission(permission: "manage_payouts" | "moderate_disputes" | "export_governance" | "manage_system"): Promise<AuthenticatedUser> {
+  const user = await requireAuthenticatedUser();
+  const rolePermissions: Record<string, string[]> = {
+    admin: ["manage_payouts", "moderate_disputes", "export_governance", "manage_system"],
+    worker: [],
+    customer: [],
+    contractor: ["manage_payouts"],
+    institution: ["export_governance"],
+  };
+
+  const allowed = rolePermissions[user.role] || [];
+  if (!allowed.includes(permission)) {
+    throw new AuthError(`Forbidden: Missing required permission '${permission}'.`, 403);
+  }
+
   return user;
 }
 

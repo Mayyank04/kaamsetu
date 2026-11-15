@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin, AuthError } from "@/lib/auth/server";
 import {
   buildCommercialTransaction,
   transitionSettlementState,
@@ -11,6 +12,9 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    // Financial settlement reports require administrator privileges
+    await requireAdmin();
+
     const supabase = createAdminClient();
 
     // Query both payment_records_ledger (worker wages) and financial_gst_ledger (B2B SaaS)
@@ -19,7 +23,7 @@ export async function GET(req: NextRequest) {
 
     const transactions: CommercialTransactionRecord[] = [];
 
-    // Map wage records (0.00% commission invariant)
+    // Map wage records (0.00% commission permanent invariant)
     if (wageRecords) {
       for (const w of wageRecords) {
         const tx = buildCommercialTransaction({
@@ -33,6 +37,8 @@ export async function GET(req: NextRequest) {
         });
         tx.platformCommissionAmount = 0.0;
         tx.platformCommissionRate = 0.0;
+        // Direct bank settlement is unverified without live bank clearing feeds
+        tx.merchantBankReference = null;
         transactions.push(tx);
       }
     }
@@ -51,9 +57,11 @@ export async function GET(req: NextRequest) {
         });
         if (g.reconciliation_status === "reconciled" || g.reconciliation_status === "settled") {
           tx.state = "merchant_settlement_completed";
-          tx.merchantBankReference = `UTR-${g.id.slice(0, 8).toUpperCase()}`;
+          // Only use authentic bank reference if explicitly provided in database record; never manufacture pseudo-UTRs
+          tx.merchantBankReference = g.bank_utr || null;
         } else {
           tx.state = "merchant_settlement_pending";
+          tx.merchantBankReference = null;
         }
         transactions.push(tx);
       }
@@ -68,12 +76,15 @@ export async function GET(req: NextRequest) {
       transactions,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const status = err.statusCode || (err.name === "AuthError" ? 401 : 500);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // State transitions require administrator privileges
+    await requireAdmin();
     const body = await req.json();
 
     if (body.action === "transition_state") {
@@ -85,10 +96,15 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Do not allow manufactured pseudo-UTRs
+      const cleanBankRef = merchantBankReference && !merchantBankReference.startsWith("UTR-")
+        ? merchantBankReference
+        : null;
+
       const result = transitionSettlementState({
         transaction,
         targetState: targetState as SettlementState,
-        merchantBankReference,
+        merchantBankReference: cleanBankRef,
         notes,
       });
 
@@ -115,7 +131,7 @@ export async function POST(req: NextRequest) {
       isSimulated: body.isSimulated ?? false,
       gatewayProvider: body.gatewayProvider,
       gatewayReference: body.gatewayReference,
-      merchantBankReference: body.merchantBankReference,
+      merchantBankReference: body.merchantBankReference || null,
       gstRate: body.gstRate,
     };
 
@@ -130,6 +146,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    const status = err.statusCode || (err.name === "AuthError" ? 403 : 400);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }

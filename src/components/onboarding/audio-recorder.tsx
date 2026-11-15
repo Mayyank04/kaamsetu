@@ -41,6 +41,17 @@ interface SpeechRecognitionInstance {
   onend: () => void;
 }
 
+// Map language codes to BCP-47 for Web Speech API
+const BCP47_MAP: Record<SupportedLanguageCode, string> = {
+  hi: "hi-IN",
+  en: "en-IN",
+  bn: "bn-IN",
+  mr: "mr-IN",
+  ta: "ta-IN",
+  te: "te-IN",
+  as: "as-IN",
+};
+
 export function AudioRecorder({
   language,
   transcript,
@@ -58,17 +69,8 @@ export function AudioRecorder({
 
   const recognitionRef = React.useRef<SpeechRecognitionInstance | null>(null);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
-
-  // Map language codes to BCP-47 for Web Speech API
-  const bcp47Map: Record<SupportedLanguageCode, string> = {
-    hi: "hi-IN",
-    en: "en-IN",
-    bn: "bn-IN",
-    mr: "mr-IN",
-    ta: "ta-IN",
-    te: "te-IN",
-    as: "as-IN",
-  };
+  const onChangeTranscriptRef = React.useRef(onChangeTranscript);
+  onChangeTranscriptRef.current = onChangeTranscript;
 
   React.useEffect(() => {
     // Check Web Speech API availability
@@ -86,7 +88,7 @@ export function AudioRecorder({
       const recognition = new SpeechRecognitionClass();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = bcp47Map[language] || "hi-IN";
+      recognition.lang = BCP47_MAP[language] || "hi-IN";
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         let currentTranscript = "";
@@ -94,7 +96,7 @@ export function AudioRecorder({
           currentTranscript += event.results[i][0].transcript + " ";
         }
         if (currentTranscript.trim()) {
-          onChangeTranscript(currentTranscript.trim());
+          onChangeTranscriptRef.current(currentTranscript.trim());
         }
       };
 
@@ -156,7 +158,7 @@ export function AudioRecorder({
       // Start
       try {
         if (recognitionRef.current) {
-          recognitionRef.current.lang = bcp47Map[language] || "hi-IN";
+          recognitionRef.current.lang = BCP47_MAP[language] || "hi-IN";
           recognitionRef.current.start();
         }
         setIsRecording(true);

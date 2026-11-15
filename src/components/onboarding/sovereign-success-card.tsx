@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import QRCode from "qrcode";
 import {
   ShieldCheck,
@@ -238,7 +239,7 @@ export function SovereignSuccessCard({
                 className="mt-2 bg-emerald-500/20 text-emerald-300 border-emerald-400/40 text-[10px] font-mono tracking-wide"
               >
                 <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-400" />
-                VOICE VERIFIED
+                {cardData.verificationMethod === "voice" ? "VOICE ATTESTED" : "REGISTERED PROFILE"}
               </Badge>
             </div>
           </div>
@@ -248,7 +249,7 @@ export function SovereignSuccessCard({
             <div className="flex items-center gap-3">
               {qrCodeDataUrl ? (
                 <div className="w-10 h-10 rounded bg-ivory p-0.5 border border-sand shrink-0 shadow-xs">
-                  <img src={qrCodeDataUrl} alt="Scannable QR" className="w-full h-full" />
+                  <Image src={qrCodeDataUrl} alt="Scannable QR" width={40} height={40} unoptimized className="w-full h-full" />
                 </div>
               ) : (
                 <div className="w-10 h-10 rounded bg-sand/10 border border-sand/30 flex items-center justify-center text-sand">

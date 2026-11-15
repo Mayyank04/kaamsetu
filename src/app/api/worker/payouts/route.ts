@@ -1,10 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  requireAuthenticatedUser,
+  requireContractor,
+  requireOwnedWorkerProfile,
+  AuthError,
+} from "@/lib/auth/server";
 import { evaluatePayoutProvenance, computeWorkerIncomeTimeline } from "@/lib/worker/worker-outcome-service";
+
+const createPayoutSchema = z.object({
+  paymentRecordId: z.string().optional().nullable(),
+  workerProfileId: z.string().min(1, "workerProfileId is required"),
+  bookingId: z.string().optional().nullable(),
+  contractorOrganizationId: z.string().optional().nullable(),
+  contractorDeclaredAmount: z.number().nonnegative("contractorDeclaredAmount must be >= 0"),
+  workerAgreedAmount: z.number().nonnegative("workerAgreedAmount must be >= 0"),
+  actualPayoutAmount: z.number().nonnegative("actualPayoutAmount must be >= 0"),
+  payoutMethod: z.enum(["upi", "bank_transfer", "cash", "direct_debit", "other"]),
+  payoutReference: z.string().optional().nullable(),
+  payoutDate: z.string().optional().nullable(),
+  idempotencyKey: z.string().optional().nullable(),
+});
+
+const patchPayoutSchema = z.object({
+  payoutConfirmationId: z.string().min(1, "payoutConfirmationId is required"),
+  workerConfirmationStatus: z.enum(["pending", "confirmed", "disputed"]),
+  workerDisputedAmount: z.number().nonnegative().optional().default(0.0),
+  workerNotes: z.string().max(1000).optional().nullable(),
+});
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createAdminClient();
+    const user = await requireAuthenticatedUser();
     const { searchParams } = new URL(req.url);
     const workerProfileId = searchParams.get("workerProfileId");
 
@@ -12,6 +41,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "workerProfileId is required" }, { status: 400 });
     }
 
+    // Role-based authorization & ownership check
+    if (user.role === "worker") {
+      await requireOwnedWorkerProfile(workerProfileId);
+    } else if (user.role !== "contractor" && user.role !== "admin") {
+      throw new AuthError("Access denied: You do not have permission to view these payouts.", 403);
+    }
+
+    const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("worker_payout_confirmations")
       .select("*")
@@ -44,44 +81,48 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ payouts: formatted, incomeSummary });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const status = err.statusCode || (err.name === "AuthError" ? 401 : 500);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await requireContractor();
     const body = await req.json();
-    const {
-      paymentRecordId,
-      workerProfileId,
-      bookingId,
-      contractorOrganizationId,
-      contractorDeclaredAmount,
-      workerAgreedAmount,
-      actualPayoutAmount,
-      payoutMethod,
-      payoutReference,
-      payoutDate,
-    } = body;
-
-    if (!workerProfileId || contractorDeclaredAmount === undefined || workerAgreedAmount === undefined || actualPayoutAmount === undefined || !payoutMethod) {
-      return NextResponse.json({ error: "Missing required payout parameters" }, { status: 400 });
-    }
+    const parsed = createPayoutSchema.parse(body);
 
     const supabase = createAdminClient();
+
+    // Idempotency check: if payoutReference is provided, check for existing entry
+    if (parsed.payoutReference) {
+      const { data: existing } = await supabase
+        .from("worker_payout_confirmations")
+        .select("id")
+        .eq("payout_reference", parsed.payoutReference)
+        .maybeSingle();
+
+      if (existing) {
+        return NextResponse.json(
+          { error: "Duplicate payout reference. Payout already exists." },
+          { status: 409 }
+        );
+      }
+    }
+
     const { data, error } = await supabase
       .from("worker_payout_confirmations")
       .insert({
-        payment_record_id: paymentRecordId || null,
-        worker_profile_id: workerProfileId,
-        booking_id: bookingId || null,
-        contractor_organization_id: contractorOrganizationId || null,
-        contractor_declared_amount: contractorDeclaredAmount,
-        worker_agreed_amount: workerAgreedAmount,
-        actual_payout_amount: actualPayoutAmount,
-        payout_method: payoutMethod,
-        payout_reference: payoutReference || null,
-        payout_date: payoutDate || new Date().toISOString(),
+        payment_record_id: parsed.paymentRecordId || null,
+        worker_profile_id: parsed.workerProfileId,
+        booking_id: parsed.bookingId || null,
+        contractor_organization_id: parsed.contractorOrganizationId || null,
+        contractor_declared_amount: parsed.contractorDeclaredAmount,
+        worker_agreed_amount: parsed.workerAgreedAmount,
+        actual_payout_amount: parsed.actualPayoutAmount,
+        payout_method: parsed.payoutMethod,
+        payout_reference: parsed.payoutReference || null,
+        payout_date: parsed.payoutDate || new Date().toISOString(),
         worker_confirmation_status: "pending",
       })
       .select()
@@ -93,29 +134,57 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ payoutConfirmation: data }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation error", details: err.errors }, { status: 422 });
+    }
+    const status = err.statusCode || (err.name === "AuthError" ? 403 : 500);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
     const body = await req.json();
-    const { payoutConfirmationId, workerConfirmationStatus, workerDisputedAmount, workerNotes } = body;
-
-    if (!payoutConfirmationId || !workerConfirmationStatus) {
-      return NextResponse.json({ error: "payoutConfirmationId and workerConfirmationStatus are required" }, { status: 400 });
-    }
+    const parsed = patchPayoutSchema.parse(body);
 
     const supabase = createAdminClient();
+
+    // Verify record exists and get owner worker_profile_id
+    const { data: existing, error: fetchErr } = await supabase
+      .from("worker_payout_confirmations")
+      .select("id, worker_profile_id, actual_payout_amount")
+      .eq("id", parsed.payoutConfirmationId)
+      .single();
+
+    if (fetchErr || !existing) {
+      return NextResponse.json({ error: "Payout confirmation record not found." }, { status: 404 });
+    }
+
+    // If caller is a worker, enforce ownership of the payout record
+    if (user.role === "worker") {
+      await requireOwnedWorkerProfile(existing.worker_profile_id);
+    } else if (user.role !== "contractor" && user.role !== "admin") {
+      throw new AuthError("Access denied: You cannot modify this payout confirmation.", 403);
+    }
+
+    // Validate disputed amount cannot exceed payout amount
+    if (parsed.workerDisputedAmount > Number(existing.actual_payout_amount)) {
+      return NextResponse.json(
+        { error: "Disputed amount cannot exceed the actual payout amount." },
+        { status: 422 }
+      );
+    }
+
     const { data, error } = await supabase
       .from("worker_payout_confirmations")
       .update({
-        worker_confirmation_status: workerConfirmationStatus,
+        worker_confirmation_status: parsed.workerConfirmationStatus,
         worker_confirmed_at: new Date().toISOString(),
-        worker_disputed_amount: workerDisputedAmount || 0.0,
-        worker_notes: workerNotes || null,
+        worker_disputed_amount: parsed.workerDisputedAmount,
+        worker_notes: parsed.workerNotes || null,
       })
-      .eq("id", payoutConfirmationId)
+      .eq("id", parsed.payoutConfirmationId)
       .select()
       .single();
 
@@ -136,6 +205,10 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ updatedConfirmation: data, provenanceEvaluation: evaluation });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation error", details: err.errors }, { status: 422 });
+    }
+    const status = err.statusCode || (err.name === "AuthError" ? 403 : 500);
+    return NextResponse.json({ error: err.message }, { status });
   }
 }

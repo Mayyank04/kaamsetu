@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   ShieldCheck,
@@ -264,7 +265,7 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
             {/* Scannable QR Code */}
             {qrDataUrl && (
               <div className="w-20 h-20 bg-ivory p-1.5 rounded-xl border border-sand shrink-0 shadow-xs">
-                <img src={qrDataUrl} alt={`QR verification for ${worker.registryId}`} className="w-full h-full" />
+                <Image src={qrDataUrl} alt={`QR verification for ${worker.registryId}`} width={80} height={80} unoptimized className="w-full h-full" />
               </div>
             )}
           </div>
