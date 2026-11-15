@@ -4862,6 +4862,261 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      independent_audit_attestations: {
+        Row: {
+          id: string;
+          attestation_code: string;
+          auditor_name: string;
+          auditor_organization: string;
+          auditor_accreditation: string;
+          report_reference: string;
+          evidence_digest_sha256: string;
+          scope_domains: string[];
+          findings_summary: Record<string, unknown>;
+          attestation_status:
+            | "PENDING_REVIEW"
+            | "ATTESTED"
+            | "CONDITIONALLY_ATTESTED"
+            | "REJECTED"
+            | "EXPIRED";
+          effective_from: string | null;
+          expires_at: string | null;
+          verified_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          attestation_code: string;
+          auditor_name: string;
+          auditor_organization: string;
+          auditor_accreditation: string;
+          report_reference: string;
+          evidence_digest_sha256: string;
+          scope_domains: string[];
+          findings_summary?: Record<string, unknown>;
+          attestation_status:
+            | "PENDING_REVIEW"
+            | "ATTESTED"
+            | "CONDITIONALLY_ATTESTED"
+            | "REJECTED"
+            | "EXPIRED";
+          effective_from?: string | null;
+          expires_at?: string | null;
+          verified_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          attestation_code?: string;
+          auditor_name?: string;
+          auditor_organization?: string;
+          auditor_accreditation?: string;
+          report_reference?: string;
+          evidence_digest_sha256?: string;
+          scope_domains?: string[];
+          findings_summary?: Record<string, unknown>;
+          attestation_status?:
+            | "PENDING_REVIEW"
+            | "ATTESTED"
+            | "CONDITIONALLY_ATTESTED"
+            | "REJECTED"
+            | "EXPIRED";
+          effective_from?: string | null;
+          expires_at?: string | null;
+          verified_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      worker_dispute_appeals: {
+        Row: {
+          id: string;
+          appeal_code: string;
+          dispute_id: string;
+          worker_id: string;
+          appellant_role: "worker" | "contractor" | "customer";
+          tribunal_member_name: string;
+          tribunal_member_role:
+            | "independent_ombudsperson"
+            | "legal_counsel"
+            | "worker_advocate"
+            | "district_lead";
+          grounds_of_appeal: string;
+          prior_resolution_summary: string;
+          worker_relief_sought: number;
+          appeal_status:
+            | "filed"
+            | "under_tribunal_review"
+            | "hearing_scheduled"
+            | "evidence_requested"
+            | "upheld_worker"
+            | "upheld_partial"
+            | "denied"
+            | "settled";
+          final_determination: string | null;
+          relief_awarded_amount: number;
+          non_retaliation_certified: boolean;
+          filed_at: string;
+          resolved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          appeal_code: string;
+          dispute_id: string;
+          worker_id: string;
+          appellant_role: "worker" | "contractor" | "customer";
+          tribunal_member_name: string;
+          tribunal_member_role:
+            | "independent_ombudsperson"
+            | "legal_counsel"
+            | "worker_advocate"
+            | "district_lead";
+          grounds_of_appeal: string;
+          prior_resolution_summary: string;
+          worker_relief_sought: number;
+          appeal_status?:
+            | "filed"
+            | "under_tribunal_review"
+            | "hearing_scheduled"
+            | "evidence_requested"
+            | "upheld_worker"
+            | "upheld_partial"
+            | "denied"
+            | "settled";
+          final_determination?: string | null;
+          relief_awarded_amount?: number;
+          non_retaliation_certified?: boolean;
+          filed_at?: string;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          appeal_code?: string;
+          dispute_id?: string;
+          worker_id?: string;
+          appellant_role?: "worker" | "contractor" | "customer";
+          tribunal_member_name?: string;
+          tribunal_member_role?:
+            | "independent_ombudsperson"
+            | "legal_counsel"
+            | "worker_advocate"
+            | "district_lead";
+          grounds_of_appeal?: string;
+          prior_resolution_summary?: string;
+          worker_relief_sought?: number;
+          appeal_status?:
+            | "filed"
+            | "under_tribunal_review"
+            | "hearing_scheduled"
+            | "evidence_requested"
+            | "upheld_worker"
+            | "upheld_partial"
+            | "denied"
+            | "settled";
+          final_determination?: string | null;
+          relief_awarded_amount?: number;
+          non_retaliation_certified?: boolean;
+          filed_at?: string;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      production_dr_execution_log: {
+        Row: {
+          id: string;
+          drill_code: string;
+          environment_classification:
+            | "LOCAL_SANDBOX"
+            | "STAGING_SIMULATION"
+            | "PRODUCTION_FAILOVER";
+          drill_type:
+            | "PITR_RESTORE"
+            | "DATABASE_FAILOVER"
+            | "CROSS_REGION_STORAGE"
+            | "FULL_SYSTEM_RECOVERY";
+          authorized_by: string;
+          authorization_reference: string;
+          primary_region: string;
+          recovery_region: string;
+          target_rto_seconds: number;
+          actual_rto_seconds: number;
+          target_rpo_seconds: number;
+          actual_rpo_seconds: number;
+          data_integrity_verified: boolean;
+          verified_records_count: number;
+          checksum_verification_status: "PASSED" | "FAILED" | "PENDING";
+          findings: Record<string, unknown>;
+          executed_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          drill_code: string;
+          environment_classification:
+            | "LOCAL_SANDBOX"
+            | "STAGING_SIMULATION"
+            | "PRODUCTION_FAILOVER";
+          drill_type:
+            | "PITR_RESTORE"
+            | "DATABASE_FAILOVER"
+            | "CROSS_REGION_STORAGE"
+            | "FULL_SYSTEM_RECOVERY";
+          authorized_by: string;
+          authorization_reference: string;
+          primary_region: string;
+          recovery_region: string;
+          target_rto_seconds: number;
+          actual_rto_seconds: number;
+          target_rpo_seconds: number;
+          actual_rpo_seconds: number;
+          data_integrity_verified?: boolean;
+          verified_records_count?: number;
+          checksum_verification_status: "PASSED" | "FAILED" | "PENDING";
+          findings?: Record<string, unknown>;
+          executed_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          drill_code?: string;
+          environment_classification?:
+            | "LOCAL_SANDBOX"
+            | "STAGING_SIMULATION"
+            | "PRODUCTION_FAILOVER";
+          drill_type?:
+            | "PITR_RESTORE"
+            | "DATABASE_FAILOVER"
+            | "CROSS_REGION_STORAGE"
+            | "FULL_SYSTEM_RECOVERY";
+          authorized_by?: string;
+          authorization_reference?: string;
+          primary_region?: string;
+          recovery_region?: string;
+          target_rto_seconds?: number;
+          actual_rto_seconds?: number;
+          target_rpo_seconds?: number;
+          actual_rpo_seconds?: number;
+          data_integrity_verified?: boolean;
+          verified_records_count?: number;
+          checksum_verification_status?: "PASSED" | "FAILED" | "PENDING";
+          findings?: Record<string, unknown>;
+          executed_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -4974,6 +5229,9 @@ export type W3CVerifiableCredentialRegistry = Database["public"]["Tables"]["w3c_
 export type AuditChainCheckpoint = Database["public"]["Tables"]["audit_chain_checkpoints"]["Row"];
 export type WorkerPayoutDisputeRecord = Database["public"]["Tables"]["worker_payout_dispute_records"]["Row"];
 export type WorkerPayoutDisputeEvent = Database["public"]["Tables"]["worker_payout_dispute_events"]["Row"];
+export type IndependentAuditAttestation = Database["public"]["Tables"]["independent_audit_attestations"]["Row"];
+export type WorkerDisputeAppeal = Database["public"]["Tables"]["worker_dispute_appeals"]["Row"];
+export type ProductionDrExecutionLog = Database["public"]["Tables"]["production_dr_execution_log"]["Row"];
 
 
 

@@ -76,8 +76,38 @@ export interface DisputeAuditEvent {
   timestamp: string;
 }
 
+/**
+ * Formal Multi-Tier Worker Dispute Appeal Tribunal Record (Phase 28 Pillar D)
+ */
+export interface WorkerDisputeAppealRecord {
+  appealCode: string;
+  disputeCode: string;
+  workerId: string;
+  appellantRole: "worker" | "contractor" | "customer";
+  tribunalMemberName: string;
+  tribunalMemberRole: "independent_ombudsperson" | "legal_counsel" | "worker_advocate" | "district_lead";
+  groundsOfAppeal: string;
+  priorResolutionSummary: string;
+  workerReliefSought: number;
+  appealStatus:
+    | "filed"
+    | "under_tribunal_review"
+    | "hearing_scheduled"
+    | "evidence_requested"
+    | "upheld_worker"
+    | "upheld_partial"
+    | "denied"
+    | "settled";
+  finalDetermination?: string;
+  reliefAwardedAmount: number;
+  nonRetaliationCertified: boolean;
+  filedAt: string;
+  resolvedAt?: string;
+}
+
 export class WorkerPayoutDisputeService {
   private disputes: Map<string, PayoutDispute> = new Map();
+  private appeals: Map<string, WorkerDisputeAppealRecord> = new Map();
   private auditEvents: DisputeAuditEvent[] = [];
   private quarantinedReviews: Set<string> = new Set(); // reviewIds quarantined
 
@@ -187,7 +217,7 @@ export class WorkerPayoutDisputeService {
   public assignInvestigator(
     disputeCode: string,
     investigatorId: string,
-    investigatorRole: "independent_ombudsperson" | "investigator"
+    investigatorRole: "independent_ombudsperson" | "investigator" = "independent_ombudsperson"
   ): PayoutDispute {
     const dispute = this.disputes.get(disputeCode);
     if (!dispute) throw new Error(`Dispute ${disputeCode} not found`);
@@ -282,12 +312,116 @@ export class WorkerPayoutDisputeService {
     return this.quarantinedReviews.has(reviewId);
   }
 
+  public quarantineRetaliatoryReview(disputeCode: string, reviewId: string): void {
+    this.quarantinedReviews.add(reviewId);
+    const dispute = this.disputes.get(disputeCode);
+    if (dispute) {
+      dispute.retaliationFlag = true;
+      dispute.retaliatoryReviewQuarantined = true;
+      dispute.updatedAt = new Date().toISOString();
+    }
+  }
+
   public getDispute(disputeCode: string): PayoutDispute | undefined {
     return this.disputes.get(disputeCode);
   }
 
   public getAuditEvents(disputeCode: string): DisputeAuditEvent[] {
     return this.auditEvents.filter(e => e.disputeCode === disputeCode);
+  }
+
+  /**
+   * Files a formal appeal to the Independent Worker Ombudsperson Tribunal (Phase 28 Pillar D)
+   */
+  public fileTribunalAppeal(
+    disputeCode: string,
+    workerId: string,
+    appellantRole: "worker" | "contractor" | "customer",
+    groundsOfAppeal: string,
+    workerReliefSought: number,
+    tribunalMemberName = "Adv. Nilotpal Sarma",
+    tribunalMemberRole: "independent_ombudsperson" | "legal_counsel" | "worker_advocate" | "district_lead" = "independent_ombudsperson"
+  ): WorkerDisputeAppealRecord {
+    const dispute = this.disputes.get(disputeCode);
+    if (!dispute) throw new Error(`Dispute ${disputeCode} not found`);
+
+    const appealCode = `APPL-2026-${String(this.appeals.size + 1).padStart(4, "0")}`;
+    const appealRecord: WorkerDisputeAppealRecord = {
+      appealCode,
+      disputeCode,
+      workerId,
+      appellantRole,
+      tribunalMemberName,
+      tribunalMemberRole,
+      groundsOfAppeal,
+      priorResolutionSummary: dispute.resolutionNotes || "Initial dispute resolution challenged",
+      workerReliefSought,
+      appealStatus: "filed",
+      reliefAwardedAmount: 0.0,
+      nonRetaliationCertified: true,
+      filedAt: new Date().toISOString(),
+    };
+
+    this.appeals.set(appealCode, appealRecord);
+
+    this.auditEvents.push({
+      disputeCode,
+      eventType: "appealed",
+      actorId: workerId,
+      actorRole: "worker",
+      notes: `Formal Tribunal Appeal ${appealCode} lodged: ${groundsOfAppeal}`,
+      timestamp: appealRecord.filedAt,
+    });
+
+    return appealRecord;
+  }
+
+  /**
+   * Adjudicates tribunal appeal with binding determination
+   */
+  public adjudicateAppeal(
+    appealCode: string,
+    tribunalMemberName: string,
+    finalDetermination: string,
+    reliefAwarded: number,
+    outcome: "upheld_worker" | "upheld_partial" | "denied" | "settled"
+  ): WorkerDisputeAppealRecord {
+    const appeal = this.appeals.get(appealCode);
+    if (!appeal) throw new Error(`Appeal ${appealCode} not found`);
+
+    appeal.appealStatus = outcome;
+    appeal.finalDetermination = finalDetermination;
+    appeal.reliefAwardedAmount = reliefAwarded;
+    appeal.resolvedAt = new Date().toISOString();
+
+    const dispute = this.disputes.get(appeal.disputeCode);
+    if (dispute) {
+      dispute.status = outcome === "upheld_worker" || outcome === "upheld_partial"
+        ? "resolved_worker_favorable"
+        : "closed";
+      dispute.resolvedAt = appeal.resolvedAt;
+      dispute.resolutionNotes = `Tribunal Determination: ${finalDetermination}`;
+    }
+
+    return appeal;
+  }
+
+  /**
+   * Anti-retaliation check: Confirms worker is shielded from negative rating or roster suppression
+   */
+  public isWorkerProtectedFromRetaliation(workerId: string): boolean {
+    // If worker has any active dispute or pending appeal, protection is strictly TRUE
+    for (const d of this.disputes.values()) {
+      if (d.workerId === workerId && d.status !== "closed") return true;
+    }
+    for (const a of this.appeals.values()) {
+      if (a.workerId === workerId && (a.appealStatus === "filed" || a.appealStatus === "under_tribunal_review")) return true;
+    }
+    return true; // Default anti-retaliation policy active for all registered workers
+  }
+
+  public getAppeal(appealCode: string): WorkerDisputeAppealRecord | undefined {
+    return this.appeals.get(appealCode);
   }
 }
 

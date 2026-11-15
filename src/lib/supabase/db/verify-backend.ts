@@ -64,6 +64,7 @@ export async function runBackendVerification() {
   const migration26Path = path.join(projectRoot, "supabase/migrations/20261115000026_temporal_integrity_and_blocker_state_machine.sql");
   const migration27Path = path.join(projectRoot, "supabase/migrations/20261115000027_w3c_credentials_and_dpdp_consent_enforcement.sql");
   const migration28Path = path.join(projectRoot, "supabase/migrations/20261115000028_audit_hash_chaining_and_payout_disputes.sql");
+  const migration29Path = path.join(projectRoot, "supabase/migrations/20261115000029_independent_audit_attestations_and_dispute_appeals.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
@@ -90,6 +91,7 @@ export async function runBackendVerification() {
   assert(fs.existsSync(migration26Path), "1. SQL Migrations", "Migration 26 (Temporal Data Integrity & Blocker State Machine) exists");
   assert(fs.existsSync(migration27Path), "1. SQL Migrations", "Migration 27 (W3C Credentials Registry & DPDP Consent) exists");
   assert(fs.existsSync(migration28Path), "1. SQL Migrations", "Migration 28 (Audit Hash Chaining & Payout Disputes) exists");
+  assert(fs.existsSync(migration29Path), "1. SQL Migrations", "Migration 29 (Independent Audit Attestations & Dispute Appeals) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
@@ -567,6 +569,48 @@ export async function runBackendVerification() {
       `Phase 27 RLS enabled on public.${table}`
     );
   }
+
+  const m29Content = fs.readFileSync(migration29Path, "utf-8");
+  const phase28Tables = [
+    "independent_audit_attestations",
+    "worker_dispute_appeals",
+    "production_dr_execution_log"
+  ];
+
+  for (const table of phase28Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m29Content),
+      "1. SQL Migrations",
+      `Phase 28 Table public.${table} defined in schema`
+    );
+    assert(
+      m29Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 28 RLS enabled on public.${table}`
+    );
+  }
+
+  assert(
+    m29Content.includes("enforce_attestation_evidence_immutability") &&
+    m29Content.includes("trg_audit_attestation_immutability"),
+    "2. Row Level Security",
+    "Phase 28 Attestation evidence immutability trigger defined"
+  );
+
+  assert(
+    m29Content.includes("enforce_appeal_non_retaliation") &&
+    m29Content.includes("trg_dispute_appeal_non_retaliation"),
+    "2. Row Level Security",
+    "Phase 28 Worker dispute appeal anti-retaliation trigger defined"
+  );
+
+  assert(
+    m29Content.includes("enforce_dr_log_immutability") &&
+    m29Content.includes("trg_dr_log_immutability"),
+    "2. Row Level Security",
+    "Phase 28 Production DR execution log immutability trigger defined"
+  );
 
   // ---------------------------------------------------------------------------
   // TEST SUITE 2: Row Level Security (RLS) Policies

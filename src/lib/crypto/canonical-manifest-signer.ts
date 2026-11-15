@@ -73,11 +73,13 @@ export function computeFileSha256(filePath: string): string {
 /**
  * Computes deterministic hash of all migration files in sequence
  */
-export function computeMigrationsDirectoryDigest(migrationsDir: string): string {
+export function computeMigrationsDirectoryDigest(migrationsDir: string, maxMigrationPrefix = "20261115000099"): string {
   if (!fs.existsSync(migrationsDir)) {
     return "0000000000000000000000000000000000000000000000000000000000000000";
   }
-  const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith(".sql")).sort();
+  const files = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith(".sql") && f.substring(0, 14) <= maxMigrationPrefix)
+    .sort();
   const hasher = crypto.createHash("sha256");
   for (const file of files) {
     const fullPath = path.join(migrationsDir, file);
@@ -96,7 +98,9 @@ export function buildPhase27ReleaseManifest(projectRoot: string): ReleaseManifes
   const testInventoryPath = path.join(projectRoot, "docs/PHASE_27_TEST_INVENTORY.json");
 
   const migrationFiles = fs.existsSync(migrationsDir)
-    ? fs.readdirSync(migrationsDir).filter(f => f.endsWith(".sql")).sort()
+    ? fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith(".sql") && f.substring(0, 14) <= "20261115000028")
+        .sort()
     : [];
 
   return {
@@ -108,7 +112,7 @@ export function buildPhase27ReleaseManifest(projectRoot: string): ReleaseManifes
       count: migrationFiles.length,
       range: "01 to 28",
       latestMigration: migrationFiles[migrationFiles.length - 1] || "none",
-      migrationDirectoryDigest: computeMigrationsDirectoryDigest(migrationsDir),
+      migrationDirectoryDigest: computeMigrationsDirectoryDigest(migrationsDir, "20261115000028"),
     },
     lockfileDigest: computeFileSha256(lockfilePath),
     testInventoryDigest: computeFileSha256(testInventoryPath),
@@ -121,6 +125,45 @@ export function buildPhase27ReleaseManifest(projectRoot: string): ReleaseManifes
     },
     documentationCount: 20,
     timestamp: "2026-11-15T18:00:00.000Z",
+  };
+}
+
+/**
+ * Generates canonical release manifest data for Phase 28
+ */
+export function buildPhase28ReleaseManifest(projectRoot: string): ReleaseManifestData {
+  const migrationsDir = path.join(projectRoot, "supabase/migrations");
+  const lockfilePath = path.join(projectRoot, "package-lock.json");
+  const testInventoryPath = path.join(projectRoot, "docs/PHASE_28_ACTIVE_TEST_INVENTORY.json");
+
+  const migrationFiles = fs.existsSync(migrationsDir)
+    ? fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith(".sql") && f.substring(0, 14) <= "20261115000029")
+        .sort()
+    : [];
+
+  return {
+    repository: "Mayyank04/kaamsetu",
+    branch: "phase-28-institutional-execution-and-production-assurance",
+    baselineCommit: "8cd69c6",
+    parentCommit: "6f8a488",
+    migrations: {
+      count: migrationFiles.length,
+      range: "01 to 29",
+      latestMigration: migrationFiles[migrationFiles.length - 1] || "none",
+      migrationDirectoryDigest: computeMigrationsDirectoryDigest(migrationsDir, "20261115000029"),
+    },
+    lockfileDigest: computeFileSha256(lockfilePath),
+    testInventoryDigest: computeFileSha256(testInventoryPath),
+    environmentClassification: "CLASS_B_CONTROLLED_ROLLOUT",
+    toolchain: {
+      nodeVersion: "v20.x (LTS) / v22.x",
+      nextVersion: "15.1.7",
+      typeScriptVersion: "5.x",
+      postgresVersion: "15.x",
+    },
+    documentationCount: 33,
+    timestamp: "2026-11-15T18:30:00.000Z",
   };
 }
 
@@ -178,3 +221,5 @@ export function verifyReleaseManifestSignature(signedManifest: CanonicalSignedRe
     return false;
   }
 }
+
+export const verifySignedReleaseManifest = verifyReleaseManifestSignature;

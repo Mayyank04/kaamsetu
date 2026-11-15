@@ -240,11 +240,11 @@ async function runPhase27Suite() {
       stats.atomicAssertions++;
     });
 
-    await runTest(12, "Migration Sequence Integrity: Continuous linear migrations from Migration 01 to Migration 28", () => {
+    await runTest(12, "Migration Sequence Integrity: Continuous linear migrations from Migration 01 to Migration 28+", () => {
       const migrationsDir = path.join(projectRoot, "supabase/migrations");
       const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith(".sql")).sort();
-      assert.strictEqual(files.length, 28);
-      assert(files[27].includes("20261115000028_audit_hash_chaining_and_payout_disputes.sql"));
+      assert(files.length >= 28);
+      assert(files.some(f => f.includes("20261115000028_audit_hash_chaining_and_payout_disputes.sql")));
       stats.atomicAssertions += 2;
     });
 
@@ -797,14 +797,14 @@ async function runPhase27Suite() {
       stats.atomicAssertions += 2;
     });
 
-    await runTest(56, "Catalog RLS Completeness: 97 of 97 tables (100.0%) have RLS enabled", async () => {
+    await runTest(56, "Catalog RLS Completeness: 100.0% of public tables have RLS enabled", async () => {
       const res = await dbClient.query(
         "SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE rowsecurity) as rls_enabled FROM pg_tables WHERE schemaname = 'public';"
       );
       const total = parseInt(res.rows[0].total, 10);
       const rlsEnabled = parseInt(res.rows[0].rls_enabled, 10);
-      assert.strictEqual(total, 97);
-      assert.strictEqual(rlsEnabled, 97);
+      assert(total >= 97);
+      assert.strictEqual(total, rlsEnabled);
       assert.strictEqual(rlsEnabled / total, 1.0);
       stats.atomicAssertions += 3;
     });

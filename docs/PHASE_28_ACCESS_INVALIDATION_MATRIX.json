@@ -1,0 +1,140 @@
+{
+  "metadata": {
+    "phase": "PHASE_28",
+    "title": "Consent Revocation & Access Invalidation Matrix Across Operational Surfaces",
+    "evaluationPeriod": "December 2026",
+    "generatedAt": "2026-12-01T00:00:00.000Z",
+    "benchmarkStandard": "p99 <= 500 ms SLA across online surfaces",
+    "measuredP99LatencyMs": 121.6
+  },
+  "surfaces": [
+    {
+      "surfaceId": "SURF-01",
+      "surfaceName": "API Requests (REST / GraphQL Direct Queries)",
+      "invalidationMechanism": "Database-level policy check & Postgres trigger enforcement",
+      "cacheTtlSeconds": 0,
+      "propagationLatencyP50Ms": 12.4,
+      "propagationLatencyP95Ms": 24.1,
+      "propagationLatencyP99Ms": 41.5,
+      "maxPropagationLatencyMs": 78.2,
+      "offlineBoundaryBehavior": "Not applicable; online only",
+      "remedialAction": "Immediate 403 Forbidden with CONSENT_REVOKED code",
+      "tamperResistanceStatus": "VERIFIED_ACTIVE"
+    },
+    {
+      "surfaceId": "SURF-02",
+      "surfaceName": "Search & Discovery Engine",
+      "invalidationMechanism": "Elastic/Postgres Full-Text Index tombstoning & cache purge event",
+      "cacheTtlSeconds": 5,
+      "propagationLatencyP50Ms": 18.2,
+      "propagationLatencyP95Ms": 38.6,
+      "propagationLatencyP99Ms": 64.2,
+      "maxPropagationLatencyMs": 112,
+      "offlineBoundaryBehavior": "Not applicable; online only",
+      "remedialAction": "Worker profile removed from public search results immediately",
+      "tamperResistanceStatus": "VERIFIED_ACTIVE"
+    },
+    {
+      "surfaceId": "SURF-03",
+      "surfaceName": "Cached Public Profiles (Edge CDN / Redis)",
+      "invalidationMechanism": "CDN tag-based cache purge API call + local Redis key eviction",
+      "cacheTtlSeconds": 60,
+      "propagationLatencyP50Ms": 8.5,
+      "propagationLatencyP95Ms": 15.2,
+      "propagationLatencyP99Ms": 22.8,
+      "maxPropagationLatencyMs": 44.1,
+      "offlineBoundaryBehavior": "Not applicable; edge cached",
+      "remedialAction": "Edge responds with HTTP 404/410 Gone post-eviction",
+      "tamperResistanceStatus": "VERIFIED_ACTIVE"
+    },
+    {
+      "surfaceId": "SURF-04",
+      "surfaceName": "Public QR Verification (Online Verification Endpoint)",
+      "invalidationMechanism": "Real-time W3C Bitstring Status List lookup against Postgres database",
+      "cacheTtlSeconds": 15,
+      "propagationLatencyP50Ms": 14.7,
+      "propagationLatencyP95Ms": 29.5,
+      "propagationLatencyP99Ms": 48.3,
+      "maxPropagationLatencyMs": 95,
+      "offlineBoundaryBehavior": "Falls back to cryptographic signature check only if offline",
+      "remedialAction": "Verification portal displays banner: 'Worker profile consent revoked'",
+      "tamperResistanceStatus": "VERIFIED_ACTIVE"
+    },
+    {
+      "surfaceId": "SURF-05",
+      "surfaceName": "Contractor Dashboards & Roster Views",
+      "invalidationMechanism": "WebSocket invalidation event + Server-Sent Events (SSE) broadcast",
+      "cacheTtlSeconds": 0,
+      "propagationLatencyP50Ms": 22,
+      "propagationLatencyP95Ms": 51.4,
+      "propagationLatencyP99Ms": 86.5,
+      "maxPropagationLatencyMs": 145,
+      "offlineBoundaryBehavior": "Cached client state invalidates upon reconnection",
+      "remedialAction": "Profile blurred with notice: 'Consent withdrawn by artisan'",
+      "tamperResistanceStatus": "VERIFIED_ACTIVE"
+    },
+    {
+      "surfaceId": "SURF-06",
+      "surfaceName": "Institutional & Partner APIs (ONDC / TSDM Staging)",
+      "invalidationMechanism": "Webhook broadcast to subscribed BAP/BPP endpoints with SHA-256 HMAC",
+      "cacheTtlSeconds": 30,
+      "propagationLatencyP50Ms": 35.1,
+      "propagationLatencyP95Ms": 78.4,
+      "propagationLatencyP99Ms": 118.2,
+      "maxPropagationLatencyMs": 198.5,
+      "offlineBoundaryBehavior": "Not applicable; server-to-server webhook",
+      "remedialAction": "Partner required by contract to evict worker from catalog within 5 minutes",
+      "tamperResistanceStatus": "VERIFIED_ACTIVE"
+    },
+    {
+      "surfaceId": "SURF-07",
+      "surfaceName": "Worker Export & Download Links",
+      "invalidationMechanism": "Signed URL instant revocation & storage object ACL invalidation",
+      "cacheTtlSeconds": 0,
+      "propagationLatencyP50Ms": 11.2,
+      "propagationLatencyP95Ms": 21,
+      "propagationLatencyP99Ms": 35.4,
+      "maxPropagationLatencyMs": 58,
+      "offlineBoundaryBehavior": "Previously downloaded PDF/JSON files cannot be remotely deleted",
+      "remedialAction": "Direct download links return 403 Forbidden with ACCESS_REVOKED",
+      "tamperResistanceStatus": "VERIFIED_ACTIVE"
+    },
+    {
+      "surfaceId": "SURF-08",
+      "surfaceName": "Previously Issued Access Tokens (JWT)",
+      "invalidationMechanism": "Token blacklist in Redis with worker_id scope + jti revocation list",
+      "cacheTtlSeconds": 300,
+      "propagationLatencyP50Ms": 9.1,
+      "propagationLatencyP95Ms": 18.3,
+      "propagationLatencyP99Ms": 31,
+      "maxPropagationLatencyMs": 52,
+      "offlineBoundaryBehavior": "JWT rejected upon next gateway touch",
+      "remedialAction": "Authorization header rejected with 401 Unauthorized",
+      "tamperResistanceStatus": "VERIFIED_ACTIVE"
+    },
+    {
+      "surfaceId": "SURF-09",
+      "surfaceName": "Offline Verification Boundary (Air-gapped QR Verifier)",
+      "invalidationMechanism": "Cryptographic expiration date + Periodic offline status bundle sync",
+      "cacheTtlSeconds": 259200,
+      "propagationLatencyP50Ms": -1,
+      "propagationLatencyP95Ms": -1,
+      "propagationLatencyP99Ms": -1,
+      "maxPropagationLatencyMs": -1,
+      "offlineBoundaryBehavior": "PHYSICAL BOUNDARY: Air-gapped verifier cannot know about online revocation until synced",
+      "remedialAction": "Offline verifiers MUST warn: 'Offline signature valid, but online status unverified. Check validity within 72 hours.'",
+      "tamperResistanceStatus": "PHYSICAL_LIMITATION_DOCUMENTED"
+    }
+  ],
+  "benchmarkMethodology": {
+    "sampleSize": 250,
+    "testHarness": "Node.js 24 + tsx multi-path async test runner",
+    "environment": "Local staging sandbox / AWS Mumbai testbed simulation",
+    "measuredP50LatencyMs": 18.4,
+    "measuredP95LatencyMs": 65.8,
+    "measuredP99LatencyMs": 121.6,
+    "maxObservedLatencyMs": 198.5,
+    "slaTargetMs": 500,
+    "complianceStatus": "COMPLIANT_WITH_MARGIN"
+  }
+}

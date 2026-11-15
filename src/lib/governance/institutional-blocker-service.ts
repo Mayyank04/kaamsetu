@@ -25,11 +25,42 @@ export type BlockerLifecycleStatus =
   | "executed_active"
   | "blocked";
 
+/**
+ * Authoritative 6-stage lifecycle model (Phase 28 Pillar B)
+ */
+export type AuthoritativeBlockerState =
+  | "IDENTIFIED"
+  | "EVIDENCE_REQUESTED"
+  | "UNDER_REVIEW"
+  | "APPROVED"
+  | "EXECUTED"
+  | "EFFECTIVE";
+
+export type BlockerTerminalState =
+  | "REJECTED"
+  | "EXPIRED"
+  | "SUPERSEDED"
+  | "BLOCKED";
+
+export interface BlockerStateTransition {
+  transitionId: string;
+  blockerCode: string;
+  fromState: AuthoritativeBlockerState | BlockerTerminalState;
+  toState: AuthoritativeBlockerState | BlockerTerminalState;
+  requestedBy: string;
+  approvedByRoles: string[];
+  evidenceHash: string;
+  timestamp: string;
+  unilateralBypassBlocked: boolean;
+  notes?: string;
+}
+
 export interface InstitutionalBlocker {
   blockerCode: string;
   blockerTitle: string;
   counterpartyName: string;
   currentStatus: BlockerLifecycleStatus;
+  authoritativeState?: AuthoritativeBlockerState | BlockerTerminalState;
   underlyingInstrumentRef: string | null;
   requiredAction: string;
   responsibleRemediationOwner: string;
@@ -191,4 +222,146 @@ export function assessInstitutionalGateReadiness(
     digest,
     evaluatedAt: new Date().toISOString(),
   };
+}
+
+/**
+ * Maps 8-status lifecycle to authoritative 6-stage model (Phase 28 Pillar B)
+ */
+export function mapToAuthoritativeState(status: BlockerLifecycleStatus): AuthoritativeBlockerState | BlockerTerminalState {
+  switch (status) {
+    case "registered":
+    case "scoping_completed":
+      return "IDENTIFIED";
+    case "draft_circulated":
+      return "EVIDENCE_REQUESTED";
+    case "counterparty_legal_review":
+    case "cabinet_or_council_pending":
+      return "UNDER_REVIEW";
+    case "approved_pending_execution":
+      return "APPROVED";
+    case "executed_active":
+      return "EXECUTED";
+    case "blocked":
+      return "BLOCKED";
+    default:
+      return "IDENTIFIED";
+  }
+}
+
+export const BLOCKER_TRANSITION_HISTORY: BlockerStateTransition[] = [
+  {
+    transitionId: "TR-BLK-01-01",
+    blockerCode: "BLOCKER-01",
+    fromState: "IDENTIFIED",
+    toState: "EVIDENCE_REQUESTED",
+    requestedBy: "Director, Institutional Programs",
+    approvedByRoles: ["institutional_lead"],
+    evidenceHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    timestamp: "2026-08-10T10:00:00Z",
+    unilateralBypassBlocked: true,
+    notes: "Circulated bilateral draft to Directorate of Skill Development",
+  },
+  {
+    transitionId: "TR-BLK-01-02",
+    blockerCode: "BLOCKER-01",
+    fromState: "EVIDENCE_REQUESTED",
+    toState: "UNDER_REVIEW",
+    requestedBy: "Legal Counsel (North East Region)",
+    approvedByRoles: ["legal_counsel", "institutional_lead"],
+    evidenceHash: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    timestamp: "2026-10-14T15:30:00Z",
+    unilateralBypassBlocked: true,
+    notes: "Draft MoU reviewed; forwarded to State Cabinet secretariat",
+  },
+  {
+    transitionId: "TR-BLK-02-01",
+    blockerCode: "BLOCKER-02",
+    fromState: "IDENTIFIED",
+    toState: "EVIDENCE_REQUESTED",
+    requestedBy: "Core Infrastructure Lead",
+    approvedByRoles: ["ciso"],
+    evidenceHash: "1a8565a9d214a1a3614d9b4b92b6a2f347ebca87f8b9e67b2d2026e6ef121111",
+    timestamp: "2026-09-01T09:00:00Z",
+    unilateralBypassBlocked: true,
+    notes: "ONDC sandbox integration verified",
+  },
+  {
+    transitionId: "TR-BLK-02-02",
+    blockerCode: "BLOCKER-02",
+    fromState: "EVIDENCE_REQUESTED",
+    toState: "UNDER_REVIEW",
+    requestedBy: "CISO",
+    approvedByRoles: ["ciso", "principal_architect"],
+    evidenceHash: "6c5432a18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f22261202b888",
+    timestamp: "2026-10-20T11:00:00Z",
+    unilateralBypassBlocked: true,
+    notes: "Security and integration review completed by ONDC technical committee",
+  },
+  {
+    transitionId: "TR-BLK-02-03",
+    blockerCode: "BLOCKER-02",
+    fromState: "UNDER_REVIEW",
+    toState: "APPROVED",
+    requestedBy: "CISO",
+    approvedByRoles: ["ciso", "ondc_working_group_chair"],
+    evidenceHash: "7b4321a18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f33361202b999",
+    timestamp: "2026-11-05T14:00:00Z",
+    unilateralBypassBlocked: true,
+    notes: "Approved by ONDC council; pending production key signing ceremony",
+  },
+  {
+    transitionId: "TR-BLK-03-01",
+    blockerCode: "BLOCKER-03",
+    fromState: "IDENTIFIED",
+    toState: "EVIDENCE_REQUESTED",
+    requestedBy: "Enterprise Partnerships Lead",
+    approvedByRoles: ["institutional_lead"],
+    evidenceHash: "2b7654a18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f44461202b777",
+    timestamp: "2026-09-15T16:00:00Z",
+    unilateralBypassBlocked: true,
+    notes: "EPC pilot framework drafted for NHIDCL and Airport projects",
+  },
+  {
+    transitionId: "TR-BLK-03-02",
+    blockerCode: "BLOCKER-03",
+    fromState: "EVIDENCE_REQUESTED",
+    toState: "UNDER_REVIEW",
+    requestedBy: "Labor Welfare Officer",
+    approvedByRoles: ["legal_counsel", "labor_welfare_officer"],
+    evidenceHash: "9a1234a18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f55561202b666",
+    timestamp: "2026-10-28T12:00:00Z",
+    unilateralBypassBlocked: true,
+    notes: "Tripartite agreements under review by NHIDCL legal counsel",
+  },
+];
+
+/**
+ * Validates transition rules and enforces non-unilateral requirement (Phase 28 Pillar B)
+ */
+export function validateBlockerTransition(
+  blockerCode: string,
+  targetState: AuthoritativeBlockerState | BlockerTerminalState,
+  requestedByRole: string,
+  approverRoles: string[],
+  evidenceDigest: string
+): { isValid: boolean; error?: string } {
+  if (!evidenceDigest || evidenceDigest.length !== 64 || !/^[0-9a-f]{64}$/.test(evidenceDigest)) {
+    return {
+      isValid: false,
+      error: "MISSING_OR_INVALID_EVIDENCE_HASH: Transition requires verified 64-char hex SHA-256 evidence digest",
+    };
+  }
+
+  // Dual authorization rule: Advancing past UNDER_REVIEW requires at least two distinct approval roles
+  if (targetState === "APPROVED" || targetState === "EXECUTED" || targetState === "EFFECTIVE") {
+    const distinctRoles = new Set(approverRoles);
+    if (distinctRoles.size < 2) {
+      return {
+        isValid: false,
+        error: "UNILATERAL_ADVANCEMENT_PROHIBITED: Promotion beyond UNDER_REVIEW requires dual-party verification",
+      };
+    }
+  }
+
+  return { isValid: true };
 }
