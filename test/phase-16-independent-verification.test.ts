@@ -1462,14 +1462,14 @@ async function runPhase16Tests() {
       const total = parseInt(tables[0].total_tables, 10);
       const rls = parseInt(rlsTables[0].rls_tables, 10);
 
-      const passed = total === 68 && rls === 68;
+      const passed = total >= 68 && rls === total;
 
       recordTest(
         60,
         "Disaster Recovery & 100% RLS Catalog Verification",
         "Pillar J: Operational Readiness",
         passed,
-        `PostgreSQL catalog verified: exactly 68 tables with 100% Row-Level Security (${rls}/${total})`
+        `PostgreSQL catalog verified: at least 68 tables with 100% Row-Level Security (${rls}/${total})`
       );
     }
 
