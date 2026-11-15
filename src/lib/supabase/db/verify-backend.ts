@@ -61,6 +61,7 @@ export async function runBackendVerification() {
   const migration23Path = path.join(projectRoot, "supabase/migrations/20261115000023_independent_regional_assurance_and_audit.sql");
   const migration24Path = path.join(projectRoot, "supabase/migrations/20261115000024_production_transition_and_institutional_execution.sql");
   const migration25Path = path.join(projectRoot, "supabase/migrations/20261115000025_institutional_gate_closure_and_impact_replication.sql");
+  const migration26Path = path.join(projectRoot, "supabase/migrations/20261115000026_temporal_integrity_and_blocker_state_machine.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
@@ -84,6 +85,7 @@ export async function runBackendVerification() {
   assert(fs.existsSync(migration23Path), "1. SQL Migrations", "Migration 23 (Independent Regional Assurance & Audit) exists");
   assert(fs.existsSync(migration24Path), "1. SQL Migrations", "Migration 24 (Production Transition & Institutional Execution) exists");
   assert(fs.existsSync(migration25Path), "1. SQL Migrations", "Migration 25 (Institutional Gate Closure & Impact Replication) exists");
+  assert(fs.existsSync(migration26Path), "1. SQL Migrations", "Migration 26 (Temporal Data Integrity & Blocker State Machine) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
@@ -500,6 +502,25 @@ export async function runBackendVerification() {
       m25Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
       "2. Row Level Security",
       `Phase 24 RLS enabled on public.${table}`
+    );
+  }
+
+  const m26Content = fs.readFileSync(migration26Path, "utf-8");
+  const phase25Tables = [
+    "institutional_blocker_transition_audit_logs",
+  ];
+
+  for (const table of phase25Tables) {
+    const tableRegex = new RegExp(`CREATE TABLE (IF NOT EXISTS )?public\\.${table}`, "i");
+    assert(
+      tableRegex.test(m26Content),
+      "1. SQL Migrations",
+      `Phase 25 Table public.${table} defined in schema`
+    );
+    assert(
+      m26Content.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+      "2. Row Level Security",
+      `Phase 25 RLS enabled on public.${table}`
     );
   }
 

@@ -4433,6 +4433,9 @@ export interface Database {
           subgroup_breakdown: Json;
           replication_verdict: "reproduced_exact" | "reproduced_within_confidence_band" | "inconclusive" | "failed";
           evidence_digest: string;
+          study_type: "independent_new_cohort" | "cohort_reanalysis" | "longitudinal_followup" | "synthetic_simulation";
+          statistical_ci_method: string;
+          evaluated_metric: string;
           created_at: string;
           updated_at: string;
         };
@@ -4462,6 +4465,9 @@ export interface Database {
           subgroup_breakdown?: Json;
           replication_verdict: "reproduced_exact" | "reproduced_within_confidence_band" | "inconclusive" | "failed";
           evidence_digest: string;
+          study_type?: "independent_new_cohort" | "cohort_reanalysis" | "longitudinal_followup" | "synthetic_simulation";
+          statistical_ci_method?: string;
+          evaluated_metric?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -4491,6 +4497,9 @@ export interface Database {
           subgroup_breakdown?: Json;
           replication_verdict?: "reproduced_exact" | "reproduced_within_confidence_band" | "inconclusive" | "failed";
           evidence_digest?: string;
+          study_type?: "independent_new_cohort" | "cohort_reanalysis" | "longitudinal_followup" | "synthetic_simulation";
+          statistical_ci_method?: string;
+          evaluated_metric?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -4519,6 +4528,9 @@ export interface Database {
           operating_status: "candidate" | "conditionally_ready" | "controlled_active" | "active_verified" | "suspended";
           regional_lead_owner: string;
           evidence_digest: string;
+          temporal_classification: "completed_actual" | "partial_actual" | "forecast_projection" | "simulation_fixture";
+          period_start_date: string | null;
+          period_end_date: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -4543,6 +4555,9 @@ export interface Database {
           operating_status: "candidate" | "conditionally_ready" | "controlled_active" | "active_verified" | "suspended";
           regional_lead_owner: string;
           evidence_digest: string;
+          temporal_classification?: "completed_actual" | "partial_actual" | "forecast_projection" | "simulation_fixture";
+          period_start_date?: string | null;
+          period_end_date?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -4567,8 +4582,48 @@ export interface Database {
           operating_status?: "candidate" | "conditionally_ready" | "controlled_active" | "active_verified" | "suspended";
           regional_lead_owner?: string;
           evidence_digest?: string;
+          temporal_classification?: "completed_actual" | "partial_actual" | "forecast_projection" | "simulation_fixture";
+          period_start_date?: string | null;
+          period_end_date?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      institutional_blocker_transition_audit_logs: {
+        Row: {
+          id: string;
+          blocker_code: string;
+          from_status: string;
+          to_status: string;
+          transition_authority: string;
+          evidence_reference: string;
+          evidence_digest: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          blocker_code: string;
+          from_status: string;
+          to_status: string;
+          transition_authority: string;
+          evidence_reference: string;
+          evidence_digest: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          blocker_code?: string;
+          from_status?: string;
+          to_status?: string;
+          transition_authority?: string;
+          evidence_reference?: string;
+          evidence_digest?: string;
+          notes?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -4679,6 +4734,7 @@ export type ClassAReadinessAudit = Database["public"]["Tables"]["class_a_readine
 export type InstitutionalBlockerEvaluation = Database["public"]["Tables"]["institutional_blocker_evaluations"]["Row"];
 export type WorkerImpactReplicationStudy = Database["public"]["Tables"]["worker_impact_replication_studies"]["Row"];
 export type SustainedRegionalOperationsRecord = Database["public"]["Tables"]["sustained_regional_operations_records"]["Row"];
+export type InstitutionalBlockerTransitionAuditLog = Database["public"]["Tables"]["institutional_blocker_transition_audit_logs"]["Row"];
 
 
 

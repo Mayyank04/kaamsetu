@@ -35,6 +35,9 @@ export interface SustainedRegionalRecord {
   operatingStatus: "candidate" | "conditionally_ready" | "controlled_active" | "active_verified" | "suspended";
   regionalLeadOwner: string;
   evidenceDigest: string;
+  temporalClassification: "completed_actual" | "partial_actual" | "forecast_projection" | "simulation_fixture";
+  periodStartDate: string;
+  periodEndDate: string;
 }
 
 export function computeRegionalOperationsDigest(record: Partial<SustainedRegionalRecord>): string {
@@ -50,6 +53,7 @@ export function computeRegionalOperationsDigest(record: Partial<SustainedRegiona
     repeat: record.repeatCustomers,
     conv: record.bookingConversionRate,
     status: record.operatingStatus,
+    temporal: record.temporalClassification,
   });
   return crypto.createHash("sha256").update(canonical).digest("hex");
 }
@@ -78,6 +82,9 @@ export const CANONICAL_SUSTAINED_REGIONAL_RECORDS: SustainedRegionalRecord[] = (
       operatingStatus: "active_verified" as const,
       regionalLeadOwner: "Regional Director (Assam State Operations)",
       evidenceDigest: "",
+      temporalClassification: "completed_actual" as const,
+      periodStartDate: "2026-10-01",
+      periodEndDate: "2026-10-31",
     },
     {
       regionCode: "IN-AS",
@@ -100,6 +107,9 @@ export const CANONICAL_SUSTAINED_REGIONAL_RECORDS: SustainedRegionalRecord[] = (
       operatingStatus: "active_verified" as const,
       regionalLeadOwner: "Regional Director (Assam State Operations)",
       evidenceDigest: "",
+      temporalClassification: "partial_actual" as const,
+      periodStartDate: "2026-11-01",
+      periodEndDate: "2026-11-15",
     },
     {
       regionCode: "IN-AS",
@@ -122,6 +132,9 @@ export const CANONICAL_SUSTAINED_REGIONAL_RECORDS: SustainedRegionalRecord[] = (
       operatingStatus: "active_verified" as const,
       regionalLeadOwner: "Regional Director (Assam State Operations)",
       evidenceDigest: "",
+      temporalClassification: "forecast_projection" as const,
+      periodStartDate: "2026-12-01",
+      periodEndDate: "2026-12-31",
     },
 
     // East Khasi Hills, Meghalaya (M1, M2, M3)
@@ -146,6 +159,9 @@ export const CANONICAL_SUSTAINED_REGIONAL_RECORDS: SustainedRegionalRecord[] = (
       operatingStatus: "active_verified" as const,
       regionalLeadOwner: "State Coordinator (Meghalaya Operations)",
       evidenceDigest: "",
+      temporalClassification: "completed_actual" as const,
+      periodStartDate: "2026-10-01",
+      periodEndDate: "2026-10-31",
     },
     {
       regionCode: "IN-ML",
@@ -168,6 +184,9 @@ export const CANONICAL_SUSTAINED_REGIONAL_RECORDS: SustainedRegionalRecord[] = (
       operatingStatus: "active_verified" as const,
       regionalLeadOwner: "State Coordinator (Meghalaya Operations)",
       evidenceDigest: "",
+      temporalClassification: "partial_actual" as const,
+      periodStartDate: "2026-11-01",
+      periodEndDate: "2026-11-15",
     },
     {
       regionCode: "IN-ML",
@@ -190,12 +209,31 @@ export const CANONICAL_SUSTAINED_REGIONAL_RECORDS: SustainedRegionalRecord[] = (
       operatingStatus: "active_verified" as const,
       regionalLeadOwner: "State Coordinator (Meghalaya Operations)",
       evidenceDigest: "",
+      temporalClassification: "forecast_projection" as const,
+      periodStartDate: "2026-12-01",
+      periodEndDate: "2026-12-31",
     },
   ] as SustainedRegionalRecord[]
 ).map((r) => ({
   ...r,
   evidenceDigest: computeRegionalOperationsDigest(r),
 }));
+
+export function getActualCompletedOperations(
+  records: SustainedRegionalRecord[] = CANONICAL_SUSTAINED_REGIONAL_RECORDS
+): SustainedRegionalRecord[] {
+  return records.filter((r) => r.temporalClassification === "completed_actual");
+}
+
+export function getVerifiedHistoricalOperations(
+  records: SustainedRegionalRecord[] = CANONICAL_SUSTAINED_REGIONAL_RECORDS
+): SustainedRegionalRecord[] {
+  return records.filter(
+    (r) =>
+      r.temporalClassification === "completed_actual" ||
+      r.temporalClassification === "partial_actual"
+  );
+}
 
 export function evaluateSustainedRegionalPerformance(record: SustainedRegionalRecord): {
   isCompliant: boolean;

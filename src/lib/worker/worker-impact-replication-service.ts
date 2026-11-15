@@ -78,6 +78,9 @@ export interface ReplicatedCohortStudy {
   attritionRatePercent: number;
   subgroups: SubgroupImpactMetrics[];
   replicationVerdict: "reproduced_exact" | "reproduced_within_confidence_band" | "inconclusive" | "failed";
+  studyType: "independent_new_cohort" | "cohort_reanalysis" | "longitudinal_followup" | "synthetic_simulation";
+  statisticalCiMethod: string;
+  evaluatedMetric: string;
   evidenceDigest: string;
   certifiedAt: string;
 }
@@ -214,6 +217,9 @@ export const CANONICAL_GUWAHATI_CARPENTRY_REPLICATION: ReplicatedCohortStudy = (
     attritionRatePercent: 0.0,
     subgroups,
     replicationVerdict: "reproduced_exact",
+    studyType: "cohort_reanalysis" as const,
+    statisticalCiMethod: "two_sided_students_t_df44",
+    evaluatedMetric: "mean_post_net_monthly_realization",
     evidenceDigest,
     certifiedAt: "2026-11-15T00:00:00.000Z",
   };
