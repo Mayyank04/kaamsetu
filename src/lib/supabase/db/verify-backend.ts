@@ -65,6 +65,7 @@ export async function runBackendVerification() {
   const migration27Path = path.join(projectRoot, "supabase/migrations/20261115000027_w3c_credentials_and_dpdp_consent_enforcement.sql");
   const migration28Path = path.join(projectRoot, "supabase/migrations/20261115000028_audit_hash_chaining_and_payout_disputes.sql");
   const migration29Path = path.join(projectRoot, "supabase/migrations/20261115000029_independent_audit_attestations_and_dispute_appeals.sql");
+  const migration30Path = path.join(projectRoot, "supabase/migrations/20261116000030_phase35_1_security_and_financial_integrity.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
@@ -92,7 +93,25 @@ export async function runBackendVerification() {
   assert(fs.existsSync(migration27Path), "1. SQL Migrations", "Migration 27 (W3C Credentials Registry & DPDP Consent) exists");
   assert(fs.existsSync(migration28Path), "1. SQL Migrations", "Migration 28 (Audit Hash Chaining & Payout Disputes) exists");
   assert(fs.existsSync(migration29Path), "1. SQL Migrations", "Migration 29 (Independent Audit Attestations & Dispute Appeals) exists");
+  assert(fs.existsSync(migration30Path), "1. SQL Migrations", "Migration 30 (Security & Financial Integrity) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
+
+  const m30Content = fs.readFileSync(migration30Path, "utf-8");
+  assert(
+    m30Content.includes("trg_prevent_ledger_clawback") && m30Content.includes("fn_prevent_ledger_clawback_and_commission"),
+    "1. SQL Migrations",
+    "Migration 30 defines immutable trigger trg_prevent_ledger_clawback"
+  );
+  assert(
+    m30Content.includes("uq_worker_payout_reference") && m30Content.includes("uq_worker_payout_idempotency_key"),
+    "1. SQL Migrations",
+    "Migration 30 enforces database uniqueness on payout_reference and idempotency_key"
+  );
+  assert(
+    m30Content.includes("trg_prevent_payout_tampering") && m30Content.includes("fn_prevent_payout_tampering"),
+    "1. SQL Migrations",
+    "Migration 30 defines immutable trigger trg_prevent_payout_tampering"
+  );
 
   const m1Content = fs.readFileSync(migration1Path, "utf-8");
   const requiredTables = [

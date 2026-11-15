@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exportCohortOutcomeReport } from "@/lib/supabase/db/institutional-ops";
+import { exportCohortOutcomeReport, logInstitutionAction } from "@/lib/supabase/db/institutional-ops";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
 import { requireInstitutionCohortOwnership, AuthError } from "@/lib/auth/server";
 
@@ -11,10 +11,26 @@ export async function GET(
     const { id: cohortId } = await params;
     
     // Strict institutional authorization and cohort ownership verification
-    await requireInstitutionCohortOwnership(cohortId);
+    const user = await requireInstitutionCohortOwnership(cohortId);
 
     const { searchParams } = new URL(request.url);
     const format = (searchParams.get("format") || "json") as "json" | "csv";
+
+    // Record export audit log in non-demo mode
+    try {
+      if (!user.isDemo) {
+        await logInstitutionAction({
+          institutionId: user.institutionId || user.id,
+          actorId: user.id,
+          action: "EXPORT_COHORT_OUTCOMES",
+          targetType: "cohort",
+          targetId: cohortId,
+          details: { format, exportedAt: new Date().toISOString() },
+        });
+      }
+    } catch {
+      // Audit log best effort without breaking export
+    }
 
     const { data, mimeType } = await exportCohortOutcomeReport(cohortId, format);
 

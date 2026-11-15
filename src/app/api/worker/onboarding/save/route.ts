@@ -48,13 +48,15 @@ export async function POST(request: NextRequest) {
       .replace(/^-|-$/g, "");
     const slug = `${baseSlug}-${randomSuffix}`;
 
-    // 4. Evidence-driven KAAMSCORE Calculation based on actual user inputs
-    const hasVoice = Boolean(data.hasVoiceAttestation);
-    const workerConfirmed = Boolean(data.workerConfirmedVoice);
+    // 4. Evidence-driven KAAMSCORE Calculation & Verification State Machine
+    // Audio evidence requires an actual storage reference, not merely a client boolean
+    const hasGenuineAudioEvidence = Boolean(
+      (data.audioStoragePath || data.audioRecordingId) && data.workerConfirmedVoice
+    );
 
     const scoreResult = calculateKaamScore({
-      hasVoiceAttestation: hasVoice,
-      workerConfirmedVoice: workerConfirmed,
+      hasVoiceAttestation: hasGenuineAudioEvidence,
+      workerConfirmedVoice: Boolean(data.workerConfirmedVoice && hasGenuineAudioEvidence),
       yearsExperience: data.yearsExperience,
       verifiedSkillsCount: data.skills?.length || 0,
       completedBookingsCount: 0,
@@ -213,7 +215,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Link confirmed skills to worker_skills table with evidence-driven status
-      const initialVerificationType = hasVoice && workerConfirmed
+      const initialVerificationType = hasGenuineAudioEvidence
         ? "voice_submitted"
         : "self_declared";
 

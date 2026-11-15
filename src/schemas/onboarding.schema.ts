@@ -77,6 +77,8 @@ export const approvedProfileSubmissionSchema = z.object({
   bio: z.string().min(10),
   languages: z.array(z.string()).min(1),
   voiceTranscript: z.string().optional(),
+  audioStoragePath: z.string().optional().nullable(),
+  audioRecordingId: z.string().optional().nullable(),
   hasVoiceAttestation: z.boolean().optional(),
   workerConfirmedVoice: z.boolean().optional(),
   isPublished: z.boolean().optional(),
