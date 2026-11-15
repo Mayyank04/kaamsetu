@@ -14,11 +14,16 @@ export type MilestoneStep =
   | "opportunity_accepted"
   | "booking_confirmed"
   | "work_started"
+  | "work_commenced"
   | "work_completed"
+  | "worker_confirmed_completion"
   | "customer_confirmed"
   | "gross_wages_agreed"
   | "gross_wages_paid"
+  | "payment_evidence"
   | "disputed"
+  | "resolution"
+  | "reversal_correction"
   | "retracted";
 
 export type ProvenanceState =
@@ -81,24 +86,35 @@ export function validateMilestoneProgression(
   existingSteps: MilestoneStep[],
   newStep: MilestoneStep
 ): { allowed: boolean; violationReason?: string } {
-  if (newStep === "work_completed" && !existingSteps.includes("work_started")) {
+  const hasWorkStarted = existingSteps.includes("work_started") || existingSteps.includes("work_commenced");
+  const hasWorkCompleted =
+    existingSteps.includes("work_completed") || existingSteps.includes("worker_confirmed_completion");
+
+  if ((newStep === "work_completed" || newStep === "worker_confirmed_completion") && !hasWorkStarted) {
     return {
       allowed: false,
-      violationReason: "Cannot record 'work_completed' without prior 'work_started' milestone.",
+      violationReason: "Cannot record 'work_completed' without prior 'work_started' or 'work_commenced' milestone.",
     };
   }
 
-  if (newStep === "customer_confirmed" && !existingSteps.includes("work_completed")) {
+  if (newStep === "customer_confirmed" && !hasWorkCompleted) {
     return {
       allowed: false,
       violationReason: "Customer confirmation requires completed work record.",
     };
   }
 
-  if (newStep === "gross_wages_paid" && !existingSteps.includes("work_completed")) {
+  if (newStep === "gross_wages_paid" && !hasWorkCompleted) {
     return {
       allowed: false,
       violationReason: "Cannot record paid wages for uncompleted work. Booking is NOT work.",
+    };
+  }
+
+  if (newStep === "payment_evidence" && !existingSteps.includes("gross_wages_paid")) {
+    return {
+      allowed: false,
+      violationReason: "Payment evidence must reference a recorded gross_wages_paid milestone.",
     };
   }
 

@@ -3439,9 +3439,14 @@ export interface Database {
           verifier_role: string;
           scope_and_limitations: string;
           expiry_date: string | null;
-          status: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected";
+          status: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected" | "revoked";
           is_public_safe: boolean;
           redacted_summary: string;
+          claim_owner: string | null;
+          verifier_identity: string | null;
+          verification_method: string | null;
+          revocation_reason: string | null;
+          access_classification: "public" | "internal" | "confidential" | "restricted";
           metadata: Record<string, unknown>;
           created_at: string;
           updated_at: string;
@@ -3459,9 +3464,14 @@ export interface Database {
           verifier_role?: string;
           scope_and_limitations: string;
           expiry_date?: string | null;
-          status?: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected";
+          status?: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected" | "revoked";
           is_public_safe?: boolean;
           redacted_summary: string;
+          claim_owner?: string | null;
+          verifier_identity?: string | null;
+          verification_method?: string | null;
+          revocation_reason?: string | null;
+          access_classification?: "public" | "internal" | "confidential" | "restricted";
           metadata?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
@@ -3479,9 +3489,14 @@ export interface Database {
           verifier_role?: string;
           scope_and_limitations?: string;
           expiry_date?: string | null;
-          status?: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected";
+          status?: "unverified" | "self_reported" | "system_observed" | "partner_confirmed" | "independently_verified" | "expired" | "disputed" | "rejected" | "revoked";
           is_public_safe?: boolean;
           redacted_summary?: string;
+          claim_owner?: string | null;
+          verifier_identity?: string | null;
+          verification_method?: string | null;
+          revocation_reason?: string | null;
+          access_classification?: "public" | "internal" | "confidential" | "restricted";
           metadata?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
@@ -3493,7 +3508,7 @@ export interface Database {
           id: string;
           worker_id: string;
           opportunity_id: string | null;
-          milestone_step: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_completed" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "disputed" | "retracted";
+          milestone_step: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_commenced" | "work_completed" | "worker_confirmed_completion" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "payment_evidence" | "disputed" | "resolution" | "reversal_correction" | "retracted";
           agreed_wage_amount: number | null;
           paid_wage_amount: number | null;
           platform_commission_amount: number;
@@ -3510,7 +3525,7 @@ export interface Database {
           id?: string;
           worker_id: string;
           opportunity_id?: string | null;
-          milestone_step: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_completed" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "disputed" | "retracted";
+          milestone_step: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_commenced" | "work_completed" | "worker_confirmed_completion" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "payment_evidence" | "disputed" | "resolution" | "reversal_correction" | "retracted";
           agreed_wage_amount?: number | null;
           paid_wage_amount?: number | null;
           platform_commission_amount?: number;
@@ -3527,7 +3542,7 @@ export interface Database {
           id?: string;
           worker_id?: string;
           opportunity_id?: string | null;
-          milestone_step?: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_completed" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "disputed" | "retracted";
+          milestone_step?: "opportunity_received" | "opportunity_accepted" | "booking_confirmed" | "work_started" | "work_commenced" | "work_completed" | "worker_confirmed_completion" | "customer_confirmed" | "gross_wages_agreed" | "gross_wages_paid" | "payment_evidence" | "disputed" | "resolution" | "reversal_correction" | "retracted";
           agreed_wage_amount?: number | null;
           paid_wage_amount?: number | null;
           platform_commission_amount?: number;
@@ -3539,6 +3554,51 @@ export interface Database {
           metadata?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      evidence_attestation_events: {
+        Row: {
+          id: string;
+          claim_id: string;
+          attestation_type: "submitted" | "observed" | "attested" | "rejected" | "disputed" | "clarification_requested" | "revoked" | "expired";
+          actor_id: string;
+          actor_role: "worker" | "customer" | "contractor" | "enterprise_partner" | "institutional_partner" | "financial_partner" | "credential_issuer" | "independent_auditor" | "platform_admin";
+          methodology: string;
+          reviewed_artifacts: Record<string, unknown>[];
+          scope_and_limitations: string;
+          signature_digest: string;
+          dual_approved_by: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          claim_id: string;
+          attestation_type: "submitted" | "observed" | "attested" | "rejected" | "disputed" | "clarification_requested" | "revoked" | "expired";
+          actor_id: string;
+          actor_role: "worker" | "customer" | "contractor" | "enterprise_partner" | "institutional_partner" | "financial_partner" | "credential_issuer" | "independent_auditor" | "platform_admin";
+          methodology: string;
+          reviewed_artifacts?: Record<string, unknown>[];
+          scope_and_limitations: string;
+          signature_digest: string;
+          dual_approved_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          claim_id?: string;
+          attestation_type?: "submitted" | "observed" | "attested" | "rejected" | "disputed" | "clarification_requested" | "revoked" | "expired";
+          actor_id?: string;
+          actor_role?: "worker" | "customer" | "contractor" | "enterprise_partner" | "institutional_partner" | "financial_partner" | "credential_issuer" | "independent_auditor" | "platform_admin";
+          methodology?: string;
+          reviewed_artifacts?: Record<string, unknown>[];
+          scope_and_limitations?: string;
+          signature_digest?: string;
+          dual_approved_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -3633,5 +3693,7 @@ export type EnterprisePilotEngagement = Database["public"]["Tables"]["enterprise
 export type ToolFinancingPilotApplication = Database["public"]["Tables"]["tool_financing_pilot_applications"]["Row"];
 export type EvidenceRegistryRecord = Database["public"]["Tables"]["evidence_registry_records"]["Row"];
 export type WorkerOutcomeMilestone = Database["public"]["Tables"]["worker_outcome_milestones"]["Row"];
+export type EvidenceAttestationEvent = Database["public"]["Tables"]["evidence_attestation_events"]["Row"];
+
 
 

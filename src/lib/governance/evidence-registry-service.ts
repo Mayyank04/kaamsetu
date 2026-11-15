@@ -1,10 +1,10 @@
 /**
- * Central Certification Evidence Registry Service
- * Pillar L: Establishes an immutable, tamper-evident registry for all material platform claims,
- * tracking claim provenance, verification timestamps, and public-safe redactions.
+ * Central Certification Evidence Registry Service V2
+ * Pillar A & B: Controlled Evidence-Management System & Independent Attestation Workflow
  *
  * MISSION INVARIANT: "Every skill deserves to be seen, even without a degree."
  * CONSTITUTIONAL INVARIANT: 0.00% commission on worker wages.
+ * INTEGRITY PRINCIPLE: A cryptographic digest proves evidence immutability, not truth of claim.
  */
 
 import crypto from "crypto";
@@ -31,7 +31,31 @@ export type EvidenceStatus =
   | "independently_verified"
   | "expired"
   | "disputed"
-  | "rejected";
+  | "rejected"
+  | "revoked";
+
+export type AccessClassification = "public" | "internal" | "confidential" | "restricted";
+
+export type AuthorizedVerifierRole =
+  | "worker"
+  | "customer"
+  | "contractor"
+  | "enterprise_partner"
+  | "institutional_partner"
+  | "financial_partner"
+  | "credential_issuer"
+  | "independent_auditor"
+  | "platform_admin";
+
+export type AttestationEventType =
+  | "submitted"
+  | "observed"
+  | "attested"
+  | "rejected"
+  | "disputed"
+  | "clarification_requested"
+  | "revoked"
+  | "expired";
 
 export interface EvidenceRegistryInput {
   claimId: string;
@@ -41,8 +65,13 @@ export interface EvidenceRegistryInput {
   evidenceLocation: string;
   payloadToHash: Record<string, unknown> | string;
   scopeAndLimitations: string;
+  claimOwner?: string | null;
+  verifierIdentity?: string | null;
+  verificationMethod?: string | null;
+  revocationReason?: string | null;
+  accessClassification?: AccessClassification;
   expiryDate?: string | null;
-  verifierRole?: string;
+  verifierRole?: AuthorizedVerifierRole | string;
   status?: EvidenceStatus;
   isPublicSafe?: boolean;
   redactedSummary: string;
@@ -61,6 +90,11 @@ export interface EvidenceRegistryRecord {
   verificationTimestamp: string | null;
   verifierRole: string;
   scopeAndLimitations: string;
+  claimOwner: string | null;
+  verifierIdentity: string | null;
+  verificationMethod: string | null;
+  revocationReason: string | null;
+  accessClassification: AccessClassification;
   expiryDate: string | null;
   status: EvidenceStatus;
   isPublicSafe: boolean;
@@ -70,8 +104,24 @@ export interface EvidenceRegistryRecord {
   updatedAt: string;
 }
 
+export interface EvidenceAttestationEventRecord {
+  id: string;
+  claimId: string;
+  attestationType: AttestationEventType;
+  actorId: string;
+  actorRole: AuthorizedVerifierRole;
+  methodology: string;
+  reviewedArtifacts: Record<string, unknown>[];
+  scopeAndLimitations: string;
+  signatureDigest: string;
+  dualApprovedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
 /**
  * Computes deterministic RFC 8785 canonical SHA-256 digest of evidence payload.
+ * Invariant: Digest proves immutability since hashing; does NOT prove external ground truth.
  */
 export function computeEvidenceHash(payload: Record<string, unknown> | string): string {
   const content = typeof payload === "string" ? payload : JSON.stringify(payload, Object.keys(payload).sort());
@@ -79,16 +129,15 @@ export function computeEvidenceHash(payload: Record<string, unknown> | string): 
 }
 
 /**
- * Creates a validated Evidence Registry Record.
+ * Creates a validated Evidence Registry Record V2.
  * Strictly verifies absence of sensitive personal data or plaintext secrets in public summaries.
  */
 export function buildEvidenceRegistryRecord(input: EvidenceRegistryInput): EvidenceRegistryRecord {
-  // Prohibit raw PII and credentials in summary
   const forbiddenPatterns = [
     /bearer\s+[a-z0-9_\-\.]+/i,
     /password/i,
     /\b\d{4}[ -]?\d{4}[ -]?\d{4}\b/, // Aadhaar pattern
-    /\b\d{10}\b/, // Unmasked 10-digit phone number
+    /\b[6-9]\d{9}\b/, // Unmasked 10-digit Indian phone number
   ];
 
   for (const pattern of forbiddenPatterns) {
@@ -109,9 +158,15 @@ export function buildEvidenceRegistryRecord(input: EvidenceRegistryInput): Evide
     evidenceLocation: input.evidenceLocation,
     evidenceSha256,
     collectionTimestamp: now,
-    verificationTimestamp: input.status === "independently_verified" || input.status === "partner_confirmed" ? now : null,
+    verificationTimestamp:
+      input.status === "independently_verified" || input.status === "partner_confirmed" ? now : null,
     verifierRole: input.verifierRole || "independent_auditor",
     scopeAndLimitations: input.scopeAndLimitations,
+    claimOwner: input.claimOwner || null,
+    verifierIdentity: input.verifierIdentity || null,
+    verificationMethod: input.verificationMethod || null,
+    revocationReason: input.revocationReason || null,
+    accessClassification: input.accessClassification || "internal",
     expiryDate: input.expiryDate || null,
     status: input.status || "unverified",
     isPublicSafe: input.isPublicSafe ?? true,
@@ -123,8 +178,44 @@ export function buildEvidenceRegistryRecord(input: EvidenceRegistryInput): Evide
 }
 
 /**
- * Evaluates valid evidence status transitions.
- * Enforces governing rule: unverified claims cannot transition to independently_verified without prior observation.
+ * Evaluates conflict of interest between claim submitter and verifier.
+ * Strictly prohibits self-approval: submitter cannot certify their own claim as independently_verified.
+ */
+export function validateAttestationConflict(params: {
+  claimOwner?: string | null;
+  verifierIdentity?: string | null;
+  targetStatus: EvidenceStatus;
+}): { allowed: boolean; reason?: string } {
+  if (
+    params.targetStatus === "independently_verified" &&
+    params.claimOwner &&
+    params.verifierIdentity &&
+    params.claimOwner === params.verifierIdentity
+  ) {
+    return {
+      allowed: false,
+      reason: "Conflict of Interest: A claim owner cannot self-attest or self-approve independent verification.",
+    };
+  }
+
+  return { allowed: true };
+}
+
+/**
+ * Evaluates whether a sensitive claim category requires dual-approval.
+ */
+export function requiresDualApproval(category: EvidenceCategory): boolean {
+  const dualApprovalCategories: EvidenceCategory[] = [
+    "enterprise_pilot",
+    "responsible_finance",
+    "commercial_revenue",
+    "regional_gate",
+  ];
+  return dualApprovalCategories.includes(category);
+}
+
+/**
+ * Evaluates valid evidence status transitions under the V2 strict state machine.
  */
 export function validateEvidenceStatusTransition(
   current: EvidenceStatus,
@@ -134,11 +225,12 @@ export function validateEvidenceStatusTransition(
     unverified: ["self_reported", "system_observed", "rejected"],
     self_reported: ["system_observed", "disputed", "rejected"],
     system_observed: ["partner_confirmed", "independently_verified", "disputed", "rejected"],
-    partner_confirmed: ["independently_verified", "expired", "disputed", "rejected"],
-    independently_verified: ["expired", "disputed", "rejected"],
+    partner_confirmed: ["independently_verified", "expired", "disputed", "rejected", "revoked"],
+    independently_verified: ["expired", "disputed", "rejected", "revoked"],
     expired: ["unverified", "system_observed"],
     disputed: ["unverified", "rejected", "independently_verified"],
     rejected: ["unverified"],
+    revoked: ["unverified", "disputed"],
   };
 
   const allowed = allowedTransitions[current]?.includes(target) ?? false;
@@ -153,7 +245,41 @@ export function validateEvidenceStatusTransition(
 }
 
 /**
- * Returns a public-safe view of an evidence record, redacting internal source locations if private.
+ * Builds an immutable Evidence Attestation Event Record.
+ */
+export function buildAttestationEvent(params: {
+  claimId: string;
+  attestationType: AttestationEventType;
+  actorId: string;
+  actorRole: AuthorizedVerifierRole;
+  methodology: string;
+  reviewedArtifacts: Record<string, unknown>[];
+  scopeAndLimitations: string;
+  dualApprovedBy?: string | null;
+  notes?: string | null;
+}): EvidenceAttestationEventRecord {
+  const now = new Date().toISOString();
+  const rawDigest = `${params.claimId}:${params.attestationType}:${params.actorId}:${params.actorRole}:${now}`;
+  const signatureDigest = crypto.createHash("sha256").update(rawDigest).digest("hex");
+
+  return {
+    id: "att-" + crypto.randomUUID().slice(0, 12),
+    claimId: params.claimId,
+    attestationType: params.attestationType,
+    actorId: params.actorId,
+    actorRole: params.actorRole,
+    methodology: params.methodology,
+    reviewedArtifacts: params.reviewedArtifacts,
+    scopeAndLimitations: params.scopeAndLimitations,
+    signatureDigest,
+    dualApprovedBy: params.dualApprovedBy || null,
+    notes: params.notes || null,
+    createdAt: now,
+  };
+}
+
+/**
+ * Returns a public-safe view of an evidence record V2, strictly hiding internal source locations and confidential artifacts.
  */
 export function sanitizePublicEvidenceRecord(record: EvidenceRegistryRecord) {
   return {
@@ -166,6 +292,10 @@ export function sanitizePublicEvidenceRecord(record: EvidenceRegistryRecord) {
     scopeAndLimitations: record.scopeAndLimitations,
     redactedSummary: record.redactedSummary,
     verificationTimestamp: record.verificationTimestamp,
+    accessClassification: record.accessClassification,
+    expiryDate: record.expiryDate,
+    isRevoked: record.status === "revoked",
+    revocationReason: record.status === "revoked" ? record.revocationReason : null,
   };
 }
 
@@ -182,6 +312,7 @@ export function summarizeRegistryStatus(records: EvidenceRegistryRecord[]) {
     expired: 0,
     disputed: 0,
     rejected: 0,
+    revoked: 0,
   };
 
   for (const r of records) {
