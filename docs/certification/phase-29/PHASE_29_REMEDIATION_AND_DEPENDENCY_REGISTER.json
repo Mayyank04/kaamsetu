@@ -1,0 +1,40 @@
+{
+  "phase": "PHASE_29",
+  "title": "Remediation and Dependency Register",
+  "auditDate": "2026-11-15T19:25:00Z",
+  "externalDependencies": [
+    {
+      "dependencyId": "DEP-TSDM",
+      "counterparty": "Tripura Skill Development Mission",
+      "requiredInstrument": "Gazette notification or signed bilateral MoU",
+      "dependencyStage": "cabinet_or_council_pending",
+      "operationalContingency": "Tripura operations held in candidate/research-only mode; 0 active bookings"
+    },
+    {
+      "dependencyId": "DEP-ONDC",
+      "counterparty": "ONDC / ONest Council",
+      "requiredInstrument": "Production cryptographic key ceremony and live registry entry",
+      "dependencyStage": "approved_pending_execution",
+      "operationalContingency": "Staging sandbox isolated; production transaction routing held"
+    },
+    {
+      "dependencyId": "DEP-EPC",
+      "counterparty": "NHIDCL / L&T Construction Consortium",
+      "requiredInstrument": "Executed bilateral master service agreement with wage escrow clauses",
+      "dependencyStage": "counterparty_legal_review",
+      "operationalContingency": "Large-scale enterprise site staffing held pending signed contracts"
+    }
+  ],
+  "technicalRemediations": [
+    {
+      "issue": "Phantom commit bcbc222 reported in historical logs",
+      "remediation": "Audit proved bcbc222 does not exist; canonical parent resolved as 8cd69c6 and 03ae818",
+      "status": "RESOLVED"
+    },
+    {
+      "issue": "Immutability trigger testing in local suite",
+      "remediation": "Updated assertions to match authoritative trigger exception strings and column names",
+      "status": "RESOLVED"
+    }
+  ]
+}

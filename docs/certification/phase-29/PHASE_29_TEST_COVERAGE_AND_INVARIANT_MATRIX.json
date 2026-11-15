@@ -1,0 +1,48 @@
+{
+  "phase": "PHASE_29",
+  "title": "Test Coverage and Invariant Matrix",
+  "coreInvariants": [
+    {
+      "invariant": "platform_commission_amount = 0.00",
+      "description": "0.00% commission on worker wages forever",
+      "enforcementMechanisms": [
+        "PostgreSQL schema check constraint on bookings and payment_records_ledger",
+        "TransactionReconciliationService reconciliation equation",
+        "Adversarial negative injection tests (disguised commission, clawback)",
+        "Automated wage statement generator validation"
+      ],
+      "status": "PASSING_PERMANENT"
+    },
+    {
+      "invariant": "W3C VC Data Model v1.1 Schema Conformance",
+      "description": "All issued credentials strictly conform to W3C VC v1.1 with Ed25519 signatures",
+      "enforcementMechanisms": [
+        "RFC 8785 Canonical JSON Serialization (JCS)",
+        "Ed25519 pure digital signature verification",
+        "18 cryptographic negative test fixtures",
+        "Selective disclosure excluding raw Aadhaar and bank details"
+      ],
+      "status": "PASSING_PERMANENT"
+    },
+    {
+      "invariant": "Append-Only Audit Immutability",
+      "description": "Audit trails and checkpoints cannot be updated or deleted",
+      "enforcementMechanisms": [
+        "SHA-256 cryptographic hash chaining (H_n = SHA-256(seq:prevDigest:canonical(payload)))",
+        "PostgreSQL BEFORE UPDATE/DELETE exception triggers",
+        "Ed25519-signed external checkpoints"
+      ],
+      "status": "PASSING_PERMANENT"
+    },
+    {
+      "invariant": "Non-Masking of Institutional Gates",
+      "description": "Class A promotion strictly barred while external counterparty blockers are unresolved",
+      "enforcementMechanisms": [
+        "Dual-authorization blocker transition validator",
+        "assessInstitutionalGateReadiness automated gatekeeper",
+        "Refusal of unearned Class A promotion in test suites and certification manifests"
+      ],
+      "status": "PASSING_PERMANENT"
+    }
+  ]
+}

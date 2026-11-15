@@ -35,7 +35,8 @@
     "test:phase25": "tsx test/phase-25-reconciliation.test.ts",
     "test:phase26": "tsx test/phase-26-production-evidence.test.ts",
     "test:phase27": "tsx test/phase-27-trust-assurance.test.ts",
-    "test:phase28": "tsx test/phase-28-institutional-assurance.test.ts"
+    "test:phase28": "tsx test/phase-28-institutional-assurance.test.ts",
+    "test:phase29": "tsx test/phase-29-independent-challenge.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

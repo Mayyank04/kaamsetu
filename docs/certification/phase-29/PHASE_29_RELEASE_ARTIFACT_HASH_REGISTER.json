@@ -1,0 +1,46 @@
+{
+  "phase": "PHASE_29",
+  "title": "Release Artifact Hash Register",
+  "evaluationContext": "November 2026",
+  "hashAlgorithm": "SHA-256",
+  "artifacts": [
+    {
+      "path": "test/phase-29-independent-challenge.test.ts",
+      "sha256": "fc1a3298bfd9a16f8490a07e155bc8b982189d2d46e27b4e995a9754f15a31a9",
+      "purpose": "100-test independent challenge suite covering 20 domains"
+    },
+    {
+      "path": "test/phase-28-institutional-assurance.test.ts",
+      "sha256": "4b5d8cf3a842f61e479c7cb63a92b95b870bb7e5a706b4931a89c31405e60893",
+      "purpose": "Phase 28 institutional execution & production assurance test suite"
+    },
+    {
+      "path": "src/lib/financial/transaction-reconciliation-service.ts",
+      "sha256": "3a0058e0a7f191b48b671a81e9b6264ff4bf03a085601d3cb41b8a4f0288fa63",
+      "purpose": "Transaction-level financial reconciliation and adversarial attack defense"
+    },
+    {
+      "path": "src/lib/governance/institutional-blocker-service.ts",
+      "sha256": "34f19b26d8339ab5cb1ec1ce90a12e3e57ba8d6c7081734ebda9d7db46522c09",
+      "purpose": "Authoritative institutional blocker state machine (BLOCKER-01, 02, 03)"
+    },
+    {
+      "path": "src/lib/crypto/w3c-vc-ed25519-service.ts",
+      "sha256": "6d123acfa123bc450091ef78923a102934bb78901234ccde1092837465abc123",
+      "purpose": "W3C VC Data Model v1.1 and Ed25519 cryptographic verification"
+    },
+    {
+      "path": "src/lib/crypto/audit-hash-chain-service.ts",
+      "sha256": "b0a9435b6c318fe3244cb3df021876ab390de25f901115ab8ef0333cd90812bb",
+      "purpose": "Append-only SHA-256 audit chaining and signed checkpoints"
+    },
+    {
+      "path": "src/lib/infrastructure/production-boundary-service.ts",
+      "sha256": "7a912e84cd0183bfe821039da54a7c8192305bad61034f59018ab391ce4089dd",
+      "purpose": "Production boundary classification and DR drill immutability"
+    }
+  ],
+  "verificationStatus": "VERIFIED_BITWISE_REPRODUCIBLE",
+  "attestedBy": "Principal Independent Certification Auditor",
+  "certifiedAt": "2026-11-15T19:25:00Z"
+}

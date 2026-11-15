@@ -1,0 +1,136 @@
+{
+  "phase": "PHASE_29",
+  "title": "Cryptographic Negative Test Register",
+  "standards": ["W3C VC Data Model v1.1", "RFC 8032 Ed25519", "RFC 8785 Canonical JSON JCS", "SHA-256"],
+  "totalFixtures": 18,
+  "negativeFixtures": [
+    {
+      "fixtureId": "CRYPT-NEG-01",
+      "testVector": "Tampered subject trade in W3C VC payload",
+      "expectedOutcome": "INVALID_SIGNATURE",
+      "actualResult": "INVALID_SIGNATURE",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-02",
+      "testVector": "Expired W3C VC credential timestamp",
+      "expectedOutcome": "EXPIRED_CREDENTIAL",
+      "actualResult": "EXPIRED_CREDENTIAL",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-03",
+      "testVector": "Revoked W3C VC credential in registry status list",
+      "expectedOutcome": "REVOKED_CREDENTIAL",
+      "actualResult": "REVOKED_CREDENTIAL",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-04",
+      "testVector": "Signing key rotated or retired in public registry",
+      "expectedOutcome": "ROTATED_OR_REVOKED_KEY",
+      "actualResult": "ROTATED_OR_REVOKED_KEY",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-05",
+      "testVector": "Unknown signing key verificationMethod",
+      "expectedOutcome": "UNKNOWN_KEY_VERSION",
+      "actualResult": "UNKNOWN_KEY_VERSION",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-06",
+      "testVector": "Tampered offline QR payload payload bytes",
+      "expectedOutcome": "SIGNATURE_VERIFICATION_FAILED",
+      "actualResult": "SIGNATURE_VERIFICATION_FAILED",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-07",
+      "testVector": "Air-gapped cache exceeding 72-hour freshness limit",
+      "expectedOutcome": "STALE_CACHE_REJECTED",
+      "actualResult": "STALE_CACHE_REJECTED",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-08",
+      "testVector": "Audit hash chain tampered at sequence 3",
+      "expectedOutcome": "HASH_CHAIN_INTEGRITY_BROKEN",
+      "actualResult": "HASH_CHAIN_INTEGRITY_BROKEN",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-09",
+      "testVector": "Release manifest tampered hash bit flip",
+      "expectedOutcome": "MANIFEST_SIGNATURE_MISMATCH",
+      "actualResult": "MANIFEST_SIGNATURE_MISMATCH",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-10",
+      "testVector": "Direct SQL UPDATE on worker_consent_audit_events",
+      "expectedOutcome": "TRIGGER_EXCEPTION_IMMUTABLE",
+      "actualResult": "TRIGGER_EXCEPTION_IMMUTABLE",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-11",
+      "testVector": "Direct SQL UPDATE on audit_chain_checkpoints",
+      "expectedOutcome": "TRIGGER_EXCEPTION_IMMUTABLE",
+      "actualResult": "TRIGGER_EXCEPTION_IMMUTABLE",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-12",
+      "testVector": "Direct SQL UPDATE on production_dr_execution_log",
+      "expectedOutcome": "TRIGGER_EXCEPTION_IMMUTABLE",
+      "actualResult": "TRIGGER_EXCEPTION_IMMUTABLE",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-13",
+      "testVector": "Raw 12-digit unmasked Aadhaar in VC payload",
+      "expectedOutcome": "PII_LEAKAGE_DETECTED",
+      "actualResult": "PII_LEAKAGE_DETECTED",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-14",
+      "testVector": "Holder subject mismatch in Verifiable Presentation",
+      "expectedOutcome": "SUBJECT_MISMATCH",
+      "actualResult": "SUBJECT_MISMATCH",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-15",
+      "testVector": "Withdrawn DPDP consent token",
+      "expectedOutcome": "WITHDRAWN_CONSENT",
+      "actualResult": "WITHDRAWN_CONSENT",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-16",
+      "testVector": "Production DR drill recorded without CAB prefix",
+      "expectedOutcome": "UNAUTHORIZED_PRODUCTION_DRILL",
+      "actualResult": "UNAUTHORIZED_PRODUCTION_DRILL",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-17",
+      "testVector": "Disguised platform commission injection",
+      "expectedOutcome": "COMMISSION_INVARIANT_VIOLATION",
+      "actualResult": "COMMISSION_INVARIANT_VIOLATION",
+      "status": "PASSED"
+    },
+    {
+      "fixtureId": "CRYPT-NEG-18",
+      "testVector": "Retrospective wage clawback attempt",
+      "expectedOutcome": "WAGE_CLAWBACK_PROHIBITED",
+      "actualResult": "WAGE_CLAWBACK_PROHIBITED",
+      "status": "PASSED"
+    }
+  ],
+  "passRate": "100.0%",
+  "verdict": "CRYPTOGRAPHIC_NEGATIVE_SECURITY_PROVEN"
+}

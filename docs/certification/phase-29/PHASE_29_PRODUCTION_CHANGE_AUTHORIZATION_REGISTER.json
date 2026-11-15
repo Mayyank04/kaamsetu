@@ -1,0 +1,35 @@
+{
+  "phase": "PHASE_29",
+  "title": "Production Change Authorization Register",
+  "governingCharter": "Change Advisory Board (CAB) Operating Procedure v2.4",
+  "changeRequests": [
+    {
+      "changeId": "CHG-2026-P28-M29",
+      "title": "Migration 29 deployment: worker dispute appeals & DR execution log",
+      "authorizedBy": ["CISO", "Principal Infrastructure Lead", "Legal Ombudsman"],
+      "riskClassification": "STANDARD_SCHEMA_ADDITIVE",
+      "maintenanceWindow": "2026-11-15T01:00:00Z to 2026-11-15T02:00:00Z",
+      "rollbackPlanVerified": true,
+      "executionStatus": "COMPLETED_VERIFIED"
+    },
+    {
+      "changeId": "CHG-2026-DR-STG-04",
+      "title": "Staging DR Full Recovery Exercise DR-DRILL-2026-Q4-STG",
+      "authorizedBy": ["Principal Infrastructure Lead"],
+      "riskClassification": "SIMULATION_STAGING_ONLY",
+      "maintenanceWindow": "2026-11-14T18:00:00Z to 2026-11-14T19:00:00Z",
+      "rollbackPlanVerified": true,
+      "executionStatus": "COMPLETED_RTO_1452s_RPO_30s"
+    },
+    {
+      "changeId": "CHG-2026-PROD-DR-01",
+      "title": "Live Production Failover Drill (Mumbai -> Hyderabad)",
+      "authorizedBy": ["PENDING_DUAL_CAB_APPROVAL"],
+      "riskClassification": "CRITICAL_LIVE_FAILOVER",
+      "maintenanceWindow": "PENDING_SCHEDULE",
+      "rollbackPlanVerified": true,
+      "executionStatus": "HELD_UNVERIFIED_PENDING_INSTITUTIONAL_RATIFICATION"
+    }
+  ],
+  "antiMaskingInvariant": "Live production failover drills cannot be recorded or certified based on staging simulations"
+}

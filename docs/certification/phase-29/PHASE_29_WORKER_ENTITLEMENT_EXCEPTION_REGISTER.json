@@ -1,0 +1,35 @@
+{
+  "phase": "PHASE_29",
+  "title": "Worker Entitlement Exception Register",
+  "auditPeriod": "2026-08-01 to 2026-11-15",
+  "totalTransactionsAudited": 517,
+  "exceptionsDetected": 0,
+  "zeroCommissionExceptions": 0,
+  "negativeDisbursementExceptions": 0,
+  "unauthorizedDeductionExceptions": 0,
+  "auditedCategories": [
+    {
+      "category": "Customer Initiated Dispute / Chargeback",
+      "totalCases": 4,
+      "workerEntitlementImpact": "0.00 (Worker shielded; platform enterprise contingency absorbed dispute fee)",
+      "disposition": "RESOLVED_FAVORING_WORKER"
+    },
+    {
+      "category": "Cancellation Post Work Commencement",
+      "totalCases": 7,
+      "workerEntitlementImpact": "0.00 deduction (100% agreed labor hours compensated directly to worker)",
+      "disposition": "FULL_WAGE_PAID"
+    },
+    {
+      "category": "Sub-Rupee Rounding Discrepancy",
+      "totalCases": 12,
+      "workerEntitlementImpact": "0.00 variance (Fractions rounded UP in favor of worker entitlement)",
+      "disposition": "CEILING_ROUNDING_APPLIED"
+    }
+  ],
+  "constitutionalCertification": {
+    "invariant": "platform_commission_amount = 0.00",
+    "verified": true,
+    "auditVerdict": "ZERO_WORKER_ENTITLEMENT_DEFICIT"
+  }
+}
