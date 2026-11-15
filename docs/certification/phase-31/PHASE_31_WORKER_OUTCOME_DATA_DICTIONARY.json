@@ -1,0 +1,83 @@
+{
+  "phase": "PHASE_31",
+  "title": "Worker Outcome Measurement Data Dictionary",
+  "timestamp": "2026-11-15T20:00:00Z",
+  "fields": [
+    {
+      "name": "worker_profile_id",
+      "type": "UUID",
+      "description": "Cryptographically pseudonymous worker identifier",
+      "pii": false
+    },
+    {
+      "name": "registered_at",
+      "type": "TIMESTAMPTZ",
+      "description": "Timestamp of initial account registration",
+      "pii": false
+    },
+    {
+      "name": "verified_at",
+      "type": "TIMESTAMPTZ",
+      "description": "Timestamp of practical skill verification & identity check",
+      "pii": false
+    },
+    {
+      "name": "active_status",
+      "type": "BOOLEAN",
+      "description": "Indicates active availability for work opportunities",
+      "pii": false
+    },
+    {
+      "name": "jobs_converted_count",
+      "type": "INTEGER",
+      "description": "Total jobs accepted and commenced",
+      "pii": false
+    },
+    {
+      "name": "jobs_completed_count",
+      "type": "INTEGER",
+      "description": "Total jobs successfully completed",
+      "pii": false
+    },
+    {
+      "name": "payout_tier_level",
+      "type": "ENUM",
+      "values": [
+        "independently_reconciled",
+        "payment_backed",
+        "customer_confirmed",
+        "worker_reported"
+      ],
+      "pii": false
+    },
+    {
+      "name": "monthly_earnings_reconciled",
+      "type": "DECIMAL(12,2)",
+      "description": "Bank-confirmed net monthly realization (0.00% commission)",
+      "pii": false
+    },
+    {
+      "name": "payout_latency_hours",
+      "type": "DECIMAL(5,2)",
+      "description": "Hours elapsed between customer confirmation and settlement",
+      "pii": false
+    },
+    {
+      "name": "dispute_count",
+      "type": "INTEGER",
+      "description": "Number of formal disputes opened",
+      "pii": false
+    },
+    {
+      "name": "retention_status_90d",
+      "type": "BOOLEAN",
+      "description": "Completed at least one service booking within 90 days",
+      "pii": false
+    }
+  ],
+  "privacyPreservingThresholds": {
+    "minimumCohortReportingSize": 10,
+    "differentialPrivacyNoiseVariance": "laplace(0.1)",
+    "directIdentifierSuppression": true
+  }
+}

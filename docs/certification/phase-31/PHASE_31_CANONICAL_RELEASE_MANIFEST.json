@@ -1,0 +1,30 @@
+{
+  "manifest": {
+    "repository": "Mayyank04/kaamsetu",
+    "branch": "phase-31-operational-readiness-and-worker-outcome-validation",
+    "baselineCommit": "b66db69",
+    "parentCommit": "9928ab2",
+    "migrations": {
+      "count": 29,
+      "range": "01 to 29",
+      "latestMigration": "20261115000029_independent_audit_attestations_and_dispute_appeals.sql",
+      "migrationDirectoryDigest": "4d1595d572aaf4b271e600512454ec1bf6a72736edc48341c193767b139e9d3f"
+    },
+    "lockfileDigest": "6259c05078bd12c2c4f32e383de88c60bbf69e71ef9dcdf964d6db92207a317d",
+    "testInventoryDigest": "81eedb498d6f9577903d0071cea3994febb823ea1d50c29a694a975e36e457a6",
+    "environmentClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+    "toolchain": {
+      "nodeVersion": "v20.x (LTS) / v22.x",
+      "nextVersion": "15.1.7",
+      "typeScriptVersion": "5.x",
+      "postgresVersion": "15.x"
+    },
+    "documentationCount": 46,
+    "timestamp": "2026-11-15T20:00:00.000Z"
+  },
+  "canonicalDigest": "a92164de343c3202535d2c5a9831dc91e9752709857c192de6a913fa46627e63",
+  "signature": "0b40400c87d08fe24218ea74b36a58af3391e146551c144cb920aebea523387b6abcbeab8f2705edbb132f8f7f5dc55762172cbe744271254edecf9a60b0b40c",
+  "signingKeyId": "did:kaamsetu:release:phase-31-authority#key-1",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA985GwyX5HINGxJpUJ/StbDE+wDQAqi5GcrkX/Dl4jII=\n-----END PUBLIC KEY-----\n",
+  "reproducibilityClassification": "reproducible_canonical_manifest"
+}

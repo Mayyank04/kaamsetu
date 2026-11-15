@@ -1,0 +1,68 @@
+{
+  "phase": "PHASE_31",
+  "title": "Regional Authorization & Containment Matrix",
+  "timestamp": "2026-11-15T20:00:00Z",
+  "regions": [
+    {
+      "stateCode": "IN-AS",
+      "stateName": "Assam",
+      "operationalStatus": "ACTIVE_CONTROLLED_PRODUCTION",
+      "authorizedDistricts": [
+        "Kamrup Metropolitan (Guwahati Urban)"
+      ],
+      "prohibitedDistricts": [
+        "All other 34 districts"
+      ],
+      "activeWorkforce": 310,
+      "verifiedIdentityRate": "100%",
+      "languageSupport": [
+        "as",
+        "hi",
+        "en"
+      ],
+      "legalGrounding": "Assam Shops and Establishments Act & MSDE Skill Framework"
+    },
+    {
+      "stateCode": "IN-ML",
+      "stateName": "Meghalaya",
+      "operationalStatus": "ACTIVE_CONTROLLED_PRODUCTION",
+      "authorizedDistricts": [
+        "East Khasi Hills (Shillong Urban)"
+      ],
+      "prohibitedDistricts": [
+        "All other 11 districts"
+      ],
+      "activeWorkforce": 207,
+      "verifiedIdentityRate": "100%",
+      "languageSupport": [
+        "kha",
+        "en",
+        "hi"
+      ],
+      "legalGrounding": "Autonomous District Council (Khasi Hills ADC) Labor Compliance"
+    },
+    {
+      "stateCode": "IN-WB",
+      "stateName": "West Bengal (Siliguri Transit Corridor)",
+      "operationalStatus": "CONDITIONALLY_READY",
+      "authorizedDistricts": [],
+      "prohibitedDistricts": [
+        "Darjeeling",
+        "Jalpaiguri"
+      ],
+      "activeWorkforce": 0,
+      "blockingReason": "Physical verification center facility lease pending"
+    },
+    {
+      "stateCode": "IN-TR",
+      "stateName": "Tripura",
+      "operationalStatus": "CANDIDATE_RESEARCH_ONLY",
+      "authorizedDistricts": [],
+      "prohibitedDistricts": [
+        "All districts"
+      ],
+      "activeWorkforce": 0,
+      "blockingReason": "BLOCKER-01: Awaiting TSDM bilateral MoU and State Cabinet notification"
+    }
+  ]
+}

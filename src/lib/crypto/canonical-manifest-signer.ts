@@ -240,8 +240,47 @@ export function buildPhase30ReleaseManifest(projectRoot: string): ReleaseManifes
       typeScriptVersion: "5.x",
       postgresVersion: "15.x",
     },
-    documentationCount: 32,
+    documentationCount: 39,
     timestamp: "2026-11-15T19:40:00.000Z",
+  };
+}
+
+/**
+ * Generates canonical release manifest data for Phase 31
+ */
+export function buildPhase31ReleaseManifest(projectRoot: string): ReleaseManifestData {
+  const migrationsDir = path.join(projectRoot, "supabase/migrations");
+  const lockfilePath = path.join(projectRoot, "package-lock.json");
+  const testInventoryPath = path.join(projectRoot, "docs/certification/phase-31/PHASE_31_ACTIVE_TEST_INVENTORY.json");
+
+  const migrationFiles = fs.existsSync(migrationsDir)
+    ? fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith(".sql") && f.substring(0, 14) <= "20261115000029")
+        .sort()
+    : [];
+
+  return {
+    repository: "Mayyank04/kaamsetu",
+    branch: "phase-31-operational-readiness-and-worker-outcome-validation",
+    baselineCommit: "b66db69",
+    parentCommit: "9928ab2",
+    migrations: {
+      count: migrationFiles.length,
+      range: "01 to 29",
+      latestMigration: migrationFiles[migrationFiles.length - 1] || "none",
+      migrationDirectoryDigest: computeMigrationsDirectoryDigest(migrationsDir, "20261115000029"),
+    },
+    lockfileDigest: computeFileSha256(lockfilePath),
+    testInventoryDigest: computeFileSha256(testInventoryPath),
+    environmentClassification: "CLASS_B_CONTROLLED_ROLLOUT",
+    toolchain: {
+      nodeVersion: "v20.x (LTS) / v22.x",
+      nextVersion: "15.1.7",
+      typeScriptVersion: "5.x",
+      postgresVersion: "15.x",
+    },
+    documentationCount: 46,
+    timestamp: "2026-11-15T20:00:00.000Z",
   };
 }
 

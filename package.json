@@ -37,7 +37,8 @@
     "test:phase27": "tsx test/phase-27-trust-assurance.test.ts",
     "test:phase28": "tsx test/phase-28-institutional-assurance.test.ts",
     "test:phase29": "tsx test/phase-29-independent-challenge.test.ts",
-    "test:phase30": "tsx test/phase-30-institutional-authorization.test.ts"
+    "test:phase30": "tsx test/phase-30-institutional-authorization.test.ts",
+    "test:phase31": "tsx test/phase-31-operational-readiness.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
