@@ -24,7 +24,8 @@
     "test:phase14": "tsx test/phase-14-operational-proof.test.ts",
     "test:phase15": "tsx test/phase-15-workforce-network.test.ts",
     "test:phase16": "tsx test/phase-16-independent-verification.test.ts",
-    "test:phase17": "tsx test/phase-17-national-ecosystem.test.ts"
+    "test:phase17": "tsx test/phase-17-national-ecosystem.test.ts",
+    "test:phase18": "tsx test/phase-18-live-ecosystem.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

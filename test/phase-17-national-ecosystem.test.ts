@@ -296,21 +296,19 @@ async function runPhase17TestSuite() {
         ratingAverage: 4.8,
         credentials: [
           {
-            credentialId: "asdm-solar-001",
-            trade: "Solar Technician",
+            credentialIdentifier: "asdm-solar-001",
+            tradeTitle: "Solar Technician",
             nsqfLevel: 4,
-            issuerName: "Assam Skill Development Mission",
+            issuingInstitution: "Assam Skill Development Mission",
             issuanceDate: "2026-05-10",
             status: "active",
           },
         ],
-        privacy: {
-          disclosePhone: false,
-          discloseEarnings: false,
-          maskIdentity: false,
+        selectiveDisclosure: {
+          phoneDisclosed: false,
+          earningsDisclosed: false,
         },
-        signingSecret: "test-secret-at-least-32-bytes-long-for-hmac",
-      });
+      }, "test-secret-at-least-32-bytes-long-for-hmac");
 
       const onestProfile = OnestAdapter.mapSchemaV2ToOnest(
         v2Export,
@@ -344,9 +342,8 @@ async function runPhase17TestSuite() {
         completedProjectsCount: 14,
         ratingAverage: 4.8,
         credentials: [],
-        privacy: { disclosePhone: false, discloseEarnings: false, maskIdentity: false },
-        signingSecret: "test-secret-at-least-32-bytes-long-for-hmac",
-      });
+        selectiveDisclosure: { phoneDisclosed: false, earningsDisclosed: false },
+      }, "test-secret-at-least-32-bytes-long-for-hmac");
 
       let threw = false;
       try {
@@ -1793,7 +1790,7 @@ async function runPhase17TestSuite() {
 
     // TEST 77: Assisted service kiosk: coordinator cannot transfer worker account ownership
     {
-      const coordinatorRole = "coordinator";
+      const coordinatorRole: string = "coordinator";
       const canTransferOwnership = coordinatorRole === "superadmin"; // Invariant: coordinator cannot transfer
       const passed = canTransferOwnership === false;
 
