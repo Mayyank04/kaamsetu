@@ -30,7 +30,8 @@
     "test:phase20": "tsx test/phase-20-operations-and-governance.test.ts",
     "test:phase21": "tsx test/phase-21-verified-operations.test.ts",
     "test:phase22": "tsx test/phase-22-regional-assurance.test.ts",
-    "test:phase23": "tsx test/phase-23-production-transition.test.ts"
+    "test:phase23": "tsx test/phase-23-production-transition.test.ts",
+    "test:phase24": "tsx test/phase-24-gate-closure.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
