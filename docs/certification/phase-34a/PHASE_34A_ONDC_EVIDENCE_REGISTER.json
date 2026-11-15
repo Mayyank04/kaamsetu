@@ -1,0 +1,18 @@
+{
+  "phase": "34A",
+  "gateCode": "BLOCKER-02",
+  "counterparty": "Open Network for Digital Commerce (ONDC) / ONest Network Registry",
+  "registryDomain": "services.ondc.org / onest.network",
+  "requiredEvidence": [
+    "Dual-control air-gapped Ed25519 root key ceremony",
+    "Production registry publication of BPP endpoint and public key",
+    "Network participant compliance certificate and signed NP agreement"
+  ],
+  "currentStatus": "APPROVED_PENDING_EXECUTION",
+  "operationalStatus": "BLOCKED",
+  "authorizedToBroadcast": false,
+  "bppBroadcastActive": false,
+  "stagingRegistryValidated": true,
+  "antiMaskingAssessment": "Staging integration is fully verified, but staging success is not production authorization. Production key ceremony requires dual physical key custodians. Live BPP network broadcast remains disabled.",
+  "verificationTimestamp": "2026-11-15T23:35:00.000Z"
+}

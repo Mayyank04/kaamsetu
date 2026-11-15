@@ -1,0 +1,41 @@
+{
+  "phase": "34A",
+  "operatingClassification": "CLASS_B_CONTROLLED_ROLLOUT",
+  "permittedDistricts": [
+    "Guwahati Urban (Kamrup Metropolitan, Assam)",
+    "Shillong Urban (East Khasi Hills, Meghalaya)"
+  ],
+  "restrictedDistricts": [
+    {
+      "name": "Siliguri",
+      "state": "West Bengal",
+      "status": "CONDITIONAL_READINESS_ONLY",
+      "dispatchAllowed": false
+    },
+    {
+      "name": "Tripura (Agartala Municipal)",
+      "state": "Tripura",
+      "status": "CANDIDATE_RESEARCH_ONLY",
+      "dispatchAllowed": false
+    },
+    {
+      "name": "EPC Heavy Construction Sites",
+      "state": "Multi-State",
+      "status": "FROZEN",
+      "dispatchAllowed": false
+    }
+  ],
+  "boundaryEnforcement": {
+    "outOfBoundsRejected": true,
+    "coordinateSpoofingRejected": true,
+    "adminOverrideForbidden": true,
+    "offlineDispatchReplayRejection": true
+  },
+  "workerAccessibilityEnforcement": {
+    "degreeFreeArtisansOnboardedPercentage": 100,
+    "voicePromptAssistanceAvailable": true,
+    "androidGoMemoryFootprintVerified": true,
+    "offline2GSyncEnforced": true
+  },
+  "verificationTimestamp": "2026-11-15T23:35:00.000Z"
+}

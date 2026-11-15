@@ -1,0 +1,17 @@
+{
+  "phase": "34A",
+  "gateCode": "BLOCKER-03",
+  "counterparty": "EPC Infrastructure Contractors & Tripartite Counterparties",
+  "requiredEvidence": [
+    "Bilateral / tripartite contract signed by corporate general counsel",
+    "Underwritten institutional worker indemnity and safety policy binding",
+    "Verified site safety protocols and OSHA-grade PPE deployment framework"
+  ],
+  "currentStatus": "UNDER_REVIEW",
+  "operationalStatus": "FROZEN",
+  "authorizedToDispatch": false,
+  "heavyWorkforceDispatchCount": 0,
+  "deployedConstructionWorkers": 0,
+  "antiMaskingAssessment": "Commercial term sheet negotiations are active, but tripartite legal execution remains incomplete. Worker safety and indemnity covenants cannot be waived. Heavy EPC dispatch remains strictly frozen.",
+  "verificationTimestamp": "2026-11-15T23:35:00.000Z"
+}
