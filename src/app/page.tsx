@@ -71,13 +71,12 @@ export default function HomePage() {
 
               {/* Approved Primary Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-forest leading-[1.1]">
-                Your work. Your reputation. Your opportunities.
+                Your skills deserve recognition.
               </h1>
 
               {/* Approved Supporting Copy */}
               <p className="text-lg sm:text-xl text-charcoal-muted leading-relaxed max-w-2xl font-normal">
-                Build a professional identity around the skills you use every day. Showcase your work,
-                share your experience and connect with people looking for your expertise.
+                Whether you are an electrician, carpenter, weaver or technician, KAAMSETU helps you build a professional identity around the work you know. Showcase your experience, share your work and connect with people looking for your skills.
               </p>
 
               {/* Two Direct CTAs */}
@@ -127,8 +126,6 @@ export default function HomePage() {
             {/* Right Column: Hero Visual Anchor (Sovereign Credential Card Preview) */}
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative w-full max-w-md">
-                {/* Visual accent backdrop */}
-                <div className="absolute -inset-2 bg-gradient-to-tr from-sand/30 via-sage/10 to-transparent rounded-lg blur-lg -z-10" />
                 <SovereignCard worker={FEATURED_PROFESSIONALS[0]} />
               </div>
             </div>
@@ -142,9 +139,11 @@ export default function HomePage() {
       <section id="professions" className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-forest/15 pb-6">
           <div className="space-y-2">
-            <Badge variant="verified">National Taxonomy</Badge>
+            <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">
+              National Taxonomy
+            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-forest">
-              Discover Certified Master Crafts
+              Explore Recognized Vocational Trades
             </h2>
             <p className="text-sm text-charcoal-muted max-w-xl">
               Categorized according to recognized vocational trades.
@@ -210,10 +209,10 @@ export default function HomePage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xs bg-sand/25 text-forest border border-sand/40">
-                    <Sparkles className="h-5 w-5 text-forest" />
+                    <Wrench className="h-5 w-5 text-forest" />
                   </div>
-                  <span className="text-[11px] font-bold text-sage">
-                    {prof.workerCount.toLocaleString("en-IN")} Verified
+                  <span className="text-[11px] font-bold text-forest/70 font-mono">
+                    Recognized Trade
                   </span>
                 </div>
 
@@ -267,13 +266,15 @@ export default function HomePage() {
       <section id="how-it-works" className="border-y border-forest/15 bg-gradient-to-b from-[#F7F5F0] via-[#EFF5F0] to-[#F7F5F0] py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
           <div className="text-center max-w-3xl mx-auto space-y-3">
-            <Badge variant="sovereign">Sovereign Trust Pipeline</Badge>
+            <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">
+              How It Works
+            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-forest">
-              From Spoken Word to Unforgeable Credential
+              From Spoken Testimony to Verifiable Credential
             </h2>
             <p className="text-sm sm:text-base text-charcoal-muted leading-relaxed">
-              We eliminate paper friction and digital illiteracy barriers.
-              Four institutional steps translate hands-on craftsmanship into sovereign economic power.
+              We remove paper friction and digital literacy barriers.
+              Four straightforward steps translate hands-on craftsmanship into recognized professional standing.
             </p>
           </div>
 
@@ -287,14 +288,14 @@ export default function HomePage() {
                 </div>
               </div>
               <h3 className="font-bold text-forest text-lg">
-                Speak in Any Dialect
+                Describe Your Craft in Any Language
               </h3>
               <p className="text-xs text-charcoal-muted leading-relaxed">
-                Workers speak naturally in Hinglish, Hindi, Bhojpuri, Tamil, or Kannada describing their tools, tenures, and recent projects. No complex forms required.
+                Workers speak naturally in Hindi, Assamese, Bengali, Tamil, or English describing their tools, tenures, and recent projects. No complex forms required.
               </p>
               <div className="pt-2 text-[11px] font-semibold text-forest flex items-center gap-1">
                 <CheckCircle2 className="h-3.5 w-3.5 text-sage" />
-                Audio Voiceprint Stored
+                Spoken attestation recorded
               </div>
             </div>
 
@@ -307,14 +308,14 @@ export default function HomePage() {
                 </div>
               </div>
               <h3 className="font-bold text-forest text-lg">
-                Gemini Domain Extraction
+                Structured Trade Classification
               </h3>
               <p className="text-xs text-charcoal-muted leading-relaxed">
-                Domain-trained Gemini models parse vernacular testimonies into structured NSQF skill taxonomies, verified tool proficiencies, and experience metrics.
+                Voice descriptions are converted into structured vocational skill categories, equipment proficiencies, and experience tenures for artisan review.
               </p>
               <div className="pt-2 text-[11px] font-semibold text-forest flex items-center gap-1">
                 <CheckCircle2 className="h-3.5 w-3.5 text-sage" />
-                96% Domain Accuracy
+                Self-declared draft created
               </div>
             </div>
 
@@ -327,14 +328,14 @@ export default function HomePage() {
                 </div>
               </div>
               <h3 className="font-bold text-forest text-lg">
-                Dual Peer Attestation
+                Peer & Contractor References
               </h3>
               <p className="text-xs text-charcoal-muted leading-relaxed">
-                Reputable peer craftspeople and licensed site contractors endorse past work. The Web of Trust prevents forged resumes through mutual accountability.
+                Fellow craftspeople and site contractors add independent verification of completed work, building mutual credibility.
               </p>
               <div className="pt-2 text-[11px] font-semibold text-forest flex items-center gap-1">
                 <CheckCircle2 className="h-3.5 w-3.5 text-sage" />
-                Cryptographic Vouching
+                Documented work references
               </div>
             </div>
 
@@ -347,14 +348,14 @@ export default function HomePage() {
                 </div>
               </div>
               <h3 className="font-bold text-forest text-lg">
-                Sovereign ID & KAAMSCORE
+                Digital Skill Card & QR Verification
               </h3>
               <p className="text-xs text-charcoal-muted leading-relaxed">
-                DigiLocker issues a tamper-evident digital card with QR verification and an indexed KAAMSCORE (300–900) unlocking institutional credit and direct hiring.
+                Receive a digital skill card with instant camera-scannable QR verification and a trust score reflecting documented experience.
               </p>
               <div className="pt-2 text-[11px] font-semibold text-forest flex items-center gap-1">
                 <CheckCircle2 className="h-3.5 w-3.5 text-sage" />
-                Govt. & Bank Verifiable
+                Verifiable digital credential
               </div>
             </div>
           </div>
@@ -362,7 +363,7 @@ export default function HomePage() {
           <div className="text-center pt-2">
             <Button variant="default" size="lg" asChild className="bg-forest hover:bg-forest-500 text-ivory">
               <Link href="/how-it-works">
-                Explore Full Verification Architecture
+                Learn How Verification Works
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -377,17 +378,18 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-forest/15 pb-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Badge variant="verified">Sovereign Registry</Badge>
+              <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">
+                Featured Professionals
+              </Badge>
               <span className="text-[11px] font-bold text-sand-800 uppercase tracking-wider bg-sand/30 px-2 py-0.5 rounded-xs border border-sand/40">
-                [EXPLICIT DEMO RECORDS]
+                [ILLUSTRATIVE PROFILES]
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-forest">
-              Featured Verified Indian Craftspeople
+              Featured Craftspeople & Technicians
             </h2>
             <p className="text-sm text-charcoal-muted max-w-xl">
-              Authentic independent trades professionals with cryptographically validated
-              tenures, DigiLocker credentials, and peer endorsements.
+              Skilled independent professionals with documented experience, peer references, and verifiable work history.
             </p>
           </div>
 
@@ -412,13 +414,14 @@ export default function HomePage() {
          ========================================================================= */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <Badge variant="sand">Civic Dignity & Prosperity</Badge>
+          <Badge variant="outline" className="text-xs bg-sand/20 text-sand-800 border-sand/40">
+            Direct Recognition
+          </Badge>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-forest">
-            Closing the Trillion-Dollar Trust Deficit
+            Direct Recognition for Honest Craft
           </h2>
           <p className="text-sm sm:text-base text-charcoal-muted leading-relaxed">
-            India&apos;s informal labor ecosystem suffers from middlemen cuts, unproven skill claims,
-            and complete financial exclusion. KAAMSETU fixes the root cause: verifiable identity.
+            Middlemen and informal brokers often skim 30% to 45% of worker earnings simply for introductions. KAAMSETU gives craftspeople their own portable reputation with zero platform commissions.
           </p>
         </div>
 
@@ -429,11 +432,10 @@ export default function HomePage() {
               <TrendingUp className="h-6 w-6" />
             </div>
             <h3 className="font-bold text-forest text-xl">
-              Eliminating the Middleman Tax
+              Zero Middleman Commissions
             </h3>
             <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
-              Subcontractors routinely extract 30% to 45% of worker wages simply for &quot;vouching&quot; for reliability.
-              With KAAMSETU, workers carry their own unforgeable reputation directly to enterprise contractors.
+              Workers keep 100% of their agreed wage. Direct payouts go straight to the artisan&apos;s bank account with zero platform deduction.
             </p>
             <div className="pt-2 text-xs font-semibold text-forest">
               Direct Bank Settlements via UPI
@@ -446,15 +448,13 @@ export default function HomePage() {
               <BadgeCheck className="h-6 w-6" />
             </div>
             <h3 className="font-bold text-forest text-xl">
-              Dignity of Labor & Formalization
+              Documented Craftsmanship
             </h3>
             <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
-              Informal master craftspeople are treated as unskilled day laborers.
-              Sovereign Skill Cards formally document years of specialized mastery,
-              bringing institutional respect and formal social security eligibility.
+              Years of specialized carpentry, electrical wiring, or civil masonry are formally recorded so workers are recognized as master tradespeople, not anonymous day laborers.
             </p>
             <div className="pt-2 text-xs font-semibold text-forest">
-              NSQF & National Registry Linked
+              Recognized Vocational Taxonomy
             </div>
           </div>
 
@@ -464,14 +464,13 @@ export default function HomePage() {
               <Lock className="h-6 w-6" />
             </div>
             <h3 className="font-bold text-forest text-xl">
-              Micro-Credit Without Collateral
+              Portable Professional Reputation
             </h3>
             <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
-              Banks reject workers who lack payslips and tax returns. The KAAMSCORE index acts as an
-              alternative credit and trade reliability rating, enabling tool loans and working capital.
+              A digital skill profile travels across project sites, cities, and states, unlocking direct client inquiries and tool financing without starting from scratch.
             </p>
             <div className="pt-2 text-xs font-semibold text-forest">
-              Financial Inclusion for 450M+ Workers
+              Independent Sovereign Identity
             </div>
           </div>
         </div>
@@ -488,57 +487,55 @@ export default function HomePage() {
             <div className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 rounded-xs bg-forest-700 px-3 py-1 text-xs font-bold text-sand border border-forest-500">
                 <ShieldCheck className="h-4 w-4 text-sand" />
-                <span>Zero-Knowledge Sovereign Trust Layer</span>
+                <span>Privacy-Preserving Verification</span>
               </div>
 
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-ivory leading-tight">
-                Institutional Security Built for India’s Digital Public Infrastructure
+                Built on India’s Digital Public Infrastructure
               </h2>
 
               <p className="text-sm sm:text-base text-ivory/80 leading-relaxed font-normal">
-                KAAMSETU operates seamlessly alongside India Stack (Aadhaar, DigiLocker, UPI, ONDC).
-                Worker data remains sovereign: craftspeople maintain complete control over which contractor
-                or employer accesses their full verification trail.
+                KAAMSETU operates alongside India Stack protocols (DigiLocker, UPI, ONDC). Craftspeople maintain complete control over which contractors or employers access their full verification details.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                 <div className="p-4 rounded-xs bg-forest-700/70 border border-forest-500/40 space-y-2">
                   <div className="flex items-center gap-2 text-sand">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="font-bold text-xs uppercase tracking-wider">Aadhaar VID Masking</span>
+                    <span className="font-bold text-xs uppercase tracking-wider">Aadhaar VID Privacy</span>
                   </div>
                   <p className="text-xs text-ivory/70 leading-relaxed">
-                    Zero raw Aadhaar numbers stored. Verifications use 16-digit Virtual IDs and DigiLocker XML hash matches.
+                    Zero raw Aadhaar numbers stored. Verifications use masked Virtual IDs and DigiLocker XML hash matching.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xs bg-forest-700/70 border border-forest-500/40 space-y-2">
                   <div className="flex items-center gap-2 text-sand">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="font-bold text-xs uppercase tracking-wider">Anti-Fraud Voiceprints</span>
+                    <span className="font-bold text-xs uppercase tracking-wider">Authentic Voice Attestation</span>
                   </div>
                   <p className="text-xs text-ivory/70 leading-relaxed">
-                    Acoustic anti-spoofing algorithms detect synthetic AI voices and verify authentic human trades descriptions.
+                    Artisans describe their craft in their own voice, recording an unalterable self-declaration of work experience.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xs bg-forest-700/70 border border-forest-500/40 space-y-2">
                   <div className="flex items-center gap-2 text-sand">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="font-bold text-xs uppercase tracking-wider">Immutable QR Seals</span>
+                    <span className="font-bold text-xs uppercase tracking-wider">Camera-Scannable QR Codes</span>
                   </div>
                   <p className="text-xs text-ivory/70 leading-relaxed">
-                    Every digital credential includes an offline-verifiable cryptographic signature readable by any smartphone camera.
+                    Every skill profile features an offline-verifiable QR code readable by any smartphone camera without special software.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xs bg-forest-700/70 border border-forest-500/40 space-y-2">
                   <div className="flex items-center gap-2 text-sand">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="font-bold text-xs uppercase tracking-wider">Audited Peer Vouching</span>
+                    <span className="font-bold text-xs uppercase tracking-wider">Accountable References</span>
                   </div>
                   <p className="text-xs text-ivory/70 leading-relaxed">
-                    Collusion detection flags mutual endorsement clusters, preserving high institutional credibility for employers.
+                    Peer endorsements link to verified contractor or artisan profiles, creating a genuine web of professional trust.
                   </p>
                 </div>
               </div>
@@ -550,21 +547,21 @@ export default function HomePage() {
                   KS
                 </div>
                 <h3 className="text-xl font-bold text-sand">
-                  Verify Any Credential Offline
+                  Verify Any Profile Offline
                 </h3>
                 <p className="text-xs text-ivory/75 leading-relaxed">
-                  Contractors, architects, and homeowners can point any QR reader to validate authenticity in under 500 milliseconds.
+                  Contractors, architects, and homeowners can point any QR camera to validate identity and experience in seconds.
                 </p>
 
                 <div className="p-4 rounded-xs bg-card text-forest flex flex-col items-center gap-2 border border-sand/40">
                   <div className="text-xs font-mono font-bold text-forest">
-                    TEST VERIFICATION ENDPOINT
+                    SAMPLE PROFILE REGISTRY CODE
                   </div>
                   <div className="text-[11px] text-charcoal-muted">
                     Scan or enter registry code:
                   </div>
                   <code className="text-xs font-mono bg-forest/5 px-2 py-1 rounded text-forest font-bold">
-                    IN-RJ-2026-4029-KS
+                    IN-AS-2026-4029-KS
                   </code>
                 </div>
 
@@ -584,13 +581,14 @@ export default function HomePage() {
          ========================================================================= */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <Badge variant="verified">Nationwide Economic Mobility</Badge>
+          <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">
+            Workforce Inclusion
+          </Badge>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-forest">
-            Empowering India at Sovereign Scale
+            Built for India&apos;s Skilled Workforce
           </h2>
           <p className="text-sm sm:text-base text-charcoal-muted leading-relaxed">
-            Measurable, verifiable transformation across urban construction hubs,
-            tier-2 industrial clusters, and rural artisanal belts.
+            Grounding digital identity in verified craftsmanship across urban construction centers, industrial corridors, and traditional artisan clusters.
           </p>
         </div>
 
@@ -607,52 +605,52 @@ export default function HomePage() {
               Informal Craftspeople
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Representing 93% of India&apos;s non-agricultural workforce currently uncredentialed on formal registries.
+              Representing over 90% of India&apos;s non-agricultural workforce building homes, networks, and infrastructure.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
             <span className="text-[10px] font-mono uppercase bg-sand/30 text-sand-800 px-2 py-0.5 rounded-full inline-block mb-1 font-semibold">
-              Pilot Model Projection
+              Constitutional Invariant
             </span>
             <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
-              +38%
+              ₹0.00
             </span>
             <span className="font-bold text-charcoal text-sm block">
-              Targeted Income Uplift
+              Platform Commission
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Targeted monthly uplift from unmediated contracting via verified sovereign credential proofs.
+              Permanent zero-commission guarantee on worker earnings across all vocational trades.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
             <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-full inline-block mb-1">
-              Field Benchmark
+              Direct Settlement
             </span>
             <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
-              4x
+              100%
             </span>
             <span className="font-bold text-charcoal text-sm block">
-              Faster Verification
+              Direct Payouts
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Instant on-site QR verification eliminates multi-week trial delays and contractor uncertainty.
+              Earnings disburse directly to worker accounts via UPI with transparent transaction audit logs.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
             <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-full inline-block mb-1">
-              Interoperability
+              Class B Rollout
             </span>
             <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
-              28 States
+              2 Cities
             </span>
             <span className="font-bold text-charcoal text-sm block">
-              National Portability
+              Active Pilot Scope
             </span>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Credentials travel seamlessly across state borders without dialect friction or physical loss.
+              Controlled regional operations in Guwahati Urban, Assam and Shillong Urban, Meghalaya.
             </p>
           </div>
         </div>
@@ -664,13 +662,13 @@ export default function HomePage() {
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
             <div className="space-y-3 max-w-xl">
               <span className="text-xs font-bold uppercase tracking-widest text-sand-300">
-                Join the Sovereign Movement
+                Start Your Profile
               </span>
               <h3 className="text-2xl sm:text-3xl font-bold text-ivory">
-                Are you a craftsperson, contractor, or homeowner?
+                Ready to showcase your skills?
               </h3>
               <p className="text-xs sm:text-sm text-ivory/80 leading-relaxed">
-                Start building your verified reputation today. Create your sovereign identity in 3 minutes via voice.
+                Create your profile in 3 minutes by describing your work, or explore skilled professionals in your city.
               </p>
             </div>
 
@@ -678,7 +676,7 @@ export default function HomePage() {
               <Button variant="sand" size="lg" asChild className="h-12 px-6 font-bold shadow-sm">
                 <Link href="/onboarding">
                   <Mic className="mr-2 h-4 w-4" />
-                  Claim Identity via Voice
+                  Create Your Skill Profile
                 </Link>
               </Button>
               <Button
@@ -687,8 +685,8 @@ export default function HomePage() {
                 asChild
                 className="h-12 px-6 border-ivory/30 text-ivory hover:bg-ivory/10 hover:text-ivory"
               >
-                <Link href="/about">
-                  Read Our Mission
+                <Link href="/how-it-works">
+                  Learn How It Works
                 </Link>
               </Button>
             </div>

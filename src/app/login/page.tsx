@@ -161,13 +161,13 @@ export default function LoginPage() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest/5 border border-forest/15 text-forest text-xs font-mono">
             <ShieldCheck className="w-3.5 h-3.5 text-forest" />
-            <span>SOVEREIGN AUTHENTICATION GATEWAY</span>
+            <span>Secure Mobile Verification</span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-forest">
             Sign In to KAAMSETU
           </h1>
           <p className="text-xs sm:text-sm text-charcoal-muted max-w-md mx-auto leading-relaxed">
-            Access your sovereign workforce identity, verify credentials, manage incoming client bookings, or discover certified craftspeople.
+            Sign in to manage your skill profile, view incoming job bookings, or verify work records.
           </p>
         </div>
 
@@ -184,9 +184,9 @@ export default function LoginPage() {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-sand" />
-              <span>Hackathon Quick-Sign In</span>
+              <span>Demo Role Switcher</span>
               <Badge variant="outline" className="text-[10px] bg-sand/20 border-sand text-sand-800 hidden sm:inline-flex">
-                Fast Track
+                Preview
               </Badge>
             </button>
             <button
@@ -199,7 +199,7 @@ export default function LoginPage() {
               }`}
             >
               <Smartphone className="w-3.5 h-3.5" />
-              <span>Mobile OTP Login</span>
+              <span>Mobile OTP Sign-In</span>
             </button>
           </div>
         )}
@@ -222,13 +222,13 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* TAB 1: Hackathon Quick-Sign In */}
+        {/* TAB 1: Quick Role Switcher */}
         {activeTab === "personas" && (
           <div className="space-y-4">
             <div className="text-xs text-charcoal-muted px-1 flex items-center justify-between">
-              <span>Select a pre-verified role for instant evaluation:</span>
-              <span className="font-mono text-[10px] bg-forest/5 text-forest px-1.5 py-0.5 rounded">
-                1-CLICK ACCESS
+              <span>Select a role to preview the application:</span>
+              <span className="font-mono text-[10px] bg-forest/5 text-forest px-1.5 py-0.5 rounded font-semibold">
+                INSTANT PREVIEW
               </span>
             </div>
 

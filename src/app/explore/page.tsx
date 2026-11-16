@@ -198,12 +198,11 @@ export default function ExplorePage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-forest leading-tight font-serif">
-            Explore Verified Indian Craftspeople
+            Find Skilled Professionals Across Trades
           </h1>
 
           <p className="text-sm sm:text-base text-charcoal-muted max-w-2xl mx-auto leading-relaxed">
-            Every professional listed holds a verified DigiLocker-linked record,
-            quantified KAAMSCORE rating, and peer-attested technical credentials. All demo records are clearly labelled.
+            Every professional profile features documented work experience, peer references, and verifiable trade qualifications.
           </p>
 
           <div className="pt-2">
@@ -215,7 +214,7 @@ export default function ExplorePage() {
             >
               <Link href="/customer/bookings">
                 <Briefcase className="w-3.5 h-3.5 mr-1.5" />
-                View My Customer Bookings Dashboard
+                View My Bookings
               </Link>
             </Button>
           </div>
