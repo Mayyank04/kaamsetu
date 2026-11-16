@@ -79,14 +79,27 @@ export default function LoginPage() {
         throw new Error(data.message || "Unable to send verification OTP.");
       }
       setOtpSent(true);
-      setOtpValue("123456"); // Pre-fill demo OTP for convenience
-      setStatusMessage({
-        text: "OTP transmitted successfully. Use demo code 123456 to verify.",
-        isError: false,
-      });
+      if (data.isDemo || data.requiresDemoCode) {
+        setOtpValue("123456"); // Fill demo OTP only in sandbox mode
+        setStatusMessage({
+          text: data.message || "OTP transmitted successfully. In sandbox mode, use code 123456 to verify.",
+          isError: false,
+        });
+      } else {
+        setOtpValue("");
+        setStatusMessage({
+          text: data.message || `Verification code sent via SMS to ${phoneNumber}.`,
+          isError: false,
+        });
+      }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to transmit OTP.";
-      setStatusMessage({ text: msg, isError: true });
+      const rawMsg = err instanceof Error ? err.message : "Failed to transmit OTP.";
+      // Clean, safe operational error: never leak environment variable names to ordinary users
+      const safeMsg =
+        rawMsg.includes("RATE_LIMIT_HMAC_SECRET") || rawMsg.includes("FATAL")
+          ? "We're temporarily unable to process this request. Please try again shortly."
+          : rawMsg;
+      setStatusMessage({ text: safeMsg, isError: true });
     } finally {
       setIsLoading(false);
     }
@@ -117,10 +130,25 @@ export default function LoginPage() {
         throw new Error(data.message || "Invalid OTP code.");
       }
       await refreshSession();
-      router.push(redirectTarget || data.redirectUrl || "/dashboard");
+
+      // Check role consistency: honor authoritative database role
+      const actualRole = data.user?.role;
+      if (actualRole && actualRole !== selectedRole) {
+        setStatusMessage({
+          text: `Signed in as verified ${actualRole}. Redirecting to your dashboard...`,
+          isError: false,
+        });
+      }
+
+      const targetDestination = redirectTarget || data.redirectUrl || (actualRole === "contractor" ? "/contractor/dashboard" : "/dashboard");
+      router.push(targetDestination);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Verification failed.";
-      setStatusMessage({ text: msg, isError: true });
+      const rawMsg = err instanceof Error ? err.message : "Verification failed.";
+      const safeMsg =
+        rawMsg.includes("RATE_LIMIT_HMAC_SECRET") || rawMsg.includes("FATAL")
+          ? "We're temporarily unable to process this request. Please try again shortly."
+          : rawMsg;
+      setStatusMessage({ text: safeMsg, isError: true });
     } finally {
       setIsLoading(false);
     }
@@ -382,16 +410,18 @@ export default function LoginPage() {
                     placeholder="123456"
                     className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xl border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
                   />
-                  <div className="flex items-center justify-between text-[11px] text-charcoal-muted pt-1">
-                    <span>Demo Bypass Code: <strong className="font-mono text-forest">123456</strong></span>
-                    <button
-                      type="button"
-                      onClick={() => setOtpValue("123456")}
-                      className="text-forest underline font-bold"
-                    >
-                      Fill Demo OTP
-                    </button>
-                  </div>
+                  {allowDemo && (
+                    <div className="flex items-center justify-between text-[11px] text-charcoal-muted pt-1">
+                      <span>Sandbox Code: <strong className="font-mono text-forest">123456</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => setOtpValue("123456")}
+                        className="text-forest underline font-bold"
+                      >
+                        Fill Demo Code
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <Button

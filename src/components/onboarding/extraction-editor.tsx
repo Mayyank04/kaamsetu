@@ -14,13 +14,14 @@ import {
   AlertTriangle,
   Plus,
   X,
-  Sparkles,
   ShieldCheck,
   Briefcase,
   MapPin,
   Clock,
   IndianRupee,
+  Info,
 } from "lucide-react";
+import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
 
 interface ExtractionEditorProps {
   language: SupportedLanguageCode;
@@ -37,12 +38,13 @@ export function ExtractionEditor({
   onApprove,
   isSubmitting,
 }: ExtractionEditorProps) {
-  const i18n = ONBOARDING_I18N[language];
+  const i18n = ONBOARDING_I18N[language] || ONBOARDING_I18N.en;
 
-  // Editable Form State initialized from Gemini AI Extraction
+  // Editable Form State initialized from Voice / Text Extraction
   const [fullName, setFullName] = React.useState(extractedData.fullName);
   const [occupation, setOccupation] = React.useState(extractedData.occupation);
   const [category, setCategory] = React.useState(extractedData.category);
+  const [ncoCode, setNcoCode] = React.useState(extractedData.ncoCode || "");
   const [yearsExperience, setYearsExperience] = React.useState<number | null>(extractedData.experienceYears);
   const [city, setCity] = React.useState(extractedData.city || "");
   const [state, setState] = React.useState(extractedData.state || "");
@@ -57,6 +59,16 @@ export function ExtractionEditor({
   const [dailyRateMax, setDailyRateMax] = React.useState<number | null>(
     (extractedData as any).dailyRateMax ?? null
   );
+
+  // Compute live geographic status for UI guidance
+  const geoStatus = React.useMemo(() => {
+    if (!city && !state && !pincode) return null;
+    return GeographicAuthorizationService.validateLocation({
+      city,
+      state,
+      pincode: pincode.trim() || null,
+    });
+  }, [city, state, pincode]);
 
   const handleAddSkill = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +88,7 @@ export function ExtractionEditor({
       fullName,
       occupation,
       category,
+      ncoCode: ncoCode.trim() || undefined,
       yearsExperience,
       city,
       state,
@@ -88,6 +101,7 @@ export function ExtractionEditor({
       bio,
       languages: [language.toUpperCase(), "Hindi"],
       voiceTranscript,
+      allowNonDispatchProfile: geoStatus ? !geoStatus.allowed : false,
     });
   };
 
@@ -95,7 +109,7 @@ export function ExtractionEditor({
     <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl mx-auto">
       {/* Missing Fields Notice (Non-invention principle) */}
       {extractedData.missingFields && extractedData.missingFields.length > 0 && (
-        <div className="rounded-sm bg-sand/20 border border-sand/40 p-4 space-y-2 text-xs">
+        <div className="rounded-md bg-sand/20 border border-sand/40 p-4 space-y-2 text-xs">
           <div className="flex items-center gap-2 text-forest font-bold">
             <AlertTriangle className="h-4 w-4 text-sand-800" />
             <span>{i18n.missingFieldsAlert}</span>
@@ -110,25 +124,30 @@ export function ExtractionEditor({
 
       {/* Main Review Card */}
       <div className="rounded-md border border-forest/15 bg-card p-6 shadow-sovereign-sm space-y-6">
-        <div className="flex items-center justify-between border-b border-forest/10 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-forest/10 pb-4">
           <div>
             <h3 className="font-bold text-forest text-lg">
               {i18n.extractedTitle}
             </h3>
             <p className="text-xs text-charcoal-muted">
-              {extractedData.ncoCode}
+              Self-declared trade testimony. Review and edit any field before credential minting.
             </p>
           </div>
-          <Badge variant="verified">
-            {(extractedData.confidenceScore * 100).toFixed(0)}% AI Confidence
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20 font-mono py-1">
+              Self-Declared Testimony
+            </Badge>
+            <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-900 border-amber-300 font-mono py-1">
+              Trade suggestion — review and edit
+            </Badge>
+          </div>
         </div>
 
         {/* Basic Info Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div>
             <label className="font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-              Full Legal / Trade Name
+              Full Legal / Trade Name *
             </label>
             <input
               type="text"
@@ -141,7 +160,7 @@ export function ExtractionEditor({
 
           <div>
             <label className="font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-              Primary Trade / Craft
+              Primary Trade / Craft *
             </label>
             <input
               type="text"
@@ -167,11 +186,31 @@ export function ExtractionEditor({
             />
           </div>
 
+          {/* Trade Classification Suggestion (Truthful, non-fabricated, editable) */}
           <div>
             <label className="font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-              Operating City, State & PIN Code
+              Trade Classification Suggestion (NCO 2015)
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input
+              type="text"
+              value={ncoCode}
+              onChange={(e) => setNcoCode(e.target.value)}
+              placeholder="e.g. 7411.0100 - Electrical Mechanics & Solar Mounts"
+              className="w-full h-11 px-3 rounded-xs border border-forest/20 text-xs font-mono text-forest focus:outline-none focus:border-forest"
+            />
+            <span className="text-[10px] text-charcoal-muted mt-1 block">
+              Suggested code based on testimony. Not a formal government certification or NSQF diploma.
+            </span>
+          </div>
+        </div>
+
+        {/* Operating Location & Live Geographic Validation */}
+        <div className="space-y-3 pt-2 border-t border-forest/10">
+          <label className="font-bold uppercase tracking-wider text-xs text-forest block">
+            Operating City, State & PIN Code *
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
               <input
                 type="text"
                 placeholder="City (e.g. Guwahati)"
@@ -180,6 +219,8 @@ export function ExtractionEditor({
                 required
                 className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm text-forest focus:outline-none focus:border-forest"
               />
+            </div>
+            <div>
               <input
                 type="text"
                 placeholder="State (e.g. Assam)"
@@ -188,9 +229,11 @@ export function ExtractionEditor({
                 required
                 className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm text-forest focus:outline-none focus:border-forest"
               />
+            </div>
+            <div>
               <input
                 type="text"
-                placeholder="PIN Code (e.g. 781001)"
+                placeholder="6-Digit PIN Code *"
                 maxLength={6}
                 value={pincode}
                 onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
@@ -198,16 +241,49 @@ export function ExtractionEditor({
               />
             </div>
           </div>
+
+          {/* Real-time Geographic Scope Feedback */}
+          {geoStatus && (
+            <div
+              className={`p-3.5 rounded-md text-xs border flex items-start gap-2.5 ${
+                geoStatus.status === "AUTHORIZED"
+                  ? "bg-emerald-50 text-emerald-900 border-emerald-200"
+                  : geoStatus.status === "NON_DISPATCH_AREA"
+                  ? "bg-amber-50 text-amber-900 border-amber-200"
+                  : "bg-red-50 text-red-900 border-red-200"
+              }`}
+            >
+              {geoStatus.status === "AUTHORIZED" ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              ) : (
+                <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+              )}
+              <div className="space-y-1">
+                <div className="font-bold">
+                  {geoStatus.status === "AUTHORIZED"
+                    ? "Active Class B Controlled Rollout Zone"
+                    : geoStatus.status === "NON_DISPATCH_AREA"
+                    ? "Non-Dispatch Operating Scope"
+                    : "Geographic Boundary Notice"}
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  {geoStatus.status === "AUTHORIZED"
+                    ? "Your location is within our active commercial dispatch zone (Guwahati Urban or Shillong Urban). Customer bookings and job dispatch are enabled."
+                    : geoStatus.reason}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Daily Rate Expectation (Non-invention: optional) */}
+        {/* Daily Rate Expectation (Optional) */}
         <div className="p-4 rounded-xs bg-forest/5 border border-forest/10 space-y-2 text-xs">
           <label className="font-bold uppercase tracking-wider text-forest block">
             Estimated Daily Rate Range (₹ / day, Optional)
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <span className="text-[10px] text-charcoal-muted block">Minimum Daily Rate (Optional)</span>
+              <span className="text-[10px] text-charcoal-muted block">Minimum Daily Rate</span>
               <div className="relative mt-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-muted text-xs">₹</span>
                 <input
@@ -223,7 +299,7 @@ export function ExtractionEditor({
             </div>
 
             <div>
-              <span className="text-[10px] text-charcoal-muted block">Maximum Daily Rate (Optional)</span>
+              <span className="text-[10px] text-charcoal-muted block">Maximum Daily Rate</span>
               <div className="relative mt-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-muted text-xs">₹</span>
                 <input
@@ -243,20 +319,20 @@ export function ExtractionEditor({
         {/* Skills Tag Management */}
         <div className="space-y-3">
           <label className="font-bold uppercase tracking-wider text-xs text-forest block">
-            {i18n.editSkillsTitle}
+            {i18n.editSkillsTitle} *
           </label>
 
           <div className="flex flex-wrap gap-1.5">
             {skills.map((skill, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-forest/10 text-forest text-xs font-semibold border border-forest/20 shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forest/5 text-forest border border-forest/15 text-xs font-medium"
               >
                 <span>{skill}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveSkill(skill)}
-                  className="hover:text-terracotta"
+                  className="text-forest/60 hover:text-terracotta transition-colors"
                   aria-label={`Remove ${skill}`}
                 >
                   <X className="h-3 w-3" />
@@ -265,20 +341,20 @@ export function ExtractionEditor({
             ))}
           </div>
 
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2">
             <input
               type="text"
+              placeholder={i18n.addSkillPlaceholder}
               value={newSkillInput}
               onChange={(e) => setNewSkillInput(e.target.value)}
-              placeholder={i18n.addSkillPlaceholder}
-              className="flex-1 h-10 px-3 rounded-xs border border-forest/20 text-xs focus:outline-none focus:border-forest"
+              className="flex-1 h-10 px-3 rounded-xs border border-forest/20 text-xs text-forest focus:outline-none focus:border-forest"
             />
             <Button
               type="button"
+              onClick={handleAddSkill}
               variant="outline"
               size="sm"
-              onClick={handleAddSkill}
-              className="text-xs border-forest/20 text-forest"
+              className="border-forest/20 text-forest text-xs"
             >
               <Plus className="h-3.5 w-3.5 mr-1" />
               {i18n.addSkillBtn}
@@ -286,58 +362,49 @@ export function ExtractionEditor({
           </div>
         </div>
 
-        {/* Professional Headline & Bio */}
-        <div className="space-y-4 text-xs">
+        {/* Headline & Bio */}
+        <div className="space-y-3">
           <div>
-            <label className="font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-              Sovereign Headline
+            <label className="font-bold uppercase tracking-wider text-xs text-forest block mb-1">
+              Public Trade Headline *
             </label>
             <input
               type="text"
               value={headline}
               onChange={(e) => setHeadline(e.target.value)}
               required
-              className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm font-semibold text-forest focus:outline-none focus:border-forest"
+              className="w-full h-11 px-3 rounded-xs border border-forest/20 text-xs font-semibold text-forest focus:outline-none focus:border-forest"
             />
           </div>
 
           <div>
-            <label className="font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-              Editorial Professional Introduction
+            <label className="font-bold uppercase tracking-wider text-xs text-forest block mb-1">
+              Artisan Profile Bio & Trade Experience *
             </label>
             <textarea
+              rows={3}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              rows={3}
               required
-              className="w-full p-3 rounded-xs border border-forest/20 text-xs text-charcoal leading-relaxed focus:outline-none focus:border-forest"
+              className="w-full p-3 rounded-xs border border-forest/20 text-xs text-forest focus:outline-none focus:border-forest leading-relaxed font-sans"
             />
           </div>
         </div>
-      </div>
 
-      {/* Final Approval Action */}
-      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-xs text-charcoal-muted">
-          Clicking approve mints your sovereign registry ID and locks in your initial KAAMSCORE.
-        </p>
+        {/* Submit Actions */}
+        <div className="pt-4 border-t border-forest/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-[11px] text-charcoal-muted">
+            By proceeding, you attest to the accuracy of your craft declaration under KAAMSETU&apos;s sovereign trust framework.
+          </p>
 
-        <Button
-          type="submit"
-          variant="default"
-          size="lg"
-          disabled={isSubmitting}
-          className="bg-forest hover:bg-forest-500 text-ivory font-bold h-12 px-8 w-full sm:w-auto shadow-sm"
-        >
-          {isSubmitting ? (
-            <>Minting Sovereign Credential...</>
-          ) : (
-            <>
-              <ShieldCheck className="mr-2 h-4 w-4 text-sand" />
-              {i18n.approveBtn}
-            </>
-          )}
-        </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting || skills.length === 0}
+            className="w-full sm:w-auto h-11 px-8 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm"
+          >
+            {isSubmitting ? "Minting Sovereign Identity..." : i18n.approveBtn}
+          </Button>
+        </div>
       </div>
     </form>
   );

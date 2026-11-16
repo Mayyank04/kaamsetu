@@ -32,9 +32,9 @@ export function TrustBadge({ type, className }: TrustBadgeProps) {
       );
     case "voice_verified":
       return (
-        <Badge variant="verified" className={className}>
+        <Badge variant="outline" className={className}>
           <Mic className="h-3 w-3 text-forest" />
-          <span>Voice Verified</span>
+          <span>Voice Attestation</span>
         </Badge>
       );
     case "master":

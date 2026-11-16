@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       longitude: data.longitude,
     });
 
-    if (!geoValidation.allowed) {
+    if (!geoValidation.allowed && !data.allowNonDispatchProfile) {
       return NextResponse.json(
         {
           error: geoValidation.reason || "Location outside authorized operating zone.",
@@ -48,13 +48,15 @@ export async function POST(request: NextRequest) {
       .replace(/^-|-$/g, "");
     const slug = `${baseSlug}-${randomSuffix}`;
 
-    // 4. Evidence-driven KAAMSCORE Calculation based on actual user inputs
-    const hasVoice = Boolean(data.hasVoiceAttestation);
-    const workerConfirmed = Boolean(data.workerConfirmedVoice);
+    // 4. Evidence-driven KAAMSCORE Calculation & Verification State Machine
+    // Audio evidence requires an actual storage reference, not merely a client boolean
+    const hasGenuineAudioEvidence = Boolean(
+      (data.audioStoragePath || data.audioRecordingId) && data.workerConfirmedVoice
+    );
 
     const scoreResult = calculateKaamScore({
-      hasVoiceAttestation: hasVoice,
-      workerConfirmedVoice: workerConfirmed,
+      hasVoiceAttestation: hasGenuineAudioEvidence,
+      workerConfirmedVoice: Boolean(data.workerConfirmedVoice && hasGenuineAudioEvidence),
       yearsExperience: data.yearsExperience,
       verifiedSkillsCount: data.skills?.length || 0,
       completedBookingsCount: 0,
@@ -104,6 +106,11 @@ export async function POST(request: NextRequest) {
       aadhaarVerified: false,
       digiLockerLinked: false,
       isPublished,
+      isDispatchEligible: geoValidation.isDispatchEligible,
+      dispatchStatus: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
+      is_dispatch_eligible: geoValidation.isDispatchEligible,
+      dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
+      dispatchNotice: geoValidation.isDispatchEligible ? undefined : geoValidation.reason,
       qrVerificationUrl,
       createdAt: new Date().toISOString(),
       isDemo: user.isDemo,
@@ -166,6 +173,8 @@ export async function POST(request: NextRequest) {
             kaamscore: provisionalScore,
             kaamscore_level: scoreLevel,
             is_published: isPublished,
+            is_dispatch_eligible: geoValidation.isDispatchEligible,
+            dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingProfile.id);
@@ -198,6 +207,8 @@ export async function POST(request: NextRequest) {
             kaamscore: provisionalScore,
             kaamscore_level: scoreLevel,
             is_published: isPublished,
+            is_dispatch_eligible: geoValidation.isDispatchEligible,
+            dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
           })
           .select("id")
           .single();
@@ -213,7 +224,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Link confirmed skills to worker_skills table with evidence-driven status
-      const initialVerificationType = hasVoice && workerConfirmed
+      const initialVerificationType = hasGenuineAudioEvidence
         ? "voice_submitted"
         : "self_declared";
 
@@ -297,8 +308,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const message = !geoValidation.isDispatchEligible
+      ? "Non-dispatch digital craft credential created successfully. Customer bookings are disabled for this location."
+      : "Professional profile successfully created and saved.";
+
     return createSuccessResponse(savedRecord, {
-      message: "Professional profile successfully created and saved.",
+      message,
       registryId,
       slug,
       isDemo: user.isDemo,

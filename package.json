@@ -43,7 +43,10 @@
     "test:phase33": "tsx test/phase-33-final-assurance.test.ts",
     "test:phase34": "tsx test/phase-34-conditional-closure.test.ts",
     "test:phase34a": "tsx test/phase-34a-gate-closure.test.ts",
-    "test:phase35": "tsx test/phase-35-security-and-authorization.test.ts"
+    "test:phase35": "tsx test/phase-35-security-and-authorization.test.ts",
+    "test:phase35.1": "tsx test/phase-35-1-layered-security.test.ts",
+    "test:phase35.1:addendum": "tsx test/phase-35-1-addendum.test.ts",
+    "test:phase35.2": "tsx test/phase-35-2-production-remediation.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

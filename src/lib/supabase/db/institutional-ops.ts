@@ -127,12 +127,12 @@ export async function logInstitutionAction(params: {
 
 /**
  * Sanitizes CSV cell values to prevent Formula Injection (CSV Injection).
- * Prefixes cells beginning with =, +, -, @, \t, or \r with a single quote.
+ * Prefixes cells beginning with =, +, -, @, \t, \r, or |, even when preceded by whitespace.
  */
 function sanitizeCsvValue(val: any): string {
   if (val === null || val === undefined) return "N/A";
-  let str = String(val).trim();
-  if (/^[=+\-@\t\r]/.test(str)) {
+  let str = String(val);
+  if (/^\s*[=+\-@\t\r|]/.test(str)) {
     str = `'${str}`;
   }
   // Escape internal double quotes

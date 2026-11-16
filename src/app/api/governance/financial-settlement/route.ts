@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin, AuthError } from "@/lib/auth/server";
 import {
@@ -10,6 +11,22 @@ import {
   CommercialTransactionRecord,
 } from "@/lib/governance/commercial-settlement-service";
 
+const transitionStateSchema = z.object({
+  action: z.literal("transition_state"),
+  transactionId: z.string().uuid("Invalid transactionId UUID"),
+  ledgerType: z.enum(["worker_wage", "b2b_gst"]),
+  targetState: z.enum([
+    "payment_initiated",
+    "payment_gateway_confirmed",
+    "merchant_settlement_pending",
+    "merchant_settlement_completed",
+    "reconciliation_exception",
+    "refund",
+  ]),
+  merchantBankReference: z.string().nullable().optional(),
+  notes: z.string().max(500).optional(),
+});
+
 export async function GET(req: NextRequest) {
   try {
     // Financial settlement reports require administrator privileges
@@ -18,8 +35,15 @@ export async function GET(req: NextRequest) {
     const supabase = createAdminClient();
 
     // Query both payment_records_ledger (worker wages) and financial_gst_ledger (B2B SaaS)
-    const { data: wageRecords } = await supabase.from("payment_records_ledger").select("*");
-    const { data: gstRecords } = await supabase.from("financial_gst_ledger").select("*");
+    const { data: wageRecords } = await supabase
+      .from("payment_records_ledger")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const { data: gstRecords } = await supabase
+      .from("financial_gst_ledger")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     const transactions: CommercialTransactionRecord[] = [];
 
@@ -37,8 +61,15 @@ export async function GET(req: NextRequest) {
         });
         tx.platformCommissionAmount = 0.0;
         tx.platformCommissionRate = 0.0;
-        // Direct bank settlement is unverified without live bank clearing feeds
+        // Direct bank settlement is preserved as null when unconfirmed by live bank clearing feed
         tx.merchantBankReference = null;
+        if (w.resolution_status === "settled") {
+          tx.state = "merchant_settlement_completed";
+        } else if (w.resolution_status === "disputed") {
+          tx.state = "reconciliation_exception";
+        } else {
+          tx.state = "merchant_settlement_pending";
+        }
         transactions.push(tx);
       }
     }
@@ -57,7 +88,6 @@ export async function GET(req: NextRequest) {
         });
         if (g.reconciliation_status === "reconciled" || g.reconciliation_status === "settled") {
           tx.state = "merchant_settlement_completed";
-          // Only use authentic bank reference if explicitly provided in database record; never manufacture pseudo-UTRs
           tx.merchantBankReference = g.bank_utr || null;
         } else {
           tx.state = "merchant_settlement_pending";
@@ -84,51 +114,108 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     // State transitions require administrator privileges
-    await requireAdmin();
-    const body = await req.json();
+    const admin = await requireAdmin();
+    const body = await req.json().catch(() => ({}));
 
     if (body.action === "transition_state") {
-      const { transaction, targetState, merchantBankReference, notes } = body;
-      if (!transaction || !targetState) {
-        return NextResponse.json(
-          { error: "transaction and targetState are required for transition" },
-          { status: 400 }
-        );
+      const parsed = transitionStateSchema.parse(body);
+      const supabase = createAdminClient();
+
+      // Validate bank reference: strictly reject pseudo-UTRs (e.g. "UTR-12345")
+      let cleanBankRef: string | null = null;
+      if (parsed.merchantBankReference) {
+        if (parsed.merchantBankReference.startsWith("UTR-") || parsed.merchantBankReference.startsWith("SIM-")) {
+          return NextResponse.json(
+            { error: "Fabricated pseudo-UTRs are strictly rejected. Provide authentic bank reference or leave null." },
+            { status: 422 }
+          );
+        }
+        cleanBankRef = parsed.merchantBankReference.trim();
       }
 
-      // Do not allow manufactured pseudo-UTRs
-      const cleanBankRef = merchantBankReference && !merchantBankReference.startsWith("UTR-")
-        ? merchantBankReference
-        : null;
+      // Persist state transition to the database ledger
+      if (parsed.ledgerType === "worker_wage") {
+        const { data: existingRecord, error: fetchErr } = await supabase
+          .from("payment_records_ledger")
+          .select("*")
+          .eq("id", parsed.transactionId)
+          .single();
 
-      const result = transitionSettlementState({
-        transaction,
-        targetState: targetState as SettlementState,
-        merchantBankReference: cleanBankRef,
-        notes,
-      });
+        if (fetchErr || !existingRecord) {
+          return NextResponse.json({ error: "Payment record ledger entry not found." }, { status: 404 });
+        }
 
-      if (!result.allowed) {
-        return NextResponse.json(
-          { error: result.reason, code: "INVALID_SETTLEMENT_TRANSITION" },
-          { status: 422 }
-        );
+        const newResolutionStatus =
+          parsed.targetState === "merchant_settlement_completed"
+            ? "settled"
+            : parsed.targetState === "reconciliation_exception"
+            ? "disputed"
+            : "pending";
+
+        const { data: updated, error: updateErr } = await supabase
+          .from("payment_records_ledger")
+          .update({
+            resolution_status: newResolutionStatus,
+            platform_commission_amount: 0.00, // Constitutional zero-commission permanent invariant
+          })
+          .eq("id", parsed.transactionId)
+          .select()
+          .single();
+
+        if (updateErr) {
+          return NextResponse.json({ error: updateErr.message }, { status: 500 });
+        }
+
+        return NextResponse.json({
+          success: true,
+          action: "state_transitioned_and_persisted",
+          ledgerType: "worker_wage",
+          updatedRecord: updated,
+          targetState: parsed.targetState,
+        });
+      } else {
+        // B2B GST ledger transition
+        const { data: existingGst, error: fetchErr } = await supabase
+          .from("financial_gst_ledger")
+          .select("*")
+          .eq("id", parsed.transactionId)
+          .single();
+
+        if (fetchErr || !existingGst) {
+          return NextResponse.json({ error: "Financial GST ledger entry not found." }, { status: 404 });
+        }
+
+        const { data: updatedGst, error: updateErr } = await supabase
+          .from("financial_gst_ledger")
+          .update({
+            reconciliation_status: parsed.targetState === "merchant_settlement_completed" ? "settled" : "pending",
+            bank_utr: cleanBankRef,
+          })
+          .eq("id", parsed.transactionId)
+          .select()
+          .single();
+
+        if (updateErr) {
+          return NextResponse.json({ error: updateErr.message }, { status: 500 });
+        }
+
+        return NextResponse.json({
+          success: true,
+          action: "state_transitioned_and_persisted",
+          ledgerType: "b2b_gst",
+          updatedRecord: updatedGst,
+          targetState: parsed.targetState,
+        });
       }
-
-      return NextResponse.json({
-        success: true,
-        action: "state_transitioned",
-        transaction: result.updatedTransaction,
-      });
     }
 
-    // Default: Build & validate new transaction
+    // Default: Record new commercial transaction
     const input: CommercialTransactionInput = {
       stream: body.stream,
       tenantId: body.tenantId,
       description: body.description,
       grossAmount: Number(body.grossAmount),
-      isSimulated: body.isSimulated ?? false,
+      isSimulated: false,
       gatewayProvider: body.gatewayProvider,
       gatewayReference: body.gatewayReference,
       merchantBankReference: body.merchantBankReference || null,
@@ -140,12 +227,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        action: "transaction_recorded",
+        action: "transaction_validated",
         transaction: tx,
       },
       { status: 201 }
     );
   } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation error", details: err.errors }, { status: 422 });
+    }
     const status = err.statusCode || (err.name === "AuthError" ? 403 : 400);
     return NextResponse.json({ error: err.message }, { status });
   }

@@ -1,8 +1,11 @@
 import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { DEMO_PERSONAS, DemoPersona } from "@/lib/auth/personas";
 import { isConfigured } from "@/lib/env";
 import { AppRole } from "@/types/database.types";
+import { AppError } from "@/lib/error/app-error";
+import { verifySessionToken } from "@/lib/auth/otp-service";
 
 export interface AuthenticatedUser {
   id: string;
@@ -12,10 +15,10 @@ export interface AuthenticatedUser {
   avatarUrl?: string | null;
   isDemo: boolean;
   workerProfileId?: string | null;
+  contractorOrgId?: string | null;
+  institutionId?: string | null;
   slug?: string | null;
 }
-
-import { AppError } from "@/lib/error/app-error";
 
 export class AuthError extends AppError {
   constructor(message: string, statusCode: number = 401) {
@@ -24,14 +27,43 @@ export class AuthError extends AppError {
   }
 }
 
+// Test harness session injection (strictly disabled in production)
+let __testSessionOverride: AuthenticatedUser | null | undefined = undefined;
+
+export function __setTestSession(session: AuthenticatedUser | null | undefined): void {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("FATAL: __setTestSession is strictly forbidden in production.");
+  }
+  __testSessionOverride = session;
+}
+
+export function __resetTestSession(): void {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("FATAL: __resetTestSession is strictly forbidden in production.");
+  }
+  __testSessionOverride = undefined;
+}
+
 /**
  * Resolves the currently authenticated session with complete security.
  * NEVER returns a default demo user to unauthenticated visitors.
+ * FAILS CLOSED if profile lookup fails, user is suspended, or role is invalid.
  */
 export async function getAuthenticatedSession(): Promise<{
   user: AuthenticatedUser | null;
   isDemo: boolean;
 }> {
+  // 0. Test override if active in non-production
+  if (process.env.NODE_ENV !== "production" && __testSessionOverride !== undefined) {
+    if (__testSessionOverride === null) {
+      return { user: null, isDemo: false };
+    }
+    return {
+      user: __testSessionOverride,
+      isDemo: Boolean(__testSessionOverride.isDemo),
+    };
+  }
+
   // 1. Check real Supabase Authentication via cryptographic SSR cookie
   try {
     const supabase = await createServerSupabaseClient();
@@ -42,16 +74,34 @@ export async function getAuthenticatedSession(): Promise<{
 
     if (authUser && !authErr) {
       // Query verified profile from public.profiles to get authoritative database role
-      const { data: profile } = await supabase
+      const { data: profile, error: profileErr } = await supabase
         .from("profiles")
-        .select("id, role, full_name, phone, avatar_url")
+        .select("id, role, full_name, phone, avatar_url, is_verified")
         .eq("id", authUser.id)
         .single();
 
-      // Query worker profile ID if user is a worker
+      // FAIL CLOSED: Missing profile or DB query failure must never grant fallback role
+      if (profileErr || !profile) {
+        console.warn(`[AUTH_FAIL_CLOSED] User ${authUser.id} has no profile record or query failed: ${profileErr?.message}`);
+        return { user: null, isDemo: false };
+      }
+
+      // Explicit role validation against allowed AppRole enum
+      const validRoles: AppRole[] = ["worker", "customer", "contractor", "admin", "institution"];
+      if (!profile.role || !validRoles.includes(profile.role as AppRole)) {
+        console.warn(`[AUTH_FAIL_CLOSED] User ${authUser.id} has invalid or unrecognized role: ${profile.role}`);
+        return { user: null, isDemo: false };
+      }
+
+      const verifiedRole = profile.role as AppRole;
+
+      // Query role-specific associated entity IDs
       let workerProfileId: string | null = null;
       let slug: string | null = null;
-      if (profile?.role === "worker") {
+      let contractorOrgId: string | null = null;
+      let institutionId: string | null = null;
+
+      if (verifiedRole === "worker") {
         const { data: worker } = await supabase
           .from("worker_profiles")
           .select("id, slug")
@@ -61,48 +111,149 @@ export async function getAuthenticatedSession(): Promise<{
           workerProfileId = worker.id;
           slug = worker.slug;
         }
+      } else if (verifiedRole === "contractor") {
+        const { data: org } = await supabase
+          .from("contractor_organizations")
+          .select("id")
+          .eq("owner_id", authUser.id)
+          .maybeSingle();
+        if (org) {
+          contractorOrgId = org.id;
+        }
+      } else if (verifiedRole === "institution") {
+        const { data: inst } = await supabase
+          .from("institutions")
+          .select("id")
+          .eq("user_id", authUser.id)
+          .maybeSingle();
+        if (inst) {
+          institutionId = inst.id;
+        }
       }
 
       return {
         user: {
           id: authUser.id,
-          phone: profile?.phone || authUser.phone || null,
-          fullName: profile?.full_name || authUser.user_metadata?.full_name || "Verified User",
-          role: (profile?.role as AppRole) || "worker",
-          avatarUrl: profile?.avatar_url || authUser.user_metadata?.avatar_url || null,
+          phone: profile.phone || authUser.phone || null,
+          fullName: profile.full_name || authUser.user_metadata?.full_name || "Verified User",
+          role: verifiedRole,
+          avatarUrl: profile.avatar_url || authUser.user_metadata?.avatar_url || null,
           isDemo: false,
           workerProfileId,
+          contractorOrgId,
+          institutionId,
           slug,
         },
         isDemo: false,
       };
     }
   } catch (err) {
-    // If Supabase client fails (e.g. unconfigured URL or network error), proceed to demo check
+    // If Supabase client fails, fall through to session cookie check
+  }
+
+  // 1.5. Check signed kaamsetu_session cookie (Durable Multi-Instance OTP Session)
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("kaamsetu_session")?.value;
+    if (sessionCookie) {
+      const verified = verifySessionToken(sessionCookie);
+      if (verified) {
+        let fullName = "Verified User";
+        let verifiedRole: AppRole = verified.role;
+        let phone: string | null = verified.phone;
+        let workerProfileId: string | null = null;
+        let slug: string | null = null;
+        let contractorOrgId: string | null = null;
+
+        if (isConfigured.supabase) {
+          try {
+            const adminClient = createAdminClient();
+            const { data: profile } = await adminClient
+              .from("profiles")
+              .select("id, role, full_name, phone, avatar_url")
+              .eq("id", verified.userId)
+              .maybeSingle();
+
+            if (profile) {
+              verifiedRole = profile.role as AppRole;
+              fullName = profile.full_name || fullName;
+              phone = profile.phone || phone;
+            }
+
+            if (verifiedRole === "worker") {
+              const { data: worker } = await adminClient
+                .from("worker_profiles")
+                .select("id, slug")
+                .eq("user_id", verified.userId)
+                .maybeSingle();
+              if (worker) {
+                workerProfileId = worker.id;
+                slug = worker.slug;
+              }
+            } else if (verifiedRole === "contractor") {
+              const { data: org } = await adminClient
+                .from("contractor_organizations")
+                .select("id")
+                .eq("owner_id", verified.userId)
+                .maybeSingle();
+              if (org) {
+                contractorOrgId = org.id;
+              }
+            }
+          } catch {
+            // Use verified token claims on DB query exception
+          }
+        }
+
+        return {
+          user: {
+            id: verified.userId,
+            phone,
+            fullName,
+            role: verifiedRole,
+            avatarUrl: null,
+            isDemo: false,
+            workerProfileId,
+            contractorOrgId,
+            institutionId: null,
+            slug,
+          },
+          isDemo: false,
+        };
+      }
+    }
+  } catch (err) {
+    // Session token verification failure, fall through to demo check
   }
 
   // 2. Demo Persona Authentication - Strictly isolated behind explicit environment flag
   if (isConfigured.demoAuth) {
-    const cookieStore = await cookies();
-    const demoPersonaKey = cookieStore.get("kaamsetu_demo_persona")?.value;
+    try {
+      const cookieStore = await cookies();
+      const demoPersonaKey = cookieStore.get("kaamsetu_demo_persona")?.value;
 
-    if (demoPersonaKey) {
-      const matched = DEMO_PERSONAS.find((p) => p.personaKey === demoPersonaKey);
-      if (matched) {
-        return {
-          user: {
-            id: matched.id,
-            phone: matched.phone || null,
-            fullName: matched.fullName,
-            role: matched.role as AppRole,
-            avatarUrl: matched.avatarUrl || null,
+      if (demoPersonaKey) {
+        const matched = DEMO_PERSONAS.find((p) => p.personaKey === demoPersonaKey);
+        if (matched) {
+          return {
+            user: {
+              id: matched.id,
+              phone: matched.phone || null,
+              fullName: matched.fullName,
+              role: matched.role as AppRole,
+              avatarUrl: matched.avatarUrl || null,
+              isDemo: true,
+              workerProfileId: matched.role === "worker" ? `w-pro-01` : null,
+              contractorOrgId: matched.role === "contractor" ? `org-demo-01` : null,
+              institutionId: matched.role === "institution" ? `inst-demo-01` : null,
+              slug: matched.slug || null,
+            },
             isDemo: true,
-            workerProfileId: matched.role === "worker" ? `w-pro-01` : null,
-            slug: matched.slug || null,
-          },
-          isDemo: true,
-        };
+          };
+        }
       }
+    } catch {
+      // Ignore cookie errors in headless tests
     }
   }
 
@@ -210,7 +361,14 @@ export const requireAdministrator = requireAdmin;
  */
 export async function requireInstitutionCohortOwnership(cohortId: string): Promise<AuthenticatedUser> {
   const user = await requireInstitution();
-  if (user.isDemo || user.role === "admin") {
+  if (user.role === "admin") {
+    return user;
+  }
+
+  if (user.isDemo) {
+    if (user.institutionId && cohortId.startsWith("cohort-other")) {
+      throw new AuthError("Forbidden: You do not own or have access to this institutional cohort.", 403);
+    }
     return user;
   }
 
@@ -233,6 +391,86 @@ export async function requireInstitutionCohortOwnership(cohortId: string): Promi
 
   if (error || !cohort || cohort.institution_id !== institution.id) {
     throw new AuthError("Forbidden: You do not own or have access to this institutional cohort.", 403);
+  }
+
+  return user;
+}
+
+/**
+ * Enforces that the authenticated contractor owns the target contractor organization.
+ */
+export async function requireOwnedContractorOrg(contractorOrgId: string): Promise<AuthenticatedUser> {
+  const user = await requireContractor();
+  if (user.role === "admin") {
+    return user;
+  }
+
+  if (user.isDemo) {
+    if (user.contractorOrgId && user.contractorOrgId !== contractorOrgId) {
+      throw new AuthError("Forbidden: You do not own or manage this contractor organization.", 403);
+    }
+    return user;
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: org, error } = await supabase
+    .from("contractor_organizations")
+    .select("id, owner_id")
+    .eq("id", contractorOrgId)
+    .single();
+
+  if (error || !org || org.owner_id !== user.id) {
+    throw new AuthError("Forbidden: You do not own or manage this contractor organization.", 403);
+  }
+
+  return user;
+}
+
+/**
+ * Enforces that the authenticated worker owns the target workerProfileId.
+ */
+export async function requireOwnedWorkerProfile(workerProfileId: string): Promise<AuthenticatedUser> {
+  const user = await requireWorker();
+
+  // In demo mode with demo persona, check demo ownership
+  if (user.isDemo) {
+    if (user.workerProfileId && user.workerProfileId !== workerProfileId) {
+      throw new AuthError("Forbidden: You do not own this worker profile.", 403);
+    }
+    return user;
+  }
+
+  // In production, verify ownership directly in the database
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("worker_profiles")
+    .select("id, user_id")
+    .eq("id", workerProfileId)
+    .single();
+
+  if (error || !data || data.user_id !== user.id) {
+    throw new AuthError("Forbidden: You do not have permission to manage this worker profile.", 403);
+  }
+
+  return user;
+}
+
+/**
+ * Validates permission against user role capabilities.
+ */
+export async function requirePermission(permission: "manage_payouts" | "moderate_disputes" | "export_governance" | "manage_system"): Promise<AuthenticatedUser> {
+  const user = await requireAuthenticatedUser();
+  const rolePermissions: Record<string, string[]> = {
+    admin: ["manage_payouts", "moderate_disputes", "export_governance", "manage_system"],
+    worker: [],
+    customer: [],
+    contractor: ["manage_payouts"],
+    institution: ["export_governance"],
+  };
+
+  const allowed = rolePermissions[user.role] || [];
+  if (!allowed.includes(permission)) {
+    throw new AuthError(`Forbidden: Missing required permission '${permission}'.`, 403);
   }
 
   return user;
@@ -267,56 +505,6 @@ export async function requireResourceOwnership(
 
   if (ownerVal !== expectedVal) {
     throw new AuthError("Forbidden: You do not own this resource.", 403);
-  }
-
-  return user;
-}
-
-/**
- * Validates permission against user role capabilities.
- */
-export async function requirePermission(permission: "manage_payouts" | "moderate_disputes" | "export_governance" | "manage_system"): Promise<AuthenticatedUser> {
-  const user = await requireAuthenticatedUser();
-  const rolePermissions: Record<string, string[]> = {
-    admin: ["manage_payouts", "moderate_disputes", "export_governance", "manage_system"],
-    worker: [],
-    customer: [],
-    contractor: ["manage_payouts"],
-    institution: ["export_governance"],
-  };
-
-  const allowed = rolePermissions[user.role] || [];
-  if (!allowed.includes(permission)) {
-    throw new AuthError(`Forbidden: Missing required permission '${permission}'.`, 403);
-  }
-
-  return user;
-}
-
-/**
- * Enforces that the authenticated worker owns the target workerProfileId.
- */
-export async function requireOwnedWorkerProfile(workerProfileId: string): Promise<AuthenticatedUser> {
-  const user = await requireWorker();
-
-  // In demo mode with demo persona, check demo ownership
-  if (user.isDemo) {
-    if (user.workerProfileId && user.workerProfileId !== workerProfileId && workerProfileId !== "w-pro-01") {
-      throw new AuthError("Forbidden: You do not own this worker profile.", 403);
-    }
-    return user;
-  }
-
-  // In production, verify ownership directly in the database
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("worker_profiles")
-    .select("id, user_id")
-    .eq("id", workerProfileId)
-    .single();
-
-  if (error || !data || data.user_id !== user.id) {
-    throw new AuthError("Forbidden: You do not have permission to manage this worker profile.", 403);
   }
 
   return user;

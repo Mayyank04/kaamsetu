@@ -68,7 +68,14 @@ export const approvedProfileSubmissionSchema = z.object({
   yearsExperience: z.number().int().min(0).max(60).nullable().default(null),
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
-  pincode: z.string().regex(/^[1-9][0-9]{5}$/, "Pincode must be 6 digits").optional(),
+  pincode: z
+    .string()
+    .trim()
+    .regex(/^[1-9][0-9]{5}$/, "Pincode must be 6 digits")
+    .optional()
+    .or(z.literal(""))
+    .transform((val) => (val === "" ? undefined : val)),
+  ncoCode: z.string().optional(),
   skills: z.array(z.string()).min(1, "Include at least one validated skill"),
   equipmentHandled: z.array(z.string()).default([]),
   dailyRateMin: z.number().int().positive().nullable().optional(),
@@ -77,8 +84,11 @@ export const approvedProfileSubmissionSchema = z.object({
   bio: z.string().min(10),
   languages: z.array(z.string()).min(1),
   voiceTranscript: z.string().optional(),
+  audioStoragePath: z.string().optional().nullable(),
+  audioRecordingId: z.string().optional().nullable(),
   hasVoiceAttestation: z.boolean().optional(),
   workerConfirmedVoice: z.boolean().optional(),
+  allowNonDispatchProfile: z.boolean().optional().default(false),
   isPublished: z.boolean().optional(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),

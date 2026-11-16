@@ -9,6 +9,7 @@
  * Restricted:
  * - Siliguri (734001-734014): Conditional readiness only (Dispatch disallowed)
  * - Tripura (799001-799290): BLOCKED by BLOCKER-01 (Dispatch disallowed)
+ * - Heavy EPC Staffing: FROZEN by BLOCKER-03 (Dispatch disallowed)
  * - All other districts: Out of bounds (Rejected with 403)
  */
 
@@ -18,13 +19,15 @@ export interface LocationValidationRequest {
   pincode?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  dispatchCategory?: "standard_vocational" | "heavy_epc_infrastructure";
 }
 
 export type RegionalOperatingStatus = 
   | "AUTHORIZED"
   | "CONDITIONAL_READINESS_ONLY"
   | "BLOCKED"
-  | "OUT_OF_BOUNDS";
+  | "OUT_OF_BOUNDS"
+  | "NON_DISPATCH_AREA";
 
 export interface LocationValidationResult {
   allowed: boolean;
@@ -34,22 +37,38 @@ export interface LocationValidationResult {
   pincode: string;
   reason?: string;
   coordinateCheckPassed: boolean;
+  allowedForRegistration: boolean;
+  isDispatchEligible: boolean;
+}
+
+interface AuthorizedDistrictConfig {
+  name: string;
+  urbanCenter: string;
+  state: string;
+  minPin: number;
+  maxPin: number;
+  allowedCities: string[];
+  bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number };
 }
 
 // Authorized Class B Operating Districts
-const AUTHORIZED_DISTRICTS = [
+const AUTHORIZED_DISTRICTS: AuthorizedDistrictConfig[] = [
   {
     name: "Kamrup Metropolitan",
     urbanCenter: "Guwahati Urban",
     state: "Assam",
-    pinPrefixes: ["78100", "78101", "78102", "78103"],
+    minPin: 781001,
+    maxPin: 781039,
+    allowedCities: ["guwahati", "kamrup", "dispur", "panbazar", "paltan"],
     bounds: { minLat: 26.05, maxLat: 26.25, minLng: 91.60, maxLng: 91.90 },
   },
   {
     name: "East Khasi Hills",
     urbanCenter: "Shillong Urban",
     state: "Meghalaya",
-    pinPrefixes: ["79300", "79301", "79302"],
+    minPin: 793001,
+    maxPin: 793022,
+    allowedCities: ["shillong", "east khasi hills", "khasi", "police bazar", "laitumkhrah"],
     bounds: { minLat: 25.50, maxLat: 25.65, minLng: 91.80, maxLng: 91.95 },
   },
 ];
@@ -57,11 +76,14 @@ const AUTHORIZED_DISTRICTS = [
 export class GeographicAuthorizationService {
   /**
    * Validates location against strict regional operating rules.
+   * Enforces consistent conjunction of PIN, city, state, district, and coordinates.
    */
   public static validateLocation(req: LocationValidationRequest): LocationValidationResult {
     const city = (req.city || "").trim();
     const state = (req.state || "").trim();
     const pin = (req.pincode || "").trim();
+    const cityLower = city.toLowerCase();
+    const stateLower = state.toLowerCase();
 
     // 1. PIN code format check
     if (!pin || !/^[1-9][0-9]{5}$/.test(pin)) {
@@ -73,10 +95,29 @@ export class GeographicAuthorizationService {
         pincode: pin || "",
         reason: "A valid 6-digit Indian Postal PIN code is required.",
         coordinateCheckPassed: false,
+        allowedForRegistration: false,
+        isDispatchEligible: false,
       };
     }
 
-    // 2. Coordinate spoofing check if coordinates are provided
+    const pinInt = parseInt(pin, 10);
+
+    // 2. Heavy EPC Infrastructure Dispatch check
+    if (req.dispatchCategory === "heavy_epc_infrastructure") {
+      return {
+        allowed: false,
+        status: "BLOCKED",
+        district: "Heavy EPC Sector",
+        state: state || "National",
+        pincode: pin,
+        reason: "Heavy EPC industrial staffing is FROZEN pending tripartite EPC contractual execution (BLOCKER-03).",
+        coordinateCheckPassed: false,
+        allowedForRegistration: false,
+        isDispatchEligible: false,
+      };
+    }
+
+    // 3. Coordinate validation if coordinates provided
     let coordinateCheckPassed = true;
     if (req.latitude !== undefined && req.latitude !== null && req.longitude !== undefined && req.longitude !== null) {
       const lat = Number(req.latitude);
@@ -92,6 +133,8 @@ export class GeographicAuthorizationService {
           pincode: pin,
           reason: "Coordinate spoofing detected: (0,0) null island coordinates rejected.",
           coordinateCheckPassed: false,
+          allowedForRegistration: false,
+          isDispatchEligible: false,
         };
       }
 
@@ -105,15 +148,15 @@ export class GeographicAuthorizationService {
           pincode: pin,
           reason: "Coordinates fall outside Indian territorial boundaries.",
           coordinateCheckPassed: false,
+          allowedForRegistration: false,
+          isDispatchEligible: false,
         };
       }
     }
 
-    // 3. Check for explicitly restricted regions
-    const pinInt = parseInt(pin, 10);
-
+    // 4. Check for explicitly restricted regions
     // Tripura (799001 - 799290)
-    if ((pinInt >= 799001 && pinInt <= 799290) || state.toLowerCase().includes("tripura") || city.toLowerCase().includes("agartala")) {
+    if ((pinInt >= 799001 && pinInt <= 799290) || stateLower.includes("tripura") || cityLower.includes("agartala")) {
       return {
         allowed: false,
         status: "BLOCKED",
@@ -122,11 +165,13 @@ export class GeographicAuthorizationService {
         pincode: pin,
         reason: "Tripura operations are BLOCKED pending Tripura Skill Development Mission (TSDM) institutional authorization (BLOCKER-01).",
         coordinateCheckPassed,
+        allowedForRegistration: false,
+        isDispatchEligible: false,
       };
     }
 
     // Siliguri (734001 - 734014)
-    if ((pinInt >= 734001 && pinInt <= 734014) || city.toLowerCase().includes("siliguri")) {
+    if ((pinInt >= 734001 && pinInt <= 734014) || cityLower.includes("siliguri")) {
       return {
         allowed: false,
         status: "CONDITIONAL_READINESS_ONLY",
@@ -135,19 +180,48 @@ export class GeographicAuthorizationService {
         pincode: pin,
         reason: "Siliguri is currently under conditional readiness evaluation; customer dispatch is not yet authorized.",
         coordinateCheckPassed,
+        allowedForRegistration: true,
+        isDispatchEligible: false,
       };
     }
 
-    // 4. Match against authorized Class B districts
+    // 5. Match against authorized Class B districts with strict CONJUNCTION
     for (const district of AUTHORIZED_DISTRICTS) {
-      const pinMatches = district.pinPrefixes.some((pfx) => pin.startsWith(pfx));
-      const textMatches =
-        state.toLowerCase().includes(district.state.toLowerCase()) &&
-        (city.toLowerCase().includes(district.urbanCenter.toLowerCase().split(" ")[0]) ||
-         city.toLowerCase().includes(district.name.toLowerCase().split(" ")[0]));
+      const pinMatches = pinInt >= district.minPin && pinInt <= district.maxPin;
 
-      if (pinMatches || textMatches) {
-        // If coordinates provided, verify within regional bounding box
+      if (pinMatches) {
+        // Strict consistency check: declared state MUST match the authorized district state
+        if (!stateLower.includes(district.state.toLowerCase())) {
+          return {
+            allowed: false,
+            status: "OUT_OF_BOUNDS",
+            district: district.name,
+            state: state,
+            pincode: pin,
+            reason: `Contradictory location: PIN code ${pin} belongs to ${district.state}, but declared state is '${state}'.`,
+            coordinateCheckPassed: false,
+            allowedForRegistration: false,
+            isDispatchEligible: false,
+          };
+        }
+
+        // Strict consistency check: declared city must be consistent with district
+        const cityConsistent = district.allowedCities.some((c) => cityLower.includes(c));
+        if (!cityConsistent && city.length > 0) {
+          return {
+            allowed: false,
+            status: "OUT_OF_BOUNDS",
+            district: district.name,
+            state: district.state,
+            pincode: pin,
+            reason: `Contradictory location: PIN code ${pin} belongs to ${district.urbanCenter}, but declared city is '${city}'.`,
+            coordinateCheckPassed: false,
+            allowedForRegistration: false,
+            isDispatchEligible: false,
+          };
+        }
+
+        // Verify coordinates if provided
         if (req.latitude && req.longitude) {
           const lat = Number(req.latitude);
           const lng = Number(req.longitude);
@@ -163,12 +237,15 @@ export class GeographicAuthorizationService {
               district: district.name,
               state: district.state,
               pincode: pin,
-              reason: `GPS coordinates [${lat}, ${lng}] do not match authorized district boundaries for ${district.urbanCenter}.`,
+              reason: `GPS coordinates (${lat.toFixed(4)}, ${lng.toFixed(4)}) do not correspond to ${district.urbanCenter}.`,
               coordinateCheckPassed: false,
+              allowedForRegistration: false,
+              isDispatchEligible: false,
             };
           }
         }
 
+        // Passed all strict conjunction checks!
         return {
           allowed: true,
           status: "AUTHORIZED",
@@ -176,19 +253,23 @@ export class GeographicAuthorizationService {
           state: district.state,
           pincode: pin,
           coordinateCheckPassed: true,
+          allowedForRegistration: true,
+          isDispatchEligible: true,
         };
       }
     }
 
-    // 5. Default: Region outside authorized Class B controlled rollout
+    // 6. Non-Class-B District: Out of bounds for commercial dispatch, eligible only for non-dispatch craft identity if permitted
     return {
       allowed: false,
       status: "OUT_OF_BOUNDS",
-      district: city || "Unregistered District",
-      state: state || "External State",
+      district: city || "Outside Class B Cluster",
+      state: state || "National",
       pincode: pin,
-      reason: `Location '${city}, ${state}' (PIN ${pin}) is outside the currently authorized Class B rollout zone (Guwahati Urban & Shillong Urban).`,
+      reason: `KAAMSETU is currently accepting service operations in Guwahati and Shillong. Your selected location${city ? ` (${city})` : ""} is not yet within our active service area. You can continue only with the profile options currently supported for your location.`,
       coordinateCheckPassed,
+      allowedForRegistration: true,
+      isDispatchEligible: false,
     };
   }
 }
