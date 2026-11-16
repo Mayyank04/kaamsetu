@@ -13,8 +13,8 @@ export function createClient() {
   }
 
   const client = createBrowserClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-kaamsetu.supabase.co",
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
   );
 
   if (typeof window !== "undefined") {

@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       phone: data.phone,
       role: data.role,
       fullName: data.fullName,
+      intent: data.intent,
       clientIp,
     });
 
@@ -23,7 +24,8 @@ export async function POST(request: NextRequest) {
       {
         success: result.success,
         message: result.message,
-        isDemo: result.isDemo,
+        isSandbox: result.isSandbox,
+        sandboxCode: result.sandboxCode,
         requiresDemoCode: result.requiresDemoCode,
         retryAfterSeconds: result.retryAfterSeconds,
       },
@@ -36,7 +38,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (err: unknown) {
     console.error("[OTP_SEND_ROUTE_ERROR]", err);
-    // Never expose internal configuration, stack traces, or fatal error strings to users
     return NextResponse.json(
       {
         success: false,

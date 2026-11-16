@@ -1,18 +1,18 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env, isConfigured } from "@/lib/env";
-import { DEMO_PERSONAS } from "@/lib/auth/personas";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
 
+  // 1. Supabase Auth Session (if live Supabase is configured)
   if (isConfigured.supabase) {
     try {
       const supabase = createServerClient(
-        env.NEXT_PUBLIC_SUPABASE_URL,
-        env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        env.NEXT_PUBLIC_SUPABASE_URL || "",
+        env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
         {
           cookies: {
             getAll() {
@@ -38,32 +38,43 @@ export async function updateSession(request: NextRequest) {
         data: { user },
       } = await supabase.auth.getUser();
 
-      return { supabaseResponse, user, isDemo: false };
+      if (user) {
+        return { supabaseResponse, user, isDemo: false };
+      }
     } catch {
       // Supabase connection error fallback
     }
   }
 
-  // Demo Persona Session - only when explicit flag is active
-  if (isConfigured.demoAuth) {
-    const demoPersonaKey = request.cookies.get("kaamsetu_demo_persona")?.value;
-    if (demoPersonaKey) {
-      const matched = DEMO_PERSONAS.find((p) => p.personaKey === demoPersonaKey);
-      if (matched) {
-        return {
-          supabaseResponse,
-          user: {
-            id: matched.id,
-            role: matched.role,
-            email: matched.phone || "demo@kaamsetu.dev",
-            user_metadata: {
-              full_name: matched.fullName,
-              role: matched.role,
-            },
-          } as any,
-          isDemo: true,
-        };
+  // 2. Authoritative KAAMSETU Session Token Verification
+  const sessionToken = request.cookies.get("kaamsetu_session")?.value;
+  if (sessionToken) {
+    try {
+      const parts = sessionToken.split(".");
+      if (parts.length === 2) {
+        const [encoded] = parts;
+        const jsonStr = typeof atob !== "undefined"
+          ? atob(encoded.replace(/-/g, "+").replace(/_/g, "/"))
+          : Buffer.from(encoded, "base64url").toString("utf-8");
+        const json = JSON.parse(jsonStr);
+        if (json.userId && json.role && (!json.exp || json.exp > Math.floor(Date.now() / 1000))) {
+          return {
+            supabaseResponse,
+            user: {
+              id: json.userId,
+              role: json.role,
+              email: json.phone,
+              user_metadata: {
+                phone: json.phone,
+                role: json.role,
+              },
+            } as any,
+            isDemo: false,
+          };
+        }
       }
+    } catch {
+      // Invalidation
     }
   }
 

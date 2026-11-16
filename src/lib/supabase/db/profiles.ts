@@ -32,6 +32,10 @@ export async function getPublishedWorkerProfiles(
   filters: WorkerFilterParams = {}
 ): Promise<WorkerProfile[]> {
   if (!isConfigured.supabase) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("FATAL DATABASE CONFIGURATION: Supabase is unconfigured in production. Cannot query worker profiles.");
+    }
+    // Isolated development & test fixtures (strictly excluded from production)
     let result = FEATURED_PROFESSIONALS.map((p) => ({
       id: p.id,
       user_id: `33333333-3333-3333-3333-33333333000${p.id.slice(-1)}`,
@@ -176,6 +180,9 @@ export async function getPublishedWorkerProfiles(
  */
 export async function getWorkerProfileBySlug(slug: string): Promise<WorkerProfileWithRelations | null> {
   if (!isConfigured.supabase) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("FATAL DATABASE CONFIGURATION: Supabase is unconfigured in production. Cannot query worker profile.");
+    }
     const demo =
       FEATURED_PROFESSIONALS.find((p) => {
         const pSlug =
@@ -247,6 +254,9 @@ export async function getWorkerProfileBySlug(slug: string): Promise<WorkerProfil
  */
 export async function getWorkerProfileById(id: string): Promise<WorkerProfile | null> {
   if (!isConfigured.supabase) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("FATAL DATABASE CONFIGURATION: Supabase is unconfigured in production. Cannot query worker profile.");
+    }
     const p = await getWorkerProfileBySlug("rameshwar-sharma-jaipur");
     return p;
   }
@@ -271,6 +281,9 @@ export async function updateWorkerProfile(
   updates: Partial<WorkerProfile>
 ): Promise<WorkerProfile | null> {
   if (!isConfigured.supabase) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("FATAL DATABASE CONFIGURATION: Supabase is unconfigured in production. Cannot update worker profile.");
+    }
     const existing = await getWorkerProfileBySlug("rameshwar-sharma-jaipur");
     if (!existing) return null;
     return {

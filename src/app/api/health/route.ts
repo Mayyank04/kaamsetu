@@ -12,7 +12,9 @@ export async function GET() {
     services: {
       supabase: {
         configured: isConfigured.supabase,
-        url: env.NEXT_PUBLIC_SUPABASE_URL.replace(/https?:\/\//, "").split(".")[0] + ".supabase.co",
+        url: env.NEXT_PUBLIC_SUPABASE_URL
+          ? env.NEXT_PUBLIC_SUPABASE_URL.replace(/https?:\/\//, "").split(".")[0] + ".supabase.co"
+          : "unconfigured",
       },
       gemini: {
         configured: isConfigured.gemini,

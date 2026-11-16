@@ -17,8 +17,14 @@ export const phoneAuthSchema = z.object({
         message: "Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)",
       }
     ),
-  role: z.enum(["worker", "contractor", "employer", "verifier"]).default("worker"),
-  fullName: z.string().optional(),
+  role: z.enum(["worker", "contractor", "employer", "verifier", "customer", "admin", "institution"]).default("worker"),
+  fullName: z
+    .string()
+    .trim()
+    .min(2, "Full name must be at least 2 characters")
+    .max(100, "Full name must not exceed 100 characters")
+    .optional(),
+  intent: z.enum(["registration", "login"]).default("login"),
 });
 
 export const otpVerificationSchema = z.object({
@@ -27,6 +33,9 @@ export const otpVerificationSchema = z.object({
     .string()
     .trim()
     .regex(/^\d{6}$/, "Verification code must be exactly 6 digits"),
+  role: z.enum(["worker", "contractor", "employer", "verifier", "customer", "admin", "institution"]).default("worker"),
+  fullName: z.string().optional(),
+  intent: z.enum(["registration", "login"]).optional(),
 });
 
 export type PhoneAuthInput = z.infer<typeof phoneAuthSchema>;

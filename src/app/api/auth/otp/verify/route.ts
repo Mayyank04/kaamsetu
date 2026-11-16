@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { otpVerificationSchema } from "@/schemas/auth.schema";
 import { verifyOtp } from "@/lib/auth/otp-service";
-
-const verifySchema = z.object({
-  phone: z.string().min(10),
-  otp: z.string().regex(/^\d{6}$/, "Verification code must be exactly 6 digits"),
-  role: z.enum(["worker", "contractor", "verifier", "admin", "customer"]).default("worker"),
-  fullName: z.string().optional(),
-});
 
 export async function POST(request: NextRequest) {
   try {
     const json = await request.json();
-    const data = verifySchema.parse(json);
+    const data = otpVerificationSchema.parse(json);
 
     const result = await verifyOtp({
       phone: data.phone,
       otp: data.otp,
       role: data.role,
       fullName: data.fullName,
+      intent: data.intent,
     });
 
     const response = NextResponse.json(
@@ -27,7 +21,7 @@ export async function POST(request: NextRequest) {
         message: result.message,
         user: result.user,
         redirectUrl: result.redirectUrl,
-        isDemo: result.isDemo,
+        isSandbox: result.isSandbox,
         retryAfterSeconds: result.retryAfterSeconds,
       },
       {
@@ -49,12 +43,8 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (err: unknown) {
     console.error("[OTP_VERIFY_ROUTE_ERROR]", err);
-    const message = err instanceof z.ZodError 
-      ? err.errors[0]?.message || "Invalid verification payload."
-      : "Verification failed. Please try again.";
-
     return NextResponse.json(
-      { success: false, message },
+      { success: false, message: "Verification failed. Please check your verification code and try again." },
       { status: 400 }
     );
   }

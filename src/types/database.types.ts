@@ -21,6 +21,10 @@ export interface Database {
           phone: string | null;
           avatar_url: string | null;
           is_verified: boolean;
+          account_status?: string;
+          phone_verification_status?: string;
+          verification_method?: string;
+          phone_verified?: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -31,6 +35,10 @@ export interface Database {
           phone?: string | null;
           avatar_url?: string | null;
           is_verified?: boolean;
+          account_status?: string;
+          phone_verification_status?: string;
+          verification_method?: string;
+          phone_verified?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -41,6 +49,10 @@ export interface Database {
           phone?: string | null;
           avatar_url?: string | null;
           is_verified?: boolean;
+          account_status?: string;
+          phone_verification_status?: string;
+          verification_method?: string;
+          phone_verified?: boolean;
           created_at?: string;
           updated_at?: string;
         };

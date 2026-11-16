@@ -193,12 +193,6 @@ export function InstitutionalHeader() {
                     <span>Customer Bookings</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/login" className="flex items-center gap-2">
-                    <UserCheck className="w-3.5 h-3.5 text-sand-800" />
-                    <span>Switch Demo Persona</span>
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-red-700 focus:text-red-800 flex items-center gap-2">
                   <LogOut className="w-3.5 h-3.5" />
@@ -301,7 +295,7 @@ export function InstitutionalHeader() {
             ) : (
               <Button variant="outline" className="w-full justify-center text-xs" asChild>
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  Sign In / Switch Persona
+                  Sign In / Register
                 </Link>
               </Button>
             )}
