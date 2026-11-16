@@ -19,7 +19,6 @@ import {
   CheckCircle2,
   MapPin,
   QrCode,
-  Sparkles,
   Calendar,
   Briefcase,
   Award,

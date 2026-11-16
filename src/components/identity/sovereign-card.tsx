@@ -1,6 +1,6 @@
 import * as React from "react";
 import { WorkerProfile } from "@/types/identity";
-import { ShieldCheck, Award, QrCode, CheckCircle2, MapPin, Sparkles } from "lucide-react";
+import { ShieldCheck, Award, QrCode, CheckCircle2, MapPin } from "lucide-react";
 import { TrustBadge } from "./trust-badge";
 import { KaamScoreGauge } from "./kaamscore-gauge";
 
@@ -35,14 +35,14 @@ export function SovereignCard({ worker, className = "" }: SovereignCardProps) {
           </div>
 
           <div className="flex items-center gap-1.5 rounded-xs bg-forest-700/80 px-2.5 py-1 border border-forest-500/40 text-[10px] font-bold text-sand uppercase tracking-wider">
-            <Sparkles className="h-3 w-3 text-sand" />
+            <Award className="h-3 w-3 text-sand" />
             <span>LEVEL {worker.kaamScore.level}</span>
           </div>
         </div>
       </div>
 
       {/* 2. Card Body: Crisp Ivory & Paper Surface */}
-      <div className="p-6 bg-gradient-to-b from-card to-ivory-light space-y-5">
+      <div className="p-6 bg-card space-y-5">
         {/* Profile Main Row */}
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">

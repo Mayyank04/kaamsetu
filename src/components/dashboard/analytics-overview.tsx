@@ -74,13 +74,13 @@ export function AnalyticsOverview({ analytics, profile }: AnalyticsOverviewProps
         return (
           <div
             key={idx}
-            className="p-5 rounded-2xl bg-card border border-forest/15 shadow-sovereign-xs flex flex-col justify-between space-y-3 hover:border-forest/30 transition-all"
+            className="p-5 rounded-md bg-card border border-forest/15 shadow-sovereign-xs flex flex-col justify-between space-y-3 hover:border-forest/30 transition-all"
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-charcoal-muted uppercase tracking-wider">
                 {card.label}
               </span>
-              <div className={`w-8 h-8 rounded-xl ${card.bg} flex items-center justify-center ${card.accent}`}>
+              <div className={`w-8 h-8 rounded-sm ${card.bg} flex items-center justify-center ${card.accent}`}>
                 <Icon className="w-4 h-4" />
               </div>
             </div>

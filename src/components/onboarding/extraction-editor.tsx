@@ -138,7 +138,7 @@ export function ExtractionEditor({
               Self-Declared Testimony
             </Badge>
             <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-900 border-amber-300 font-mono py-1">
-              Trade suggestion — review and edit
+              Trade suggestion: review and edit
             </Badge>
           </div>
         </div>

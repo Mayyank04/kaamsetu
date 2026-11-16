@@ -30,7 +30,7 @@ export function WorkHistoryView({ workRecords }: WorkHistoryViewProps) {
   };
 
   return (
-    <div className="rounded-2xl bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
+    <div className="rounded-md bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
       {/* Header */}
       <div className="pb-4 border-b border-forest/10">
         <div className="flex items-center gap-2">

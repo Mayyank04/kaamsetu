@@ -13,7 +13,6 @@ import {
   Download,
   Share2,
   ExternalLink,
-  Sparkles,
   QrCode,
   MapPin,
   Calendar,
@@ -116,8 +115,8 @@ export function SovereignSuccessCard({
     <div className="space-y-8 animate-in fade-in-50 duration-700">
       {/* Celebration Header */}
       <div className="text-center max-w-xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-forest-900/10 dark:bg-sand/10 border border-forest/20 dark:border-sand/30 text-forest dark:text-sand text-xs font-mono font-medium tracking-wide">
-          <Sparkles className="w-3.5 h-3.5 text-sand" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xs bg-forest-900/10 dark:bg-sand/10 border border-forest/20 dark:border-sand/30 text-forest dark:text-sand text-xs font-mono font-medium tracking-wide">
+          <ShieldCheck className="w-3.5 h-3.5 text-sand" />
           <span>SOVEREIGN DIGITAL IDENTITY GENERATED</span>
         </div>
 
@@ -133,13 +132,8 @@ export function SovereignSuccessCard({
       <div className="max-w-2xl mx-auto">
         <div
           id="sovereign-card-print-target"
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-forest-950 via-forest to-forest-900 text-ivory p-6 sm:p-8 shadow-sovereign-xl border-2 border-sand/40 print:border-black print:text-black"
+          className="relative overflow-hidden rounded-md bg-forest text-ivory p-6 sm:p-8 shadow-sovereign-md border-2 border-sand/40 print:border-black print:text-black"
         >
-          {/* Decorative Security Guilloche Watermark Pattern */}
-          <div
-            className="absolute inset-0 opacity-5 pointer-events-none mix-blend-overlay bg-[radial-gradient(#E8C999_1px,transparent_1px)] [background-size:16px_16px]"
-            aria-hidden="true"
-          />
 
           {/* Top Bar: Emblem & Registry Meta */}
           <div className="relative flex items-start justify-between border-b border-sand/20 pb-5">

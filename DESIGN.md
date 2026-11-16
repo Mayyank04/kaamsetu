@@ -4,7 +4,7 @@
 **Domain:** Sovereign Worker Identity, Cryptographic Trust, Fair Labor Economics, Institutional Skill Infrastructure.  
 **Operating Classification:** `CLASS_B_CONTROLLED_ROLLOUT` (Guwahati Urban, Assam & Shillong Urban, Meghalaya).  
 **Permanent Constitutional Invariant:** `platform_commission_amount = 0.00` on artisan earnings.  
-**Specification Version:** 2.0 (Phase 36 Design Intelligence Standard)
+**Specification Version:** 2.1 (Phase 36.1 Anti-AI UI Reconstruction & Quality Standard)
 
 ---
 
@@ -123,15 +123,13 @@ Spacing adheres to a strict 4px/8px modular rhythm:
 
 ## 8. BORDER & RADIUS RULES
 
-- **Borders:** Tactile, calibrated hairline borders (`border border-forest/12`). No borderless floating elements.
-- **Radius Scale:**
-  - `rounded-xs` (2px): Code chips, monospace data tokens.
-  - `rounded-sm` (4px): Form inputs, table cells, secondary tags.
-  - `rounded-md` (6px): Default buttons, small cards, alert boxes.
-  - `rounded-xl` (12px): Standard cards, dialog modals.
-  - `rounded-2xl` (16px): Sovereign credential certificate cards.
+- **Borders:** Tactile, calibrated hairline borders (`border border-forest/12` to `border-forest/15`). No borderless floating elements.
+- **Calibrated Radius Scale:**
+  - `rounded-xs` (2px): Code chips, monospace data tokens, tight technical badges.
+  - `rounded-sm` (4px): Form inputs, table cells, secondary tags, small icon containers.
+  - `rounded-md` (6px): Default cards, buttons, dashboard metrics, dialog modals, certificate cards.
   - `rounded-full`: Circular avatar portraits, status indicator dots.
-  - ❌ **Prohibited:** Giant pill shapes (`rounded-full`) on standard cards or rectangular panels.
+  - ❌ **Prohibited:** `rounded-2xl` (16px), `rounded-3xl` (24px), or giant pill shapes on cards, dialog boxes, or rectangular panels. Over-rounded soft corners are an AI-generated design tell and dilute institutional dignity.
 
 ---
 
@@ -226,7 +224,16 @@ Every empty state must provide:
 
 ## 18. LOADING STATES & SKELETONS
 
-- In-place pulsing skeleton boxes matching the exact geometry of the loading cards (`bg-forest/5 animate-pulse rounded-md`).
+- In-place pulsing skeleton boxes matching the exact geometry of the loading cards (`bg-forest/5 animate-pulse rounded-md border border-forest/10`).
+- Base skeleton primitive: `src/components/ui/skeleton.tsx`.
+- Domain-specific geometry-matching skeletons in `src/components/ui/domain-skeletons.tsx`:
+  - `WorkerCardSkeleton`: Replicates worker directory cards with avatar circle, name block, trade tag, and rating line.
+  - `ExploreGridSkeleton`: Replicates multi-column worker search results.
+  - `ProfileHeroSkeleton`: Replicates individual public worker profile header.
+  - `DashboardMetricsSkeleton`: Replicates 4-card metric dashboard summary.
+  - `BookingCardSkeleton`: Replicates customer booking tracker item.
+  - `ContractorRosterSkeleton`: Replicates contractor workforce table rows.
+  - `InstitutionalCohortSkeleton`: Replicates institutional cohort dossiers and trainee counts.
 - Explicit `aria-busy="true"` and live region announcement (`aria-live="polite"`).
 - Never render blank white screens or generic unstyled spinners.
 
@@ -236,6 +243,7 @@ Every empty state must provide:
 
 - **Strict Purpose:** Icons serve orientation, navigation, or status recognition.
 - **No Decorative Lucide Overdose:** Never prefix every headline or list item with arbitrary Lucide icons.
+- **Zero Sparkle Policy:** The `Sparkles` icon is prohibited as an indicator of automated or intelligent capabilities. Replace with domain-accurate icons (`FileText`, `Award`, `ShieldCheck`, `Mic`, `QrCode`, `Scissors`).
 - **Sizing:** Standard `w-4 h-4` (16px) or `w-5 h-5` (20px) aligned to text cap-height.
 
 ---
@@ -244,6 +252,7 @@ Every empty state must provide:
 
 - **Restraint:** Motion is purposeful and rapid (`duration-150` to `duration-200 ease-out`).
 - **Transitions:** Color fades (`transition-colors`) and slight scale feedback on button click (`active:scale-[0.99]`).
+- **Prohibited:** Sliding arrow animations (`group-hover:translate-x-1`), looping pulsing badges, floating hover offsets (`hover:-translate-y-1`).
 - **Reduced Motion:** Full support for `prefers-reduced-motion: reduce` disabling all non-essential animations.
 
 ---
@@ -269,6 +278,7 @@ Every empty state must provide:
 - **Authentic Worker Voice:** Speak to workers with dignity and clarity. Avoid calling workers "resources", "leads", or "gig units".
 - **No Startup Hype:** Avoid "revolutionary", "seamless", "cutting-edge", "game-changing".
 - **Clear Actions:** "Save draft", "Send OTP", "Verify number", "View certificate".
+- **Punctuation Discipline:** Avoid em dashes (`—`) in UI headings or field labels. Use colons or clean parentheticals.
 
 ---
 
@@ -280,4 +290,54 @@ Every empty state must provide:
 | **Subheading** | *"India's premier all-in-one institutional decentralized workforce enablement ecosystem."* | *"Build a verified profile around the craft you practice—electrician, carpenter, plumber or technician. Share your work with customers and contractors."* |
 | **Card Style** | Glossy transparent glass with gradient border and floating blur background | Solid paper surface with crisp 1px hairline border (`border-forest/12`) |
 | **Social Proof** | *"Trusted by 500,000+ top enterprises and 5.0 star rated by all users!"* | Truthful, grounded statistics backed by real database records or honest regional pilot indicators |
-| **Trade Badge** | `variant="verified"` claiming *"NSQF Level 4 Government Certified"* without proof | `variant="outline"` stating *"Self-Declared Testimony"* and *"Trade suggestion — review and edit"* |
+| **Trade Badge** | `variant="verified"` claiming *"NSQF Level 4 Government Certified"* without proof | `variant="outline"` stating *"Self-Declared Testimony"* and *"Trade suggestion: review and edit"* |
+
+---
+
+## 25. 30-POINT ANTI-AI DESIGN GOVERNANCE
+
+Every frontend pull request, commit, and component review must comply with the 30-Point Anti-AI Quality Standard:
+
+1. **Harsh Gradients:** Prohibited. No saturated cyan-to-purple or neon multi-stop gradients.
+2. **Pure White Backgrounds:** Prohibited for page body. Must use Warm Ivory (`#F7F5F0`) canvas; cards use `#FFFFFF` or `bg-card`.
+3. **Rainbow Coloring:** Prohibited. Palette restricted to Forest Green, Warm Sand, Warm Ivory, and Charcoal.
+4. **Heavy Blurry Shadows:** Prohibited (`shadow-2xl`). Replaced with physical calibrated document elevations (`shadow-sovereign-sm/md`).
+5. **Liquid Glass Effects:** Prohibited. No decorative `backdrop-blur-sm` or frosted glass panels.
+6. **Purple/Black Dark AI Tropes:** Prohibited. The platform is grounded in natural daylight parchment tones.
+7. **Floating Gradient Blur Orbs:** Prohibited (`bg-gradient-to-r blur-3xl opacity-30`).
+8. **Centered Generic AI Heros:** Prohibited. Heros must have concrete domain copy, tactile dual-pane evidence, or clear worker action paths.
+9. **Glowing Pill Badges:** Prohibited (`ring-2 ring-primary/50 animate-pulse`). Badges must be solid or hairline outlined.
+10. **Repetitive 3-Card Partitions:** Prohibited. Vary layout with data tables, editorial lists, two-column split panels, or document cards.
+11. **Fabricated Metrics & Badges:** Prohibited. No ungrounded percentages ("99.9% Faster") or unverified partner counts.
+12. **Decorative Icon Overdose:** Prohibited. Never prepend arbitrary icons to every heading.
+13. **Sparkles Icon for AI:** Prohibited. Replace with craft-accurate tools (`FileText`, `Award`, `Mic`, `Scissors`).
+14. **Hover Sliding Arrows:** Prohibited (`group-hover:translate-x-1`). Keep transitions subtle and stationary.
+15. **Unearned "Verified" Labels:** Prohibited on self-declared user data. Clearly label as *"Self-Declared Testimony"*.
+16. **AI Marketing Jargon:** Prohibited. Run copy through `humanizer` to eliminate words like "revolutionize", "seamless", "synergy".
+17. **Forced Triads:** Prohibited. Do not force every feature explanation into three arbitrary bullet points.
+18. **Not-X-But-Y Contrasts:** Prohibited. State what the product is directly.
+19. **One-Line Chatbot Closers:** Prohibited. Omit cheesy taglines at section footers.
+20. **Robot Tone:** Prohibited. Maintain respectful, dignified, natural tone suited to skilled informal workers.
+21. **Oversized Soft Radius:** Prohibited (`rounded-2xl`, `rounded-3xl` on cards and panels). Standardize on `rounded-md` (6px) and `rounded-sm` (4px).
+22. **Radial Dot Background Patterns:** Prohibited (`bg-[radial-gradient...]`).
+23. **Em Dash Overuse:** Prohibited in titles and badges. Use colons or clean sentence breaks.
+24. **Identical Visual Style Across Contexts:** Prohibited. Distinguish contractor enterprise management from artisan sovereign cards.
+25. **Repetitive Checkmark Lists:** Prohibited. Use domain-specific icons or numbered sequential steps.
+26. **Fabricated Testimonials:** Prohibited. Display only real feedback tied to cryptographically confirmed bookings.
+27. **Missing Focus Rings:** Prohibited. Always provide `focus-visible:ring-2 focus-visible:ring-forest`.
+28. **Missing Skeleton Loaders:** Prohibited. Every async page or card grid must implement a geometry-matching skeleton.
+29. **Missing Terms of Service:** Required at `/terms` with permanent zero-commission guarantee and legal review disclaimers.
+30. **Missing Privacy Policy:** Required at `/privacy` with DPDP compliance, zero Aadhaar persistence, and cryptographic protections.
+
+---
+
+## 26. LEGAL & TRUST ARCHITECTURE DIRECTIVES
+
+- **Terms of Service (`/terms`):** Fully rendered, structured 12-section terms establishing:
+  - Permanent constitutional invariant: `platform_commission_amount = 0.00` on artisan wages.
+  - `CLASS_B_CONTROLLED_ROLLOUT` geographic boundary (Guwahati Urban & Shillong Urban).
+  - Explicit legal disclaimer: Provided for operational transparency during controlled rollout; subject to formal statutory counsel review prior to general public expansion.
+- **Privacy Policy (`/privacy`):** Fully rendered, structured 9-section DPDP compliance document establishing:
+  - Zero raw Aadhaar storage (only one-way cryptographic SHA-256 hashes generated for identity anchoring).
+  - Worker sovereign right to revoke, edit, unpublish, or delete profile data at any time.
+  - Explicit legal disclaimer: Subject to ongoing DPDP Act 2023 compliance audit prior to multi-state expansion.

@@ -10,7 +10,6 @@ import {
   Eye,
   Edit3,
   ExternalLink,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   ChevronDown,
@@ -41,7 +40,7 @@ export function DashboardHeader({
   const [showTasks, setShowTasks] = React.useState(false);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
+    <div className="relative overflow-hidden rounded-md bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
       {/* Top Banner: Sovereign Status & Publication Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-forest/10">
         <div className="flex items-center gap-3">
@@ -88,7 +87,7 @@ export function DashboardHeader({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-start sm:items-center gap-4 sm:gap-6">
           {/* Avatar / Portrait */}
-          <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-2xl overflow-hidden border-2 border-sand/60 shadow-sovereign-sm bg-forest-900">
+          <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-md overflow-hidden border-2 border-sand/60 shadow-sovereign-sm bg-forest-900">
             {profile.avatarUrl ? (
               <Image
                 src={profile.avatarUrl}

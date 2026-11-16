@@ -11,8 +11,8 @@ import {
   Menu,
   X,
   User,
+  UserCheck,
   LogOut,
-  Sparkles,
   ChevronDown,
   LayoutDashboard,
   CalendarCheck,
@@ -195,7 +195,7 @@ export function InstitutionalHeader() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/login" className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-sand-800" />
+                    <UserCheck className="w-3.5 h-3.5 text-sand-800" />
                     <span>Switch Demo Persona</span>
                   </Link>
                 </DropdownMenuItem>

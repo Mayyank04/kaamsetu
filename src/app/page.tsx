@@ -8,7 +8,7 @@ import {
   Award,
   Mic,
   Search,
-  Sparkles,
+  QrCode,
   ArrowRight,
   CheckCircle2,
   Lock,
@@ -501,7 +501,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                 <div className="p-4 rounded-xs bg-forest-700/70 border border-forest-500/40 space-y-2">
                   <div className="flex items-center gap-2 text-sand">
-                    <CheckCircle2 className="h-4 w-4" />
+                    <Lock className="h-4 w-4" />
                     <span className="font-bold text-xs uppercase tracking-wider">Aadhaar VID Privacy</span>
                   </div>
                   <p className="text-xs text-ivory/70 leading-relaxed">
@@ -511,7 +511,7 @@ export default function HomePage() {
 
                 <div className="p-4 rounded-xs bg-forest-700/70 border border-forest-500/40 space-y-2">
                   <div className="flex items-center gap-2 text-sand">
-                    <CheckCircle2 className="h-4 w-4" />
+                    <Mic className="h-4 w-4" />
                     <span className="font-bold text-xs uppercase tracking-wider">Authentic Voice Attestation</span>
                   </div>
                   <p className="text-xs text-ivory/70 leading-relaxed">
@@ -521,7 +521,7 @@ export default function HomePage() {
 
                 <div className="p-4 rounded-xs bg-forest-700/70 border border-forest-500/40 space-y-2">
                   <div className="flex items-center gap-2 text-sand">
-                    <CheckCircle2 className="h-4 w-4" />
+                    <QrCode className="h-4 w-4" />
                     <span className="font-bold text-xs uppercase tracking-wider">Camera-Scannable QR Codes</span>
                   </div>
                   <p className="text-xs text-ivory/70 leading-relaxed">
@@ -531,7 +531,7 @@ export default function HomePage() {
 
                 <div className="p-4 rounded-xs bg-forest-700/70 border border-forest-500/40 space-y-2">
                   <div className="flex items-center gap-2 text-sand">
-                    <CheckCircle2 className="h-4 w-4" />
+                    <Users className="h-4 w-4" />
                     <span className="font-bold text-xs uppercase tracking-wider">Accountable References</span>
                   </div>
                   <p className="text-xs text-ivory/70 leading-relaxed">
@@ -594,8 +594,8 @@ export default function HomePage() {
 
         {/* Quantified Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
-            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-full inline-block mb-1">
+          <div className="p-6 rounded-md border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
+            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-xs inline-block mb-1">
               National Census / PLFS
             </span>
             <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
@@ -609,8 +609,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
-            <span className="text-[10px] font-mono uppercase bg-sand/30 text-sand-800 px-2 py-0.5 rounded-full inline-block mb-1 font-semibold">
+          <div className="p-6 rounded-md border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
+            <span className="text-[10px] font-mono uppercase bg-sand/30 text-sand-800 px-2 py-0.5 rounded-xs inline-block mb-1 font-semibold">
               Constitutional Invariant
             </span>
             <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
@@ -624,8 +624,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
-            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-full inline-block mb-1">
+          <div className="p-6 rounded-md border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
+            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-xs inline-block mb-1">
               Direct Settlement
             </span>
             <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
@@ -639,8 +639,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
-            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-full inline-block mb-1">
+          <div className="p-6 rounded-md border border-forest/15 bg-card text-center space-y-2 shadow-sovereign-sm relative">
+            <span className="text-[10px] font-mono uppercase bg-forest/5 text-forest px-2 py-0.5 rounded-xs inline-block mb-1">
               Class B Rollout
             </span>
             <span className="text-4xl sm:text-5xl font-black text-forest block font-serif">
@@ -656,7 +656,7 @@ export default function HomePage() {
         </div>
 
         {/* Bottom Banner Call to Action */}
-        <div className="rounded-md border border-forest/20 bg-gradient-to-r from-forest via-forest-600 to-forest-700 text-ivory p-8 sm:p-12 shadow-sovereign-md relative overflow-hidden">
+        <div className="rounded-md border border-forest/20 bg-forest text-ivory p-8 sm:p-12 shadow-sovereign-md relative overflow-hidden">
           <div className="absolute inset-0 bg-paper-grid opacity-10 pointer-events-none" />
 
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">

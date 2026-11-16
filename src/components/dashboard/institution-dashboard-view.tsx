@@ -46,10 +46,10 @@ export function InstitutionDashboardView({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Institutional Mission Header */}
-      <div className="bg-white rounded-2xl border border-sand-200/60 p-6 md:p-8 shadow-sm">
+      <div className="bg-card rounded-md border border-forest/15 p-6 md:p-8 shadow-sovereign-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-xl bg-forest-900 text-sand-300 flex items-center justify-center font-bold text-2xl shadow-inner">
+            <div className="w-14 h-14 rounded-sm bg-forest-900 text-sand-300 flex items-center justify-center font-bold text-2xl shadow-inner">
               <GraduationCap className="w-7 h-7" />
             </div>
             <div>
@@ -94,8 +94,8 @@ export function InstitutionDashboardView({
 
       {/* Aggregate Outcomes Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-sand-200/60 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-forest-50 text-forest-700 flex items-center justify-center">
+        <div className="bg-card p-6 rounded-md border border-forest/15 shadow-sovereign-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-sm bg-forest-50 text-forest-700 flex items-center justify-center">
             <Users className="w-6 h-6" />
           </div>
           <div>
@@ -106,8 +106,8 @@ export function InstitutionDashboardView({
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-sand-200/60 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center">
+        <div className="bg-card p-6 rounded-md border border-forest/15 shadow-sovereign-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-sm bg-emerald-50 text-emerald-800 flex items-center justify-center">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
@@ -118,8 +118,8 @@ export function InstitutionDashboardView({
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-sand-200/60 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-sand-50 text-sand-800 flex items-center justify-center">
+        <div className="bg-card p-6 rounded-md border border-forest/15 shadow-sovereign-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-sm bg-sand-50 text-sand-800 flex items-center justify-center">
             <FileCheck2 className="w-6 h-6" />
           </div>
           <div>
@@ -130,8 +130,8 @@ export function InstitutionDashboardView({
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-sand-200/60 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+        <div className="bg-card p-6 rounded-md border border-forest/15 shadow-sovereign-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-sm bg-indigo-50 text-indigo-700 flex items-center justify-center">
             <MapPin className="w-6 h-6" />
           </div>
           <div>
@@ -144,7 +144,7 @@ export function InstitutionDashboardView({
       </div>
 
       {/* Assam Regional Expansion Badges */}
-      <div className="bg-white p-6 rounded-2xl border border-sand-200/60 shadow-sm space-y-3">
+      <div className="bg-card p-6 rounded-md border border-forest/15 shadow-sovereign-sm space-y-3">
         <div className="text-xs font-bold text-forest-800 uppercase tracking-wider flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-forest-600" />
           Assam District Footprint & Expansion Target Hubs
@@ -184,10 +184,10 @@ export function InstitutionDashboardView({
                 <div
                   key={cohort.id}
                   onClick={() => setSelectedCohort(cohort)}
-                  className={`p-5 rounded-2xl border cursor-pointer transition-all ${
+                  className={`p-5 rounded-md border cursor-pointer transition-all ${
                     isSelected
                       ? "border-forest-700 bg-forest-50/50 shadow-sm ring-1 ring-forest-700"
-                      : "border-sand-200 bg-white hover:border-sand-400"
+                      : "border-sand-200 bg-card hover:border-sand-400"
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -228,7 +228,7 @@ export function InstitutionDashboardView({
         </div>
 
         {/* Selected Cohort Detail & Participant Privacy View */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-sand-200/60 shadow-sm p-6 space-y-6">
+        <div className="lg:col-span-2 bg-card rounded-md border border-forest/15 shadow-sovereign-sm p-6 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-sand-100">
             <div>
               <div className="text-xs uppercase font-bold text-forest-600 tracking-wider">

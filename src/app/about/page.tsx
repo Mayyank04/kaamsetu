@@ -9,7 +9,6 @@ import {
   HeartHandshake,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
   Scale,
   Compass,
 } from "lucide-react";

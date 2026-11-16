@@ -4,7 +4,6 @@ import * as React from "react";
 import {
   Award,
   ShieldCheck,
-  Sparkles,
   Users,
   Clock,
   CheckCircle2,
@@ -78,7 +77,7 @@ export function ProfileSkills({ skills }: ProfileSkillsProps) {
   const selfDeclared = skills.filter((s) => s.verificationType === "self_declared");
 
   return (
-    <div className="rounded-2xl bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
+    <div className="rounded-md bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
       <div className="pb-4 border-b border-forest/10">
         <div className="flex items-center gap-2">
           <Award className="w-5 h-5 text-forest" />

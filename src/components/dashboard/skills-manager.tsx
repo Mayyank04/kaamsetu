@@ -4,7 +4,7 @@ import * as React from "react";
 import {
   ShieldCheck,
   Award,
-  Sparkles,
+  Mic,
   Users,
   Plus,
   Trash2,
@@ -73,8 +73,8 @@ export function SkillsManager({
       case "voice_attested":
         return (
           <Badge className="bg-forest/15 text-forest border-forest/30 text-[10px] font-mono gap-1">
-            <Sparkles className="w-3 h-3 text-sand-600" />
-            VOICE-ATTESTED AI
+            <Mic className="w-3 h-3 text-forest" />
+            VOICE ATTESTATION
           </Badge>
         );
       case "peer_confirmed":
@@ -99,7 +99,7 @@ export function SkillsManager({
   };
 
   return (
-    <div className="rounded-2xl bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
+    <div className="rounded-md bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-forest/10">
         <div>

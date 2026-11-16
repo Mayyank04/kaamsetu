@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { X, Sparkles, AlertCircle, Save } from "lucide-react";
+import { X, Edit3, AlertCircle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,11 +66,11 @@ export function ProfileEditorModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-card w-full max-w-xl rounded-2xl border border-forest/20 shadow-sovereign-xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-card w-full max-w-xl rounded-md border border-forest/20 shadow-sovereign-md p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between pb-3 border-b border-forest/10">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-forest" />
+            <Edit3 className="w-4 h-4 text-forest" />
             <h3 className="font-serif text-lg font-bold text-forest">
               Edit Worker Profile & Rates
             </h3>

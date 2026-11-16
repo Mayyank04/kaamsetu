@@ -14,10 +14,12 @@ import {
   SovereignSuccessCard,
   SovereignCardData,
 } from "@/components/onboarding/sovereign-success-card";
+import Link from "next/link";
 import {
   ShieldCheck,
   ChevronLeft,
-  Sparkles,
+  RotateCcw,
+  Mic,
   AlertCircle,
   RefreshCw,
   Check,
@@ -323,7 +325,7 @@ export function OnboardingWizard() {
       {draftRestored && currentStep > 1 && (
         <div className="p-3 rounded-md bg-forest/5 border border-forest/15 text-xs text-forest flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-sand-500 shrink-0" />
+            <RotateCcw className="w-4 h-4 text-forest shrink-0" />
             <span>Resumed your saved onboarding session. Previous steps are preserved.</span>
           </div>
           <button
@@ -446,8 +448,8 @@ export function OnboardingWizard() {
       {currentStep === 2 && (
         <div className="animate-in fade-in duration-300">
           <div className="text-center max-w-xl mx-auto mb-6 space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest/5 border border-forest/15 text-forest text-xs font-mono">
-              <Sparkles className="w-3.5 h-3.5 text-sand" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-forest/5 border border-forest/15 text-forest text-xs font-mono">
+              <Mic className="w-3.5 h-3.5 text-forest" />
               <span>STEP 2 OF 4: {inputMode === "voice" ? "VOICE ATTESTATION" : "TEXT ATTESTATION"}</span>
             </div>
             <h2 className="font-serif text-2xl sm:text-3xl font-bold text-forest tracking-tight">
@@ -495,8 +497,8 @@ export function OnboardingWizard() {
 
       {/* INLINE AUTHENTICATION MODAL (Triggered when unauthenticated artisan approves Step 3) */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-forest/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-card w-full max-w-md rounded-2xl border border-forest/20 p-6 sm:p-8 shadow-sovereign-lg space-y-6 relative">
+        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-6 sm:p-8 shadow-sovereign-md space-y-6 relative">
             <button
               type="button"
               onClick={() => setShowAuthModal(false)}
@@ -507,7 +509,7 @@ export function OnboardingWizard() {
             </button>
 
             <div className="space-y-2 text-center">
-              <div className="w-12 h-12 rounded-full bg-forest/10 border border-forest/20 text-forest mx-auto flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xs bg-forest/10 border border-forest/20 text-forest mx-auto flex items-center justify-center">
                 <Lock className="w-5 h-5" />
               </div>
               <h3 className="font-serif text-xl sm:text-2xl font-bold text-forest">
@@ -519,15 +521,15 @@ export function OnboardingWizard() {
             </div>
 
             {authError && (
-              <div className="p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-800 flex items-center gap-2">
+              <div className="p-3 rounded-xs bg-red-50 border border-red-200 text-xs text-red-800 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
                 <span>{authError}</span>
               </div>
             )}
 
             {authDemoHint && (
-              <div className="p-3 rounded-md bg-sand/30 border border-sand/50 text-xs text-forest flex items-center gap-2">
-                <Sparkles className="w-4 h-4 shrink-0 text-sand-700" />
+              <div className="p-3 rounded-xs bg-sand/30 border border-sand/50 text-xs text-forest flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 shrink-0 text-sand-700" />
                 <span>{authDemoHint}</span>
               </div>
             )}
@@ -539,7 +541,7 @@ export function OnboardingWizard() {
                     Indian Mobile Number
                   </label>
                   <div className="flex">
-                    <span className="inline-flex items-center px-3.5 rounded-l-xl border border-r-0 border-forest/20 bg-forest/5 text-xs font-mono font-bold text-forest">
+                    <span className="inline-flex items-center px-3.5 rounded-l-xs border border-r-0 border-forest/20 bg-forest/5 text-xs font-mono font-bold text-forest">
                       +91
                     </span>
                     <input
@@ -575,7 +577,7 @@ export function OnboardingWizard() {
                     value={authOtp}
                     onChange={(e) => setAuthOtp(e.target.value.replace(/\D/g, ""))}
                     placeholder="123456"
-                    className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xl border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
+                    className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xs border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
                   />
                 </div>
 
@@ -595,6 +597,14 @@ export function OnboardingWizard() {
                   >
                     {authIsLoading ? "Verifying..." : "Verify & Mint Credential"}
                   </Button>
+                </div>
+
+                {/* Terms and Privacy policy links */}
+                <div className="text-center text-[10px] text-charcoal-muted space-x-1 pt-1">
+                  <span>By verifying, you accept the</span>
+                  <Link href="/terms" target="_blank" className="underline hover:text-forest">Terms</Link>
+                  <span>and</span>
+                  <Link href="/privacy" target="_blank" className="underline hover:text-forest">Privacy Policy</Link>
                 </div>
               </form>
             )}
