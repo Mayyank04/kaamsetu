@@ -26,8 +26,10 @@ export async function POST(request: NextRequest) {
         message: result.message,
         isSandbox: result.isSandbox,
         sandboxCode: result.sandboxCode,
+        hasActiveChallenge: result.hasActiveChallenge,
         requiresDemoCode: result.requiresDemoCode,
         retryAfterSeconds: result.retryAfterSeconds,
+        nextAllowedAt: result.nextAllowedAt,
       },
       {
         status: result.statusCode || (result.success ? 200 : 400),
