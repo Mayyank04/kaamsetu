@@ -218,7 +218,8 @@ export async function checkRateLimit(
           nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
           isInfrastructureError: true,
           statusCode: 503,
-          reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
+          reason:
+            "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
         };
       }
 
@@ -231,7 +232,7 @@ export async function checkRateLimit(
           nextAllowedAt: remSec > 0 ? new Date(Date.now() + remSec * 1000).toISOString() : undefined,
           reason: row.allowed
             ? undefined
-            : `Rate limit exceeded. Try again in ${remSec} seconds.`,
+            : `Please wait ${remSec} seconds before requesting a new code.`,
         };
       }
 
@@ -245,7 +246,8 @@ export async function checkRateLimit(
         nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
         isInfrastructureError: true,
         statusCode: 503,
-        reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
+        reason:
+          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
       };
     } catch (err: unknown) {
       console.error(
@@ -266,7 +268,8 @@ export async function checkRateLimit(
         nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
         isInfrastructureError: true,
         statusCode: 503,
-        reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
+        reason:
+          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
       };
     }
   }
@@ -343,7 +346,10 @@ export async function validateOtpSendRateLimit(
         allowed: false,
         remainingSeconds: 60,
         nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
-        reason: "We're temporarily unable to process this request. Please try again shortly.",
+        isInfrastructureError: true,
+        statusCode: 503,
+        reason:
+          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
       };
     }
     throw err;
@@ -415,7 +421,10 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "We're temporarily unable to process this request. Please try again shortly.",
+        isInfrastructureError: true,
+        statusCode: 503,
+        reason:
+          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
       };
     }
     throw err;
@@ -465,7 +474,8 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
           remainingSeconds: 60,
           isInfrastructureError: true,
           statusCode: 503,
-          reason: "We're temporarily unable to process this request. Please try again shortly.",
+          reason:
+            "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
         };
       }
 
@@ -474,7 +484,10 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
         return {
           allowed: false,
           remainingSeconds: 60,
-          reason: "We're temporarily unable to process this request. Please try again shortly.",
+          isInfrastructureError: true,
+          statusCode: 503,
+          reason:
+            "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
         };
       }
 
@@ -533,7 +546,8 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
         remainingSeconds: 60,
         isInfrastructureError: true,
         statusCode: 503,
-        reason: "We're temporarily unable to process this request. Please try again shortly.",
+        reason:
+          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
       };
     }
   }
@@ -667,7 +681,10 @@ export async function validateLoginRateLimit(
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "We're temporarily unable to process this request. Please try again shortly.",
+        isInfrastructureError: true,
+        statusCode: 503,
+        reason:
+          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
       };
     }
     throw err;

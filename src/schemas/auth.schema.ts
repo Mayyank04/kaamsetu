@@ -1,23 +1,34 @@
 import { z } from "zod";
+import {
+  INDIAN_MOBILE_REGEX,
+  INVALID_PHONE_MESSAGE,
+  validateIndianMobile,
+} from "@/lib/utilities/phone";
 
-export const indianMobileRegex = /^[6-9]\d{9}$/;
+export const indianMobileRegex = INDIAN_MOBILE_REGEX;
 
 export const phoneAuthSchema = z.object({
   phone: z
-    .string()
+    .string({ required_error: "Mobile number is required" })
     .trim()
-    .transform((val) => val.replace(/[^\d]/g, ""))
     .refine(
-      (val) => {
-        // Strip 91 prefix if included
-        const clean = val.startsWith("91") && val.length === 12 ? val.slice(2) : val;
-        return indianMobileRegex.test(clean);
-      },
+      (val) => validateIndianMobile(val).valid,
       {
-        message: "Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)",
+        message: INVALID_PHONE_MESSAGE,
       }
-    ),
-  role: z.enum(["worker", "contractor", "employer", "verifier", "customer", "admin", "institution"]).default("worker"),
+    )
+    .transform((val) => validateIndianMobile(val).clean10),
+  role: z
+    .enum([
+      "worker",
+      "contractor",
+      "employer",
+      "verifier",
+      "customer",
+      "admin",
+      "institution",
+    ])
+    .default("worker"),
   fullName: z
     .string()
     .trim()
@@ -28,12 +39,31 @@ export const phoneAuthSchema = z.object({
 });
 
 export const otpVerificationSchema = z.object({
-  phone: z.string().min(10),
+  phone: z
+    .string({ required_error: "Mobile number is required" })
+    .trim()
+    .refine(
+      (val) => validateIndianMobile(val).valid,
+      {
+        message: INVALID_PHONE_MESSAGE,
+      }
+    )
+    .transform((val) => validateIndianMobile(val).clean10),
   otp: z
-    .string()
+    .string({ required_error: "Verification code is required" })
     .trim()
     .regex(/^\d{6}$/, "Verification code must be exactly 6 digits"),
-  role: z.enum(["worker", "contractor", "employer", "verifier", "customer", "admin", "institution"]).default("worker"),
+  role: z
+    .enum([
+      "worker",
+      "contractor",
+      "employer",
+      "verifier",
+      "customer",
+      "admin",
+      "institution",
+    ])
+    .default("worker"),
   fullName: z.string().optional(),
   intent: z.enum(["registration", "login"]).optional(),
 });

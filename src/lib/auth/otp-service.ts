@@ -25,6 +25,11 @@ import {
   getRateLimitHmacSecret,
 } from "@/lib/security/rate-limiter";
 import { AppRole } from "@/types/database.types";
+import { AuthErrorCode } from "@/lib/auth/auth-error-codes";
+import {
+  validateIndianMobile,
+  INVALID_PHONE_MESSAGE,
+} from "@/lib/utilities/phone";
 
 export interface SendOtpRequest {
   phone: string;
@@ -36,6 +41,7 @@ export interface SendOtpRequest {
 
 export interface SendOtpResponse {
   success: boolean;
+  code?: AuthErrorCode;
   message: string;
   challengeCreated?: boolean;
   hasActiveChallenge?: boolean;
@@ -58,6 +64,7 @@ export interface VerifyOtpRequest {
 
 export interface VerifyOtpResponse {
   success: boolean;
+  code?: AuthErrorCode;
   message: string;
   user?: {
     id: string;
@@ -72,6 +79,8 @@ export interface VerifyOtpResponse {
     workerProfileId?: string | null;
     contractorOrgId?: string | null;
   };
+  verificationMethod?: string;
+  phoneVerified?: boolean;
   sessionToken?: string;
   redirectUrl?: string;
   isSandbox?: boolean;
@@ -140,10 +149,19 @@ export function hashOtpCode(otp: string): string {
  * Signs a session payload for cookie persistence (14-day expiry).
  * Strictly fails closed if cryptographic key material is missing.
  */
-export function signSessionToken(payload: { userId: string; phone: string; role: AppRole; exp?: number }): string {
+export function signSessionToken(payload: {
+  userId?: string;
+  phone: string;
+  role: AppRole;
+  verificationMethod?: string;
+  phoneVerified?: boolean;
+  phoneVerificationStatus?: string;
+  exp?: number;
+}): string {
   const secret = getRateLimitHmacSecret();
+  const userId = payload.userId || `usr-${Date.now()}`;
   const exp = payload.exp ?? Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60; // 14 days
-  const data = JSON.stringify({ ...payload, exp });
+  const data = JSON.stringify({ ...payload, userId, exp });
   const encoded = Buffer.from(data, "utf8").toString("base64url");
   const signature = crypto.createHmac("sha256", secret).update(encoded).digest("base64url");
   return `${encoded}.${signature}`;
@@ -153,7 +171,14 @@ export function signSessionToken(payload: { userId: string; phone: string; role:
  * Verifies a signed session token using constant-time comparison.
  * Strictly fails closed if cryptographic key material is missing.
  */
-export function verifySessionToken(token: string): { userId: string; phone: string; role: AppRole } | null {
+export function verifySessionToken(token: string): {
+  userId: string;
+  phone: string;
+  role: AppRole;
+  verificationMethod?: string;
+  phoneVerified?: boolean;
+  phoneVerificationStatus?: string;
+} | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 2) return null;
@@ -174,6 +199,9 @@ export function verifySessionToken(token: string): { userId: string; phone: stri
       userId: json.userId,
       phone: json.phone,
       role: json.role,
+      verificationMethod: json.verificationMethod,
+      phoneVerified: json.phoneVerified,
+      phoneVerificationStatus: json.phoneVerificationStatus,
     };
   } catch {
     return null;
@@ -185,12 +213,13 @@ export function verifySessionToken(token: string): { userId: string; phone: stri
  */
 export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   const isProduction = process.env.NODE_ENV === "production";
-  const { valid, formatted } = normalizeIndianPhone(req.phone);
+  const { valid, formatted, error } = validateIndianMobile(req.phone);
 
   if (!valid) {
     return {
       success: false,
-      message: "Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.",
+      code: "INVALID_PHONE",
+      message: error || INVALID_PHONE_MESSAGE,
       statusCode: 400,
     };
   }
@@ -202,10 +231,13 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     if (rateLimit.isInfrastructureError) {
       return {
         success: false,
+        code: "DATABASE_UNAVAILABLE",
         challengeCreated: false,
         hasActiveChallenge: false,
         isInfrastructureError: true,
-        message: rateLimit.reason || "Authentication rate limiter temporarily unavailable. Please retry shortly.",
+        message:
+          rateLimit.reason ||
+          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
         retryAfterSeconds: rateLimit.remainingSeconds || 60,
         nextAllowedAt: rateLimit.nextAllowedAt,
         statusCode: rateLimit.statusCode || 503,
@@ -259,6 +291,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     if (hasActiveChallenge) {
       return {
         success: false,
+        code: "ACTIVE_CHALLENGE_EXISTS",
         challengeCreated: false,
         hasActiveChallenge: true,
         retryAfterSeconds: remSec,
@@ -272,6 +305,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
 
     return {
       success: false,
+      code: "RATE_LIMITED",
       challengeCreated: false,
       hasActiveChallenge: false,
       retryAfterSeconds: remSec,
@@ -315,7 +349,9 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       if (isProduction && !isSandbox) {
         return {
           success: false,
-          message: "We're temporarily unable to process this request. Please try again shortly.",
+          code: "DATABASE_UNAVAILABLE",
+          message:
+            "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
           statusCode: 503,
         };
       }
@@ -428,12 +464,13 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
  */
 export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpResponse> {
   const isProduction = process.env.NODE_ENV === "production";
-  const { valid, formatted } = normalizeIndianPhone(req.phone);
+  const { valid, formatted, error } = validateIndianMobile(req.phone);
 
   if (!valid) {
     return {
       success: false,
-      message: "Invalid phone number format.",
+      code: "INVALID_PHONE",
+      message: error || INVALID_PHONE_MESSAGE,
       statusCode: 400,
     };
   }
@@ -443,7 +480,8 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
   if (!lockout.allowed) {
     return {
       success: false,
-      message: lockout.reason || "Too many failed attempts. Account temporarily locked.",
+      code: "OTP_ATTEMPTS_EXCEEDED",
+      message: lockout.reason || "Maximum verification attempts exceeded. Please request a new code.",
       retryAfterSeconds: lockout.remainingSeconds,
       statusCode: 429,
     };
@@ -474,12 +512,14 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
         } else if (res.status_code === "EXPIRED") {
           return {
             success: false,
+            code: "OTP_EXPIRED",
             message: "Verification code has expired. Please request a new code.",
             statusCode: 400,
           };
         } else if (res.status_code === "MAX_ATTEMPTS_EXCEEDED") {
           return {
             success: false,
+            code: "OTP_ATTEMPTS_EXCEEDED",
             message: "Maximum verification attempts exceeded. Please request a new code.",
             statusCode: 429,
           };
@@ -499,6 +539,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
       memoryOtpStore.delete(phoneHashed);
       return {
         success: false,
+        code: "OTP_EXPIRED",
         message: "Verification code has expired. Please request a new code.",
         statusCode: 400,
       };
@@ -507,6 +548,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
     if (memRecord.consumedAt) {
       return {
         success: false,
+        code: "OTP_INVALID",
         message: "Verification code already used. Please request a new code.",
         statusCode: 400,
       };
@@ -515,6 +557,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
     if (memRecord.attempts >= memRecord.maxAttempts) {
       return {
         success: false,
+        code: "OTP_ATTEMPTS_EXCEEDED",
         message: "Maximum verification attempts exceeded. Please request a new code.",
         statusCode: 429,
       };
@@ -522,11 +565,10 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
 
     memRecord.attempts += 1;
 
-    // Verify hash match or plainOtp match in memory record (or standard test code in non-production)
+    // Strict verification: Cryptographic hash match or plainOtp match in memory store
     const matchesCode =
       memRecord.otpHash === otpHashed ||
-      memRecord.plainOtp === req.otp.trim() ||
-      (!isProduction && req.otp === "123456");
+      memRecord.plainOtp === req.otp.trim();
 
     if (matchesCode) {
       verified = true;
@@ -541,6 +583,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
     const failResult = await recordFailedOtpAttempt(formatted);
     return {
       success: false,
+      code: failResult.allowed ? "OTP_INVALID" : "OTP_ATTEMPTS_EXCEEDED",
       message: !failResult.allowed && failResult.reason
         ? failResult.reason
         : "Invalid verification code. Please check and try again.",
@@ -624,6 +667,9 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
     userId,
     phone: formatted,
     role: resolvedRole,
+    verificationMethod,
+    phoneVerified,
+    phoneVerificationStatus,
   });
 
   const targetDashboard = resolvedRole === "worker" ? "/dashboard" : "/contractor/dashboard";
@@ -646,6 +692,8 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
       workerProfileId,
       contractorOrgId,
     },
+    verificationMethod,
+    phoneVerified,
     sessionToken,
     redirectUrl: targetDashboard,
     isSandbox,

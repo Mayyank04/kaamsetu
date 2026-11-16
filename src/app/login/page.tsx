@@ -4,8 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ShieldCheck,
-  ArrowRight,
+  validateIndianMobile,
+  INVALID_PHONE_MESSAGE,
+} from "@/lib/utilities/phone";
+import {
   Smartphone,
   CheckCircle2,
   AlertCircle,
@@ -15,6 +17,8 @@ import {
   Info,
   Clock,
   Copy,
+  ShieldCheck,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,10 +53,10 @@ export default function LoginPage() {
 
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const cleanDigits = phoneNumber.replace(/\D/g, "");
-    if (!cleanDigits || cleanDigits.length < 10) {
+    const validation = validateIndianMobile(phoneNumber);
+    if (!validation.valid) {
       setStatusMessage({
-        text: "Please enter a valid 10-digit Indian mobile number.",
+        text: validation.error || INVALID_PHONE_MESSAGE,
         isError: true,
       });
       return;
@@ -115,7 +119,7 @@ export default function LoginPage() {
       } else {
         setSandboxCode(null);
         setStatusMessage({
-          text: data.message || `Verification code dispatched to +91 ${cleanDigits.slice(-10)}.`,
+          text: data.message || `Verification code dispatched to +91 ${validation.clean10}.`,
           isError: false,
         });
       }
@@ -281,15 +285,21 @@ export default function LoginPage() {
                     className="w-full h-11 px-3.5 rounded-r-xs border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20 font-mono"
                   />
                 </div>
-                <p className="text-[11px] text-charcoal-muted">
-                  Registered Indian mobile number for cryptographic OTP verification.
-                </p>
+                {phoneNumber.trim().length > 0 && !validateIndianMobile(phoneNumber).valid ? (
+                  <p className="text-[11px] text-red-600 font-medium">
+                    {INVALID_PHONE_MESSAGE}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-charcoal-muted">
+                    Registered Indian mobile number for cryptographic OTP verification.
+                  </p>
+                )}
               </div>
 
               <Button
                 type="submit"
-                disabled={isLoading || cooldownSeconds > 0}
-                className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm"
+                disabled={isLoading || cooldownSeconds > 0 || !validateIndianMobile(phoneNumber).valid}
+                className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   "Sending OTP..."

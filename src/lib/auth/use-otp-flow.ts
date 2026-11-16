@@ -1,6 +1,10 @@
 "use client";
 
 import * as React from "react";
+import {
+  validateIndianMobile,
+  INVALID_PHONE_MESSAGE,
+} from "@/lib/utilities/phone";
 
 export type OtpFlowState =
   | "idle"
@@ -9,9 +13,10 @@ export type OtpFlowState =
   | "code_sent"
   | "verifying"
   | "verified"
-  | "request_failed"
   | "rate_limited"
   | "expired"
+  | "request_failed"
+  | "configuration_failed"
   | "verification_failed";
 
 export interface UseOtpFlowOptions {
@@ -42,7 +47,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
   const [state, setState] = React.useState<OtpFlowState>("idle");
   const [step, setStep] = React.useState<1 | 2>(1);
-  const [phone, setPhone] = React.useState(initialPhone);
+  const [phone, setPhoneState] = React.useState(initialPhone);
   const [otp, setOtp] = React.useState("");
   const [fullName, setFullName] = React.useState("");
   const [isSandbox, setIsSandbox] = React.useState(false);
@@ -56,6 +61,47 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
+  // Derived validation
+  const phoneValidation = React.useMemo(() => validateIndianMobile(phone), [phone]);
+  const isPhoneValid = phoneValidation.valid;
+  const phoneDigits = phone.replace(/\D/g, "");
+
+  // Update phone with immediate inline validation feedback
+  const setPhone = React.useCallback((val: string) => {
+    setPhoneState(val);
+    const trimmed = val.trim();
+    const digits = trimmed.replace(/\D/g, "");
+
+    // Clear error if empty
+    if (!trimmed) {
+      setErrorMessage(null);
+      return;
+    }
+
+    // If alphabets or special characters entered
+    if (/[a-zA-Z]/.test(trimmed)) {
+      setErrorMessage(INVALID_PHONE_MESSAGE);
+      return;
+    }
+
+    // If 10 digits entered but invalid starting digit (e.g. 5456565656)
+    if (digits.length === 10 && !/^[6-9]/.test(digits)) {
+      setErrorMessage(INVALID_PHONE_MESSAGE);
+      return;
+    }
+
+    // If starts with invalid digit early (0, 1, 2, 3, 4, 5) when length >= 1 and not country code
+    if (digits.length > 0 && !digits.startsWith("91") && !/^[6-9]/.test(digits)) {
+      setErrorMessage(INVALID_PHONE_MESSAGE);
+      return;
+    }
+
+    // Clear validation error when valid
+    if (digits.length === 10 && /^[6-9]/.test(digits)) {
+      setErrorMessage(null);
+    }
+  }, []);
+
   // Synchronize state from sessionStorage on mount or phone change
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -67,19 +113,22 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
         const cleanCurrent = phone.replace(/\D/g, "");
         const cleanStored = (stored.phone || "").replace(/\D/g, "");
 
-        // If stored session belongs to this phone (or initial phone was empty)
         if (!cleanCurrent || cleanCurrent === cleanStored) {
           if (!phone && stored.phone) {
-            setPhone(stored.phone);
+            setPhoneState(stored.phone);
           }
 
           if (stored.isSandbox !== undefined) setIsSandbox(stored.isSandbox);
           if (stored.sandboxCode) setSandboxCode(stored.sandboxCode);
-          if (stored.hasActiveChallenge !== undefined) setHasActiveChallenge(Boolean(stored.hasActiveChallenge));
+          if (stored.hasActiveChallenge !== undefined)
+            setHasActiveChallenge(Boolean(stored.hasActiveChallenge));
 
           const now = Date.now();
           if (stored.targetTimestamp > now) {
-            const remaining = Math.max(1, Math.ceil((stored.targetTimestamp - now) / 1000));
+            const remaining = Math.max(
+              1,
+              Math.ceil((stored.targetTimestamp - now) / 1000)
+            );
             setCooldownSeconds(remaining);
             setNextAllowedAt(new Date(stored.targetTimestamp));
             setStep(stored.step || 2);
@@ -110,7 +159,9 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
             clearInterval(timerRef.current);
             timerRef.current = null;
           }
-          setState((curr) => (curr === "cooldown" || curr === "rate_limited" ? "idle" : curr));
+          setState((curr) =>
+            curr === "cooldown" || curr === "rate_limited" ? "idle" : curr
+          );
           return 0;
         }
         return prev - 1;
@@ -130,7 +181,9 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     if (typeof window === "undefined") return;
     try {
       const existingRaw = window.sessionStorage.getItem(storageKey);
-      const existing: StoredOtpSession = existingRaw ? JSON.parse(existingRaw) : { phone: "", targetTimestamp: 0, step: 1 };
+      const existing: StoredOtpSession = existingRaw
+        ? JSON.parse(existingRaw)
+        : { phone: "", targetTimestamp: 0, step: 1 };
       const updated: StoredOtpSession = { ...existing, ...data };
       window.sessionStorage.setItem(storageKey, JSON.stringify(updated));
     } catch {
@@ -149,13 +202,17 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
   /**
    * Request OTP code dispatch
+   * Enforces client-side validation: reject invalid numbers without making network request
    */
-  const requestOtp = async (overridePhone?: string, overrideFullName?: string): Promise<boolean> => {
+  const requestOtp = async (
+    overridePhone?: string,
+    overrideFullName?: string
+  ): Promise<boolean> => {
     const targetPhone = (overridePhone || phone).trim();
-    const cleanDigits = targetPhone.replace(/\D/g, "");
+    const validation = validateIndianMobile(targetPhone);
 
-    if (!cleanDigits || cleanDigits.length < 10) {
-      setErrorMessage("Please enter a valid 10-digit Indian mobile number.");
+    if (!validation.valid) {
+      setErrorMessage(validation.error || INVALID_PHONE_MESSAGE);
       setState("idle");
       return false;
     }
@@ -167,7 +224,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
     // If cooldown is actively running
     if (cooldownSeconds > 0) {
-      setErrorMessage(`Please wait ${cooldownSeconds} seconds before requesting a new code.`);
+      setErrorMessage(`You can request another code in ${cooldownSeconds} seconds.`);
       setState("cooldown");
       return false;
     }
@@ -181,7 +238,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: targetPhone,
+          phone: validation.clean10,
           role,
           fullName: (overrideFullName || fullName).trim() || undefined,
           intent,
@@ -189,25 +246,49 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
       });
 
       const data = await res.json();
-      const retrySec = typeof data.retryAfterSeconds === "number" ? data.retryAfterSeconds : 60;
+      const retrySec =
+        typeof data.retryAfterSeconds === "number" ? data.retryAfterSeconds : 60;
       const targetTime = Date.now() + retrySec * 1000;
+
+      // Handle 400 Invalid Phone
+      if (res.status === 400 && data.code === "INVALID_PHONE") {
+        setState("idle");
+        setErrorMessage(data.message || INVALID_PHONE_MESSAGE);
+        return false;
+      }
+
+      // Handle 503 Database / Infrastructure Unavailable
+      if (
+        res.status === 503 ||
+        data.code === "DATABASE_UNAVAILABLE" ||
+        data.isInfrastructureError
+      ) {
+        setState("configuration_failed");
+        setErrorMessage(
+          data.message ||
+            "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later."
+        );
+        return false;
+      }
 
       // Handle 429 Cooldown / Rate Limit
       if (res.status === 429 || (!res.ok && res.status === 429)) {
         setCooldownSeconds(retrySec);
-        setNextAllowedAt(data.nextAllowedAt ? new Date(data.nextAllowedAt) : new Date(targetTime));
+        setNextAllowedAt(
+          data.nextAllowedAt ? new Date(data.nextAllowedAt) : new Date(targetTime)
+        );
 
         if (data.isSandbox !== undefined) setIsSandbox(Boolean(data.isSandbox));
         if (data.sandboxCode) setSandboxCode(data.sandboxCode);
 
-        // If an active challenge already exists for this number, transition to Step 2 so user can enter it
+        // If an active challenge exists, transition to Step 2 so user can enter it
         if (data.hasActiveChallenge || data.sandboxCode) {
           setHasActiveChallenge(true);
           setStep(2);
           setState("code_sent");
           setInfoMessage(
             data.isSandbox
-              ? `A verification code is active for +91 ${cleanDigits.slice(-10)}. Enter test code below.`
+              ? `A verification code is active for +91 ${validation.clean10}. Enter test code below.`
               : `A verification code was already dispatched. Please check your SMS or resend in ${retrySec}s.`
           );
           saveSession({
@@ -223,8 +304,8 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
         // 429 Cooldown without active challenge
         setHasActiveChallenge(false);
-        setState("cooldown");
-        setErrorMessage(data.message || `Please wait ${retrySec} seconds before requesting a new code.`);
+        setState("rate_limited");
+        setErrorMessage(`You can request another code in ${retrySec} seconds.`);
         saveSession({
           phone: targetPhone,
           targetTimestamp: targetTime,
@@ -236,7 +317,10 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
       if (!res.ok || !data.success) {
         setState("request_failed");
-        setErrorMessage(data.message || "Failed to transmit verification code. Please check your connection and try again.");
+        setErrorMessage(
+          data.message ||
+            "Failed to transmit verification code. Please check your connection and try again."
+        );
         return false;
       }
 
@@ -251,12 +335,6 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
         setSandboxCode(data.sandboxCode);
       }
 
-      setInfoMessage(
-        data.isSandbox
-          ? "Sandbox mode enabled. Use the test code displayed below to complete verification."
-          : `Verification code sent via SMS to +91 ${cleanDigits.slice(-10)}.`
-      );
-
       saveSession({
         phone: targetPhone,
         targetTimestamp: targetTime,
@@ -267,10 +345,11 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
       });
 
       return true;
-    } catch (err) {
+    } catch {
       setState("request_failed");
-      const msg = err instanceof Error ? err.message : "Network error. Please try again.";
-      setErrorMessage(msg);
+      setErrorMessage(
+        "Network connection error. Please verify your connection and try again."
+      );
       return false;
     }
   };
@@ -279,26 +358,29 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
    * Verify entered 6-digit OTP code
    */
   const verifyCode = async (overrideOtp?: string): Promise<boolean> => {
-    const code = (overrideOtp || otp).trim();
+    const codeToVerify = (overrideOtp || otp).trim();
 
-    if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+    if (!codeToVerify || codeToVerify.length !== 6) {
       setErrorMessage("Please enter the complete 6-digit verification code.");
-      setState("verification_failed");
       return false;
     }
 
-    if (state === "verifying") return false;
+    if (state === "verifying") {
+      return false;
+    }
 
     setState("verifying");
     setErrorMessage(null);
+
+    const validation = validateIndianMobile(phone);
 
     try {
       const res = await fetch("/api/auth/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone,
-          otp: code,
+          phone: validation.clean10 || phone.replace(/\D/g, "").slice(-10),
+          otp: codeToVerify,
           role,
           fullName: fullName.trim() || undefined,
           intent,
@@ -308,63 +390,65 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        const msg = data.message || "Invalid verification code.";
-        if (msg.toLowerCase().includes("expired")) {
-          setState("expired");
-        } else if (res.status === 429 || msg.toLowerCase().includes("maximum")) {
+        if (data.code === "OTP_ATTEMPTS_EXCEEDED" || res.status === 429) {
           setState("rate_limited");
+          setErrorMessage(
+            data.message ||
+              "Maximum verification attempts exceeded. Please request a new code."
+          );
+        } else if (data.code === "OTP_EXPIRED") {
+          setState("expired");
+          setErrorMessage(
+            data.message || "Verification code has expired. Please request a new code."
+          );
         } else {
           setState("verification_failed");
+          setErrorMessage(
+            data.message || "Invalid verification code. Please check and try again."
+          );
         }
-        setErrorMessage(msg);
         return false;
       }
 
-      // Success
+      // Successful verification
       setState("verified");
       clearSession();
 
-      if (onSuccess) {
+      if (onSuccess && data.user) {
         await onSuccess(data.user);
       }
 
       return true;
-    } catch (err) {
+    } catch {
       setState("verification_failed");
-      const msg = err instanceof Error ? err.message : "Verification request failed.";
-      setErrorMessage(msg);
+      setErrorMessage(
+        "Network error verifying code. Please try again."
+      );
       return false;
     }
   };
 
-  /**
-   * Return to Step 1 to edit phone number while preserving draft & cooldown
-   */
   const editPhone = () => {
     setStep(1);
+    setOtp("");
     setErrorMessage(null);
     setInfoMessage(null);
-    // Keep cooldown timer running
+    if (state !== "cooldown" && state !== "rate_limited") {
+      setState("idle");
+    }
   };
 
-  /**
-   * Helper to copy sandbox test code
-   */
-  const copySandboxCode = async (): Promise<boolean> => {
-    if (!sandboxCode) return false;
+  const copySandboxCode = async () => {
+    if (!sandboxCode) return;
     try {
       await navigator.clipboard.writeText(sandboxCode);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
-      return true;
     } catch {
-      return false;
+      // Fallback
     }
   };
 
-  /**
-   * Helper to auto-fill sandbox code into the input
-   */
   const autoFillSandboxCode = () => {
     if (sandboxCode) {
       setOtp(sandboxCode);
@@ -372,55 +456,73 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     }
   };
 
-  /**
-   * Evaluates the exact Section 6 button text
-   */
-  const getPrimaryButtonText = (): string => {
-    if (state === "requesting") return "Sending Code...";
-    if (isCooldown && !hasActiveChallenge) return `Resend in ${cooldownSeconds}s`;
-    if (isCooldown && hasActiveChallenge) return "Enter Existing Code";
-    if (!isCooldown && (state === "code_sent" || state === "cooldown" || state === "rate_limited" || state === "expired" || hasActiveChallenge)) {
-      return "Resend Verification Code";
-    }
-    if (state === "request_failed") return "Try Again";
-    return "Send Verification Code";
-  };
-
-  /**
-   * Handles primary action button click on Step 1
-   */
-  const handlePrimaryAction = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (state === "requesting" || (isCooldown && !hasActiveChallenge)) {
-      return;
-    }
-    if (isCooldown && hasActiveChallenge) {
-      setStep(2);
-      return;
-    }
-    await requestOtp();
-  };
-
-  /**
-   * Reset all state to idle
-   */
   const reset = () => {
     setState("idle");
     setStep(1);
+    setPhoneState(initialPhone);
     setOtp("");
+    setFullName("");
+    setSandboxCode(null);
+    setHasActiveChallenge(false);
+    setCooldownSeconds(0);
+    setNextAllowedAt(null);
     setErrorMessage(null);
     setInfoMessage(null);
-    setCooldownSeconds(0);
-    setHasActiveChallenge(false);
     clearSession();
+  };
+
+  const isLoading = state === "requesting" || state === "verifying";
+  const isVerified = state === "verified";
+
+  const getPrimaryButtonText = (): string => {
+    if (isLoading) {
+      return step === 1 ? "Sending Code..." : "Verifying...";
+    }
+
+    if (step === 1) {
+      if (isCooldown) {
+        if (hasActiveChallenge) {
+          return "Enter Existing Code";
+        }
+        return `Resend in ${cooldownSeconds}s`;
+      }
+      if (state === "configuration_failed" || state === "request_failed") {
+        return "Try Again";
+      }
+      return "Send Verification Code";
+    }
+
+    // Step 2
+    if (state === "verified") {
+      return "Verified";
+    }
+    return "Verify & Mint Credential";
+  };
+
+  const handlePrimaryAction = async () => {
+    if (step === 1) {
+      if (isCooldown && hasActiveChallenge) {
+        setStep(2);
+        return;
+      }
+      if (!isCooldown) {
+        await requestOtp();
+      }
+      return;
+    }
+
+    await verifyCode();
   };
 
   return {
     state,
+    setState,
     step,
     setStep,
     phone,
     setPhone,
+    isPhoneValid,
+    phoneDigits,
     otp,
     setOtp,
     fullName,
@@ -430,13 +532,13 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     hasActiveChallenge,
     cooldownSeconds,
     nextAllowedAt,
+    isCooldown,
+    isLoading,
+    isVerified,
     errorMessage,
     setErrorMessage,
     infoMessage,
-    setInfoMessage,
     copiedCode,
-    isLoading: state === "requesting" || state === "verifying",
-    isCooldown: cooldownSeconds > 0,
     getPrimaryButtonText,
     handlePrimaryAction,
     requestOtp,

@@ -1,11 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { otpVerificationSchema } from "@/schemas/auth.schema";
 import { verifyOtp } from "@/lib/auth/otp-service";
+import { INVALID_PHONE_MESSAGE } from "@/lib/utilities/phone";
 
 export async function POST(request: NextRequest) {
   try {
-    const json = await request.json();
-    const data = otpVerificationSchema.parse(json);
+    let json: unknown;
+    try {
+      json = await request.json();
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "OTP_INVALID",
+          message: "Invalid request payload. Please check your verification code.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const parseResult = otpVerificationSchema.safeParse(json);
+    if (!parseResult.success) {
+      const issue = parseResult.error.issues[0];
+      const isPhoneIssue = issue?.path?.includes("phone");
+      return NextResponse.json(
+        {
+          success: false,
+          code: isPhoneIssue ? "INVALID_PHONE" : "OTP_INVALID",
+          message: issue?.message || (isPhoneIssue ? INVALID_PHONE_MESSAGE : "Invalid verification code."),
+        },
+        { status: 400 }
+      );
+    }
+
+    const data = parseResult.data;
 
     const result = await verifyOtp({
       phone: data.phone,
@@ -18,6 +46,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(
       {
         success: result.success,
+        code: result.code,
         message: result.message,
         user: result.user,
         redirectUrl: result.redirectUrl,
@@ -44,7 +73,11 @@ export async function POST(request: NextRequest) {
   } catch (err: unknown) {
     console.error("[OTP_VERIFY_ROUTE_ERROR]", err);
     return NextResponse.json(
-      { success: false, message: "Verification failed. Please check your verification code and try again." },
+      {
+        success: false,
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Verification failed. Please check your verification code and try again.",
+      },
       { status: 400 }
     );
   }
