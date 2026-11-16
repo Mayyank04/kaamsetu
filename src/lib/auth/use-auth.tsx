@@ -9,7 +9,6 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   isDemo: boolean;
-  switchPersona: (personaKey: string) => Promise<string>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -51,26 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshSession();
   }, [refreshSession]);
 
-  const switchPersona = async (personaKey: string): Promise<string> => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/auth/persona", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ personaKey }),
-      });
-      const data = await res.json();
-      if (data.success && data.user) {
-        setUser(data.user);
-        setIsDemo(Boolean(data.isDemo));
-        return data.redirectUrl || "/dashboard";
-      }
-      throw new Error(data.message || "Failed to switch persona");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const logout = async () => {
     setIsLoading(true);
     try {
@@ -91,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         isDemo,
-        switchPersona,
         logout,
         refreshSession,
       }}
@@ -110,7 +88,6 @@ export function useAuth() {
       isAuthenticated: false,
       isLoading: false,
       isDemo: false,
-      switchPersona: async () => "/dashboard",
       logout: async () => {},
       refreshSession: async () => {},
     };

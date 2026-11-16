@@ -49,7 +49,8 @@
     "test:phase35.2": "tsx test/phase-35-2-production-remediation.test.ts",
     "test:phase36.1": "tsx test/phase-36-1-anti-ai-reconstruction.test.ts",
     "test:phase37": "tsx test/phase-37-architecture-modernization.test.ts",
-    "test:phase38": "tsx test/phase-38-security-audit.test.ts"
+    "test:phase38": "tsx test/phase-38-security-audit.test.ts",
+    "test:phase39": "tsx test/phase-39-production-reconstruction.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

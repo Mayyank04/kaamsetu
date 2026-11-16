@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       message,
       registryId: savedRecord.registryId,
       slug: savedRecord.slug,
-      isDemo: user.isDemo,
+      isDemo: false,
     });
   } catch (error) {
     return handleApiError(error);

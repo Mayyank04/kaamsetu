@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { DEMO_PERSONAS, DemoPersona } from "@/lib/auth/personas";
 import { isConfigured } from "@/lib/env";
 import { AppRole } from "@/types/database.types";
 import { AppError } from "@/lib/error/app-error";
@@ -223,41 +222,10 @@ export async function getAuthenticatedSession(): Promise<{
       }
     }
   } catch (err) {
-    // Session token verification failure, fall through to demo check
+    // Session token verification failure, visitor is unauthenticated
   }
 
-  // 2. Demo Persona Authentication - Strictly isolated behind explicit environment flag
-  if (isConfigured.demoAuth) {
-    try {
-      const cookieStore = await cookies();
-      const demoPersonaKey = cookieStore.get("kaamsetu_demo_persona")?.value;
-
-      if (demoPersonaKey) {
-        const matched = DEMO_PERSONAS.find((p) => p.personaKey === demoPersonaKey);
-        if (matched) {
-          return {
-            user: {
-              id: matched.id,
-              phone: matched.phone || null,
-              fullName: matched.fullName,
-              role: matched.role as AppRole,
-              avatarUrl: matched.avatarUrl || null,
-              isDemo: true,
-              workerProfileId: matched.role === "worker" ? `w-pro-01` : null,
-              contractorOrgId: matched.role === "contractor" ? `org-demo-01` : null,
-              institutionId: matched.role === "institution" ? `inst-demo-01` : null,
-              slug: matched.slug || null,
-            },
-            isDemo: true,
-          };
-        }
-      }
-    } catch {
-      // Ignore cookie errors in headless tests
-    }
-  }
-
-  // 3. Visitor is completely unauthenticated
+  // 2. Visitor is completely unauthenticated
   return {
     user: null,
     isDemo: false,

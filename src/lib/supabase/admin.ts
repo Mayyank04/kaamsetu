@@ -17,8 +17,9 @@ export function createAdminClient() {
     );
   }
 
-  const effectiveKey = serviceKey || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return createClient(env.NEXT_PUBLIC_SUPABASE_URL, effectiveKey, {
+  const effectiveUrl = env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-kaamsetu.supabase.co";
+  const effectiveKey = serviceKey || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
+  return createClient(effectiveUrl, effectiveKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

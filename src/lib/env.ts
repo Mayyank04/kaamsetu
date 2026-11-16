@@ -6,23 +6,29 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z
     .string()
     .url("NEXT_PUBLIC_SUPABASE_URL must be a valid URL")
-    .default("https://placeholder-kaamsetu.supabase.co"),
+    .optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z
     .string()
     .min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY is required")
-    .default("placeholder-anon-key-kaamsetu-sovereign-trust"),
+    .optional(),
   SUPABASE_SERVICE_ROLE_KEY: z
     .string()
     .min(1)
-    .optional()
-    .default("placeholder-service-role-key"),
+    .optional(),
 
   // Google Gemini API Configuration
   GEMINI_API_KEY: z
     .string()
     .min(1, "GEMINI_API_KEY is required for voice and skill extraction")
-    .optional()
-    .default("placeholder-gemini-api-key"),
+    .optional(),
+
+  // Authentication Verification Mode: 'sandbox' (default, simulated SMS) or 'sms' (live gateway)
+  AUTH_VERIFICATION_MODE: z
+    .enum(["sandbox", "sms"])
+    .default("sandbox"),
+
+  // Optional server-configured sandbox verification code for controlled evaluation
+  SANDBOX_OTP_CODE: z.string().optional(),
 
   // Cryptographic Credential Signing
   CREDENTIAL_SIGNING_KEY: z.string().optional(),
@@ -42,19 +48,9 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
-  // Demo Mode Flags (explicitly disabled in production unless ENABLE_DEMO_AUTH=true)
-  ENABLE_DEMO_AUTH: z
-    .string()
-    .optional()
-    .transform((val) =>
-      process.env.NODE_ENV === "production" ? val === "true" : val !== "false"
-    ),
-  NEXT_PUBLIC_ENABLE_DEMO_AUTH: z
-    .string()
-    .optional()
-    .transform((val) =>
-      process.env.NODE_ENV === "production" ? val === "true" : val !== "false"
-    ),
+  // Demo Mode Flags (Deprecated & permanently disabled)
+  ENABLE_DEMO_AUTH: z.string().optional().default("false"),
+  NEXT_PUBLIC_ENABLE_DEMO_AUTH: z.string().optional().default("false"),
 });
 
 // Parse process.env with runtime safety
@@ -64,6 +60,8 @@ function validateEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    AUTH_VERIFICATION_MODE: process.env.AUTH_VERIFICATION_MODE || "sandbox",
+    SANDBOX_OTP_CODE: process.env.SANDBOX_OTP_CODE,
     CREDENTIAL_SIGNING_KEY: process.env.CREDENTIAL_SIGNING_KEY,
     ACTIVE_SIGNING_KEY_VERSION: process.env.ACTIVE_SIGNING_KEY_VERSION,
     REVOKED_SIGNING_KEY_VERSIONS: process.env.REVOKED_SIGNING_KEY_VERSIONS,
@@ -72,8 +70,8 @@ function validateEnv() {
     ENABLE_IN_MEMORY_RATE_LIMIT_MOCK: process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NODE_ENV: process.env.NODE_ENV,
-    ENABLE_DEMO_AUTH: process.env.ENABLE_DEMO_AUTH,
-    NEXT_PUBLIC_ENABLE_DEMO_AUTH: process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH,
+    ENABLE_DEMO_AUTH: "false",
+    NEXT_PUBLIC_ENABLE_DEMO_AUTH: "false",
   });
 
   if (!parsed.success) {
@@ -97,14 +95,16 @@ export const env = validateEnv();
  */
 export function validateEnvironmentSafety(): void {
   if (process.env.NODE_ENV === "production") {
+    // Check that placeholder Supabase credentials are not masquerading as production
     if (
-      process.env.ENABLE_DEMO_AUTH === "true" ||
-      process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true"
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("placeholder") ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.includes("placeholder")
     ) {
       throw new Error(
-        "FATAL SECURITY VIOLATION: Demo authentication (ENABLE_DEMO_AUTH) cannot be enabled in production."
+        "FATAL SECURITY VIOLATION: Placeholder Supabase credentials cannot be used in production."
       );
     }
+
     // Validate Credential Signing Key Quality
     const activeVersion = process.env.ACTIVE_SIGNING_KEY_VERSION || "v1";
     const signingKey =
@@ -130,12 +130,13 @@ export function validateEnvironmentSafety(): void {
 export const isConfigured = {
   supabase:
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-    !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("placeholder"),
+    !process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("placeholder") &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) &&
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.includes("placeholder"),
   gemini:
     Boolean(process.env.GEMINI_API_KEY) &&
     !process.env.GEMINI_API_KEY?.includes("placeholder"),
-  demoAuth:
-    process.env.NODE_ENV === "production" ? false : Boolean(env.ENABLE_DEMO_AUTH),
-  demoAllowed:
-    process.env.NODE_ENV !== "production" && Boolean(env.ENABLE_DEMO_AUTH),
+  sandboxAuth: env.AUTH_VERIFICATION_MODE === "sandbox",
+  demoAuth: false,
+  demoAllowed: false,
 };

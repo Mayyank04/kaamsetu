@@ -3,14 +3,17 @@
  * 
  * Manages full lifecycle of OTP authentication:
  * 1. Cryptographically secure random 6-digit code generation
- * 2. Privacy-preserving HMAC hashing for phone and OTP storage
- * 3. SMS provider dispatch (Real SMS / Sandbox / Dev / Unconfigured)
- * 4. Persistent atomic verification and single-use consumption
- * 5. Multi-instance session token generation and cookie handling
+ * 2. Privacy-preserving HMAC hashing for phone and OTP storage (zero hardcoded fallback secrets)
+ * 3. Controlled Verification Modes:
+ *    - 'sandbox' (Simulated SMS with explicit sandbox disclosures, transparent testing codes)
+ *    - 'sms' (Live telecom gateway dispatch via Twilio / Supabase Auth)
+ * 4. Persistent atomic verification and single-use consumption in PostgreSQL
+ * 5. Multi-instance session token generation and secure cookie handling
+ * 6. Honest verification status modeling ('sandbox_unverified' vs 'sms_verified')
  */
 
 import * as crypto from "crypto";
-import { isConfigured } from "@/lib/env";
+import { isConfigured, env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
@@ -22,19 +25,20 @@ import {
   getRateLimitHmacSecret,
 } from "@/lib/security/rate-limiter";
 import { AppRole } from "@/types/database.types";
-import { DEMO_PERSONAS } from "@/lib/auth/personas";
 
 export interface SendOtpRequest {
   phone: string;
   role?: string;
   fullName?: string;
+  intent?: "registration" | "login";
   clientIp: string;
 }
 
 export interface SendOtpResponse {
   success: boolean;
   message: string;
-  isDemo?: boolean;
+  isSandbox?: boolean;
+  sandboxCode?: string;
   requiresDemoCode?: boolean;
   retryAfterSeconds?: number;
   statusCode?: number;
@@ -45,6 +49,7 @@ export interface VerifyOtpRequest {
   otp: string;
   role?: string;
   fullName?: string;
+  intent?: "registration" | "login";
 }
 
 export interface VerifyOtpResponse {
@@ -56,12 +61,16 @@ export interface VerifyOtpResponse {
     fullName: string;
     role: AppRole;
     isDemo: boolean;
+    accountStatus: string;
+    phoneVerificationStatus: string;
+    verificationMethod: string;
+    phoneVerified: boolean;
     workerProfileId?: string | null;
     contractorOrgId?: string | null;
   };
   sessionToken?: string;
   redirectUrl?: string;
-  isDemo?: boolean;
+  isSandbox?: boolean;
   retryAfterSeconds?: number;
   statusCode?: number;
 }
@@ -71,9 +80,10 @@ interface MemoryOtpRecord {
   id: string;
   phoneHash: string;
   otpHash: string;
-  plainOtp?: string; // Stored only in non-production test mode
+  plainOtp?: string;
   role: string;
   fullName?: string;
+  intent: "registration" | "login";
   attempts: number;
   maxAttempts: number;
   expiresAt: number;
@@ -112,30 +122,21 @@ export function maskPhoneNumber(phone: string): string {
 }
 
 /**
- * Computes an HMAC-SHA256 hash of an OTP code
+ * Computes an HMAC-SHA256 hash of an OTP code using validated server key.
+ * Strictly fails closed if cryptographic key material is missing.
  */
 export function hashOtpCode(otp: string): string {
-  let secret: string;
-  try {
-    secret = getRateLimitHmacSecret();
-  } catch {
-    secret = "kaamsetu-dev-fallback-hmac-secret-32-chars";
-  }
+  const secret = getRateLimitHmacSecret();
   return crypto.createHmac("sha256", secret).update(`otp:${otp.trim()}`).digest("hex");
 }
 
 /**
- * Signs a session payload for cookie persistence (14-day expiry)
+ * Signs a session payload for cookie persistence (14-day expiry).
+ * Strictly fails closed if cryptographic key material is missing.
  */
-export function signSessionToken(payload: { userId: string; phone: string; role: AppRole }): string {
-  let secret: string;
-  try {
-    secret = getRateLimitHmacSecret();
-  } catch {
-    secret = "kaamsetu-dev-fallback-hmac-secret-32-chars";
-  }
-
-  const exp = Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60; // 14 days
+export function signSessionToken(payload: { userId: string; phone: string; role: AppRole; exp?: number }): string {
+  const secret = getRateLimitHmacSecret();
+  const exp = payload.exp ?? Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60; // 14 days
   const data = JSON.stringify({ ...payload, exp });
   const encoded = Buffer.from(data, "utf8").toString("base64url");
   const signature = crypto.createHmac("sha256", secret).update(encoded).digest("base64url");
@@ -143,7 +144,8 @@ export function signSessionToken(payload: { userId: string; phone: string; role:
 }
 
 /**
- * Verifies a signed session token
+ * Verifies a signed session token using constant-time comparison.
+ * Strictly fails closed if cryptographic key material is missing.
  */
 export function verifySessionToken(token: string): { userId: string; phone: string; role: AppRole } | null {
   try {
@@ -151,13 +153,7 @@ export function verifySessionToken(token: string): { userId: string; phone: stri
     if (parts.length !== 2) return null;
     const [encoded, signature] = parts;
 
-    let secret: string;
-    try {
-      secret = getRateLimitHmacSecret();
-    } catch {
-      secret = "kaamsetu-dev-fallback-hmac-secret-32-chars";
-    }
-
+    const secret = getRateLimitHmacSecret();
     const expectedSig = crypto.createHmac("sha256", secret).update(encoded).digest("base64url");
     if (!crypto.timingSafeEqual(Buffer.from(signature, "utf8"), Buffer.from(expectedSig, "utf8"))) {
       return null;
@@ -179,7 +175,7 @@ export function verifySessionToken(token: string): { userId: string; phone: stri
 }
 
 /**
- * Sends a cryptographically secure OTP with rate limiting & provider dispatch
+ * Sends or provisions an OTP challenge with rate limiting & provider dispatch
  */
 export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   const isProduction = process.env.NODE_ENV === "production";
@@ -204,13 +200,22 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     };
   }
 
-  // Generate 6-digit random code
-  const otpCode = crypto.randomInt(100000, 999999).toString();
+  // Determine verification mode: 'sandbox' or 'sms'
+  const verificationMode = env.AUTH_VERIFICATION_MODE || "sandbox";
+  const isSandbox = verificationMode === "sandbox";
+
+  // Generate 6-digit random code or use server-configured sandbox code
+  const configuredSandboxCode = process.env.SANDBOX_OTP_CODE;
+  const otpCode = isSandbox && configuredSandboxCode && /^\d{6}$/.test(configuredSandboxCode)
+    ? configuredSandboxCode
+    : crypto.randomInt(100000, 999999).toString();
+
   const otpHashed = hashOtpCode(otpCode);
   const phoneHashed = hashRateLimitKey("phone:identity", formatted);
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes (300 seconds)
+  const intent = req.intent || "login";
 
-  // Persist challenge
+  // Persist challenge into PostgreSQL
   if (isConfigured.supabase) {
     try {
       const adminClient = createAdminClient();
@@ -219,12 +224,13 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
         otp_hash: otpHashed,
         role: req.role || "worker",
         full_name: req.fullName?.trim() || null,
+        intent,
+        verification_mode: verificationMode,
         expires_at: expiresAt.toISOString(),
       });
     } catch (err) {
       console.error("[OTP_DB_ERROR] Failed to save challenge to PostgreSQL:", err);
-      // If DB error in production, fail closed
-      if (isProduction) {
+      if (isProduction && !isSandbox) {
         return {
           success: false,
           message: "We're temporarily unable to process this request. Please try again shortly.",
@@ -234,22 +240,37 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     }
   }
 
-  // Also record in memory for local fallback / non-DB environments
+  // Record in memory store for sandbox / offline / test environments
   memoryOtpStore.set(phoneHashed, {
     id: crypto.randomUUID(),
     phoneHash: phoneHashed,
     otpHash: otpHashed,
-    plainOtp: !isProduction ? otpCode : undefined,
+    plainOtp: otpCode,
     role: req.role || "worker",
     fullName: req.fullName?.trim(),
+    intent,
     attempts: 0,
     maxAttempts: 5,
     expiresAt: expiresAt.getTime(),
     createdAt: Date.now(),
   });
 
-  // SMS Provider Dispatch Logic
-  // 1. Check if Twilio is configured
+  // =========================================================================
+  // 1. SANDBOX VERIFICATION MODE (Simulated SMS, Transparent Testing)
+  // =========================================================================
+  if (isSandbox) {
+    return {
+      success: true,
+      message: `Sandbox verification code for ${maskPhoneNumber(formatted)} generated. No SMS will be sent.`,
+      isSandbox: true,
+      sandboxCode: otpCode,
+      statusCode: 200,
+    };
+  }
+
+  // =========================================================================
+  // 2. LIVE SMS GATEWAY DISPATCH (Twilio / Supabase SMS)
+  // =========================================================================
   const twilioSid = process.env.TWILIO_ACCOUNT_SID;
   const twilioToken = process.env.TWILIO_AUTH_TOKEN;
   const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
@@ -267,7 +288,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
           body: new URLSearchParams({
             To: formatted,
             From: twilioFrom,
-            Body: `[KAAMSETU] Your verification code is ${otpCode}. Valid for 10 minutes. Do not share this code.`,
+            Body: `[KAAMSETU] Your verification code is ${otpCode}. Valid for 5 minutes. Do not share this code.`,
           }).toString(),
         }
       );
@@ -283,7 +304,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     }
   }
 
-  // 2. Check if Supabase Auth SMS Provider is configured
+  // Supabase Auth SMS Provider fallback
   if (isConfigured.supabase) {
     try {
       const supabase = await createServerSupabaseClient();
@@ -296,37 +317,15 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
         };
       }
     } catch {
-      // Fall through to sandbox / development handling
+      // Live dispatch failed
     }
   }
 
-  // 3. Demo / Development Mode
-  if (!isProduction && isConfigured.demoAuth) {
-    console.info(`[DEMO_OTP_DISPATCH] Mobile: ${formatted} | OTP: ${otpCode}`);
-    return {
-      success: true,
-      message: `[Development Sandbox] Code dispatched for ${maskPhoneNumber(formatted)}. Sandbox code: ${otpCode} (or standard demo: 123456).`,
-      isDemo: true,
-      requiresDemoCode: true,
-      statusCode: 200,
-    };
-  }
-
-  // 4. Production without configured SMS gateway -> Safe operational error
-  if (isProduction) {
-    return {
-      success: false,
-      message: "We're temporarily unable to process this request. Please try again shortly.",
-      statusCode: 503,
-    };
-  }
-
-  // Default fallback for test / local
+  // In SMS mode without working telecom credentials, fail securely
   return {
-    success: true,
-    message: `Verification code dispatched to ${maskPhoneNumber(formatted)}.`,
-    isDemo: true,
-    statusCode: 200,
+    success: false,
+    message: "SMS gateway unavailable. Please configure AUTH_VERIFICATION_MODE=sandbox for test environments.",
+    statusCode: 503,
   };
 }
 
@@ -360,7 +359,8 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
   const otpHashed = hashOtpCode(req.otp);
   let verified = false;
   let resolvedRole: AppRole = req.role === "contractor" ? "contractor" : "worker";
-  let resolvedName = req.fullName?.trim() || "Verified Artisan";
+  let resolvedName = req.fullName?.trim() || "Verified User";
+  const isSandbox = (env.AUTH_VERIFICATION_MODE || "sandbox") === "sandbox";
 
   // 1. Try atomic PostgreSQL verification if database is configured
   if (isConfigured.supabase) {
@@ -396,7 +396,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
     }
   }
 
-  // 2. Try in-memory store if DB was unconfigured or in development
+  // 2. Try in-memory store if DB was unconfigured or in development/test
   if (!verified && memoryOtpStore.has(phoneHashed)) {
     const memRecord = memoryOtpStore.get(phoneHashed)!;
     const now = Date.now();
@@ -428,11 +428,11 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
 
     memRecord.attempts += 1;
 
-    // Check OTP hash or demo 123456 code in non-production
+    // Verify hash match or plainOtp match in memory record (or standard test code in non-production)
     const matchesCode =
       memRecord.otpHash === otpHashed ||
-      (!isProduction && req.otp === "123456") ||
-      (!isProduction && memRecord.plainOtp === req.otp);
+      memRecord.plainOtp === req.otp.trim() ||
+      (!isProduction && req.otp === "123456");
 
     if (matchesCode) {
       verified = true;
@@ -440,11 +440,6 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
       if (memRecord.role) resolvedRole = memRecord.role as AppRole;
       if (memRecord.fullName) resolvedName = memRecord.fullName;
     }
-  }
-
-  // 3. Fallback demo acceptance ONLY in non-production if demoAuth is active
-  if (!verified && !isProduction && isConfigured.demoAuth && req.otp === "123456") {
-    verified = true;
   }
 
   if (!verified) {
@@ -467,6 +462,10 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
   let userId = crypto.randomUUID();
   let workerProfileId: string | null = null;
   let contractorOrgId: string | null = null;
+  const accountStatus = "active";
+  const phoneVerificationStatus = isSandbox ? "sandbox_unverified" : "sms_verified";
+  const verificationMethod = isSandbox ? "sandbox" : "sms";
+  const phoneVerified = !isSandbox;
 
   if (isConfigured.supabase) {
     try {
@@ -483,7 +482,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
         resolvedRole = existingProfile.role as AppRole;
         resolvedName = existingProfile.full_name || resolvedName;
       } else {
-        // Create new authoritative profile
+        // Create new authoritative profile with explicit sandbox vs verified status
         const { data: newProfile } = await adminClient
           .from("profiles")
           .insert({
@@ -491,7 +490,11 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
             phone: formatted,
             full_name: resolvedName,
             role: resolvedRole,
-            is_verified: true,
+            is_verified: false,
+            account_status: accountStatus,
+            phone_verification_status: phoneVerificationStatus,
+            verification_method: verificationMethod,
+            phone_verified: phoneVerified,
           })
           .select("*")
           .single();
@@ -522,7 +525,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
     }
   }
 
-  // Generate signed session token
+  // Generate cryptographically signed session token
   const sessionToken = signSessionToken({
     userId,
     phone: formatted,
@@ -533,19 +536,25 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
 
   return {
     success: true,
-    message: "Mobile phone verified successfully.",
+    message: isSandbox
+      ? "Sandbox verification complete. Account active (phone verification not completed)."
+      : "Mobile phone verified successfully.",
     user: {
       id: userId,
       phone: formatted,
       fullName: resolvedName,
       role: resolvedRole,
       isDemo: false,
+      accountStatus,
+      phoneVerificationStatus,
+      verificationMethod,
+      phoneVerified,
       workerProfileId,
       contractorOrgId,
     },
     sessionToken,
     redirectUrl: targetDashboard,
-    isDemo: false,
+    isSandbox,
     statusCode: 200,
   };
 }

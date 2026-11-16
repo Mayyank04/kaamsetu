@@ -110,11 +110,11 @@ export class OnboardingService {
       dispatchNotice: geoValidation.isDispatchEligible ? undefined : geoValidation.reason,
       qrVerificationUrl,
       createdAt: new Date().toISOString(),
-      isDemo: user.isDemo,
+      isDemo: false,
     };
 
-    // 5. Database Persistence if Supabase is configured and not demo
-    if (isConfigured.supabase && !user.isDemo) {
+    // 5. Database Persistence whenever Supabase is configured
+    if (isConfigured.supabase) {
       const supabase = await createServerSupabaseClient();
 
       const { data: occupations, error: occErr } = await supabase
