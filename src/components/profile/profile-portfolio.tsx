@@ -13,7 +13,7 @@ export function ProfilePortfolio({ portfolio }: ProfilePortfolioProps) {
   const [activeItem, setActiveItem] = React.useState<DashboardPortfolioItem | null>(null);
 
   return (
-    <div className="rounded-2xl bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
+    <div className="rounded-md bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
       <div className="pb-4 border-b border-forest/10 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -46,7 +46,7 @@ export function ProfilePortfolio({ portfolio }: ProfilePortfolioProps) {
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
-              <div className="absolute top-2.5 left-2.5 bg-forest-950/80 backdrop-blur-xs text-sand px-2.5 py-0.5 rounded text-[10px] font-mono border border-sand/30">
+              <div className="absolute top-2.5 left-2.5 bg-forest-950 text-sand px-2.5 py-0.5 rounded text-[10px] font-mono border border-sand/30">
                 {item.category || "Craft Project"}
               </div>
             </div>

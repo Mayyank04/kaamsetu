@@ -7,7 +7,6 @@ import {
   Filter,
   ShieldCheck,
   MapPin,
-  Sparkles,
   RotateCcw,
   SlidersHorizontal,
   ArrowRight,
@@ -223,7 +222,7 @@ export default function ExplorePage() {
 
       {/* 2. Search & Filters Bar */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="rounded-2xl border border-forest/15 bg-card p-6 shadow-sovereign-sm space-y-5">
+        <div className="rounded-md border border-forest/15 bg-card p-6 shadow-sovereign-sm space-y-5">
           {/* Main Search Input */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-forest/50" />
@@ -232,7 +231,7 @@ export default function ExplorePage() {
               placeholder="Search by worker name, craft (e.g. Solar, Joinery, Weaving), tool, or city..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-13 pl-12 pr-4 rounded-xl border border-forest/20 bg-background text-sm text-foreground focus:outline-none focus:border-forest focus:ring-2 focus:ring-sand/60 shadow-inner"
+              className="w-full h-13 pl-12 pr-4 rounded-sm border border-forest/20 bg-background text-sm text-foreground focus:outline-none focus:border-forest focus:ring-2 focus:ring-sand/60 shadow-inner"
             />
           </div>
 
@@ -360,7 +359,7 @@ export default function ExplorePage() {
       {/* 3. Professionals Results Grid */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
         {professionals.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-forest/25 p-12 text-center space-y-4 bg-card/50">
+          <div className="rounded-md border border-dashed border-forest/25 p-12 text-center space-y-4 bg-card/50">
             <SlidersHorizontal className="mx-auto h-12 w-12 text-forest/30" />
             <div className="space-y-1">
               <h3 className="text-base font-bold text-forest">
@@ -390,7 +389,7 @@ export default function ExplorePage() {
 
       {/* 4. Trust Assurance Banner */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="rounded-2xl bg-forest-900 text-ivory p-8 sm:p-10 border border-sand/30 shadow-sovereign-lg flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="rounded-md bg-forest-900 text-ivory p-8 sm:p-10 border border-sand/30 shadow-sovereign-md flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2 text-sand text-xs font-mono">
               <ShieldCheck className="w-4 h-4" />

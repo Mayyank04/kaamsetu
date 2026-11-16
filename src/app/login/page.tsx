@@ -15,7 +15,6 @@ import {
   Building2,
   HardHat,
   RotateCcw,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,11 +154,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F7F5F0] via-background to-[#F7F5F0]/60 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="max-w-xl w-full space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest/5 border border-forest/15 text-forest text-xs font-mono">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xs bg-forest/5 border border-forest/15 text-forest text-xs font-mono">
             <ShieldCheck className="w-3.5 h-3.5 text-forest" />
             <span>Secure Mobile Verification</span>
           </div>
@@ -173,17 +172,17 @@ export default function LoginPage() {
 
         {/* Tab Switcher */}
         {allowDemo && (
-          <div className="flex rounded-xl bg-forest/5 p-1 border border-forest/15 text-xs font-medium">
+          <div className="flex rounded-sm bg-forest/5 p-1 border border-forest/15 text-xs font-medium">
             <button
               type="button"
               onClick={() => setActiveTab("personas")}
-              className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 rounded-xs transition-colors flex items-center justify-center gap-2 ${
                 activeTab === "personas"
                   ? "bg-forest text-ivory shadow-xs font-bold"
                   : "text-charcoal-muted hover:text-forest"
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-sand" />
+              <ShieldCheck className="w-3.5 h-3.5 text-sand" />
               <span>Demo Role Switcher</span>
               <Badge variant="outline" className="text-[10px] bg-sand/20 border-sand text-sand-800 hidden sm:inline-flex">
                 Preview
@@ -192,7 +191,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setActiveTab("otp")}
-              className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 rounded-xs transition-colors flex items-center justify-center gap-2 ${
                 activeTab === "otp"
                   ? "bg-forest text-ivory shadow-xs font-bold"
                   : "text-charcoal-muted hover:text-forest"
@@ -241,9 +240,9 @@ export default function LoginPage() {
                     type="button"
                     disabled={isLoading}
                     onClick={() => handlePersonaSelect(persona)}
-                    className="w-full text-left p-4 rounded-2xl bg-card border border-forest/15 hover:border-forest/40 hover:shadow-sovereign-sm transition-all group flex items-start gap-4 relative overflow-hidden"
+                    className="w-full text-left p-4 rounded-md bg-card border border-forest/15 hover:border-forest/40 hover:shadow-sovereign-sm transition-all group flex items-start gap-4 relative overflow-hidden"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-forest/10 border border-forest/15 shrink-0 overflow-hidden flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xs bg-forest/10 border border-forest/15 shrink-0 overflow-hidden flex items-center justify-center">
                       {persona.avatarUrl ? (
                         <Image
                           src={persona.avatarUrl}
@@ -288,7 +287,7 @@ export default function LoginPage() {
                       </div>
                     </div>
 
-                    <ArrowRight className="w-4 h-4 text-forest/40 group-hover:text-forest group-hover:translate-x-1 transition-all shrink-0 self-center" />
+                    <ArrowRight className="w-4 h-4 text-forest/40 group-hover:text-forest transition-colors shrink-0 self-center" />
                   </button>
                 );
               })}
@@ -298,7 +297,7 @@ export default function LoginPage() {
 
         {/* TAB 2: Mobile OTP Login */}
         {activeTab === "otp" && (
-          <div className="bg-card p-6 sm:p-8 rounded-2xl border border-forest/15 shadow-sovereign-sm space-y-6">
+          <div className="bg-card p-6 sm:p-8 rounded-md border border-forest/15 shadow-sovereign-sm space-y-6">
             {!otpSent ? (
               <form onSubmit={handleSendOtp} className="space-y-4">
                 {/* Role Switcher */}
@@ -408,7 +407,7 @@ export default function LoginPage() {
                     value={otpValue}
                     onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
                     placeholder="123456"
-                    className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xl border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
+                    className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-sm border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
                   />
                   {allowDemo && (
                     <div className="flex items-center justify-between text-[11px] text-charcoal-muted pt-1">
@@ -438,7 +437,7 @@ export default function LoginPage() {
         )}
 
         {/* Footer / Create New Identity Callout */}
-        <div className="text-center p-4 rounded-xl bg-forest/5 border border-forest/10 space-y-2">
+        <div className="text-center p-4 rounded-sm bg-forest/5 border border-forest/10 space-y-2">
           <p className="text-xs text-charcoal-muted">
             Are you a skilled worker without an account?
           </p>
@@ -448,6 +447,14 @@ export default function LoginPage() {
               <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
             </Link>
           </Button>
+        </div>
+
+        {/* Terms and Privacy policy links */}
+        <div className="text-center text-[11px] text-charcoal-muted space-x-2 pt-2">
+          <span>By signing in, you agree to our</span>
+          <Link href="/terms" className="underline hover:text-forest">Terms of Service</Link>
+          <span>and</span>
+          <Link href="/privacy" className="underline hover:text-forest">Privacy Policy</Link>
         </div>
       </div>
     </div>

@@ -8,7 +8,6 @@ import {
   Users,
   ShieldCheck,
   CheckCircle2,
-  Sparkles,
   ArrowRight,
   Sliders,
   FileCheck2,
@@ -130,7 +129,7 @@ export default function HowItWorksPage() {
                 disabled={isProcessing}
                 className="bg-forest hover:bg-forest-500 text-ivory text-xs"
               >
-                <Sparkles className="mr-1.5 h-3.5 w-3.5 text-sand" />
+                <FileCheck2 className="mr-1.5 h-3.5 w-3.5 text-sand" />
                 {isProcessing ? "Analyzing..." : "Test AI Extraction"}
               </Button>
             </div>

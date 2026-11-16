@@ -40,8 +40,8 @@ export default async function PublicProfilePage({ params }: ProfilePageProps) {
   if (!data.profile.isPublished) {
     return (
       <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-8 rounded-2xl bg-card border border-forest/15 shadow-sovereign-md text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-forest/10 border border-forest/20 flex items-center justify-center text-forest mx-auto">
+        <div className="max-w-md w-full p-8 rounded-md bg-card border border-forest/15 shadow-sovereign-md text-center space-y-4">
+          <div className="w-12 h-12 rounded-sm bg-forest/10 border border-forest/20 flex items-center justify-center text-forest mx-auto">
             <Lock className="w-6 h-6" />
           </div>
           <h2 className="font-serif text-2xl font-bold text-forest">

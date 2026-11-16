@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { ShieldCheck, Lock, Globe, Sparkles } from "lucide-react";
+import { ShieldCheck, Lock, Globe } from "lucide-react";
 
 export function InstitutionalFooter() {
   return (
@@ -106,7 +106,7 @@ export function InstitutionalFooter() {
           {/* Civic Governance */}
           <div className="space-y-3 text-xs">
             <h4 className="font-bold uppercase tracking-widest text-sand-300">
-              Governance & Pages
+              Governance & Legal
             </h4>
             <ul className="space-y-2 text-ivory/80">
               <li>
@@ -127,6 +127,16 @@ export function InstitutionalFooter() {
               <li>
                 <Link href="/about" className="hover:text-sand transition-colors">
                   About KAAMSETU
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-sand transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-sand transition-colors">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>

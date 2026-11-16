@@ -63,7 +63,7 @@ export const PROFESSIONS_DATA: ProfessionCategory[] = [
     description: "Pit loom weaving, pure silk zardozi, block printing, and heritage organic dye formulations.",
     workerCount: 14300,
     popularSkills: ["Jacquard Weaving", "Zardozi Gold Thread", "Natural Indigo Dyeing", "Tussar Silk Processing"],
-    icon: "Sparkles",
+    icon: "Scissors",
     averageDailyRate: { min: 750, max: 1500 },
   },
   {

@@ -323,7 +323,7 @@ export function WorkerDashboardContainer({
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {pendingInvitations.length > 0 && (
-              <div className="lg:col-span-2 bg-sand-50/80 border border-sand-300 rounded-2xl p-5 space-y-3 shadow-xs">
+              <div className="lg:col-span-2 bg-sand-50/80 border border-sand-300 rounded-md p-5 space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Mail className="w-5 h-5 text-forest" />

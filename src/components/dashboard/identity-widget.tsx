@@ -44,7 +44,7 @@ export function IdentityWidget({ profile }: IdentityWidgetProps) {
   };
 
   return (
-    <div className="rounded-2xl bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
+    <div className="rounded-md bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-forest/10">
         <div>
@@ -93,13 +93,7 @@ export function IdentityWidget({ profile }: IdentityWidgetProps) {
 
       {/* Sovereign Card Component */}
       <div className="max-w-xl mx-auto">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-forest-950 via-forest to-forest-900 text-ivory p-6 sm:p-7 shadow-sovereign-lg border-2 border-sand/40">
-          {/* Security Pattern Watermark */}
-          <div
-            className="absolute inset-0 opacity-5 pointer-events-none mix-blend-overlay bg-[radial-gradient(#E8C999_1px,transparent_1px)] [background-size:16px_16px]"
-            aria-hidden="true"
-          />
-
+        <div className="relative overflow-hidden rounded-md bg-forest text-ivory p-6 sm:p-7 shadow-sovereign-md border-2 border-sand/40">
           {/* Top Bar */}
           <div className="relative flex items-start justify-between border-b border-sand/20 pb-4">
             <div className="flex items-center gap-2.5">

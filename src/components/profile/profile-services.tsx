@@ -46,7 +46,7 @@ export function ProfileServices({
   ];
 
   return (
-    <div className="rounded-2xl bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
+    <div className="rounded-md bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
       <div className="pb-4 border-b border-forest/10 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">

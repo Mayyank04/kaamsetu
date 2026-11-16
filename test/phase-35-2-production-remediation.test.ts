@@ -197,10 +197,11 @@ describe("Phase 35.2 — Incident C: Absolute Elimination of Fabricated Confiden
       "Must display 'Self-Declared Testimony' badge"
     );
 
-    // Verify presence of Trade suggestion — review and edit badge
+    // Verify presence of Trade suggestion review badge
     assert.ok(
+      editorSource.includes("Trade suggestion: review and edit") ||
       editorSource.includes("Trade suggestion — review and edit"),
-      "Must display 'Trade suggestion — review and edit' badge"
+      "Must display 'Trade suggestion: review and edit' badge"
     );
 
     // Verify disclaimer on NCO 2015 trade suggestion

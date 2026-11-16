@@ -71,8 +71,8 @@ export function CustomerReviewDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-card w-full max-w-lg rounded-2xl border border-forest/20 shadow-sovereign-xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-card w-full max-w-lg rounded-md border border-forest/20 shadow-sovereign-md p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between pb-3 border-b border-forest/10">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-forest" />

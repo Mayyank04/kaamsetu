@@ -11,7 +11,6 @@ import {
   Award,
   Calendar,
   MapPin,
-  Sparkles,
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -154,9 +153,9 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
   // 3. Not Found State
   if (!worker) {
     return (
-      <div className="min-h-screen bg-[#F7F5F0] py-16 px-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-card rounded-2xl border border-red-200 p-8 text-center space-y-4 shadow-sovereign-sm">
-          <div className="w-12 h-12 rounded-xl bg-red-50 text-red-700 flex items-center justify-center mx-auto">
+      <div className="min-h-screen bg-background py-16 px-4 flex items-center justify-center">
+        <div className="max-w-md w-full bg-card rounded-md border border-red-200 p-8 text-center space-y-4 shadow-sovereign-sm">
+          <div className="w-12 h-12 rounded-xs bg-red-50 text-red-700 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <h1 className="font-serif text-2xl font-bold text-forest">
@@ -179,9 +178,9 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
   // 4. Worker Self-Sovereign Privacy Guard (Unpublished)
   if (!isPublished) {
     return (
-      <div className="min-h-screen bg-[#F7F5F0] py-16 px-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-card rounded-2xl border border-forest/15 p-8 text-center space-y-4 shadow-sovereign-sm">
-          <div className="w-12 h-12 rounded-xl bg-forest/10 text-forest flex items-center justify-center mx-auto">
+      <div className="min-h-screen bg-background py-16 px-4 flex items-center justify-center">
+        <div className="max-w-md w-full bg-card rounded-md border border-forest/15 p-8 text-center space-y-4 shadow-sovereign-sm">
+          <div className="w-12 h-12 rounded-xs bg-forest/10 text-forest flex items-center justify-center mx-auto">
             <Lock className="w-6 h-6" />
           </div>
           <h1 className="font-serif text-2xl font-bold text-forest">
@@ -205,11 +204,11 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
   const qrDataUrl = await generateQrDataUrl(verificationUrl);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F7F5F0] via-background to-[#F7F5F0]/60 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Verification Status Banner */}
         {verificationStatus === "revoked" ? (
-          <div className="p-4 rounded-2xl bg-red-50 border border-red-300 text-red-900 flex items-center gap-3">
+          <div className="p-4 rounded-md bg-red-50 border border-red-300 text-red-900 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
             <div className="text-xs">
               <strong className="block font-bold">
@@ -221,7 +220,7 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
             </div>
           </div>
         ) : verificationStatus === "suspended" ? (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 flex items-center gap-3">
+          <div className="p-4 rounded-md bg-amber-50 border border-amber-300 text-amber-900 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
             <div className="text-xs">
               <strong className="block font-bold">
@@ -233,7 +232,7 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
             </div>
           </div>
         ) : (
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3">
+          <div className="p-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
             <div className="text-xs">
               <strong className="block font-bold">
@@ -247,7 +246,7 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
         )}
 
         {/* Physical Smart Card Presentation */}
-        <div className="sovereign-print-area bg-gradient-to-br from-forest-900 via-forest to-forest-800 text-ivory rounded-2xl p-6 sm:p-8 border border-sand/30 shadow-sovereign-xl space-y-6 relative overflow-hidden print:border-black print:text-black print:bg-white">
+        <div className="sovereign-print-area bg-forest text-ivory rounded-md p-6 sm:p-8 border border-sand/30 shadow-sovereign-md space-y-6 relative overflow-hidden print:border-black print:text-black print:bg-white">
           <div className="flex items-start justify-between gap-4 border-b border-sand/20 pb-4">
             <div>
               <div className="text-[11px] font-mono tracking-wider text-sand uppercase font-bold flex items-center gap-1.5">

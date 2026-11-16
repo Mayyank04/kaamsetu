@@ -13,7 +13,6 @@ import {
   Layers,
   Share2,
   QrCode,
-  Sparkles,
   Copy,
   Check,
   Send,
@@ -57,7 +56,7 @@ export function ProfileHero({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-card border border-forest/15 shadow-sovereign-md p-6 sm:p-8 space-y-6">
+    <div className="relative overflow-hidden rounded-md bg-card border border-forest/15 shadow-sovereign-md p-6 sm:p-8 space-y-6">
       {/* Top Protocol Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-forest/10 text-xs">
         <div className="flex items-center gap-2">
@@ -127,7 +126,7 @@ export function ProfileHero({
         {/* Left 2 Cols: Worker Photo & Craft Story */}
         <div className="lg:col-span-2 flex flex-col sm:flex-row items-start gap-5 sm:gap-6">
           {/* Portrait */}
-          <div className="relative h-28 w-28 sm:h-36 sm:w-36 shrink-0 rounded-2xl overflow-hidden border-2 border-sand/70 shadow-sovereign-sm bg-forest-900">
+          <div className="relative h-28 w-28 sm:h-36 sm:w-36 shrink-0 rounded-md overflow-hidden border-2 border-sand/70 shadow-sovereign-sm bg-forest-900">
             {profile.avatarUrl ? (
               <Image
                 src={profile.avatarUrl}
@@ -237,7 +236,7 @@ export function ProfileHero({
             onClick={onRequestBooking}
             className="w-full bg-forest hover:bg-forest-600 text-ivory font-semibold shadow-sovereign-sm h-11 text-sm"
           >
-            <Sparkles className="w-4 h-4 mr-2 text-sand" />
+            <Send className="w-4 h-4 mr-2 text-sand" />
             Request Service / Hire
           </Button>
         </div>

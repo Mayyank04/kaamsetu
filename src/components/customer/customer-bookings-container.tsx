@@ -14,7 +14,6 @@ import {
   Clock,
   Award,
   Filter,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
@@ -85,7 +84,7 @@ export function CustomerBookingsContainer({
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-in fade-in duration-500">
       {/* 1. Header Banner */}
-      <div className="rounded-2xl bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
+      <div className="rounded-md bg-card border border-forest/15 shadow-sovereign-sm p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-forest/10">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-forest/5 px-3 py-1 border border-forest/15 text-xs font-mono font-medium text-forest mb-2">
@@ -188,7 +187,7 @@ export function CustomerBookingsContainer({
 
       {/* 3. Bookings List */}
       {filteredBookings.length === 0 ? (
-        <div className="text-center py-16 rounded-2xl bg-card border border-forest/15 space-y-4">
+        <div className="text-center py-16 rounded-md bg-card border border-forest/15 space-y-4">
           <Briefcase className="w-12 h-12 text-forest/30 mx-auto" />
           <div className="space-y-1">
             <h3 className="font-serif text-lg font-bold text-forest">

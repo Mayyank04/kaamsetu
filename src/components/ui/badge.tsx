@@ -18,7 +18,7 @@ const badgeVariants = cva(
           "border border-sand-600/30 bg-sand/25 text-sand-800 font-bold",
         // Sovereign Gold Prestige Badge
         sovereign:
-          "border border-sand-500/50 bg-gradient-to-r from-forest-600 to-forest-700 text-sand font-bold shadow-xs",
+          "border border-sand-500/50 bg-forest text-sand font-bold shadow-xs",
         // Provisional / Pending
         provisional:
           "border border-terracotta/30 bg-terracotta/10 text-terracotta-dark font-medium",

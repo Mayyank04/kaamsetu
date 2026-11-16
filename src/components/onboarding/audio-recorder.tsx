@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Mic, MicOff, Square, Play, Sparkles, RefreshCw, AlertCircle, FileText } from "lucide-react";
+import { Mic, MicOff, Square, Play, RefreshCw, AlertCircle, FileText } from "lucide-react";
 import { SupportedLanguageCode } from "@/schemas/onboarding.schema";
 import { ONBOARDING_I18N } from "@/lib/i18n/onboarding";
 import { Button } from "@/components/ui/button";
@@ -324,7 +324,7 @@ export function AudioRecorder({
             </>
           ) : (
             <>
-              <Sparkles className="mr-2 h-4 w-4 text-sand" />
+              <FileText className="mr-2 h-4 w-4 text-sand" />
               {i18n.analyzeBtn}
             </>
           )}
