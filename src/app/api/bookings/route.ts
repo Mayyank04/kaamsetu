@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createBooking } from "@/lib/supabase/db/bookings";
-import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
+import { BookingService } from "@/server/services/booking.service";
+import { handleApiError, createSuccessResponse } from "@/lib/errors";
 import { requireAuthenticatedUser } from "@/lib/auth/server";
 import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
 import { z } from "zod";
@@ -49,8 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Constitutional Invariant: 100% of estimated_cost belongs to worker, platform commission = 0.00
-    const booking = await createBooking({
-      customer_id: user.id,
+    const booking = await BookingService.requestBooking(user.id, {
       worker_profile_id: data.worker_profile_id,
       service_title: data.service_title,
       description: data.description,

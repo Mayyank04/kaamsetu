@@ -27,7 +27,7 @@ import {
   CONTRACTOR_PLANS,
   SubscriptionTier,
 } from "@/types/contractor";
-import { PRICING_PLANS, BillingCycle, calculateBillingBreakdown } from "@/lib/config/pricing-plans";
+import { PRICING_PLANS, BillingCycle, calculateBillingBreakdown } from "@/features/contractors/services/billing-calculator";
 
 interface ContractorDashboardViewProps {
   initialData: ContractorDashboardData;
