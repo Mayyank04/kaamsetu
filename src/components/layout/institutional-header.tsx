@@ -38,44 +38,44 @@ export function InstitutionalHeader() {
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/explore", label: "Explore Professions" },
+    { href: "/explore", label: "Find Professionals" },
+    { href: "/how-it-works", label: "How It Works" },
     { href: "/contractor/dashboard", label: "Contractor Pro" },
     { href: "/institution/dashboard", label: "Institutions" },
-    { href: "/customer/bookings", label: "My Bookings" },
-    { href: "/dashboard", label: "Worker Dashboard" },
+    { href: "/about", label: "About" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-forest/15 bg-[#F7F5F0]/95 backdrop-blur-md shadow-xs transition-all">
-      {/* Top Sovereign Status Bar */}
+    <header className="sticky top-0 z-50 w-full border-b border-forest/15 bg-[#F7F5F0]/95 backdrop-blur-xs shadow-xs transition-all">
+      {/* Top Status Bar */}
       <div className="bg-forest text-ivory text-[11px] py-1.5 px-4 hidden sm:block border-b border-forest-500/20">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-1.5 w-1.5 rounded-full bg-sand animate-pulse" />
             <span className="font-semibold text-sand-300">
-              National Sovereign Skill Identity Protocol
+              Direct Worker Recognition Platform
             </span>
             <span className="text-ivory/60">•</span>
             <span className="text-ivory/80">
-              Aadhaar & DigiLocker Linked Open Infrastructure
+              Permanent Zero Commission on Artisan Earnings
             </span>
           </div>
           <div className="flex items-center gap-4 text-ivory/80 text-[10px]">
             <span className="bg-sand/20 text-sand px-2 py-0.5 rounded-xs font-semibold">
-              HACKATHON EVALUATION MODE
+              Class B Controlled Rollout: Guwahati & Shillong
             </span>
             <Link
               href="/login"
               className="text-sand underline hover:text-sand-300 font-medium"
             >
-              Switch Demo Persona
+              Sign In
             </Link>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto flex h-18 items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand Logo & Sovereign Mark */}
+        {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="flex h-10 w-10 items-center justify-center rounded-xs bg-forest text-sand font-black text-sm border border-forest-700 shadow-xs group-hover:bg-forest-500 transition-colors">
             KS
@@ -90,7 +90,7 @@ export function InstitutionalHeader() {
               </span>
             </div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal-muted">
-              Digital Sovereign Identity
+              Skill Identity & Recognition
             </p>
           </div>
         </Link>

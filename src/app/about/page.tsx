@@ -30,13 +30,14 @@ export default function AboutPage() {
         <div className="absolute inset-0 bg-paper-grid opacity-35 pointer-events-none" />
 
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center space-y-6">
-          <Badge variant="verified">Institutional Mission</Badge>
+          <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">
+            Our Mission
+          </Badge>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-forest leading-[1.15]">
-            Bridging Informal Mastery With Sovereign Trust.
+            Recognizing Skill Across Every Trade
           </h1>
           <p className="text-lg sm:text-xl text-charcoal-muted leading-relaxed font-normal max-w-2xl mx-auto">
-            KAAMSETU is India’s open digital public infrastructure engineered to give
-            every craftsperson sovereign ownership over their skill reputation.
+            KAAMSETU is digital infrastructure built to give every craftsperson direct, verifiable ownership of their work reputation.
           </p>
         </div>
       </section>

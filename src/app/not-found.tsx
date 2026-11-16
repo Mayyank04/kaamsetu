@@ -12,13 +12,13 @@ export default function NotFound() {
 
         <div className="space-y-2">
           <span className="text-[11px] font-bold uppercase tracking-widest text-sand-800">
-            Error 404 • Not Located
+            Page Not Found
           </span>
           <h1 className="text-2xl font-bold tracking-tight text-forest">
-            Registry Document Not Found
+            We couldn&apos;t find that page
           </h1>
           <p className="text-sm text-charcoal-muted max-w-sm mx-auto leading-relaxed">
-            The credential, registry profile, or pathway you requested does not exist or has been relocated to another sovereign block.
+            The profile or page you are looking for does not exist, has been removed, or the link may have changed.
           </p>
         </div>
 
@@ -26,13 +26,13 @@ export default function NotFound() {
           <Button variant="default" asChild className="w-full sm:w-auto">
             <Link href="/">
               <Home className="mr-2 h-4 w-4" />
-              Return to Platform Home
+              Return Home
             </Link>
           </Button>
           <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link href="/explore">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Explore Verified Crafts
+              Find Professionals
             </Link>
           </Button>
         </div>

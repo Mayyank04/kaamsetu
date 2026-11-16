@@ -72,13 +72,14 @@ export default function HowItWorksPage() {
         <div className="absolute inset-0 bg-paper-grid opacity-35 pointer-events-none" />
 
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center space-y-6">
-          <Badge variant="verified">Verification Protocol</Badge>
+          <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">
+            Verification Protocol
+          </Badge>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-forest leading-[1.15]">
-            How the Sovereign Trust Protocol Works.
+            How Skill Verification Works
           </h1>
           <p className="text-lg sm:text-xl text-charcoal-muted leading-relaxed font-normal max-w-2xl mx-auto">
-            Combining multilingual voice intelligence, decentralized peer vouching,
-            and DigiLocker integration to convert informal craftsmanship into unforgeable credit.
+            Combining voice self-declarations, peer references, and DigiLocker identity integration to give informal craftsmanship verifiable professional recognition.
           </p>
         </div>
       </section>
@@ -376,7 +377,9 @@ export default function HowItWorksPage() {
       {/* 4. Comparison Table: Traditional vs KAAMSETU */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl space-y-8">
         <div className="text-center space-y-2">
-          <Badge variant="verified">The Structural Shift</Badge>
+          <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">
+            Comparison
+          </Badge>
           <h2 className="text-3xl font-bold text-forest">
             Traditional Informal Hiring vs. KAAMSETU
           </h2>

@@ -5,21 +5,21 @@ import { ShieldCheck, Lock, Globe, Sparkles } from "lucide-react";
 export function InstitutionalFooter() {
   return (
     <footer className="border-t border-forest/15 bg-forest text-ivory">
-      {/* Top Banner: Sovereign Authority & Dignity */}
+      {/* Top Banner: Authority & Dignity */}
       <div className="border-b border-forest-500/30 bg-forest-700/60 py-4">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 text-xs">
           <div className="flex items-center gap-2 text-sand-300">
             <ShieldCheck className="h-4 w-4 text-sand" />
             <span className="font-semibold tracking-wide">
-              National Digital Credential Infrastructure for India&apos;s Skilled Workforce
+              Digital Skill Infrastructure for India&apos;s Vocational Workforce
             </span>
           </div>
           <div className="flex items-center gap-4 text-ivory/70 text-[11px]">
             <span>DigiLocker Integration Ready</span>
             <span>•</span>
-            <span>Open Skill Trust Protocol</span>
+            <span>Zero Platform Commission</span>
             <span>•</span>
-            <span>Zero-Knowledge Verification</span>
+            <span>Direct Bank Settlements</span>
           </div>
         </div>
       </div>
@@ -38,10 +38,10 @@ export function InstitutionalFooter() {
               </span>
             </div>
             <p className="text-xs text-ivory/70 leading-relaxed">
-              Equipping India&apos;s 450M+ skilled craftspeople, trades workers, and independent contractors with unforgeable, sovereign digital identities and verifiable creditworthiness.
+              Equipping India&apos;s skilled craftspeople, trades workers, and independent contractors with verifiable digital credentials, recognized experience, and direct opportunities.
             </p>
             <div className="pt-2 text-[11px] font-mono text-sand-300">
-              [DEMO ENVIRONMENT ACTIVE]
+              Guwahati & Shillong Pilot Network
             </div>
           </div>
 
