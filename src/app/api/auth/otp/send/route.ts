@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: "Sign-in is temporarily unavailable. Please try again shortly.",
+        message: "We're temporarily unable to process this request. Please try again shortly.",
       },
       { status: 500 }
     );

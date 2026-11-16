@@ -97,7 +97,7 @@ export default function LoginPage() {
       // Clean, safe operational error: never leak environment variable names to ordinary users
       const safeMsg =
         rawMsg.includes("RATE_LIMIT_HMAC_SECRET") || rawMsg.includes("FATAL")
-          ? "Sign-in is temporarily unavailable. Please try again shortly."
+          ? "We're temporarily unable to process this request. Please try again shortly."
           : rawMsg;
       setStatusMessage({ text: safeMsg, isError: true });
     } finally {
@@ -146,7 +146,7 @@ export default function LoginPage() {
       const rawMsg = err instanceof Error ? err.message : "Verification failed.";
       const safeMsg =
         rawMsg.includes("RATE_LIMIT_HMAC_SECRET") || rawMsg.includes("FATAL")
-          ? "Sign-in is temporarily unavailable. Please try again shortly."
+          ? "We're temporarily unable to process this request. Please try again shortly."
           : rawMsg;
       setStatusMessage({ text: safeMsg, isError: true });
     } finally {

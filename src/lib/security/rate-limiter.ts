@@ -133,7 +133,7 @@ export async function checkRateLimit(
         return {
           allowed: false,
           remainingSeconds: 60,
-          reason: "Verification service temporarily unavailable. Please try again shortly.",
+          reason: "We're temporarily unable to process this request. Please try again shortly.",
         };
       }
 
@@ -152,7 +152,7 @@ export async function checkRateLimit(
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "Verification service temporarily unavailable. Please try again shortly.",
+        reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     } catch (err: unknown) {
       console.error(
@@ -168,7 +168,7 @@ export async function checkRateLimit(
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "Verification service temporarily unavailable. Please try again shortly.",
+        reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     }
   }
@@ -185,7 +185,7 @@ export async function checkRateLimit(
     return {
       allowed: false,
       remainingSeconds: 300,
-      reason: "Security service unavailable. Operations locked in production without database.",
+      reason: "We're temporarily unable to process this request. Please try again shortly.",
     };
   }
 
@@ -282,7 +282,7 @@ export async function validateOtpSendRateLimit(
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "Sign-in is temporarily unavailable. Please try again shortly.",
+        reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     }
     throw err;
@@ -339,7 +339,7 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "Sign-in is temporarily unavailable. Please try again shortly.",
+        reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     }
     throw err;
@@ -374,7 +374,7 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
         return {
           allowed: false,
           remainingSeconds: 60,
-          reason: "Verification service temporarily unavailable. Please try again shortly.",
+          reason: "We're temporarily unable to process this request. Please try again shortly.",
         };
       }
 
@@ -383,7 +383,7 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
         return {
           allowed: false,
           remainingSeconds: 60,
-          reason: "Verification service temporarily unavailable. Please try again shortly.",
+          reason: "We're temporarily unable to process this request. Please try again shortly.",
         };
       }
 
@@ -428,7 +428,7 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "Verification service temporarily unavailable. Please try again shortly.",
+        reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     }
   }
@@ -562,7 +562,7 @@ export async function validateLoginRateLimit(
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "Sign-in is temporarily unavailable. Please try again shortly.",
+        reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     }
     throw err;

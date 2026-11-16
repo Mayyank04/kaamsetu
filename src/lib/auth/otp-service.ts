@@ -227,7 +227,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       if (isProduction) {
         return {
           success: false,
-          message: "Sign-in is temporarily unavailable. Please try again shortly.",
+          message: "We're temporarily unable to process this request. Please try again shortly.",
           statusCode: 503,
         };
       }
@@ -316,7 +316,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   if (isProduction) {
     return {
       success: false,
-      message: "SMS verification gateway is temporarily unavailable. Please try again shortly.",
+      message: "We're temporarily unable to process this request. Please try again shortly.",
       statusCode: 503,
     };
   }

@@ -133,9 +133,14 @@ export function ExtractionEditor({
               Self-declared trade testimony. Review and edit any field before credential minting.
             </p>
           </div>
-          <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20 font-mono py-1 self-start sm:self-auto">
-            Self-Declared Testimony
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20 font-mono py-1">
+              Self-Declared Testimony
+            </Badge>
+            <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-900 border-amber-300 font-mono py-1">
+              Trade suggestion — review and edit
+            </Badge>
+          </div>
         </div>
 
         {/* Basic Info Row */}

@@ -175,6 +175,11 @@ export function OnboardingWizard() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
+        if (response.status === 401 || result.error?.code === "UNAUTHENTICATED") {
+          setPendingSubmission(approved);
+          setShowAuthModal(true);
+          return;
+        }
         throw new Error(
           result.error?.message ||
             result.message ||
@@ -509,7 +514,7 @@ export function OnboardingWizard() {
                 Verify Mobile Number
               </h3>
               <p className="text-xs text-charcoal-muted leading-relaxed">
-                To issue your official cryptographic sovereign credential, verify your mobile number. Your draft details are safely preserved.
+                To issue your official cryptographic sovereign credential: Verify your mobile number to securely save your skill profile. Your information will remain available when you return.
               </p>
             </div>
 
