@@ -16,6 +16,7 @@ import { assertCryptographicKeyQuality } from "@/lib/crypto/key-validator";
 export interface RateLimitResult {
   allowed: boolean;
   remainingSeconds?: number;
+  nextAllowedAt?: string;
   reason?: string;
 }
 
@@ -83,7 +84,7 @@ export function hashRateLimitKey(
   secretOverride?: string
 ): string {
   const secret = secretOverride || getRateLimitHmacSecret();
-  const normalizedId = identifier.trim().toLowerCase();
+  const normalizedId = (identifier || "127.0.0.1").trim().toLowerCase();
 
   // Domain separation: include namespace in the HMAC input
   const digest = crypto
@@ -103,9 +104,10 @@ export async function checkRateLimit(
   key: string,
   maxAttempts: number,
   windowSeconds: number,
-  blockSeconds: number
+  blockSeconds: number = windowSeconds
 ): Promise<RateLimitResult> {
   const isProduction = (process.env.NODE_ENV as string) === "production";
+  const effectiveBlockSec = typeof blockSeconds === "number" && !isNaN(blockSeconds) ? blockSeconds : windowSeconds;
 
   // 1. Authoritative: Use atomic PostgreSQL stored procedure via admin service role
   if (isConfigured.supabase) {
@@ -115,7 +117,7 @@ export async function checkRateLimit(
         p_key: key,
         p_max_attempts: maxAttempts,
         p_window_seconds: windowSeconds,
-        p_block_seconds: blockSeconds,
+        p_block_seconds: effectiveBlockSec,
       });
 
       if (error) {
@@ -139,12 +141,14 @@ export async function checkRateLimit(
 
       if (data && data.length > 0) {
         const row = data[0];
+        const remSec = row.remaining_seconds || 0;
         return {
           allowed: Boolean(row.allowed),
-          remainingSeconds: row.remaining_seconds || 0,
+          remainingSeconds: remSec,
+          nextAllowedAt: remSec > 0 ? new Date(Date.now() + remSec * 1000).toISOString() : undefined,
           reason: row.allowed
             ? undefined
-            : `Rate limit exceeded. Try again in ${row.remaining_seconds} seconds.`,
+            : `Rate limit exceeded. Try again in ${remSec} seconds.`,
         };
       }
 
@@ -152,6 +156,7 @@ export async function checkRateLimit(
       return {
         allowed: false,
         remainingSeconds: 60,
+        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
         reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     } catch (err: unknown) {
@@ -168,6 +173,7 @@ export async function checkRateLimit(
       return {
         allowed: false,
         remainingSeconds: 60,
+        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
         reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     }
@@ -185,6 +191,7 @@ export async function checkRateLimit(
     return {
       allowed: false,
       remainingSeconds: 300,
+      nextAllowedAt: new Date(Date.now() + 300000).toISOString(),
       reason: "We're temporarily unable to process this request. Please try again shortly.",
     };
   }
@@ -199,6 +206,7 @@ export async function checkRateLimit(
     return {
       allowed: false,
       remainingSeconds: 60,
+      nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
       reason: "Rate limiting database is required. Enable ENABLE_IN_MEMORY_RATE_LIMIT_MOCK for offline development.",
     };
   }
@@ -207,16 +215,22 @@ export async function checkRateLimit(
   let bucket = memoryStore.get(key);
 
   if (!bucket) {
-    bucket = { count: 1, firstAttemptAt: now, lastAttemptAt: now };
+    bucket = {
+      count: 1,
+      firstAttemptAt: now,
+      lastAttemptAt: now,
+      blockedUntil: 1 >= maxAttempts ? now + effectiveBlockSec * 1000 : undefined,
+    };
     memoryStore.set(key, bucket);
     return { allowed: true };
   }
 
   if (bucket.blockedUntil && bucket.blockedUntil > now) {
-    const remaining = Math.ceil((bucket.blockedUntil - now) / 1000);
+    const remaining = Math.max(1, Math.ceil((bucket.blockedUntil - now) / 1000));
     return {
       allowed: false,
       remainingSeconds: remaining,
+      nextAllowedAt: new Date(bucket.blockedUntil).toISOString(),
       reason: `Too many attempts. Blocked for security. Try again in ${remaining}s.`,
     };
   }
@@ -225,23 +239,27 @@ export async function checkRateLimit(
     bucket.count = 1;
     bucket.firstAttemptAt = now;
     bucket.lastAttemptAt = now;
-    bucket.blockedUntil = undefined;
+    bucket.blockedUntil = 1 >= maxAttempts ? now + effectiveBlockSec * 1000 : undefined;
     return { allowed: true };
   }
 
   if (bucket.count >= maxAttempts) {
-    bucket.blockedUntil = now + blockSeconds * 1000;
+    if (!bucket.blockedUntil || bucket.blockedUntil <= now) {
+      bucket.blockedUntil = now + effectiveBlockSec * 1000;
+    }
     bucket.lastAttemptAt = now;
+    const remaining = Math.max(1, Math.ceil((bucket.blockedUntil - now) / 1000));
     return {
       allowed: false,
-      remainingSeconds: blockSeconds,
-      reason: `Maximum limit of ${maxAttempts} attempts reached. Try again in ${blockSeconds}s.`,
+      remainingSeconds: remaining,
+      nextAllowedAt: new Date(bucket.blockedUntil).toISOString(),
+      reason: `Maximum limit of ${maxAttempts} attempts reached. Try again in ${remaining}s.`,
     };
   }
 
   bucket.count += 1;
   if (bucket.count >= maxAttempts) {
-    bucket.blockedUntil = now + blockSeconds * 1000;
+    bucket.blockedUntil = now + effectiveBlockSec * 1000;
   }
   bucket.lastAttemptAt = now;
   return { allowed: true };
@@ -256,10 +274,11 @@ export async function checkRateLimit(
  */
 export async function validateOtpSendRateLimit(
   phone: string,
-  clientIp: string
+  clientIp?: string
 ): Promise<RateLimitResult> {
   const isProduction = (process.env.NODE_ENV as string) === "production";
-  const normalizedPhone = phone.replace(/\D/g, "");
+  const normalizedPhone = (phone || "").replace(/\D/g, "");
+  const safeClientIp = (clientIp || "127.0.0.1").trim();
 
   let cooldownKey: string;
   let phoneHourlyKey: string;
@@ -268,7 +287,7 @@ export async function validateOtpSendRateLimit(
   try {
     cooldownKey = hashRateLimitKey("cooldown", normalizedPhone);
     phoneHourlyKey = hashRateLimitKey("phone:send", `${normalizedPhone}:hourly`);
-    ipKey = hashRateLimitKey("ip:send", clientIp);
+    ipKey = hashRateLimitKey("ip:send", safeClientIp);
   } catch (err: unknown) {
     console.error(
       JSON.stringify({
@@ -283,6 +302,7 @@ export async function validateOtpSendRateLimit(
       return {
         allowed: false,
         remainingSeconds: 60,
+        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
         reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     }
@@ -292,19 +312,23 @@ export async function validateOtpSendRateLimit(
   // Check 1: 60-second cooldown per phone (namespace: "cooldown")
   const cooldown = await checkRateLimit(cooldownKey, 1, 60, 60);
   if (!cooldown.allowed) {
+    const remSec = cooldown.remainingSeconds || 60;
     return {
       allowed: false,
-      remainingSeconds: cooldown.remainingSeconds,
-      reason: `Please wait ${cooldown.remainingSeconds} seconds before requesting a new code.`,
+      remainingSeconds: remSec,
+      nextAllowedAt: cooldown.nextAllowedAt || new Date(Date.now() + remSec * 1000).toISOString(),
+      reason: `Please wait ${remSec} seconds before requesting a new code.`,
     };
   }
 
   // Check 2: Hourly phone limit (max 5 SMS/hr) (namespace: "phone:send")
   const phoneHourly = await checkRateLimit(phoneHourlyKey, 5, 3600, 3600);
   if (!phoneHourly.allowed) {
+    const remSec = phoneHourly.remainingSeconds || 3600;
     return {
       allowed: false,
-      remainingSeconds: phoneHourly.remainingSeconds,
+      remainingSeconds: remSec,
+      nextAllowedAt: phoneHourly.nextAllowedAt || new Date(Date.now() + remSec * 1000).toISOString(),
       reason: "Maximum SMS verification requests reached for this number. Please try again later.",
     };
   }
@@ -312,9 +336,11 @@ export async function validateOtpSendRateLimit(
   // Check 3: Hourly IP limit (max 15 SMS/hr per IP) (namespace: "ip:send")
   const ipHourly = await checkRateLimit(ipKey, 15, 3600, 3600);
   if (!ipHourly.allowed) {
+    const remSec = ipHourly.remainingSeconds || 3600;
     return {
       allowed: false,
-      remainingSeconds: ipHourly.remainingSeconds,
+      remainingSeconds: remSec,
+      nextAllowedAt: ipHourly.nextAllowedAt || new Date(Date.now() + remSec * 1000).toISOString(),
       reason: "Too many verification requests from your network. Please try again later.",
     };
   }

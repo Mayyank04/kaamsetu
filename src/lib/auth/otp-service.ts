@@ -39,8 +39,10 @@ export interface SendOtpResponse {
   message: string;
   isSandbox?: boolean;
   sandboxCode?: string;
+  hasActiveChallenge?: boolean;
   requiresDemoCode?: boolean;
   retryAfterSeconds?: number;
+  nextAllowedAt?: string;
   statusCode?: number;
 }
 
@@ -192,10 +194,55 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   // Rate Limiting Check (Fail closed in production)
   const rateLimit = await validateOtpSendRateLimit(formatted, req.clientIp);
   if (!rateLimit.allowed) {
+    const verificationMode = env.AUTH_VERIFICATION_MODE || "sandbox";
+    const isSandbox = verificationMode === "sandbox";
+    const phoneHashed = hashRateLimitKey("phone:identity", formatted);
+    let activeChallengeCode: string | undefined;
+    let hasActiveChallenge = false;
+
+    // 1. Check in-memory store for active challenge
+    const memRecord = memoryOtpStore.get(phoneHashed);
+    if (memRecord && !memRecord.consumedAt && Date.now() < memRecord.expiresAt) {
+      hasActiveChallenge = true;
+      if (isSandbox) {
+        activeChallengeCode = memRecord.plainOtp;
+      }
+    }
+
+    // 2. Check Supabase DB for active challenge if DB configured
+    if (!hasActiveChallenge && isConfigured.supabase) {
+      try {
+        const adminClient = createAdminClient();
+        const { data: dbChallenge } = await adminClient
+          .from("otp_challenges")
+          .select("id, verification_mode, expires_at")
+          .eq("phone_hash", phoneHashed)
+          .is("consumed_at", null)
+          .gt("expires_at", new Date().toISOString())
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (dbChallenge) {
+          hasActiveChallenge = true;
+          const configuredSandboxCode = process.env.SANDBOX_OTP_CODE;
+          if (isSandbox && configuredSandboxCode && /^\d{6}$/.test(configuredSandboxCode)) {
+            activeChallengeCode = configuredSandboxCode;
+          }
+        }
+      } catch {
+        // Fallback gracefully
+      }
+    }
+
     return {
       success: false,
-      message: rateLimit.reason || "Too many verification requests. Please try again later.",
+      message: rateLimit.reason || "Please wait before requesting a new code.",
       retryAfterSeconds: rateLimit.remainingSeconds,
+      nextAllowedAt: rateLimit.nextAllowedAt,
+      isSandbox,
+      sandboxCode: activeChallengeCode,
+      hasActiveChallenge,
       statusCode: 429,
     };
   }
@@ -264,6 +311,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       message: `Sandbox verification code for ${maskPhoneNumber(formatted)} generated. No SMS will be sent.`,
       isSandbox: true,
       sandboxCode: otpCode,
+      retryAfterSeconds: 60,
+      nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
       statusCode: 200,
     };
   }
@@ -296,6 +345,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
         return {
           success: true,
           message: `Verification code sent via SMS to ${maskPhoneNumber(formatted)}.`,
+          retryAfterSeconds: 60,
+          nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
           statusCode: 200,
         };
       }
@@ -313,6 +364,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
         return {
           success: true,
           message: `Verification code sent via SMS to ${maskPhoneNumber(formatted)}.`,
+          retryAfterSeconds: 60,
+          nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
           statusCode: 200,
         };
       }
