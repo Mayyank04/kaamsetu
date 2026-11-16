@@ -13,6 +13,7 @@ import {
   submitWorkerGrievance,
   resolveGrievanceWithRestitution,
 } from "@/lib/disputes/grievance-service";
+import { validateGrievanceRateLimit } from "@/lib/security/rate-limiter";
 
 const submitGrievanceSchema = z.object({
   workerProfileId: z.string().min(1, "workerProfileId is required"),
@@ -88,6 +89,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const user = await requireWorker();
+
+    // Rate limit check: max 3 grievance submissions per hour per worker/IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+    const rateLimit = await validateGrievanceRateLimit(user.id, clientIp);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: rateLimit.reason, remainingSeconds: rateLimit.remainingSeconds },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const parsed = submitGrievanceSchema.parse(body);
 

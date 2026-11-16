@@ -10,6 +10,7 @@ import {
   AuthError,
 } from "@/lib/auth/server";
 import { evaluatePayoutProvenance, computeWorkerIncomeTimeline } from "@/lib/worker/worker-outcome-service";
+import { validatePayoutRateLimit } from "@/lib/security/rate-limiter";
 
 const createPayoutSchema = z.object({
   paymentRecordId: z.string().uuid("Invalid paymentRecordId UUID").optional().nullable(),
@@ -168,6 +169,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const user = await requireContractor();
+
+    // Rate limit check: max 20 payouts per 10 minutes per contractor/IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+    const rateLimit = await validatePayoutRateLimit(user.id, clientIp);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: rateLimit.reason, remainingSeconds: rateLimit.remainingSeconds },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const parsed = createPayoutSchema.parse(body);
 
