@@ -23,10 +23,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: result.success,
+        challengeCreated: result.challengeCreated,
+        hasActiveChallenge: result.hasActiveChallenge,
         message: result.message,
         isSandbox: result.isSandbox,
         sandboxCode: result.sandboxCode,
-        hasActiveChallenge: result.hasActiveChallenge,
+        isInfrastructureError: result.isInfrastructureError,
         requiresDemoCode: result.requiresDemoCode,
         retryAfterSeconds: result.retryAfterSeconds,
         nextAllowedAt: result.nextAllowedAt,

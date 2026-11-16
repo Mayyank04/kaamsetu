@@ -18,6 +18,8 @@ export interface RateLimitResult {
   remainingSeconds?: number;
   nextAllowedAt?: string;
   reason?: string;
+  isInfrastructureError?: boolean;
+  statusCode?: number;
 }
 
 export type RateLimitNamespace =
@@ -36,7 +38,9 @@ interface MemoryBucket {
   blockedUntil?: number;
 }
 
-const memoryStore = new Map<string, MemoryBucket>();
+const memoryStore: Map<string, MemoryBucket> =
+  (globalThis as any).__kaamsetu_memory_rate_limit_store ||
+  ((globalThis as any).__kaamsetu_memory_rate_limit_store = new Map<string, MemoryBucket>());
 
 /**
  * Resolves the server-only HMAC secret for privacy-preserving rate limit keys.
@@ -100,117 +104,15 @@ export function hashRateLimitKey(
  * Checks and increments a rate limit key atomically in PostgreSQL.
  * If the database is unavailable or fails in production, it FAILS CLOSED.
  */
-export async function checkRateLimit(
+/**
+ * In-memory rate limiting engine for offline development and local automated tests.
+ */
+function checkInMemoryRateLimit(
   key: string,
   maxAttempts: number,
   windowSeconds: number,
-  blockSeconds: number = windowSeconds
-): Promise<RateLimitResult> {
-  const isProduction = (process.env.NODE_ENV as string) === "production";
-  const effectiveBlockSec = typeof blockSeconds === "number" && !isNaN(blockSeconds) ? blockSeconds : windowSeconds;
-
-  // 1. Authoritative: Use atomic PostgreSQL stored procedure via admin service role
-  if (isConfigured.supabase) {
-    try {
-      const adminClient = createAdminClient();
-      const { data, error } = await adminClient.rpc("check_and_increment_rate_limit", {
-        p_key: key,
-        p_max_attempts: maxAttempts,
-        p_window_seconds: windowSeconds,
-        p_block_seconds: effectiveBlockSec,
-      });
-
-      if (error) {
-        console.error(
-          JSON.stringify({
-            level: "error",
-            component: "RateLimiter",
-            action: "check_and_increment_rate_limit",
-            keyPrefix: key.split(":")[0],
-            message: "Database RPC error during rate check",
-            code: error.code,
-          })
-        );
-        // Fail closed on database error
-        return {
-          allowed: false,
-          remainingSeconds: 60,
-          reason: "We're temporarily unable to process this request. Please try again shortly.",
-        };
-      }
-
-      if (data && data.length > 0) {
-        const row = data[0];
-        const remSec = row.remaining_seconds || 0;
-        return {
-          allowed: Boolean(row.allowed),
-          remainingSeconds: remSec,
-          nextAllowedAt: remSec > 0 ? new Date(Date.now() + remSec * 1000).toISOString() : undefined,
-          reason: row.allowed
-            ? undefined
-            : `Rate limit exceeded. Try again in ${remSec} seconds.`,
-        };
-      }
-
-      // Malformed or empty RPC response -> Fail closed
-      return {
-        allowed: false,
-        remainingSeconds: 60,
-        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
-        reason: "We're temporarily unable to process this request. Please try again shortly.",
-      };
-    } catch (err: unknown) {
-      console.error(
-        JSON.stringify({
-          level: "error",
-          component: "RateLimiter",
-          action: "checkRateLimit",
-          keyPrefix: key.split(":")[0],
-          message: err instanceof Error ? err.message : "Unexpected database exception",
-        })
-      );
-      // Fail closed on exception
-      return {
-        allowed: false,
-        remainingSeconds: 60,
-        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
-        reason: "We're temporarily unable to process this request. Please try again shortly.",
-      };
-    }
-  }
-
-  // 2. Production Invariant: In-memory fallback is strictly FORBIDDEN in production
-  if (isProduction) {
-    console.error(
-      JSON.stringify({
-        level: "fatal",
-        component: "RateLimiter",
-        message: "Supabase not configured in production. Rejecting rate-limited request.",
-      })
-    );
-    return {
-      allowed: false,
-      remainingSeconds: 300,
-      nextAllowedAt: new Date(Date.now() + 300000).toISOString(),
-      reason: "We're temporarily unable to process this request. Please try again shortly.",
-    };
-  }
-
-  // 3. Isolated Development Mock: Only enabled when explicitly permitted or in test mode
-  const allowDevMock =
-    process.env.NODE_ENV !== "production" &&
-    (process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK === "true" ||
-      process.env.NODE_ENV === "test");
-
-  if (!allowDevMock) {
-    return {
-      allowed: false,
-      remainingSeconds: 60,
-      nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
-      reason: "Rate limiting database is required. Enable ENABLE_IN_MEMORY_RATE_LIMIT_MOCK for offline development.",
-    };
-  }
-
+  effectiveBlockSec: number
+): RateLimitResult {
   const now = Date.now();
   let bucket = memoryStore.get(key);
 
@@ -266,6 +168,144 @@ export async function checkRateLimit(
 }
 
 /**
+ * Checks and increments a rate limit key atomically in PostgreSQL.
+ * If the database is unavailable or fails in production, it FAILS CLOSED with an infrastructure error.
+ */
+export async function checkRateLimit(
+  key: string,
+  maxAttempts: number,
+  windowSeconds: number,
+  blockSeconds: number = windowSeconds
+): Promise<RateLimitResult> {
+  const isProduction = (process.env.NODE_ENV as string) === "production";
+  const effectiveBlockSec = typeof blockSeconds === "number" && !isNaN(blockSeconds) ? blockSeconds : windowSeconds;
+
+  const allowDevMock =
+    !isProduction &&
+    (process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK === "true" ||
+      process.env.NODE_ENV === "test");
+
+  // 1. Authoritative: Use atomic PostgreSQL stored procedure via admin service role
+  if (isConfigured.supabase && !allowDevMock) {
+    try {
+      const adminClient = createAdminClient();
+      const { data, error } = await adminClient.rpc("check_and_increment_rate_limit", {
+        p_key: key,
+        p_max_attempts: maxAttempts,
+        p_window_seconds: windowSeconds,
+        p_block_seconds: effectiveBlockSec,
+      });
+
+      if (error) {
+        console.error(
+          JSON.stringify({
+            level: isProduction ? "fatal" : "warn",
+            component: "RateLimiter",
+            action: "check_and_increment_rate_limit",
+            keyPrefix: key.split(":")[0],
+            message: "Database RPC error during rate check",
+            code: error.code,
+          })
+        );
+        if (!isProduction) {
+          // Graceful fallback to memory store for local development with unmigrated database
+          return checkInMemoryRateLimit(key, maxAttempts, windowSeconds, effectiveBlockSec);
+        }
+        // Fail closed on database error in production
+        return {
+          allowed: false,
+          remainingSeconds: 60,
+          nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
+          isInfrastructureError: true,
+          statusCode: 503,
+          reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
+        };
+      }
+
+      if (data && data.length > 0) {
+        const row = data[0];
+        const remSec = row.remaining_seconds || 0;
+        return {
+          allowed: Boolean(row.allowed),
+          remainingSeconds: remSec,
+          nextAllowedAt: remSec > 0 ? new Date(Date.now() + remSec * 1000).toISOString() : undefined,
+          reason: row.allowed
+            ? undefined
+            : `Rate limit exceeded. Try again in ${remSec} seconds.`,
+        };
+      }
+
+      // Malformed or empty RPC response -> Fail closed
+      if (!isProduction) {
+        return checkInMemoryRateLimit(key, maxAttempts, windowSeconds, effectiveBlockSec);
+      }
+      return {
+        allowed: false,
+        remainingSeconds: 60,
+        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
+        isInfrastructureError: true,
+        statusCode: 503,
+        reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
+      };
+    } catch (err: unknown) {
+      console.error(
+        JSON.stringify({
+          level: isProduction ? "fatal" : "warn",
+          component: "RateLimiter",
+          action: "checkRateLimit",
+          keyPrefix: key.split(":")[0],
+          message: err instanceof Error ? err.message : "Unexpected database exception",
+        })
+      );
+      if (!isProduction) {
+        return checkInMemoryRateLimit(key, maxAttempts, windowSeconds, effectiveBlockSec);
+      }
+      return {
+        allowed: false,
+        remainingSeconds: 60,
+        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
+        isInfrastructureError: true,
+        statusCode: 503,
+        reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
+      };
+    }
+  }
+
+  // 2. Production Invariant: In-memory fallback is strictly FORBIDDEN in production
+  if (isProduction) {
+    console.error(
+      JSON.stringify({
+        level: "fatal",
+        component: "RateLimiter",
+        message: "Supabase not configured in production. Rejecting rate-limited request.",
+      })
+    );
+    return {
+      allowed: false,
+      remainingSeconds: 300,
+      nextAllowedAt: new Date(Date.now() + 300000).toISOString(),
+      isInfrastructureError: true,
+      statusCode: 503,
+      reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
+    };
+  }
+
+  // 3. Isolated Development Mock: Only enabled when explicitly permitted or in test mode
+  if (!allowDevMock) {
+    return {
+      allowed: false,
+      remainingSeconds: 60,
+      nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
+      isInfrastructureError: true,
+      statusCode: 503,
+      reason: "Rate limiting database is required. Enable ENABLE_IN_MEMORY_RATE_LIMIT_MOCK for offline development.",
+    };
+  }
+
+  return checkInMemoryRateLimit(key, maxAttempts, windowSeconds, effectiveBlockSec);
+}
+
+/**
  * Validates request for OTP sending.
  * Enforces:
  * 1. Per-Phone Resend Cooldown: 60 seconds minimum interval.
@@ -312,6 +352,9 @@ export async function validateOtpSendRateLimit(
   // Check 1: 60-second cooldown per phone (namespace: "cooldown")
   const cooldown = await checkRateLimit(cooldownKey, 1, 60, 60);
   if (!cooldown.allowed) {
+    if (cooldown.isInfrastructureError) {
+      return cooldown;
+    }
     const remSec = cooldown.remainingSeconds || 60;
     return {
       allowed: false,
@@ -324,6 +367,9 @@ export async function validateOtpSendRateLimit(
   // Check 2: Hourly phone limit (max 5 SMS/hr) (namespace: "phone:send")
   const phoneHourly = await checkRateLimit(phoneHourlyKey, 5, 3600, 3600);
   if (!phoneHourly.allowed) {
+    if (phoneHourly.isInfrastructureError) {
+      return phoneHourly;
+    }
     const remSec = phoneHourly.remainingSeconds || 3600;
     return {
       allowed: false,
@@ -336,6 +382,9 @@ export async function validateOtpSendRateLimit(
   // Check 3: Hourly IP limit (max 15 SMS/hr per IP) (namespace: "ip:send")
   const ipHourly = await checkRateLimit(ipKey, 15, 3600, 3600);
   if (!ipHourly.allowed) {
+    if (ipHourly.isInfrastructureError) {
+      return ipHourly;
+    }
     const remSec = ipHourly.remainingSeconds || 3600;
     return {
       allowed: false,
@@ -391,16 +440,31 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
       if (error) {
         console.error(
           JSON.stringify({
-            level: "error",
+            level: isProduction ? "fatal" : "warn",
             component: "RateLimiter",
             action: "validateOtpVerifyAttempt",
             message: "Database error querying verification lockout status",
+            code: error.code,
           })
         );
+        if (!isProduction) {
+          const bucket = memoryStore.get(verifyKey);
+          if (bucket?.blockedUntil && bucket.blockedUntil > Date.now()) {
+            const remaining = Math.ceil((bucket.blockedUntil - Date.now()) / 1000);
+            return {
+              allowed: false,
+              remainingSeconds: remaining,
+              reason: `Account temporarily locked due to too many failed attempts. Try again in ${remaining}s.`,
+            };
+          }
+          return { allowed: true };
+        }
         // Fail closed in production or database-backed configurations
         return {
           allowed: false,
           remainingSeconds: 60,
+          isInfrastructureError: true,
+          statusCode: 503,
           reason: "We're temporarily unable to process this request. Please try again shortly.",
         };
       }
@@ -446,15 +510,29 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
     } catch (err: unknown) {
       console.error(
         JSON.stringify({
-          level: "error",
+          level: isProduction ? "fatal" : "warn",
           component: "RateLimiter",
           action: "validateOtpVerifyAttempt",
           message: err instanceof Error ? err.message : "Exception in lockout check",
         })
       );
+      if (!isProduction) {
+        const bucket = memoryStore.get(verifyKey);
+        if (bucket?.blockedUntil && bucket.blockedUntil > Date.now()) {
+          const remaining = Math.ceil((bucket.blockedUntil - Date.now()) / 1000);
+          return {
+            allowed: false,
+            remainingSeconds: remaining,
+            reason: `Account temporarily locked due to too many failed attempts. Try again in ${remaining}s.`,
+          };
+        }
+        return { allowed: true };
+      }
       return {
         allowed: false,
         remainingSeconds: 60,
+        isInfrastructureError: true,
+        statusCode: 503,
         reason: "We're temporarily unable to process this request. Please try again shortly.",
       };
     }

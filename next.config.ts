@@ -7,9 +7,9 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js hydration requires inline scripts in development
-      "style-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' blob: data: https://images.unsplash.com https://lh3.googleusercontent.com https://*.supabase.co",
-      "font-src 'self' data:",
+      "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self' https://*.supabase.co https://api.twilio.com https://generativelanguage.googleapis.com",
       "frame-ancestors 'none'",
       "object-src 'none'",

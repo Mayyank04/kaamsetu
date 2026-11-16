@@ -31,15 +31,17 @@ export interface SendOtpRequest {
   role?: string;
   fullName?: string;
   intent?: "registration" | "login";
-  clientIp: string;
+  clientIp?: string;
 }
 
 export interface SendOtpResponse {
   success: boolean;
   message: string;
+  challengeCreated?: boolean;
+  hasActiveChallenge?: boolean;
   isSandbox?: boolean;
   sandboxCode?: string;
-  hasActiveChallenge?: boolean;
+  isInfrastructureError?: boolean;
   requiresDemoCode?: boolean;
   retryAfterSeconds?: number;
   nextAllowedAt?: string;
@@ -93,7 +95,9 @@ interface MemoryOtpRecord {
   createdAt: number;
 }
 
-const memoryOtpStore = new Map<string, MemoryOtpRecord>();
+const memoryOtpStore: Map<string, MemoryOtpRecord> =
+  (globalThis as any).__kaamsetu_memory_otp_store ||
+  ((globalThis as any).__kaamsetu_memory_otp_store = new Map<string, MemoryOtpRecord>());
 
 /**
  * Normalizes an Indian phone number to E.164 (+91XXXXXXXXXX)
@@ -192,8 +196,22 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   }
 
   // Rate Limiting Check (Fail closed in production)
-  const rateLimit = await validateOtpSendRateLimit(formatted, req.clientIp);
+  const clientIp = req.clientIp || "127.0.0.1";
+  const rateLimit = await validateOtpSendRateLimit(formatted, clientIp);
   if (!rateLimit.allowed) {
+    if (rateLimit.isInfrastructureError) {
+      return {
+        success: false,
+        challengeCreated: false,
+        hasActiveChallenge: false,
+        isInfrastructureError: true,
+        message: rateLimit.reason || "Authentication rate limiter temporarily unavailable. Please retry shortly.",
+        retryAfterSeconds: rateLimit.remainingSeconds || 60,
+        nextAllowedAt: rateLimit.nextAllowedAt,
+        statusCode: rateLimit.statusCode || 503,
+      };
+    }
+
     const verificationMode = env.AUTH_VERIFICATION_MODE || "sandbox";
     const isSandbox = verificationMode === "sandbox";
     const phoneHashed = hashRateLimitKey("phone:identity", formatted);
@@ -235,14 +253,31 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       }
     }
 
+    const remSec = rateLimit.remainingSeconds || 60;
+    const nextAllowed = rateLimit.nextAllowedAt || new Date(Date.now() + remSec * 1000).toISOString();
+
+    if (hasActiveChallenge) {
+      return {
+        success: false,
+        challengeCreated: false,
+        hasActiveChallenge: true,
+        retryAfterSeconds: remSec,
+        nextAllowedAt: nextAllowed,
+        isSandbox,
+        sandboxCode: activeChallengeCode,
+        message: `Please wait ${remSec} seconds before requesting a new code.`,
+        statusCode: 429,
+      };
+    }
+
     return {
       success: false,
-      message: rateLimit.reason || "Please wait before requesting a new code.",
-      retryAfterSeconds: rateLimit.remainingSeconds,
-      nextAllowedAt: rateLimit.nextAllowedAt,
+      challengeCreated: false,
+      hasActiveChallenge: false,
+      retryAfterSeconds: remSec,
+      nextAllowedAt: nextAllowed,
       isSandbox,
-      sandboxCode: activeChallengeCode,
-      hasActiveChallenge,
+      message: rateLimit.reason || `Please wait ${remSec} seconds before requesting a new code.`,
       statusCode: 429,
     };
   }
@@ -308,6 +343,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   if (isSandbox) {
     return {
       success: true,
+      challengeCreated: true,
+      hasActiveChallenge: true,
       message: `Sandbox verification code for ${maskPhoneNumber(formatted)} generated. No SMS will be sent.`,
       isSandbox: true,
       sandboxCode: otpCode,
@@ -344,6 +381,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       if (twilioRes.ok) {
         return {
           success: true,
+          challengeCreated: true,
+          hasActiveChallenge: true,
           message: `Verification code sent via SMS to ${maskPhoneNumber(formatted)}.`,
           retryAfterSeconds: 60,
           nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
@@ -363,6 +402,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       if (!error) {
         return {
           success: true,
+          challengeCreated: true,
+          hasActiveChallenge: true,
           message: `Verification code sent via SMS to ${maskPhoneNumber(formatted)}.`,
           retryAfterSeconds: 60,
           nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
