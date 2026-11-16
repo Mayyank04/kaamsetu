@@ -230,6 +230,10 @@ export function OnboardingWizard() {
   // Inline Modal: Send OTP
   const handleSendInlineOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (otpFlow.isCooldown && otpFlow.hasActiveChallenge) {
+      otpFlow.setStep(2);
+      return;
+    }
     await otpFlow.requestOtp(undefined, pendingSubmission?.fullName);
   };
 
@@ -555,24 +559,39 @@ export function OnboardingWizard() {
                   </div>
                 </div>
 
+                {/* Sandbox Disclosure on Step 1 */}
+                {otpFlow.isSandbox && (
+                  <div className="p-2.5 rounded-xs bg-sand/20 border border-sand-600/30 text-[11px] text-forest flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <ShieldCheck className="w-3.5 h-3.5 text-forest shrink-0" />
+                      <span>Sandbox Verification Mode</span>
+                    </div>
+                    <span className="text-[10px] bg-sand/40 text-forest font-semibold px-2 py-0.5 rounded-xs border border-sand/60">
+                      Simulated SMS
+                    </span>
+                  </div>
+                )}
+
                 <Button
-                  type="submit"
-                  disabled={otpFlow.isLoading || otpFlow.isCooldown}
+                  type={otpFlow.isCooldown && otpFlow.hasActiveChallenge ? "button" : "submit"}
+                  onClick={
+                    otpFlow.isCooldown && otpFlow.hasActiveChallenge
+                      ? () => otpFlow.setStep(2)
+                      : undefined
+                  }
+                  disabled={
+                    otpFlow.isLoading ||
+                    (otpFlow.isCooldown && !otpFlow.hasActiveChallenge)
+                  }
                   className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs"
                 >
-                  {otpFlow.isLoading ? (
-                    "Sending OTP..."
-                  ) : otpFlow.isCooldown ? (
-                    `Resend code in ${otpFlow.cooldownSeconds}s`
-                  ) : (
-                    <>
-                      <span>Send Verification Code</span>
-                      <ArrowRight className="w-4 h-4 ml-1.5" />
-                    </>
+                  <span>{otpFlow.getPrimaryButtonText()}</span>
+                  {!otpFlow.isLoading && !otpFlow.isCooldown && (
+                    <ArrowRight className="w-4 h-4 ml-1.5" />
                   )}
                 </Button>
 
-                {otpFlow.isCooldown && (
+                {otpFlow.hasActiveChallenge && (
                   <button
                     type="button"
                     onClick={() => otpFlow.setStep(2)}

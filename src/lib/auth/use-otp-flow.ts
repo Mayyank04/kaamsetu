@@ -47,6 +47,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
   const [fullName, setFullName] = React.useState("");
   const [isSandbox, setIsSandbox] = React.useState(false);
   const [sandboxCode, setSandboxCode] = React.useState<string | null>(null);
+  const [hasActiveChallenge, setHasActiveChallenge] = React.useState(false);
   const [cooldownSeconds, setCooldownSeconds] = React.useState(0);
   const [nextAllowedAt, setNextAllowedAt] = React.useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -74,6 +75,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
           if (stored.isSandbox !== undefined) setIsSandbox(stored.isSandbox);
           if (stored.sandboxCode) setSandboxCode(stored.sandboxCode);
+          if (stored.hasActiveChallenge !== undefined) setHasActiveChallenge(Boolean(stored.hasActiveChallenge));
 
           const now = Date.now();
           if (stored.targetTimestamp > now) {
@@ -81,7 +83,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
             setCooldownSeconds(remaining);
             setNextAllowedAt(new Date(stored.targetTimestamp));
             setStep(stored.step || 2);
-            setState("code_sent");
+            setState(stored.hasActiveChallenge ? "code_sent" : "cooldown");
           }
         }
       }
@@ -108,6 +110,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
             clearInterval(timerRef.current);
             timerRef.current = null;
           }
+          setState((curr) => (curr === "cooldown" || curr === "rate_limited" ? "idle" : curr));
           return 0;
         }
         return prev - 1;
@@ -199,6 +202,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
         // If an active challenge already exists for this number, transition to Step 2 so user can enter it
         if (data.hasActiveChallenge || data.sandboxCode) {
+          setHasActiveChallenge(true);
           setStep(2);
           setState("code_sent");
           setInfoMessage(
@@ -217,8 +221,9 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
           return true;
         }
 
-        // Exhaustive rate limit on phone or IP
-        setState("rate_limited");
+        // 429 Cooldown without active challenge
+        setHasActiveChallenge(false);
+        setState("cooldown");
         setErrorMessage(data.message || `Please wait ${retrySec} seconds before requesting a new code.`);
         saveSession({
           phone: targetPhone,
@@ -241,6 +246,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
       setCooldownSeconds(retrySec);
       setNextAllowedAt(new Date(targetTime));
       setIsSandbox(Boolean(data.isSandbox));
+      setHasActiveChallenge(true);
       if (data.sandboxCode) {
         setSandboxCode(data.sandboxCode);
       }
@@ -367,6 +373,35 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
   };
 
   /**
+   * Evaluates the exact Section 6 button text
+   */
+  const getPrimaryButtonText = (): string => {
+    if (state === "requesting") return "Sending Code...";
+    if (isCooldown && !hasActiveChallenge) return `Resend in ${cooldownSeconds}s`;
+    if (isCooldown && hasActiveChallenge) return "Enter Existing Code";
+    if (!isCooldown && (state === "code_sent" || state === "cooldown" || state === "rate_limited" || state === "expired" || hasActiveChallenge)) {
+      return "Resend Verification Code";
+    }
+    if (state === "request_failed") return "Try Again";
+    return "Send Verification Code";
+  };
+
+  /**
+   * Handles primary action button click on Step 1
+   */
+  const handlePrimaryAction = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (state === "requesting" || (isCooldown && !hasActiveChallenge)) {
+      return;
+    }
+    if (isCooldown && hasActiveChallenge) {
+      setStep(2);
+      return;
+    }
+    await requestOtp();
+  };
+
+  /**
    * Reset all state to idle
    */
   const reset = () => {
@@ -376,6 +411,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     setErrorMessage(null);
     setInfoMessage(null);
     setCooldownSeconds(0);
+    setHasActiveChallenge(false);
     clearSession();
   };
 
@@ -391,6 +427,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     setFullName,
     isSandbox,
     sandboxCode,
+    hasActiveChallenge,
     cooldownSeconds,
     nextAllowedAt,
     errorMessage,
@@ -400,6 +437,8 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     copiedCode,
     isLoading: state === "requesting" || state === "verifying",
     isCooldown: cooldownSeconds > 0,
+    getPrimaryButtonText,
+    handlePrimaryAction,
     requestOtp,
     verifyCode,
     editPhone,
