@@ -3,7 +3,7 @@
 
 > **"Every skill deserves to be seen, even without a degree."**  
 > **"Your work. Your reputation. Your opportunities."**  
-> Permanent Constitutional Invariant: `platform_commission_amount = 0.00` on worker wages.  
+> Permanent Constitutional Invariant: `platform_commission_amount = 0.00` on artisan wages.  
 > Certified Operating Classification: `CLASS_B_CONTROLLED_ROLLOUT`  
 > Authorized Operating Geography: Guwahati Urban (Kamrup Metro, Assam) & Shillong Urban (East Khasi Hills, Meghalaya).
 
@@ -15,7 +15,9 @@ KAAMSETU is an institutional digital identity and worker empowerment platform de
 
 ---
 
-## 2. Platform Architecture
+## 2. Platform Architecture (Phase 37 Modular Monolith)
+
+KAAMSETU utilizes a strict, layered modular monolith architecture with domain-driven feature boundaries:
 
 ```text
                                   KAAMSETU SYSTEM ARCHITECTURE
@@ -36,10 +38,20 @@ KAAMSETU is an institutional digital identity and worker empowerment platform de
                                           v
    +-----------------------------------------------------------------------------------+
    |                             Next.js 15 App Router                                 |
-   |   - Server-Side Role-Based Authorization & Tenant Isolation Layer                 |
-   |   - Ed25519 W3C Verifiable Credentials & Scannable Offline QR Protocol            |
+   |   - Thin HTTP Route Handlers with Unified ApiResponse<T> Envelopes                |
+   |   - Structured JSON Logging with Sensitive Secret & PII Redaction                 |
+   |   - Fail-Closed Server Environment Validation (RATE_LIMIT_HMAC_SECRET)            |
+   +--------------------------------------+--------------------------------------------+
+                                          |
+                                          v
+   +-----------------------------------------------------------------------------------+
+   |                          Modular Monolith Core Architecture                       |
+   |   - Feature Modules (src/features/): Onboarding, Worker Identity, Bookings, Auth  |
+   |   - Domain Services (src/server/services/): Business logic & invariant validation  |
+   |   - Data Repositories (src/server/database/repositories/): Isolated DB access      |
+   |   - Cryptographic Engine (src/lib/crypto/): Ed25519 W3C Verifiable Credentials   |
    |   - Permanent Zero-Commission Invariant Engine (platform_commission = 0.00)       |
-   |   - Design System: Deep Forest Green (#1E3A2F), Warm Sand, Editorial Ivory        |
+   |   - Design System: Deep Forest Green (#153E35), Warm Sand, Warm Ivory (#F7F5F0)  |
    +--------------------------------------+--------------------------------------------+
                                           |
                    +----------------------+----------------------+
@@ -52,6 +64,37 @@ KAAMSETU is an institutional digital identity and worker empowerment platform de
    |  - Transparent KaamScore      |             |  - Immutable Ledger & Consent Logs  |
    +-------------------------------+             +-------------------------------------+
 ```
+
+### Directory Structure
+
+```
+src/
+├── app/                        # Next.js App Router (UI Pages & Thin API Route Handlers)
+│   ├── api/                    # Thin HTTP controllers delegating to Domain Services
+│   └── (routes)/               # Role-based pages and layouts
+├── components/                 # Presentation Layer (Design System & Tactile UI)
+├── features/                   # Domain Feature Modules (Vertical Slice Architecture)
+│   ├── authentication/         # Auth state, OTP lifecycle, and session verification
+│   ├── bookings/               # Direct service bookings and zero commission state
+│   ├── contractors/            # Enterprise roster management & billing calculations
+│   ├── onboarding/             # Vernacular voice intake schemas & draft persistence
+│   └── worker-identity/        # Sovereign credentials and public artisan discovery
+├── lib/                        # Cross-Cutting Shared Libraries
+│   ├── errors/                 # Centralized typed error hierarchy & API envelopes
+│   ├── utilities/              # Indian phone normalization & shared utilities
+│   ├── crypto/                 # Ed25519 asymmetric signing & JCS canonicalization
+│   └── geo/                    # Controlled rollout geographic authorization
+├── server/                     # Backend Architecture (Modular Monolith Core)
+│   ├── auth/                   # Server session verification & RBAC guards
+│   ├── configuration/          # Fail-closed environment validation
+│   ├── database/               # Data Access Layer & Repositories
+│   │   └── repositories/       # Worker, Booking, Contractor, Institution Repositories
+│   ├── logging/                # Structured JSON logger with sensitive data redaction
+│   └── services/               # Core Domain Services
+└── types/                      # TypeScript definitions & Supabase DB types
+```
+
+For complete technical specifications, see [ARCHITECTURE.md](file:///Users/mayankgautam/Desktop/stitch_kaamsetu_digital_identity_platform/ARCHITECTURE.md) and [docs/phase-37/](file:///Users/mayankgautam/Desktop/stitch_kaamsetu_digital_identity_platform/docs/phase-37/).
 
 ---
 
@@ -77,13 +120,13 @@ Verified against repository dependencies:
 ### User Roles
 - **Worker / Artisan:** Voice-assisted onboarding, skill documentation, work portfolio, direct bookings, transparent payout timeline, grievance reporting, and zero-penalty workplace safety withdrawal.
 - **Customer:** Regional search and discovery within authorized boundaries, credential inspection via scannable QR, booking lifecycle management, and verified review submission.
-- **Contractor / Employer:** Project workforce staffing, crew management, zero-commission wage disbursement confirmations.
+- **Contractor / Employer:** Project workforce staffing, crew management, enterprise billing breakdown with 18% GST, and zero-commission wage disbursement confirmations.
 - **Institution (Skill Missions, ITIs):** Trainee cohort tracking, practical assessment logging, and privacy-preserving outcome exports.
 - **Administrator / Moderator:** Non-partisan dispute resolution, review moderation appeal handling, and audit log inspection.
 
 ### Core Capabilities
 1. **Multilingual Voice Onboarding:** Speak naturally in Hindi, Assamese, Bengali, Tamil, Telugu, Marathi, or English. Gemini AI extracts structured trade claims; skills remain `self_declared` or `voice_submitted` until independently confirmed.
-2. **Permanent Zero Commission:** 100% of customer payments belong to the working artisan. Database triggers block clawbacks or retrospective deductions.
+2. **Permanent Zero Commission:** 100% of customer payments belong to the working artisan (`platform_commission_amount = 0.00`). Database triggers and server repositories reject commission deductions.
 3. **W3C Verifiable Credentials:** Ed25519-signed credentials with status list revocation and 72-hour offline validity window.
 4. **Strict Regional Geofencing:** Operations are confined to authorized Class B zones: **Guwahati Urban** (Assam) and **Shillong Urban** (Meghalaya). Out-of-bounds requests are rejected with HTTP 403.
 5. **Worker Retaliation Shield:** 1-star reviews submitted during open wage disputes are automatically quarantined to prevent customer coercion.
@@ -103,8 +146,8 @@ Verified against repository dependencies:
 git clone https://github.com/Mayyank04/kaamsetu.git
 cd kaamsetu
 
-# 2. Checkout Phase 35 branch
-git checkout phase-35-remediation-and-product-transformation
+# 2. Checkout Phase 37 branch
+git checkout phase-37-architecture-modernization
 
 # 3. Install dependencies
 npm install
@@ -122,17 +165,28 @@ Visit [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## 6. Testing & Quality Verification
 
-```bash
-# Execute Phase 35 Security & Authorization Test Suite (33/33 Tests)
-npm run test:phase35
+KAAMSETU maintains a multi-tier automated test suite:
 
-# Execute Supabase Database & Security Verification Suite (275/275 Tests)
-npm run verify:db
+```bash
+# Execute Phase 37 Architecture & Service Modernization Suite
+npm run test:phase37
+
+# Execute Phase 36.1 Anti-AI Design & Human-Centred UI Suite
+npm run test:phase36.1
+
+# Execute Phase 35.2 Production Remediation & Auth Incident Suite
+npm run test:phase35.2
+
+# Execute Phase 35.1 Addendum OTP & Onboarding Reliability Suite
+npm run test:phase35.1:addendum
+
+# Execute Phase 35.1 Core Security & Layered Protection Suite
+npm run test:phase35.1
 
 # Run TypeScript static type check (0 errors)
 npx tsc --noEmit
 
-# Execute Next.js Production Build (112/112 Routes compiled)
+# Execute Next.js Production Build
 npm run build
 ```
 

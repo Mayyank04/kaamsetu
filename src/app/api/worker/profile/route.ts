@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { updateWorkerProfile } from "@/lib/supabase/db/profiles";
-import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
+import { WorkerRepository } from "@/server/database/repositories/worker.repository";
+import { handleApiError, createSuccessResponse } from "@/lib/errors";
 import { requireWorker, requireOwnedWorkerProfile } from "@/lib/auth/server";
 import { z } from "zod";
 
@@ -32,7 +32,7 @@ export async function PATCH(request: NextRequest) {
       await requireOwnedWorkerProfile(targetWorkerId);
     }
 
-    const updated = await updateWorkerProfile(targetWorkerId, data);
+    const updated = await WorkerRepository.update(targetWorkerId, data);
 
     return createSuccessResponse(updated, {
       message: "Worker sovereign profile updated successfully.",
