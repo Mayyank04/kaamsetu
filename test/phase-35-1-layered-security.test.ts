@@ -28,6 +28,12 @@
 
 import assert from "assert";
 import { NextRequest } from "next/server";
+
+// Configure testing environment before module imports
+(process.env as any).NODE_ENV = "test";
+process.env.RATE_LIMIT_HMAC_SECRET = "kaamsetu-test-hmac-rate-limit-secret-32-chars-long";
+process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK = "true";
+
 import {
   __setTestSession,
   __resetTestSession,

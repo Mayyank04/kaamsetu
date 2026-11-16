@@ -5,10 +5,19 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isConfigured } from "@/lib/env";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
 import { logger } from "@/lib/security/privacy-logger";
+import { validateIdentityExportRateLimit } from "@/lib/security/rate-limiter";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await requireWorker();
+
+    // Rate limit check: max 10 exports per hour per worker/IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+    const rateLimit = await validateIdentityExportRateLimit(user.id, clientIp);
+    if (!rateLimit.allowed) {
+      return handleApiError(new Error(rateLimit.reason || "Rate limit exceeded"));
+    }
+
     const searchParams = req.nextUrl.searchParams;
     const format = (searchParams.get("format") || "json").toLowerCase();
 

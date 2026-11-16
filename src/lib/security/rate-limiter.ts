@@ -189,10 +189,11 @@ export async function checkRateLimit(
     };
   }
 
-  // 3. Isolated Development Mock: Only enabled when explicitly permitted
+  // 3. Isolated Development Mock: Only enabled when explicitly permitted or in test mode
   const allowDevMock =
     process.env.NODE_ENV !== "production" &&
-    process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK === "true";
+    (process.env.ENABLE_IN_MEMORY_RATE_LIMIT_MOCK === "true" ||
+      process.env.NODE_ENV === "test");
 
   if (!allowDevMock) {
     return {

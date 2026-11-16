@@ -12,6 +12,7 @@ import {
   generateIdentitySchemaV2,
   IdentitySchemaV2Export,
 } from "@/lib/identity/identity-schema-v2-service";
+import { validateIdentityExportRateLimit } from "@/lib/security/rate-limiter";
 
 /**
  * Escapes HTML entities to prevent Stored XSS and HTML injection.
@@ -43,6 +44,17 @@ function sanitizeCsv(val: any): string {
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuthenticatedUser();
+
+    // Rate limit check: max 10 exports per hour per worker/IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+    const rateLimit = await validateIdentityExportRateLimit(user.id, clientIp);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: rateLimit.reason, remainingSeconds: rateLimit.remainingSeconds },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const { searchParams } = new URL(req.url);
     const requestedFormat = (searchParams.get("format") || body.format || "json").toLowerCase();

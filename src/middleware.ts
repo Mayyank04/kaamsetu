@@ -1,11 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-// Routes requiring authentication
+// Routes requiring server authentication
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/worker/dashboard",
+  "/worker",
+  "/admin/dashboard",
+  "/admin",
   "/customer/bookings",
   "/bookings",
+  "/contractor/dashboard",
+  "/contractor",
+  "/institution/dashboard",
+  "/institution",
   "/identity/card",
   "/identity/edit",
   "/employer/manage",
@@ -35,7 +43,14 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
   if (isAuthRoute && user) {
     const role = (user as any).role || (user as any).user_metadata?.role;
-    const targetDashboard = role === "worker" ? "/dashboard" : "/customer/bookings";
+    let targetDashboard = "/dashboard";
+    if (role === "contractor") {
+      targetDashboard = "/contractor/dashboard";
+    } else if (role === "institution") {
+      targetDashboard = "/institution/dashboard";
+    } else if (role === "customer") {
+      targetDashboard = "/customer/bookings";
+    }
     return NextResponse.redirect(new URL(targetDashboard, request.url));
   }
 
