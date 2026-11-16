@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { DEMO_PERSONAS, DemoPersona } from "@/lib/auth/personas";
 import { isConfigured } from "@/lib/env";
 import { AppRole } from "@/types/database.types";
 import { AppError } from "@/lib/error/app-error";
+import { verifySessionToken } from "@/lib/auth/otp-service";
 
 export interface AuthenticatedUser {
   id: string;
@@ -146,7 +148,82 @@ export async function getAuthenticatedSession(): Promise<{
       };
     }
   } catch (err) {
-    // If Supabase client fails, fall through to demo check if enabled
+    // If Supabase client fails, fall through to session cookie check
+  }
+
+  // 1.5. Check signed kaamsetu_session cookie (Durable Multi-Instance OTP Session)
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("kaamsetu_session")?.value;
+    if (sessionCookie) {
+      const verified = verifySessionToken(sessionCookie);
+      if (verified) {
+        let fullName = "Verified User";
+        let verifiedRole: AppRole = verified.role;
+        let phone: string | null = verified.phone;
+        let workerProfileId: string | null = null;
+        let slug: string | null = null;
+        let contractorOrgId: string | null = null;
+
+        if (isConfigured.supabase) {
+          try {
+            const adminClient = createAdminClient();
+            const { data: profile } = await adminClient
+              .from("profiles")
+              .select("id, role, full_name, phone, avatar_url")
+              .eq("id", verified.userId)
+              .maybeSingle();
+
+            if (profile) {
+              verifiedRole = profile.role as AppRole;
+              fullName = profile.full_name || fullName;
+              phone = profile.phone || phone;
+            }
+
+            if (verifiedRole === "worker") {
+              const { data: worker } = await adminClient
+                .from("worker_profiles")
+                .select("id, slug")
+                .eq("user_id", verified.userId)
+                .maybeSingle();
+              if (worker) {
+                workerProfileId = worker.id;
+                slug = worker.slug;
+              }
+            } else if (verifiedRole === "contractor") {
+              const { data: org } = await adminClient
+                .from("contractor_organizations")
+                .select("id")
+                .eq("owner_id", verified.userId)
+                .maybeSingle();
+              if (org) {
+                contractorOrgId = org.id;
+              }
+            }
+          } catch {
+            // Use verified token claims on DB query exception
+          }
+        }
+
+        return {
+          user: {
+            id: verified.userId,
+            phone,
+            fullName,
+            role: verifiedRole,
+            avatarUrl: null,
+            isDemo: false,
+            workerProfileId,
+            contractorOrgId,
+            institutionId: null,
+            slug,
+          },
+          isDemo: false,
+        };
+      }
+    }
+  } catch (err) {
+    // Session token verification failure, fall through to demo check
   }
 
   // 2. Demo Persona Authentication - Strictly isolated behind explicit environment flag

@@ -26,7 +26,8 @@ export type RegionalOperatingStatus =
   | "AUTHORIZED"
   | "CONDITIONAL_READINESS_ONLY"
   | "BLOCKED"
-  | "OUT_OF_BOUNDS";
+  | "OUT_OF_BOUNDS"
+  | "NON_DISPATCH_AREA";
 
 export interface LocationValidationResult {
   allowed: boolean;
@@ -36,6 +37,8 @@ export interface LocationValidationResult {
   pincode: string;
   reason?: string;
   coordinateCheckPassed: boolean;
+  allowedForRegistration: boolean;
+  isDispatchEligible: boolean;
 }
 
 interface AuthorizedDistrictConfig {
@@ -92,6 +95,8 @@ export class GeographicAuthorizationService {
         pincode: pin || "",
         reason: "A valid 6-digit Indian Postal PIN code is required.",
         coordinateCheckPassed: false,
+        allowedForRegistration: false,
+        isDispatchEligible: false,
       };
     }
 
@@ -107,6 +112,8 @@ export class GeographicAuthorizationService {
         pincode: pin,
         reason: "Heavy EPC industrial staffing is FROZEN pending tripartite EPC contractual execution (BLOCKER-03).",
         coordinateCheckPassed: false,
+        allowedForRegistration: false,
+        isDispatchEligible: false,
       };
     }
 
@@ -126,6 +133,8 @@ export class GeographicAuthorizationService {
           pincode: pin,
           reason: "Coordinate spoofing detected: (0,0) null island coordinates rejected.",
           coordinateCheckPassed: false,
+          allowedForRegistration: false,
+          isDispatchEligible: false,
         };
       }
 
@@ -139,6 +148,8 @@ export class GeographicAuthorizationService {
           pincode: pin,
           reason: "Coordinates fall outside Indian territorial boundaries.",
           coordinateCheckPassed: false,
+          allowedForRegistration: false,
+          isDispatchEligible: false,
         };
       }
     }
@@ -154,6 +165,8 @@ export class GeographicAuthorizationService {
         pincode: pin,
         reason: "Tripura operations are BLOCKED pending Tripura Skill Development Mission (TSDM) institutional authorization (BLOCKER-01).",
         coordinateCheckPassed,
+        allowedForRegistration: false,
+        isDispatchEligible: false,
       };
     }
 
@@ -167,6 +180,8 @@ export class GeographicAuthorizationService {
         pincode: pin,
         reason: "Siliguri is currently under conditional readiness evaluation; customer dispatch is not yet authorized.",
         coordinateCheckPassed,
+        allowedForRegistration: true,
+        isDispatchEligible: false,
       };
     }
 
@@ -185,6 +200,8 @@ export class GeographicAuthorizationService {
             pincode: pin,
             reason: `Contradictory location: PIN code ${pin} belongs to ${district.state}, but declared state is '${state}'.`,
             coordinateCheckPassed: false,
+            allowedForRegistration: false,
+            isDispatchEligible: false,
           };
         }
 
@@ -199,6 +216,8 @@ export class GeographicAuthorizationService {
             pincode: pin,
             reason: `Contradictory location: PIN code ${pin} belongs to ${district.urbanCenter}, but declared city is '${city}'.`,
             coordinateCheckPassed: false,
+            allowedForRegistration: false,
+            isDispatchEligible: false,
           };
         }
 
@@ -220,6 +239,8 @@ export class GeographicAuthorizationService {
               pincode: pin,
               reason: `GPS coordinates (${lat.toFixed(4)}, ${lng.toFixed(4)}) do not correspond to ${district.urbanCenter}.`,
               coordinateCheckPassed: false,
+              allowedForRegistration: false,
+              isDispatchEligible: false,
             };
           }
         }
@@ -232,19 +253,23 @@ export class GeographicAuthorizationService {
           state: district.state,
           pincode: pin,
           coordinateCheckPassed: true,
+          allowedForRegistration: true,
+          isDispatchEligible: true,
         };
       }
     }
 
-    // 6. No authorized district matched
+    // 6. Non-Class-B District: Out of bounds for commercial dispatch, eligible only for non-dispatch craft identity if permitted
     return {
       allowed: false,
       status: "OUT_OF_BOUNDS",
-      district: "Outside Operating Radius",
-      state: state || "Unknown",
+      district: city || "Outside Class B Cluster",
+      state: state || "National",
       pincode: pin,
-      reason: `Location (PIN: ${pin}, State: ${state || "Unspecified"}) is outside authorized Class B operating geography (Guwahati Urban & Shillong Urban).`,
-      coordinateCheckPassed: false,
+      reason: `KAAMSETU is currently accepting service operations in Guwahati and Shillong. Your selected location${city ? ` (${city})` : ""} is not yet within our active service area. You can continue only with the profile options currently supported for your location.`,
+      coordinateCheckPassed,
+      allowedForRegistration: true,
+      isDispatchEligible: false,
     };
   }
 }

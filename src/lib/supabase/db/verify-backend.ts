@@ -66,6 +66,7 @@ export async function runBackendVerification() {
   const migration28Path = path.join(projectRoot, "supabase/migrations/20261115000028_audit_hash_chaining_and_payout_disputes.sql");
   const migration29Path = path.join(projectRoot, "supabase/migrations/20261115000029_independent_audit_attestations_and_dispute_appeals.sql");
   const migration30Path = path.join(projectRoot, "supabase/migrations/20261116000030_phase35_1_security_and_financial_integrity.sql");
+  const migration31Path = path.join(projectRoot, "supabase/migrations/20261116000031_phase35_1_addendum_auth_and_otp.sql");
   const seedPath = path.join(projectRoot, "supabase/seed.sql");
 
   assert(fs.existsSync(migration1Path), "1. SQL Migrations", "Migration 01 (Initial Schema) exists");
@@ -94,7 +95,20 @@ export async function runBackendVerification() {
   assert(fs.existsSync(migration28Path), "1. SQL Migrations", "Migration 28 (Audit Hash Chaining & Payout Disputes) exists");
   assert(fs.existsSync(migration29Path), "1. SQL Migrations", "Migration 29 (Independent Audit Attestations & Dispute Appeals) exists");
   assert(fs.existsSync(migration30Path), "1. SQL Migrations", "Migration 30 (Security & Financial Integrity) exists");
+  assert(fs.existsSync(migration31Path), "1. SQL Migrations", "Migration 31 (OTP Challenges & Multi-Tenant Dispatch) exists");
   assert(fs.existsSync(seedPath), "1. SQL Migrations", "Seed SQL data exists");
+
+  const m31Content = fs.readFileSync(migration31Path, "utf-8");
+  assert(
+    m31Content.includes("public.otp_challenges") && m31Content.includes("verify_and_consume_otp"),
+    "1. SQL Migrations",
+    "Migration 31 establishes atomic verify_and_consume_otp procedure and otp_challenges table"
+  );
+  assert(
+    m31Content.includes("trg_check_worker_booking_eligibility") && m31Content.includes("is_dispatch_eligible"),
+    "1. SQL Migrations",
+    "Migration 31 enforces regional dispatch eligibility trigger trg_check_worker_booking_eligibility"
+  );
 
   const m30Content = fs.readFileSync(migration30Path, "utf-8");
   assert(

@@ -257,10 +257,38 @@ export async function validateOtpSendRateLimit(
   phone: string,
   clientIp: string
 ): Promise<RateLimitResult> {
+  const isProduction = (process.env.NODE_ENV as string) === "production";
   const normalizedPhone = phone.replace(/\D/g, "");
 
+  let cooldownKey: string;
+  let phoneHourlyKey: string;
+  let ipKey: string;
+
+  try {
+    cooldownKey = hashRateLimitKey("cooldown", normalizedPhone);
+    phoneHourlyKey = hashRateLimitKey("phone:send", `${normalizedPhone}:hourly`);
+    ipKey = hashRateLimitKey("ip:send", clientIp);
+  } catch (err: unknown) {
+    console.error(
+      JSON.stringify({
+        level: "fatal",
+        component: "RateLimiter",
+        action: "validateOtpSendRateLimit",
+        message: "Cryptographic configuration failure during rate limit key hashing",
+        error: err instanceof Error ? err.message : String(err),
+      })
+    );
+    if (isProduction) {
+      return {
+        allowed: false,
+        remainingSeconds: 60,
+        reason: "Sign-in is temporarily unavailable. Please try again shortly.",
+      };
+    }
+    throw err;
+  }
+
   // Check 1: 60-second cooldown per phone (namespace: "cooldown")
-  const cooldownKey = hashRateLimitKey("cooldown", normalizedPhone);
   const cooldown = await checkRateLimit(cooldownKey, 1, 60, 60);
   if (!cooldown.allowed) {
     return {
@@ -271,7 +299,6 @@ export async function validateOtpSendRateLimit(
   }
 
   // Check 2: Hourly phone limit (max 5 SMS/hr) (namespace: "phone:send")
-  const phoneHourlyKey = hashRateLimitKey("phone:send", `${normalizedPhone}:hourly`);
   const phoneHourly = await checkRateLimit(phoneHourlyKey, 5, 3600, 3600);
   if (!phoneHourly.allowed) {
     return {
@@ -282,7 +309,6 @@ export async function validateOtpSendRateLimit(
   }
 
   // Check 3: Hourly IP limit (max 15 SMS/hr per IP) (namespace: "ip:send")
-  const ipKey = hashRateLimitKey("ip:send", clientIp);
   const ipHourly = await checkRateLimit(ipKey, 15, 3600, 3600);
   if (!ipHourly.allowed) {
     return {
@@ -313,7 +339,7 @@ export async function validateOtpVerifyAttempt(phone: string): Promise<RateLimit
       return {
         allowed: false,
         remainingSeconds: 60,
-        reason: "Security configuration error. Verification unavailable.",
+        reason: "Sign-in is temporarily unavailable. Please try again shortly.",
       };
     }
     throw err;
@@ -495,5 +521,154 @@ export async function clearFailedOtpAttempts(phone: string): Promise<void> {
       process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS
     );
     memoryStore.delete(prevKey);
+  }
+}
+
+/**
+ * Validates login attempt rate limits (per-IP and per-account).
+ * Max 10 attempts per 5 minutes per IP.
+ */
+export async function validateLoginRateLimit(
+  clientIp: string,
+  identifier?: string
+): Promise<RateLimitResult> {
+  const isProduction = (process.env.NODE_ENV as string) === "production";
+  try {
+    const ipKey = hashRateLimitKey("auth:login", clientIp);
+    const ipCheck = await checkRateLimit(ipKey, 10, 300, 900);
+    if (!ipCheck.allowed) {
+      return {
+        allowed: false,
+        remainingSeconds: ipCheck.remainingSeconds,
+        reason: "Too many login attempts from your network. Please try again shortly.",
+      };
+    }
+
+    if (identifier) {
+      const idKey = hashRateLimitKey("auth:login:account", identifier);
+      const idCheck = await checkRateLimit(idKey, 5, 300, 900);
+      if (!idCheck.allowed) {
+        return {
+          allowed: false,
+          remainingSeconds: idCheck.remainingSeconds,
+          reason: "Too many login attempts for this account. Please try again shortly.",
+        };
+      }
+    }
+
+    return { allowed: true };
+  } catch (err) {
+    if (isProduction) {
+      return {
+        allowed: false,
+        remainingSeconds: 60,
+        reason: "Sign-in is temporarily unavailable. Please try again shortly.",
+      };
+    }
+    throw err;
+  }
+}
+
+/**
+ * Validates sensitive identity export rate limits (max 10 exports per hour per worker/IP).
+ */
+export async function validateIdentityExportRateLimit(
+  userId: string,
+  clientIp: string = "127.0.0.1"
+): Promise<RateLimitResult> {
+  try {
+    const userKey = hashRateLimitKey("identity:export", userId);
+    const userCheck = await checkRateLimit(userKey, 10, 3600, 3600);
+    if (!userCheck.allowed) {
+      return {
+        allowed: false,
+        remainingSeconds: userCheck.remainingSeconds,
+        reason: "Identity export rate limit exceeded. Please try again in an hour.",
+      };
+    }
+
+    const ipKey = hashRateLimitKey("identity:export:ip", clientIp);
+    const ipCheck = await checkRateLimit(ipKey, 30, 3600, 3600);
+    if (!ipCheck.allowed) {
+      return {
+        allowed: false,
+        remainingSeconds: ipCheck.remainingSeconds,
+        reason: "Network identity export rate limit exceeded. Please try again later.",
+      };
+    }
+
+    return { allowed: true };
+  } catch (err) {
+    return {
+      allowed: false,
+      remainingSeconds: 60,
+      reason: "Export service temporarily unavailable. Please try again shortly.",
+    };
+  }
+}
+
+/**
+ * Validates worker grievance submission rate limits (max 3 grievances per hour).
+ */
+export async function validateGrievanceRateLimit(
+  workerId: string,
+  clientIp: string = "127.0.0.1"
+): Promise<RateLimitResult> {
+  try {
+    const workerKey = hashRateLimitKey("worker:grievance", workerId);
+    const workerCheck = await checkRateLimit(workerKey, 3, 3600, 3600);
+    if (!workerCheck.allowed) {
+      return {
+        allowed: false,
+        remainingSeconds: workerCheck.remainingSeconds,
+        reason: "Maximum grievance submissions reached for this hour. Please try again later.",
+      };
+    }
+
+    const ipKey = hashRateLimitKey("worker:grievance:ip", clientIp);
+    const ipCheck = await checkRateLimit(ipKey, 10, 3600, 3600);
+    if (!ipCheck.allowed) {
+      return {
+        allowed: false,
+        remainingSeconds: ipCheck.remainingSeconds,
+        reason: "Network grievance submission rate limit reached. Please try again later.",
+      };
+    }
+
+    return { allowed: true };
+  } catch (err) {
+    return {
+      allowed: false,
+      remainingSeconds: 60,
+      reason: "Grievance service temporarily unavailable. Please try again shortly.",
+    };
+  }
+}
+
+/**
+ * Validates contractor payout disbursement rate limits (max 20 payouts per 10 minutes).
+ */
+export async function validatePayoutRateLimit(
+  contractorId: string,
+  clientIp: string = "127.0.0.1"
+): Promise<RateLimitResult> {
+  try {
+    const contractorKey = hashRateLimitKey("contractor:payout", contractorId);
+    const contractorCheck = await checkRateLimit(contractorKey, 20, 600, 600);
+    if (!contractorCheck.allowed) {
+      return {
+        allowed: false,
+        remainingSeconds: contractorCheck.remainingSeconds,
+        reason: "Payout disbursement rate limit reached. Please wait before initiating further disbursements.",
+      };
+    }
+
+    return { allowed: true };
+  } catch (err) {
+    return {
+      allowed: false,
+      remainingSeconds: 60,
+      reason: "Payout service temporarily unavailable. Please try again shortly.",
+    };
   }
 }

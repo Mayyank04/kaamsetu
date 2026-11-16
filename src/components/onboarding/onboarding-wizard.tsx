@@ -21,18 +21,27 @@ import {
   AlertCircle,
   RefreshCw,
   Check,
+  Smartphone,
+  Lock,
+  ArrowRight,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth/use-auth";
 
 type Step = 1 | 2 | 3 | 4;
 
+const STORAGE_DRAFT_KEY = "kaamsetu_onboarding_draft";
+
 export function OnboardingWizard() {
+  const { user, isAuthenticated, refreshSession } = useAuth();
+
   const [currentStep, setCurrentStep] = React.useState<Step>(1);
   const [language, setLanguage] = React.useState<SupportedLanguageCode>("hi");
   const [inputMode, setInputMode] = React.useState<"voice" | "text">("voice");
   const [transcript, setTranscript] = React.useState<string>("");
 
-  // Extracted AI data state
+  // Extracted data state
   const [extractedProfile, setExtractedProfile] =
     React.useState<OnboardingExtractedProfile | null>(null);
 
@@ -45,8 +54,63 @@ export function OnboardingWizard() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [analysisError, setAnalysisError] = React.useState<string | null>(null);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [draftRestored, setDraftRestored] = React.useState(false);
+
+  // Inline Auth Verification Modal for unauthenticated artisans
+  const [showAuthModal, setShowAuthModal] = React.useState(false);
+  const [pendingSubmission, setPendingSubmission] = React.useState<ApprovedProfileSubmission | null>(null);
+  const [authPhone, setAuthPhone] = React.useState("");
+  const [authOtp, setAuthOtp] = React.useState("");
+  const [authOtpSent, setAuthOtpSent] = React.useState(false);
+  const [authIsLoading, setAuthIsLoading] = React.useState(false);
+  const [authError, setAuthError] = React.useState<string | null>(null);
+  const [authDemoHint, setAuthDemoHint] = React.useState<string | null>(null);
 
   const i18n = ONBOARDING_I18N[language] || ONBOARDING_I18N.en;
+
+  // 1. Restore draft from localStorage on mount
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(STORAGE_DRAFT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.currentStep && parsed.currentStep <= 3) {
+          setCurrentStep(parsed.currentStep);
+          if (parsed.language) setLanguage(parsed.language);
+          if (parsed.inputMode) setInputMode(parsed.inputMode);
+          if (parsed.transcript) setTranscript(parsed.transcript);
+          if (parsed.extractedProfile) setExtractedProfile(parsed.extractedProfile);
+          setDraftRestored(true);
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
+
+  // 2. Persist draft state to localStorage
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (currentStep < 4 && (currentStep > 1 || transcript || extractedProfile)) {
+        localStorage.setItem(
+          STORAGE_DRAFT_KEY,
+          JSON.stringify({
+            currentStep,
+            language,
+            inputMode,
+            transcript,
+            extractedProfile,
+          })
+        );
+      } else if (currentStep === 4) {
+        localStorage.removeItem(STORAGE_DRAFT_KEY);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, [currentStep, language, inputMode, transcript, extractedProfile]);
 
   // Handle Step 2 -> AI Extraction via POST /api/worker/onboarding/extract
   const handleAnalyze = async () => {
@@ -96,8 +160,8 @@ export function OnboardingWizard() {
     }
   };
 
-  // Handle Step 3 -> Profile Save via POST /api/worker/onboarding/save
-  const handleApprove = async (approved: ApprovedProfileSubmission) => {
+  // Execute authenticated profile save to POST /api/worker/onboarding/save
+  const executeSave = async (approved: ApprovedProfileSubmission) => {
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -114,12 +178,14 @@ export function OnboardingWizard() {
         throw new Error(
           result.error?.message ||
             result.message ||
+            result.error ||
             "Unable to save verified profile. Please retry."
         );
       }
 
       setSovereignCard(result.data);
       setCurrentStep(4);
+      localStorage.removeItem(STORAGE_DRAFT_KEY);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: unknown) {
       console.error("Profile submission error:", err);
@@ -131,6 +197,101 @@ export function OnboardingWizard() {
     }
   };
 
+  // Step 3: Check auth before save, opening inline phone verification if unauthenticated
+  const handleApprove = async (approved: ApprovedProfileSubmission) => {
+    if (!isAuthenticated) {
+      setPendingSubmission(approved);
+      setShowAuthModal(true);
+      return;
+    }
+
+    await executeSave(approved);
+  };
+
+  // Inline Modal: Send OTP
+  const handleSendInlineOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanDigits = authPhone.replace(/\D/g, "");
+    if (cleanDigits.length < 10) {
+      setAuthError("Please enter a valid 10-digit Indian mobile number.");
+      return;
+    }
+
+    setAuthIsLoading(true);
+    setAuthError(null);
+    setAuthDemoHint(null);
+
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: authPhone,
+          role: "worker",
+          fullName: pendingSubmission?.fullName,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to transmit verification code.");
+      }
+
+      setAuthOtpSent(true);
+      if (data.isDemo || data.requiresDemoCode) {
+        setAuthDemoHint("Sandbox Mode: Enter code 123456 to verify.");
+        setAuthOtp("123456");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to send code.";
+      setAuthError(msg);
+    } finally {
+      setAuthIsLoading(false);
+    }
+  };
+
+  // Inline Modal: Verify OTP & Auto-Save Profile
+  const handleVerifyInlineOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authOtp.length !== 6) {
+      setAuthError("Please enter the 6-digit verification code.");
+      return;
+    }
+
+    setAuthIsLoading(true);
+    setAuthError(null);
+
+    try {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: authPhone,
+          otp: authOtp,
+          role: "worker",
+          fullName: pendingSubmission?.fullName,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Invalid verification code.");
+      }
+
+      await refreshSession();
+      setShowAuthModal(false);
+
+      if (pendingSubmission) {
+        await executeSave(pendingSubmission);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Verification failed.";
+      setAuthError(msg);
+    } finally {
+      setAuthIsLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setCurrentStep(1);
     setTranscript("");
@@ -138,6 +299,8 @@ export function OnboardingWizard() {
     setSovereignCard(null);
     setAnalysisError(null);
     setSubmitError(null);
+    setDraftRestored(false);
+    localStorage.removeItem(STORAGE_DRAFT_KEY);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -151,6 +314,23 @@ export function OnboardingWizard() {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-8">
+      {/* Draft Restored Banner */}
+      {draftRestored && currentStep > 1 && (
+        <div className="p-3 rounded-md bg-forest/5 border border-forest/15 text-xs text-forest flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-sand-500 shrink-0" />
+            <span>Resumed your saved onboarding session. Previous steps are preserved.</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="text-[11px] font-semibold text-terracotta underline shrink-0 hover:opacity-80"
+          >
+            Start Fresh
+          </button>
+        </div>
+      )}
+
       {/* Step Indicator Bar */}
       <div className="relative">
         <div className="flex items-center justify-between max-w-2xl mx-auto mb-2">
@@ -199,68 +379,31 @@ export function OnboardingWizard() {
         <div className="absolute top-4 sm:top-5 left-8 right-8 h-0.5 bg-forest/15 -z-10" />
       </div>
 
-      {/* Back Button for Steps 2 & 3 */}
-      {currentStep > 1 && currentStep < 4 && (
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentStep((prev) => (prev - 1) as Step)}
-            disabled={isAnalyzing || isSubmitting}
-            className="text-forest hover:text-forest-600 hover:bg-forest/5 gap-1.5 pl-2 font-medium"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>
-              {language === "hi" ? "पिछला कदम" : "Back"}
-            </span>
-          </Button>
-
-          <div className="text-xs font-mono text-forest/60">
-            {language === "hi"
-              ? `कदम ${currentStep} / 4`
-              : `Step ${currentStep} of 4`}
-          </div>
-        </div>
-      )}
-
-      {/* Global Error Banner */}
+      {/* Error Banners */}
       {(analysisError || submitError) && (
-        <div className="p-4 rounded-xl bg-terracotta/10 border border-terracotta/30 flex items-start gap-3 text-terracotta animate-in fade-in-50">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <div className="flex-1 text-sm">
-            <p className="font-semibold">
-              {language === "as"
-                ? "ত্ৰুটি ঘটিছে"
-                : language === "bn"
-                ? "ত্রুটি ঘটেছে"
-                : language === "hi"
-                ? "त्रुटि आई है"
-                : "Action encountered an error"}
-            </p>
-            <p className="mt-0.5 text-xs text-forest/80">
+        <div className="p-4 rounded-md bg-red-50 border border-red-200 text-red-900 text-xs flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span className="leading-relaxed font-medium">
               {analysisError || submitError}
-            </p>
+            </span>
           </div>
           {analysisError ? (
             <Button
               size="sm"
               variant="outline"
               onClick={handleAnalyze}
-              className="border-terracotta text-terracotta hover:bg-terracotta/10 h-8 text-xs shrink-0"
+              className="border-red-300 text-red-800 hover:bg-red-100 h-8 text-xs shrink-0"
             >
               <RefreshCw className="w-3 h-3 mr-1.5" />
-              {language === "as"
-                ? "পুনৰ চেষ্টা"
-                : language === "hi"
-                ? "पुनः प्रयास करें"
-                : "Retry"}
+              Retry
             </Button>
           ) : (
             <Button
               size="sm"
               variant="ghost"
               onClick={() => setSubmitError(null)}
-              className="text-terracotta hover:bg-terracotta/10 h-8 text-xs shrink-0"
+              className="text-red-700 hover:bg-red-100 h-8 text-xs shrink-0"
             >
               Dismiss
             </Button>
@@ -321,7 +464,7 @@ export function OnboardingWizard() {
         </div>
       )}
 
-      {/* STEP 3: AI Skill Extraction & Interactive Editor */}
+      {/* STEP 3: Interactive Review & Skills Editor */}
       {currentStep === 3 && extractedProfile && (
         <div className="animate-in fade-in duration-300">
           <ExtractionEditor
@@ -342,6 +485,115 @@ export function OnboardingWizard() {
             language={language}
             onReset={handleReset}
           />
+        </div>
+      )}
+
+      {/* INLINE AUTHENTICATION MODAL (Triggered when unauthenticated artisan approves Step 3) */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 bg-forest/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-card w-full max-w-md rounded-2xl border border-forest/20 p-6 sm:p-8 shadow-sovereign-lg space-y-6 relative">
+            <button
+              type="button"
+              onClick={() => setShowAuthModal(false)}
+              className="absolute right-4 top-4 text-charcoal-muted hover:text-forest"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-2 text-center">
+              <div className="w-12 h-12 rounded-full bg-forest/10 border border-forest/20 text-forest mx-auto flex items-center justify-center">
+                <Lock className="w-5 h-5" />
+              </div>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold text-forest">
+                Verify Mobile Number
+              </h3>
+              <p className="text-xs text-charcoal-muted leading-relaxed">
+                To issue your official cryptographic sovereign credential, verify your mobile number. Your draft details are safely preserved.
+              </p>
+            </div>
+
+            {authError && (
+              <div className="p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-800 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            {authDemoHint && (
+              <div className="p-3 rounded-md bg-sand/30 border border-sand/50 text-xs text-forest flex items-center gap-2">
+                <Sparkles className="w-4 h-4 shrink-0 text-sand-700" />
+                <span>{authDemoHint}</span>
+              </div>
+            )}
+
+            {!authOtpSent ? (
+              <form onSubmit={handleSendInlineOtp} className="space-y-4">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-bold text-forest uppercase tracking-wider block">
+                    Indian Mobile Number
+                  </label>
+                  <div className="flex">
+                    <span className="inline-flex items-center px-3.5 rounded-l-xl border border-r-0 border-forest/20 bg-forest/5 text-xs font-mono font-bold text-forest">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="98765 43210"
+                      value={authPhone}
+                      onChange={(e) => setAuthPhone(e.target.value)}
+                      className="w-full h-11 px-3.5 rounded-r-xl border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={authIsLoading}
+                  className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs"
+                >
+                  {authIsLoading ? "Sending OTP..." : "Send Verification Code"}
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyInlineOtp} className="space-y-4">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-bold text-forest uppercase tracking-wider block">
+                    Enter 6-Digit Code sent to +91 {authPhone}
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    value={authOtp}
+                    onChange={(e) => setAuthOtp(e.target.value.replace(/\D/g, ""))}
+                    placeholder="123456"
+                    className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xl border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAuthOtpSent(false)}
+                    className="flex-1 h-11 border-forest/20 text-forest text-xs"
+                  >
+                    Change Number
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={authIsLoading}
+                    className="flex-1 h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs"
+                  >
+                    {authIsLoading ? "Verifying..." : "Verify & Mint Credential"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -54,6 +54,9 @@ export interface SovereignCardData {
   };
   status: string;
   verificationMethod: string;
+  isDispatchEligible?: boolean;
+  dispatchStatus?: string;
+  dispatchNotice?: string;
   createdAt: string;
 }
 
@@ -196,6 +199,15 @@ export function SovereignSuccessCard({
                   <MapPin className="w-3.5 h-3.5 text-sand" />
                   {cardData.city}, {cardData.state}
                 </span>
+                {cardData.isDispatchEligible === false ? (
+                  <span className="inline-flex items-center gap-1.5 bg-amber-950/80 text-amber-200 px-2.5 py-1 rounded border border-amber-400/40">
+                    Non-Dispatch Profile
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 bg-emerald-950/80 text-emerald-200 px-2.5 py-1 rounded border border-emerald-400/40">
+                    Class B Active Dispatch
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1.5 bg-forest-900/80 px-2.5 py-1 rounded border border-sand/20">
                   <Layers className="w-3.5 h-3.5 text-sand" />
                   ₹{cardData.dailyRateEstimate.min} - ₹{cardData.dailyRateEstimate.max} / day

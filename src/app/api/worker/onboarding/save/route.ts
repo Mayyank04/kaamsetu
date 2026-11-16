@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       longitude: data.longitude,
     });
 
-    if (!geoValidation.allowed) {
+    if (!geoValidation.allowed && !data.allowNonDispatchProfile) {
       return NextResponse.json(
         {
           error: geoValidation.reason || "Location outside authorized operating zone.",
@@ -106,6 +106,11 @@ export async function POST(request: NextRequest) {
       aadhaarVerified: false,
       digiLockerLinked: false,
       isPublished,
+      isDispatchEligible: geoValidation.isDispatchEligible,
+      dispatchStatus: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
+      is_dispatch_eligible: geoValidation.isDispatchEligible,
+      dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
+      dispatchNotice: geoValidation.isDispatchEligible ? undefined : geoValidation.reason,
       qrVerificationUrl,
       createdAt: new Date().toISOString(),
       isDemo: user.isDemo,
@@ -168,6 +173,8 @@ export async function POST(request: NextRequest) {
             kaamscore: provisionalScore,
             kaamscore_level: scoreLevel,
             is_published: isPublished,
+            is_dispatch_eligible: geoValidation.isDispatchEligible,
+            dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingProfile.id);
@@ -200,6 +207,8 @@ export async function POST(request: NextRequest) {
             kaamscore: provisionalScore,
             kaamscore_level: scoreLevel,
             is_published: isPublished,
+            is_dispatch_eligible: geoValidation.isDispatchEligible,
+            dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
           })
           .select("id")
           .single();
@@ -299,8 +308,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const message = !geoValidation.isDispatchEligible
+      ? "Non-dispatch digital craft credential created successfully. Customer bookings are disabled for this location."
+      : "Professional profile successfully created and saved.";
+
     return createSuccessResponse(savedRecord, {
-      message: "Professional profile successfully created and saved.",
+      message,
       registryId,
       slug,
       isDemo: user.isDemo,

@@ -18,6 +18,7 @@ export const phoneAuthSchema = z.object({
       }
     ),
   role: z.enum(["worker", "contractor", "employer", "verifier"]).default("worker"),
+  fullName: z.string().optional(),
 });
 
 export const otpVerificationSchema = z.object({
