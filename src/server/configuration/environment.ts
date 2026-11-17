@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { ConfigurationError } from "@/lib/errors/app-error";
+import { assertCryptographicKeyQuality } from "@/lib/crypto/key-validator";
 
 const serverEnvSchema = z.object({
   // Node Environment
@@ -83,6 +84,10 @@ export class EnvironmentService {
         );
       }
       return "kaamsetu-dev-rate-limit-secret-key-32chars-minimum-fallback";
+    }
+
+    if (isProduction) {
+      assertCryptographicKeyQuality(secret, "RATE_LIMIT_HMAC_SECRET");
     }
 
     return secret;
