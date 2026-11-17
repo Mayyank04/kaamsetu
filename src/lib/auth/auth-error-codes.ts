@@ -7,6 +7,7 @@ export type AuthErrorCode =
   | "INVALID_PHONE"
   | "CONSENT_REQUIRED"
   | "RATE_LIMITED"
+  | "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE"
   | "ACTIVE_CHALLENGE_EXISTS"
   | "OTP_EXPIRED"
   | "OTP_INVALID"
@@ -45,6 +46,12 @@ export const AUTH_ERRORS: Record<AuthErrorCode, AuthErrorDescriptor> = {
     statusCode: 429,
     message: "Rate limit reached. Please wait before requesting another code.",
     userMessage: "You can request another code in {seconds} seconds.",
+  },
+  RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE: {
+    code: "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE",
+    statusCode: 503,
+    message: "Authentication rate limiter temporarily unavailable.",
+    userMessage: "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
   },
   ACTIVE_CHALLENGE_EXISTS: {
     code: "ACTIVE_CHALLENGE_EXISTS",
@@ -124,6 +131,7 @@ export const AUTH_ERROR_CODES = {
   INVALID_PHONE: "INVALID_PHONE",
   CONSENT_REQUIRED: "CONSENT_REQUIRED",
   RATE_LIMITED: "RATE_LIMITED",
+  RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE: "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE",
   ACTIVE_CHALLENGE_EXISTS: "ACTIVE_CHALLENGE_EXISTS",
   OTP_EXPIRED: "OTP_EXPIRED",
   OTP_INVALID: "OTP_INVALID",
@@ -142,6 +150,7 @@ export const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   INVALID_PHONE: AUTH_ERRORS.INVALID_PHONE.userMessage,
   CONSENT_REQUIRED: AUTH_ERRORS.CONSENT_REQUIRED.userMessage,
   RATE_LIMITED: AUTH_ERRORS.RATE_LIMITED.userMessage,
+  RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE: AUTH_ERRORS.RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE.userMessage,
   ACTIVE_CHALLENGE_EXISTS: AUTH_ERRORS.ACTIVE_CHALLENGE_EXISTS.userMessage,
   OTP_EXPIRED: AUTH_ERRORS.OTP_EXPIRED.userMessage,
   OTP_INVALID: AUTH_ERRORS.OTP_INVALID.userMessage,
