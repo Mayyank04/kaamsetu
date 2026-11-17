@@ -202,11 +202,13 @@ export async function checkRateLimit(
       });
 
       if (error) {
+        const correlationId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
         console.error(
           JSON.stringify({
             level: isProduction ? "fatal" : "warn",
             component: "RateLimiter",
             action: "check_and_increment_rate_limit",
+            correlationId,
             keyPrefix: key.split(":")[0],
             message: "Database RPC error during rate check",
             code: error.code,
@@ -223,7 +225,7 @@ export async function checkRateLimit(
           nextAllowedAt: undefined,
           isInfrastructureError: true,
           statusCode: 503,
-          errorCode: "DATABASE_UNAVAILABLE",
+          errorCode: "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE",
           reason:
             "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
         };
@@ -236,6 +238,8 @@ export async function checkRateLimit(
           allowed: Boolean(row.allowed),
           remainingSeconds: remSec,
           nextAllowedAt: remSec > 0 ? new Date(Date.now() + remSec * 1000).toISOString() : undefined,
+          statusCode: row.allowed ? 200 : 429,
+          errorCode: row.allowed ? undefined : "RATE_LIMITED",
           reason: row.allowed
             ? undefined
             : `Please wait ${remSec} seconds before requesting a new code.`,
@@ -252,16 +256,18 @@ export async function checkRateLimit(
         nextAllowedAt: undefined,
         isInfrastructureError: true,
         statusCode: 503,
-        errorCode: "DATABASE_UNAVAILABLE",
+        errorCode: "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE",
         reason:
           "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
       };
     } catch (err: unknown) {
+      const correlationId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
       console.error(
         JSON.stringify({
           level: isProduction ? "fatal" : "warn",
           component: "RateLimiter",
           action: "checkRateLimit",
+          correlationId,
           keyPrefix: key.split(":")[0],
           message: err instanceof Error ? err.message : "Unexpected database exception",
         })
@@ -275,7 +281,7 @@ export async function checkRateLimit(
         nextAllowedAt: undefined,
         isInfrastructureError: true,
         statusCode: 503,
-        errorCode: "DATABASE_UNAVAILABLE",
+        errorCode: "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE",
         reason:
           "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
       };
@@ -284,10 +290,12 @@ export async function checkRateLimit(
 
   // 2. Production Invariant: In-memory fallback is strictly FORBIDDEN in production
   if (isProduction) {
+    const correlationId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
     console.error(
       JSON.stringify({
         level: "fatal",
         component: "RateLimiter",
+        correlationId,
         message: "Supabase not configured in production. Rejecting rate-limited request.",
       })
     );
@@ -297,7 +305,7 @@ export async function checkRateLimit(
       nextAllowedAt: undefined,
       isInfrastructureError: true,
       statusCode: 503,
-      errorCode: "DATABASE_UNAVAILABLE",
+      errorCode: "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE",
       reason:
         "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
     };
@@ -374,6 +382,8 @@ export async function validateOtpSendRateLimit(
       allowed: false,
       remainingSeconds: remSec,
       nextAllowedAt: cooldown.nextAllowedAt || new Date(Date.now() + remSec * 1000).toISOString(),
+      errorCode: "RATE_LIMITED",
+      statusCode: 429,
       reason: `Please wait ${remSec} seconds before requesting a new code.`,
     };
   }
@@ -389,6 +399,8 @@ export async function validateOtpSendRateLimit(
       allowed: false,
       remainingSeconds: remSec,
       nextAllowedAt: phoneHourly.nextAllowedAt || new Date(Date.now() + remSec * 1000).toISOString(),
+      errorCode: "RATE_LIMITED",
+      statusCode: 429,
       reason: "Maximum SMS verification requests reached for this number. Please try again later.",
     };
   }
@@ -404,6 +416,8 @@ export async function validateOtpSendRateLimit(
       allowed: false,
       remainingSeconds: remSec,
       nextAllowedAt: ipHourly.nextAllowedAt || new Date(Date.now() + remSec * 1000).toISOString(),
+      errorCode: "RATE_LIMITED",
+      statusCode: 429,
       reason: "Too many verification requests from your network. Please try again later.",
     };
   }

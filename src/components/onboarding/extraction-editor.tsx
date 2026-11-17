@@ -49,6 +49,7 @@ export function ExtractionEditor({
   const [city, setCity] = React.useState(extractedData.city || "");
   const [state, setState] = React.useState(extractedData.state || "");
   const [pincode, setPincode] = React.useState("");
+  const [pinError, setPinError] = React.useState<string | null>(null);
   const [headline, setHeadline] = React.useState(extractedData.headline);
   const [bio, setBio] = React.useState(extractedData.bio);
   const [skills, setSkills] = React.useState<string[]>(extractedData.skills);
@@ -60,15 +61,19 @@ export function ExtractionEditor({
     (extractedData as any).dailyRateMax ?? null
   );
 
-  // Compute live geographic status for UI guidance
+  const normalizedPin = pincode.replace(/\D/g, "");
+  const isPinIncomplete = normalizedPin.length > 0 && normalizedPin.length < 6;
+
+  // Compute live geographic status for UI guidance ONLY when a complete 6-digit PIN is provided.
+  // Avoids flashing premature red error alerts during onboarding drafting.
   const geoStatus = React.useMemo(() => {
-    if (!city && !state && !pincode) return null;
+    if (normalizedPin.length !== 6) return null;
     return GeographicAuthorizationService.validateLocation({
       city,
       state,
-      pincode: pincode.trim() || null,
+      pincode: normalizedPin,
     });
-  }, [city, state, pincode]);
+  }, [city, state, normalizedPin]);
 
   const handleAddSkill = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +89,13 @@ export function ExtractionEditor({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanPin = pincode.replace(/\D/g, "");
+    if (cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
+      setPinError("A valid 6-digit Indian Postal PIN code is required to continue.");
+      return;
+    }
+    setPinError(null);
+
     onApprove({
       fullName,
       occupation,
@@ -92,7 +104,7 @@ export function ExtractionEditor({
       yearsExperience,
       city,
       state,
-      pincode: pincode.trim() || undefined,
+      pincode: cleanPin,
       skills,
       equipmentHandled: extractedData.equipmentHandled,
       dailyRateMin: dailyRateMin ?? undefined,
@@ -233,14 +245,32 @@ export function ExtractionEditor({
             <div>
               <input
                 type="text"
+                inputMode="numeric"
+                pattern="[1-9][0-9]{5}"
                 placeholder="6-Digit PIN Code *"
                 maxLength={6}
+                required
                 value={pincode}
-                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => {
+                  setPincode(e.target.value.replace(/\D/g, ""));
+                  if (pinError) setPinError(null);
+                }}
                 className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm font-mono text-forest focus:outline-none focus:border-forest"
               />
             </div>
           </div>
+
+          {pinError && (
+            <p className="text-xs text-red-600 font-medium">{pinError}</p>
+          )}
+
+          {/* Incomplete PIN Guidance Notice */}
+          {isPinIncomplete && (
+            <div className="p-2.5 rounded-md text-xs border border-forest/15 bg-sand/15 text-forest flex items-center gap-2">
+              <Info className="w-4 h-4 text-forest/70 shrink-0" />
+              <span>Enter 6-digit Indian PIN code to verify service coverage ({normalizedPin.length}/6 digits).</span>
+            </div>
+          )}
 
           {/* Real-time Geographic Scope Feedback */}
           {geoStatus && (

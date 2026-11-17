@@ -81,7 +81,7 @@ export class GeographicAuthorizationService {
   public static validateLocation(req: LocationValidationRequest): LocationValidationResult {
     const city = (req.city || "").trim();
     const state = (req.state || "").trim();
-    const pin = (req.pincode || "").trim();
+    const pin = (req.pincode || "").replace(/\s+/g, "").trim();
     const cityLower = city.toLowerCase();
     const stateLower = state.toLowerCase();
 
