@@ -13,6 +13,10 @@ export type AuthErrorCode =
   | "AUTH_CONFIGURATION_ERROR"
   | "DATABASE_UNAVAILABLE"
   | "OTP_CHALLENGE_CREATION_FAILED"
+  | "ACCOUNT_NOT_FOUND"
+  | "ACCOUNT_ALREADY_EXISTS"
+  | "ACCOUNT_CREATION_FAILED"
+  | "NETWORK_ERROR"
   | "INTERNAL_SERVER_ERROR";
 
 export interface AuthErrorDescriptor {
@@ -77,6 +81,30 @@ export const AUTH_ERRORS: Record<AuthErrorCode, AuthErrorDescriptor> = {
     message: "Failed to create verification challenge.",
     userMessage: "Unable to send verification code. Please try again shortly.",
   },
+  ACCOUNT_NOT_FOUND: {
+    code: "ACCOUNT_NOT_FOUND",
+    statusCode: 404,
+    message: "No account found with this mobile number. Please register first.",
+    userMessage: "No account found with this mobile number. Please create an account to get started.",
+  },
+  ACCOUNT_ALREADY_EXISTS: {
+    code: "ACCOUNT_ALREADY_EXISTS",
+    statusCode: 409,
+    message: "An account already exists with this mobile number. Please sign in instead.",
+    userMessage: "An account with this mobile number already exists. Please sign in instead.",
+  },
+  ACCOUNT_CREATION_FAILED: {
+    code: "ACCOUNT_CREATION_FAILED",
+    statusCode: 500,
+    message: "Failed to create account in database. Please try again.",
+    userMessage: "Unable to complete account registration. Please retry in a moment.",
+  },
+  NETWORK_ERROR: {
+    code: "NETWORK_ERROR",
+    statusCode: 0,
+    message: "Network connectivity error occurred.",
+    userMessage: "Connection problem. Please check your internet connection and retry.",
+  },
   INTERNAL_SERVER_ERROR: {
     code: "INTERNAL_SERVER_ERROR",
     statusCode: 500,
@@ -95,6 +123,10 @@ export const AUTH_ERROR_CODES = {
   AUTH_CONFIGURATION_ERROR: "AUTH_CONFIGURATION_ERROR",
   DATABASE_UNAVAILABLE: "DATABASE_UNAVAILABLE",
   OTP_CHALLENGE_CREATION_FAILED: "OTP_CHALLENGE_CREATION_FAILED",
+  ACCOUNT_NOT_FOUND: "ACCOUNT_NOT_FOUND",
+  ACCOUNT_ALREADY_EXISTS: "ACCOUNT_ALREADY_EXISTS",
+  ACCOUNT_CREATION_FAILED: "ACCOUNT_CREATION_FAILED",
+  NETWORK_ERROR: "NETWORK_ERROR",
   INTERNAL_SERVER_ERROR: "INTERNAL_SERVER_ERROR",
 } as const;
 
@@ -108,6 +140,10 @@ export const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   AUTH_CONFIGURATION_ERROR: AUTH_ERRORS.AUTH_CONFIGURATION_ERROR.userMessage,
   DATABASE_UNAVAILABLE: AUTH_ERRORS.DATABASE_UNAVAILABLE.userMessage,
   OTP_CHALLENGE_CREATION_FAILED: AUTH_ERRORS.OTP_CHALLENGE_CREATION_FAILED.userMessage,
+  ACCOUNT_NOT_FOUND: AUTH_ERRORS.ACCOUNT_NOT_FOUND.userMessage,
+  ACCOUNT_ALREADY_EXISTS: AUTH_ERRORS.ACCOUNT_ALREADY_EXISTS.userMessage,
+  ACCOUNT_CREATION_FAILED: AUTH_ERRORS.ACCOUNT_CREATION_FAILED.userMessage,
+  NETWORK_ERROR: AUTH_ERRORS.NETWORK_ERROR.userMessage,
   INTERNAL_SERVER_ERROR: AUTH_ERRORS.INTERNAL_SERVER_ERROR.userMessage,
 };
 

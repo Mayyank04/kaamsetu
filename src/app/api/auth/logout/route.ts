@@ -19,8 +19,20 @@ export async function POST() {
       redirectUrl: "/",
     });
 
-    response.cookies.delete("kaamsetu_demo_persona");
-    response.cookies.delete("kaamsetu_session");
+    // Clear session cookies cleanly across path "/"
+    response.cookies.set("kaamsetu_session", "", {
+      path: "/",
+      maxAge: 0,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    response.cookies.set("kaamsetu_demo_persona", "", {
+      path: "/",
+      maxAge: 0,
+      sameSite: "lax",
+    });
 
     return response;
   } catch (error) {

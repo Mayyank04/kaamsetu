@@ -5,18 +5,27 @@ import {
   validateIndianMobile,
   INVALID_PHONE_MESSAGE,
 } from "@/lib/utilities/phone";
+import { AppRole } from "@/types/database.types";
 
 export type OtpFlowState =
   | "idle"
   | "requesting"
-  | "cooldown"
   | "code_sent"
   | "verifying"
   | "verified"
+  | "invalid_phone"
   | "rate_limited"
   | "expired"
-  | "request_failed"
+  | "invalid_code"
+  | "attempts_exceeded"
   | "configuration_failed"
+  | "database_unavailable"
+  | "account_not_found"
+  | "account_creation_failed"
+  | "network_error"
+  // Backward compatibility aliases
+  | "cooldown"
+  | "request_failed"
   | "verification_failed";
 
 export interface UseOtpFlowOptions {
@@ -39,7 +48,7 @@ interface StoredOtpSession {
 export function useOtpFlow(options: UseOtpFlowOptions = {}) {
   const {
     initialPhone = "",
-    role = "worker",
+    role: initialRole = "worker",
     intent = "login",
     storageKey = "kaamsetu_otp_session",
     onSuccess,
@@ -50,6 +59,9 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
   const [phone, setPhoneState] = React.useState(initialPhone);
   const [otp, setOtp] = React.useState("");
   const [fullName, setFullName] = React.useState("");
+  const [role, setRole] = React.useState<string>(initialRole);
+  const [termsAccepted, setTermsAccepted] = React.useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = React.useState(false);
   const [isSandbox, setIsSandbox] = React.useState(false);
   const [sandboxCode, setSandboxCode] = React.useState<string | null>(null);
   const [hasActiveChallenge, setHasActiveChallenge] = React.useState(false);
@@ -66,39 +78,49 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
   const isPhoneValid = phoneValidation.valid;
   const phoneDigits = phone.replace(/\D/g, "");
 
-  // Update phone with immediate inline validation feedback
+  // Update phone with immediate inline validation feedback and clear stale challenges
   const setPhone = React.useCallback((val: string) => {
     setPhoneState(val);
     const trimmed = val.trim();
     const digits = trimmed.replace(/\D/g, "");
 
+    // Clear stale OTP and challenge when phone number changes
+    setOtp("");
+    setSandboxCode(null);
+    setHasActiveChallenge(false);
+
     // Clear error if empty
     if (!trimmed) {
       setErrorMessage(null);
+      setState("idle");
       return;
     }
 
     // If alphabets or special characters entered
     if (/[a-zA-Z]/.test(trimmed)) {
       setErrorMessage(INVALID_PHONE_MESSAGE);
+      setState("invalid_phone");
       return;
     }
 
     // If 10 digits entered but invalid starting digit (e.g. 5456565656)
     if (digits.length === 10 && !/^[6-9]/.test(digits)) {
       setErrorMessage(INVALID_PHONE_MESSAGE);
+      setState("invalid_phone");
       return;
     }
 
     // If starts with invalid digit early (0, 1, 2, 3, 4, 5) when length >= 1 and not country code
     if (digits.length > 0 && !digits.startsWith("91") && !/^[6-9]/.test(digits)) {
       setErrorMessage(INVALID_PHONE_MESSAGE);
+      setState("invalid_phone");
       return;
     }
 
     // Clear validation error when valid
     if (digits.length === 10 && /^[6-9]/.test(digits)) {
       setErrorMessage(null);
+      setState("idle");
     }
   }, []);
 
@@ -132,7 +154,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
             setCooldownSeconds(remaining);
             setNextAllowedAt(new Date(stored.targetTimestamp));
             setStep(stored.step || 2);
-            setState(stored.hasActiveChallenge ? "code_sent" : "cooldown");
+            setState(stored.hasActiveChallenge ? "code_sent" : "rate_limited");
           }
         }
       }
@@ -213,8 +235,23 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
     if (!validation.valid) {
       setErrorMessage(validation.error || INVALID_PHONE_MESSAGE);
-      setState("idle");
+      setState("invalid_phone");
       return false;
+    }
+
+    // For registration, validate full name and terms acceptance
+    const targetFullName = (overrideFullName || fullName).trim();
+    if (intent === "registration") {
+      if (!targetFullName || targetFullName.length < 2) {
+        setErrorMessage("Please enter your full name (minimum 2 characters).");
+        setState("invalid_phone");
+        return false;
+      }
+      if (!termsAccepted) {
+        setErrorMessage("Please accept the Terms of Service and Privacy Policy to continue.");
+        setState("invalid_phone");
+        return false;
+      }
     }
 
     // Prevent duplicate requests while already in flight
@@ -225,7 +262,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     // If cooldown is actively running
     if (cooldownSeconds > 0) {
       setErrorMessage(`You can request another code in ${cooldownSeconds} seconds.`);
-      setState("cooldown");
+      setState("rate_limited");
       return false;
     }
 
@@ -240,7 +277,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
         body: JSON.stringify({
           phone: validation.clean10,
           role,
-          fullName: (overrideFullName || fullName).trim() || undefined,
+          fullName: targetFullName || undefined,
           intent,
         }),
       });
@@ -252,24 +289,48 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
       // Handle 400 Invalid Phone
       if (res.status === 400 && data.code === "INVALID_PHONE") {
-        setState("idle");
+        setState("invalid_phone");
         setErrorMessage(data.message || INVALID_PHONE_MESSAGE);
         return false;
       }
 
-      // Handle 503 Database / Infrastructure Unavailable
+      // Handle 404 Account Not Found (Login intent)
+      if (res.status === 404 || data.code === "ACCOUNT_NOT_FOUND") {
+        setState("account_not_found");
+        setErrorMessage(data.message || "No account found with this mobile number. Please register first.");
+        return false;
+      }
+
+      // Handle 409 Account Already Exists (Registration intent)
+      if (res.status === 409 || data.code === "ACCOUNT_ALREADY_EXISTS") {
+        setState("account_creation_failed");
+        setErrorMessage(data.message || "An account already exists with this mobile number. Please sign in instead.");
+        return false;
+      }
+
+      // Handle 503 Database / Infrastructure Unavailable (NEVER invent a fake 60s cooldown)
       if (
         res.status === 503 ||
         data.code === "DATABASE_UNAVAILABLE" ||
-        data.code === "AUTH_CONFIGURATION_ERROR" ||
         data.isInfrastructureError
       ) {
-        setState("configuration_failed");
+        setState("database_unavailable");
         setCooldownSeconds(0);
         setNextAllowedAt(null);
         setErrorMessage(
           data.message ||
             "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment."
+        );
+        return false;
+      }
+
+      // Handle 500 Configuration Error
+      if (data.code === "AUTH_CONFIGURATION_ERROR") {
+        setState("configuration_failed");
+        setCooldownSeconds(0);
+        setNextAllowedAt(null);
+        setErrorMessage(
+          data.message || "Verification service is momentarily unavailable. Please retry shortly."
         );
         return false;
       }
@@ -319,7 +380,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
       }
 
       if (!res.ok || !data.success) {
-        setState("request_failed");
+        setState("network_error");
         setErrorMessage(
           data.message ||
             "Failed to transmit verification code. Please check your connection and try again."
@@ -349,7 +410,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
       return true;
     } catch {
-      setState("request_failed");
+      setState("network_error");
       setErrorMessage(
         "Network connection error. Please verify your connection and try again."
       );
@@ -360,16 +421,17 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
   /**
    * Verify entered 6-digit OTP code
    */
-  const verifyCode = async (overrideOtp?: string): Promise<boolean> => {
+  const verifyCode = async (overrideOtp?: string): Promise<{ success: boolean; user?: any; redirectUrl?: string }> => {
     const codeToVerify = (overrideOtp || otp).trim();
 
     if (!codeToVerify || codeToVerify.length !== 6) {
       setErrorMessage("Please enter the complete 6-digit verification code.");
-      return false;
+      setState("invalid_code");
+      return { success: false };
     }
 
     if (state === "verifying") {
-      return false;
+      return { success: false };
     }
 
     setState("verifying");
@@ -394,7 +456,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
       if (!res.ok || !data.success) {
         if (data.code === "OTP_ATTEMPTS_EXCEEDED" || res.status === 429) {
-          setState("rate_limited");
+          setState("attempts_exceeded");
           setErrorMessage(
             data.message ||
               "Maximum verification attempts exceeded. Please request a new code."
@@ -404,13 +466,28 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
           setErrorMessage(
             data.message || "Verification code has expired. Please request a new code."
           );
+        } else if (data.code === "ACCOUNT_NOT_FOUND" || res.status === 404) {
+          setState("account_not_found");
+          setErrorMessage(
+            data.message || "No account found with this mobile number. Please register first."
+          );
+        } else if (data.code === "ACCOUNT_ALREADY_EXISTS" || res.status === 409) {
+          setState("account_creation_failed");
+          setErrorMessage(
+            data.message || "An account already exists with this mobile number. Please sign in instead."
+          );
+        } else if (data.code === "DATABASE_UNAVAILABLE" || res.status === 503) {
+          setState("database_unavailable");
+          setErrorMessage(
+            data.message || "Account verification temporarily unavailable. Please retry shortly."
+          );
         } else {
-          setState("verification_failed");
+          setState("invalid_code");
           setErrorMessage(
             data.message || "Invalid verification code. Please check and try again."
           );
         }
-        return false;
+        return { success: false };
       }
 
       // Successful verification
@@ -421,13 +498,17 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
         await onSuccess(data.user);
       }
 
-      return true;
+      return {
+        success: true,
+        user: data.user,
+        redirectUrl: data.redirectUrl,
+      };
     } catch {
-      setState("verification_failed");
+      setState("network_error");
       setErrorMessage(
         "Network error verifying code. Please try again."
       );
-      return false;
+      return { success: false };
     }
   };
 
@@ -489,7 +570,11 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
         }
         return `Resend in ${cooldownSeconds}s`;
       }
-      if (state === "configuration_failed" || state === "request_failed") {
+      if (
+        state === "configuration_failed" ||
+        state === "database_unavailable" ||
+        state === "network_error"
+      ) {
         return "Try Again";
       }
       return "Send Verification Code";
@@ -499,7 +584,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     if (state === "verified") {
       return "Verified";
     }
-    return "Verify & Mint Credential";
+    return intent === "registration" ? "Verify & Create Account" : "Verify & Sign In";
   };
 
   const handlePrimaryAction = async () => {
@@ -530,6 +615,12 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     setOtp,
     fullName,
     setFullName,
+    role,
+    setRole,
+    termsAccepted,
+    setTermsAccepted,
+    privacyAccepted,
+    setPrivacyAccepted,
     isSandbox,
     sandboxCode,
     hasActiveChallenge,

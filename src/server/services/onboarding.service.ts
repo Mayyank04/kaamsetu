@@ -8,7 +8,7 @@ import { AuthenticatedUser } from "@/server/auth/session";
 import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
 import { calculateKaamScore } from "@/lib/scoring/kaamscore";
 import { signCredentialPayload, CanonicalCredentialPayload } from "@/lib/crypto/credential-signer";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isConfigured } from "@/lib/env";
 import { AuthorizationError, DatabaseError } from "@/lib/errors/app-error";
 
@@ -116,7 +116,7 @@ export class OnboardingService {
     // 5. Database Persistence whenever Supabase is configured
     if (isConfigured.supabase) {
       try {
-        const supabase = await createServerSupabaseClient();
+        const supabase = createAdminClient();
 
         const { data: occupations, error: occErr } = await supabase
           .from("occupations")

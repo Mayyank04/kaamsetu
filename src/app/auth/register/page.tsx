@@ -8,180 +8,35 @@ import {
   INVALID_PHONE_MESSAGE,
 } from "@/lib/utilities/phone";
 import {
-  Smartphone,
   CheckCircle2,
   AlertCircle,
   Building2,
   HardHat,
   RotateCcw,
   Info,
-  User,
-  Users,
   Clock,
   Copy,
   ShieldCheck,
   ArrowRight,
+  LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/use-auth";
+import { useOtpFlow } from "@/lib/auth/use-otp-flow";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { refreshSession } = useAuth();
 
-  const [fullName, setFullName] = React.useState("");
-  const [phoneNumber, setPhoneNumber] = React.useState("");
   const [selectedRole, setSelectedRole] = React.useState<"worker" | "contractor" | "customer" | "institution">("worker");
-  const [termsAccepted, setTermsAccepted] = React.useState(false);
-  const [otpSent, setOtpSent] = React.useState(false);
-  const [otpValue, setOtpValue] = React.useState("");
-  const [sandboxCode, setSandboxCode] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = React.useState(0);
-  const [copiedCode, setCopiedCode] = React.useState(false);
-  const [statusMessage, setStatusMessage] = React.useState<{ text: string; isError: boolean } | null>(null);
 
-  // Interval ticker for live cooldown countdown
-  const isCooldown = cooldownSeconds > 0;
-  React.useEffect(() => {
-    if (!isCooldown) return;
-    const interval = setInterval(() => {
-      setCooldownSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isCooldown]);
-
-  const handleSendOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-
-    if (!fullName.trim() || fullName.trim().length < 2) {
-      setStatusMessage({
-        text: "Please enter your full name.",
-        isError: true,
-      });
-      return;
-    }
-
-    const validation = validateIndianMobile(phoneNumber);
-    if (!validation.valid) {
-      setStatusMessage({
-        text: validation.error || INVALID_PHONE_MESSAGE,
-        isError: true,
-      });
-      return;
-    }
-
-    if (!termsAccepted) {
-      setStatusMessage({
-        text: "Please accept the Terms of Service and Privacy Policy to continue.",
-        isError: true,
-      });
-      return;
-    }
-
-    if (cooldownSeconds > 0) {
-      setStatusMessage({
-        text: `Please wait ${cooldownSeconds} seconds before requesting a new code.`,
-        isError: true,
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setStatusMessage(null);
-    try {
-      const res = await fetch("/api/auth/otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: phoneNumber,
-          role: selectedRole,
-          fullName: fullName.trim(),
-          intent: "registration",
-        }),
-      });
-      const data = await res.json();
-      const retrySec = typeof data.retryAfterSeconds === "number" ? data.retryAfterSeconds : 60;
-
-      // Handle 429 Cooldown / Rate Limit
-      if (res.status === 429 || (!res.ok && res.status === 429)) {
-        setCooldownSeconds(retrySec);
-        if (data.isSandbox && data.sandboxCode) {
-          setSandboxCode(data.sandboxCode);
-        }
-        if (data.hasActiveChallenge || data.sandboxCode) {
-          setOtpSent(true);
-          setStatusMessage({
-            text: data.isSandbox
-              ? "A verification code is active. Use the test code below."
-              : `A verification code is already active. Enter it below or wait ${retrySec}s to resend.`,
-            isError: false,
-          });
-          return;
-        }
-        throw new Error(data.message || `Please wait ${retrySec} seconds before requesting a new code.`);
-      }
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Unable to send verification OTP.");
-      }
-
-      setOtpSent(true);
-      setCooldownSeconds(retrySec);
-      if (data.isSandbox && data.sandboxCode) {
-        setSandboxCode(data.sandboxCode);
-        setStatusMessage({
-          text: data.message || "Sandbox verification is enabled. No SMS will be sent.",
-          isError: false,
-        });
-      } else {
-        setSandboxCode(null);
-        setStatusMessage({
-          text: data.message || `Verification code dispatched to +91 ${validation.clean10}.`,
-          isError: false,
-        });
-      }
-    } catch (err: unknown) {
-      const rawMsg = err instanceof Error ? err.message : "Failed to initiate registration.";
-      const safeMsg =
-        rawMsg.includes("RATE_LIMIT_HMAC_SECRET") || rawMsg.includes("FATAL")
-          ? "We're temporarily unable to process this request. Please try again shortly."
-          : rawMsg;
-      setStatusMessage({ text: safeMsg, isError: true });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otpValue.length !== 6) {
-      setStatusMessage({ text: "Please enter a 6-digit OTP code.", isError: true });
-      return;
-    }
-
-    setIsLoading(true);
-    setStatusMessage(null);
-    try {
-      const res = await fetch("/api/auth/otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: phoneNumber,
-          otp: otpValue,
-          role: selectedRole,
-          fullName: fullName.trim(),
-          intent: "registration",
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Invalid verification code.");
-      }
+  const otpFlow = useOtpFlow({
+    intent: "registration",
+    role: selectedRole,
+    storageKey: "kaamsetu_register_otp_session",
+    onSuccess: async (user) => {
       await refreshSession();
-
-      // On successful registration, workers proceed to onboarding; others go to dashboards
-      const actualRole = data.user?.role || selectedRole;
+      const actualRole = user?.role || selectedRole;
       const targetDestination =
         actualRole === "worker"
           ? "/onboarding"
@@ -189,18 +44,31 @@ export default function RegisterPage() {
           ? "/contractor/dashboard"
           : actualRole === "institution"
           ? "/institution/dashboard"
-          : "/customer/bookings";
-
+          : "/dashboard";
       router.push(targetDestination);
-    } catch (err: unknown) {
-      const rawMsg = err instanceof Error ? err.message : "Registration verification failed.";
-      const safeMsg =
-        rawMsg.includes("RATE_LIMIT_HMAC_SECRET") || rawMsg.includes("FATAL")
-          ? "We're temporarily unable to process this request. Please try again shortly."
-          : rawMsg;
-      setStatusMessage({ text: safeMsg, isError: true });
-    } finally {
-      setIsLoading(false);
+    },
+  });
+
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    await otpFlow.requestOtp();
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await otpFlow.verifyCode();
+    if (result.success && result.user) {
+      await refreshSession();
+      const actualRole = result.user.role || selectedRole;
+      const targetDestination =
+        actualRole === "worker"
+          ? "/onboarding"
+          : actualRole === "contractor"
+          ? "/contractor/dashboard"
+          : actualRole === "institution"
+          ? "/institution/dashboard"
+          : "/dashboard";
+      router.push(targetDestination);
     }
   };
 
@@ -228,31 +96,44 @@ export default function RegisterPage() {
             <span>Sandbox Verification Environment</span>
           </div>
           <p className="text-[11px] text-charcoal-muted leading-relaxed">
-            No real SMS is transmitted. Verification codes are simulated transparently for account creation and testing.
+            No real SMS is transmitted. Verification codes are simulated transparently for account creation and testing. This does not verify ownership of the mobile number.
           </p>
         </div>
 
         {/* Feedback Alert */}
-        {statusMessage && (
+        {(otpFlow.errorMessage || otpFlow.infoMessage) && (
           <div
             className={`p-3.5 rounded-sm border text-xs flex items-center gap-2.5 ${
-              statusMessage.isError
+              otpFlow.errorMessage
                 ? "bg-red-50 text-red-800 border-red-200"
                 : "bg-emerald-50 text-emerald-800 border-emerald-200"
             }`}
           >
-            {statusMessage.isError ? (
+            {otpFlow.errorMessage ? (
               <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
             ) : (
               <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
             )}
-            <span className="flex-1 leading-relaxed">{statusMessage.text}</span>
+            <div className="flex-1 leading-relaxed">
+              <span>{otpFlow.errorMessage || otpFlow.infoMessage}</span>
+              {otpFlow.state === "account_creation_failed" && (
+                <div className="mt-1.5 pt-1.5 border-t border-red-200/60">
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-1 font-bold text-red-900 underline hover:text-red-700"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Sign in with your existing account →</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* Form Container */}
         <div className="bg-card p-6 sm:p-7 rounded-md border border-forest/15 shadow-sovereign-sm space-y-5">
-          {!otpSent ? (
+          {otpFlow.step === 1 ? (
             <form onSubmit={handleSendOtp} className="space-y-4">
               {/* Full Name */}
               <div className="space-y-1.5">
@@ -262,8 +143,8 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  value={otpFlow.fullName}
+                  onChange={(e) => otpFlow.setFullName(e.target.value)}
                   placeholder="e.g. Rameshwar Sharma"
                   className="w-full h-11 px-3.5 rounded-xs border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
                 />
@@ -277,7 +158,10 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setSelectedRole("worker")}
+                    onClick={() => {
+                      setSelectedRole("worker");
+                      otpFlow.setRole("worker");
+                    }}
                     className={`p-2.5 rounded-xs border text-xs font-semibold flex items-center gap-2 transition-all ${
                       selectedRole === "worker"
                         ? "border-forest bg-forest/5 text-forest font-bold shadow-xs"
@@ -289,7 +173,10 @@ export default function RegisterPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSelectedRole("contractor")}
+                    onClick={() => {
+                      setSelectedRole("contractor");
+                      otpFlow.setRole("contractor");
+                    }}
                     className={`p-2.5 rounded-xs border text-xs font-semibold flex items-center gap-2 transition-all ${
                       selectedRole === "contractor"
                         ? "border-forest bg-forest/5 text-forest font-bold shadow-xs"
@@ -314,13 +201,13 @@ export default function RegisterPage() {
                   <input
                     type="tel"
                     required
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    value={otpFlow.phone}
+                    onChange={(e) => otpFlow.setPhone(e.target.value)}
                     placeholder="98765 43210"
                     className="w-full h-11 px-3.5 rounded-r-xs border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20 font-mono"
                   />
                 </div>
-                {phoneNumber.trim().length > 0 && !validateIndianMobile(phoneNumber).valid ? (
+                {otpFlow.phone.trim().length > 0 && !validateIndianMobile(otpFlow.phone).valid ? (
                   <p className="text-[11px] text-red-600 font-medium">
                     {INVALID_PHONE_MESSAGE}
                   </p>
@@ -337,8 +224,8 @@ export default function RegisterPage() {
                   type="checkbox"
                   id="terms"
                   required
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  checked={otpFlow.termsAccepted}
+                  onChange={(e) => otpFlow.setTermsAccepted(e.target.checked)}
                   className="mt-0.5 h-4 w-4 rounded-xs border-forest/30 text-forest focus:ring-forest/20"
                 />
                 <label htmlFor="terms" className="text-xs text-charcoal-muted leading-relaxed">
@@ -356,13 +243,19 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                disabled={isLoading || cooldownSeconds > 0 || !validateIndianMobile(phoneNumber).valid}
+                disabled={
+                  otpFlow.isLoading ||
+                  otpFlow.cooldownSeconds > 0 ||
+                  !validateIndianMobile(otpFlow.phone).valid ||
+                  !otpFlow.fullName.trim() ||
+                  !otpFlow.termsAccepted
+                }
                 className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
+                {otpFlow.isLoading ? (
                   "Sending OTP..."
-                ) : cooldownSeconds > 0 ? (
-                  `Resend code in ${cooldownSeconds}s`
+                ) : otpFlow.cooldownSeconds > 0 ? (
+                  `Resend code in ${otpFlow.cooldownSeconds}s`
                 ) : (
                   <>
                     <span>Create Account & Verify</span>
@@ -371,10 +264,10 @@ export default function RegisterPage() {
                 )}
               </Button>
 
-              {cooldownSeconds > 0 && (
+              {otpFlow.hasActiveChallenge && (
                 <button
                   type="button"
-                  onClick={() => setOtpSent(true)}
+                  onClick={() => otpFlow.setStep(2)}
                   className="w-full text-center text-xs text-forest underline hover:text-forest-600 font-semibold"
                 >
                   Already have an active verification code? Enter code →
@@ -388,17 +281,14 @@ export default function RegisterPage() {
                   Verification challenge active for:
                 </div>
                 <div className="font-mono text-sm font-bold text-forest">
-                  +91 {phoneNumber}
+                  +91 {otpFlow.phone}
                 </div>
                 <div className="text-xs text-charcoal font-semibold">
-                  Name: {fullName} ({selectedRole})
+                  Name: {otpFlow.fullName} ({selectedRole})
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setOtpValue("");
-                  }}
+                  onClick={otpFlow.editPhone}
                   className="text-[11px] text-forest underline hover:text-forest-600 inline-flex items-center gap-1 pt-1"
                 >
                   <RotateCcw className="w-3 h-3" /> Edit details
@@ -406,7 +296,7 @@ export default function RegisterPage() {
               </div>
 
               {/* Sandbox Code Helper */}
-              {sandboxCode && (
+              {otpFlow.sandboxCode && (
                 <div className="p-3.5 rounded-xs bg-sand/20 border border-sand-600/30 text-xs text-forest space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-bold uppercase tracking-wider text-[11px] text-forest">
@@ -418,28 +308,22 @@ export default function RegisterPage() {
                   </div>
                   <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xs border border-forest/15 shadow-2xs">
                     <span className="font-mono text-base font-bold tracking-widest text-forest">
-                      {sandboxCode}
+                      {otpFlow.sandboxCode}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={() => setOtpValue(sandboxCode)}
+                        onClick={otpFlow.autoFillSandboxCode}
                         className="px-2 py-1 text-[11px] font-semibold bg-forest/10 hover:bg-forest/20 text-forest rounded-xs transition-colors"
                       >
                         Auto-fill
                       </button>
                       <button
                         type="button"
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(sandboxCode);
-                            setCopiedCode(true);
-                            setTimeout(() => setCopiedCode(false), 2000);
-                          } catch {}
-                        }}
+                        onClick={otpFlow.copySandboxCode}
                         className="px-2 py-1 text-[11px] font-semibold bg-forest hover:bg-forest-600 text-ivory rounded-xs transition-colors flex items-center gap-1"
                       >
-                        {copiedCode ? (
+                        {otpFlow.copiedCode ? (
                           <>
                             <CheckCircle2 className="w-3 h-3 text-emerald-300" />
                             <span>Copied</span>
@@ -463,8 +347,8 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   maxLength={6}
-                  value={otpValue}
-                  onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
+                  value={otpFlow.otp}
+                  onChange={(e) => otpFlow.setOtp(e.target.value.replace(/\D/g, ""))}
                   placeholder="------"
                   autoFocus
                   className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xs border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
@@ -473,26 +357,26 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                disabled={isLoading || otpValue.length !== 6}
+                disabled={otpFlow.isLoading || otpFlow.otp.length !== 6}
                 className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm"
               >
-                {isLoading ? "Creating Sovereign Profile..." : "Confirm & Complete Account Creation"}
+                {otpFlow.isLoading ? "Creating Sovereign Profile..." : "Confirm & Complete Account Creation"}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
 
               {/* Live Ticking Resend Action */}
               <div className="text-center pt-1">
-                {cooldownSeconds > 0 ? (
+                {otpFlow.cooldownSeconds > 0 ? (
                   <div className="text-xs text-charcoal-muted flex items-center justify-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-forest" />
                     <span>Resend code in</span>
-                    <span className="font-mono font-bold text-forest">{cooldownSeconds}s</span>
+                    <span className="font-mono font-bold text-forest">{otpFlow.cooldownSeconds}s</span>
                   </div>
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleSendOtp()}
-                    disabled={isLoading}
+                    onClick={() => otpFlow.requestOtp()}
+                    disabled={otpFlow.isLoading}
                     className="text-xs text-forest underline hover:text-forest-600 font-semibold"
                   >
                     Resend Verification Code
