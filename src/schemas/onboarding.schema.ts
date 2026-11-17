@@ -56,6 +56,7 @@ export const onboardingExtractedProfileSchema = z.object({
   state: z.string().optional().default(""),
   missingFields: z.array(z.string()).default([]),
   confidenceScore: z.number().min(0).max(1).default(0.95),
+  extractionMethod: z.enum(["gemini_ai", "deterministic_parser"]).default("deterministic_parser"),
 });
 
 export type OnboardingExtractedProfile = z.infer<typeof onboardingExtractedProfileSchema>;
