@@ -557,6 +557,12 @@ export function OnboardingWizard() {
                       className="w-full h-11 px-3.5 rounded-r-xs border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20 font-mono"
                     />
                   </div>
+                  {/* Inline validation feedback for invalid Indian mobile */}
+                  {otpFlow.phone.trim().length > 0 && !otpFlow.isPhoneValid && (
+                    <p className="text-[11px] text-red-600 font-medium pt-1">
+                      Enter a valid 10-digit Indian mobile number beginning with 6, 7, 8 or 9.
+                    </p>
+                  )}
                 </div>
 
                 {/* Sandbox Disclosure on Step 1 */}
@@ -581,9 +587,10 @@ export function OnboardingWizard() {
                   }
                   disabled={
                     otpFlow.isLoading ||
+                    (!otpFlow.isPhoneValid && (!otpFlow.isCooldown || !otpFlow.hasActiveChallenge)) ||
                     (otpFlow.isCooldown && !otpFlow.hasActiveChallenge)
                   }
-                  className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs"
+                  className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>{otpFlow.getPrimaryButtonText()}</span>
                   {!otpFlow.isLoading && !otpFlow.isCooldown && (
