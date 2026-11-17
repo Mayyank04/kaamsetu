@@ -214,8 +214,8 @@ export async function checkRateLimit(
         // Fail closed on database error in production
         return {
           allowed: false,
-          remainingSeconds: 60,
-          nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
+          remainingSeconds: undefined,
+          nextAllowedAt: undefined,
           isInfrastructureError: true,
           statusCode: 503,
           reason:
@@ -242,8 +242,8 @@ export async function checkRateLimit(
       }
       return {
         allowed: false,
-        remainingSeconds: 60,
-        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
+        remainingSeconds: undefined,
+        nextAllowedAt: undefined,
         isInfrastructureError: true,
         statusCode: 503,
         reason:
@@ -264,8 +264,8 @@ export async function checkRateLimit(
       }
       return {
         allowed: false,
-        remainingSeconds: 60,
-        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
+        remainingSeconds: undefined,
+        nextAllowedAt: undefined,
         isInfrastructureError: true,
         statusCode: 503,
         reason:
@@ -285,8 +285,8 @@ export async function checkRateLimit(
     );
     return {
       allowed: false,
-      remainingSeconds: 300,
-      nextAllowedAt: new Date(Date.now() + 300000).toISOString(),
+      remainingSeconds: undefined,
+      nextAllowedAt: undefined,
       isInfrastructureError: true,
       statusCode: 503,
       reason:
@@ -342,17 +342,15 @@ export async function validateOtpSendRateLimit(
         error: err instanceof Error ? err.message : String(err),
       })
     );
-    if (isProduction) {
-      return {
-        allowed: false,
-        remainingSeconds: 60,
-        nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
-        isInfrastructureError: true,
-        statusCode: 503,
-        reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
-      };
-    }
-    throw err;
+    return {
+      allowed: false,
+      remainingSeconds: undefined,
+      nextAllowedAt: undefined,
+      isInfrastructureError: true,
+      statusCode: 503,
+      reason:
+        "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
+    };
   }
 
   // Check 1: 60-second cooldown per phone (namespace: "cooldown")

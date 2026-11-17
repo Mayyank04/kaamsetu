@@ -261,12 +261,15 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
       if (
         res.status === 503 ||
         data.code === "DATABASE_UNAVAILABLE" ||
+        data.code === "AUTH_CONFIGURATION_ERROR" ||
         data.isInfrastructureError
       ) {
         setState("configuration_failed");
+        setCooldownSeconds(0);
+        setNextAllowedAt(null);
         setErrorMessage(
           data.message ||
-            "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later."
+            "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment."
         );
         return false;
       }

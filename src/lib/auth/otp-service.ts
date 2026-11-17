@@ -183,10 +183,37 @@ export function verifySessionToken(token: string): {
     const parts = token.split(".");
     if (parts.length !== 2) return null;
     const [encoded, signature] = parts;
+    const sigBuf = Buffer.from(signature, "utf8");
 
-    const secret = getRateLimitHmacSecret();
-    const expectedSig = crypto.createHmac("sha256", secret).update(encoded).digest("base64url");
-    if (!crypto.timingSafeEqual(Buffer.from(signature, "utf8"), Buffer.from(expectedSig, "utf8"))) {
+    let verified = false;
+
+    // 1. Verify against active primary HMAC secret
+    try {
+      const secret = getRateLimitHmacSecret();
+      const expectedSig = crypto.createHmac("sha256", secret).update(encoded).digest("base64url");
+      const expBuf = Buffer.from(expectedSig, "utf8");
+      if (sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf)) {
+        verified = true;
+      }
+    } catch {
+      // Primary verification failed or secret unavailable
+    }
+
+    // 2. Fallback to previous secret during zero-downtime key rotation
+    if (!verified && process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS) {
+      try {
+        const prevSecret = process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS;
+        const expectedSig = crypto.createHmac("sha256", prevSecret).update(encoded).digest("base64url");
+        const expBuf = Buffer.from(expectedSig, "utf8");
+        if (sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf)) {
+          verified = true;
+        }
+      } catch {
+        // Previous secret verification failed
+      }
+    }
+
+    if (!verified) {
       return null;
     }
 
@@ -238,8 +265,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
         message:
           rateLimit.reason ||
           "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
-        retryAfterSeconds: rateLimit.remainingSeconds || 60,
-        nextAllowedAt: rateLimit.nextAllowedAt,
+        retryAfterSeconds: undefined,
+        nextAllowedAt: undefined,
         statusCode: rateLimit.statusCode || 503,
       };
     }
