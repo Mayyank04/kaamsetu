@@ -39,11 +39,18 @@ import {
 
 export { normalizeIndianPhone, validateIndianMobile };
 
+export const CURRENT_TERMS_VERSION = "2026.1";
+export const CURRENT_PRIVACY_VERSION = "2026.1";
+
 export interface SendOtpRequest {
   phone: string;
   role?: string;
   fullName?: string;
   intent?: "registration" | "login";
+  termsAccepted?: boolean;
+  privacyAccepted?: boolean;
+  termsVersion?: string;
+  privacyVersion?: string;
   clientIp?: string;
 }
 
@@ -68,6 +75,10 @@ export interface VerifyOtpRequest {
   role?: string;
   fullName?: string;
   intent?: "registration" | "login";
+  termsAccepted?: boolean;
+  privacyAccepted?: boolean;
+  termsVersion?: string;
+  privacyVersion?: string;
 }
 
 export interface VerifyOtpResponse {
@@ -140,6 +151,23 @@ const memoryProfileStore: Map<string, MemoryProfileRecord> =
 
 export function getMemoryProfileStore(): Map<string, MemoryProfileRecord> {
   return memoryProfileStore;
+}
+
+export interface MemoryConsentRecord {
+  userId: string;
+  phone: string;
+  termsVersion: string;
+  privacyVersion: string;
+  purpose: string;
+  acceptedAt: number;
+}
+
+const memoryConsentStore: Map<string, MemoryConsentRecord> =
+  (globalThis as any).__kaamsetu_memory_consent_store || new Map<string, MemoryConsentRecord>();
+(globalThis as any).__kaamsetu_memory_consent_store = memoryConsentStore;
+
+export function getMemoryConsentStore(): Map<string, MemoryConsentRecord> {
+  return memoryConsentStore;
 }
 
 /**
@@ -574,7 +602,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
  */
 export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpResponse> {
   const isProduction = process.env.NODE_ENV === "production";
-  const { valid, formatted, error } = validateIndianMobile(req.phone);
+  const { valid, formatted, clean10, error } = validateIndianMobile(req.phone);
 
   if (!valid) {
     return {
@@ -785,6 +813,14 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
             statusCode: 409,
           };
         }
+        if (intent === "registration" && req.termsAccepted === false) {
+          return {
+            success: false,
+            code: "CONSENT_REQUIRED",
+            message: "Please accept the Terms of Service and Privacy Policy to continue.",
+            statusCode: 400,
+          };
+        }
         if (!intent && resolvedProfile) {
           // If legacy caller omitted intent and profile exists, log in
           userId = resolvedProfile.id;
@@ -793,6 +829,11 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
             ("full_name" in resolvedProfile ? (resolvedProfile as any).full_name : (resolvedProfile as any).fullName) ||
             resolvedName;
         } else {
+          const consentTimestamp = new Date().toISOString();
+          const termsVersion = req.termsVersion || CURRENT_TERMS_VERSION;
+          const privacyVersion = req.privacyVersion || CURRENT_PRIVACY_VERSION;
+          const consentPurpose = "workforce_identity_registration";
+
           // Create new authoritative profile in Supabase
           const { data: newProfile, error: insertErr } = await adminClient
             .from("profiles")
@@ -806,6 +847,11 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
               phone_verification_status: phoneVerificationStatus,
               verification_method: verificationMethod,
               phone_verified: phoneVerified,
+              terms_accepted_at: consentTimestamp,
+              privacy_accepted_at: consentTimestamp,
+              terms_version: termsVersion,
+              privacy_version: privacyVersion,
+              consent_purpose: consentPurpose,
             })
             .select("*")
             .single();
@@ -823,6 +869,31 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
           } else {
             userId = newProfile.id;
           }
+
+          // Record immutable consent audit event
+          try {
+            await adminClient.from("user_consents").insert({
+              user_id: userId,
+              phone_hash: phoneHashed,
+              terms_version: termsVersion,
+              privacy_version: privacyVersion,
+              purpose: consentPurpose,
+              intent: intent || "registration",
+              accepted_at: consentTimestamp,
+            });
+          } catch (consentErr) {
+            console.warn("[USER_CONSENT_PERSISTENCE_WARN]", consentErr);
+          }
+
+          // Record in memory consent store
+          memoryConsentStore.set(formatted, {
+            userId,
+            phone: formatted,
+            termsVersion,
+            privacyVersion,
+            purpose: consentPurpose,
+            acceptedAt: Date.now(),
+          });
 
           // Initialize default contractor organization if role is contractor
           if (resolvedRole === "contractor") {
@@ -911,7 +982,38 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
         verificationMethod,
         phoneVerified,
       });
+
+      const termsVersion = req.termsVersion || CURRENT_TERMS_VERSION;
+      const privacyVersion = req.privacyVersion || CURRENT_PRIVACY_VERSION;
+      const consentPurpose = "workforce_identity_registration";
+      const consentRecord: MemoryConsentRecord = {
+        userId,
+        phone: formatted,
+        termsVersion,
+        privacyVersion,
+        purpose: consentPurpose,
+        acceptedAt: Date.now(),
+      };
+      memoryConsentStore.set(formatted, consentRecord);
+      memoryConsentStore.set(clean10, consentRecord);
     }
+  }
+
+  // Always ensure memoryConsentStore is populated on successful registration verification
+  if (intent === "registration") {
+    const termsVersion = req.termsVersion || CURRENT_TERMS_VERSION;
+    const privacyVersion = req.privacyVersion || CURRENT_PRIVACY_VERSION;
+    const consentPurpose = "workforce_identity_registration";
+    const consentRecord: MemoryConsentRecord = {
+      userId,
+      phone: formatted,
+      termsVersion,
+      privacyVersion,
+      purpose: consentPurpose,
+      acceptedAt: Date.now(),
+    };
+    memoryConsentStore.set(formatted, consentRecord);
+    memoryConsentStore.set(clean10, consentRecord);
   }
 
   // Generate cryptographically signed session token
@@ -963,4 +1065,5 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
 export function __resetMemoryOtpStore(): void {
   memoryOtpStore.clear();
   memoryProfileStore.clear();
+  memoryConsentStore.clear();
 }

@@ -41,6 +41,10 @@ export async function POST(request: NextRequest) {
       role: data.role,
       fullName: data.fullName,
       intent: data.intent,
+      termsAccepted: data.termsAccepted,
+      privacyAccepted: data.privacyAccepted,
+      termsVersion: data.termsVersion,
+      privacyVersion: data.privacyVersion,
     });
 
     const response = NextResponse.json(

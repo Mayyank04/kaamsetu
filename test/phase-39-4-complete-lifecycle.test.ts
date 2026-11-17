@@ -30,6 +30,10 @@ import {
   verifySessionToken,
   __resetMemoryOtpStore,
   getMemoryOtpStore,
+  getMemoryConsentStore,
+  getMemoryProfileStore,
+  CURRENT_TERMS_VERSION,
+  CURRENT_PRIVACY_VERSION,
 } from "../src/lib/auth/otp-service";
 import {
   checkRateLimit,
@@ -455,6 +459,182 @@ describe("PHASE 39.4 COMPLETE AUTHENTICATION & LIFECYCLE TEST SUITE", () => {
       assert.ok(cookie);
       assert.equal(cookie.value, "");
       assert.equal(cookie.maxAge, 0);
+    });
+  });
+
+  // ==========================================================================
+  // Section 9: Mandatory Consent Enforcement & Audit Ledger
+  // ==========================================================================
+  describe("Section 9: Mandatory Consent Enforcement & Audit Ledger", () => {
+    it("Rejects /api/auth/otp/send on registration when termsAccepted is false", async () => {
+      const req = new NextRequest("http://localhost:3000/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: "9876543231",
+          fullName: "Arup Roy",
+          role: "worker",
+          intent: "registration",
+          termsAccepted: false,
+        }),
+      });
+      const res = await sendOtpApiHandler(req);
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.success, false);
+      assert.equal(json.code, "CONSENT_REQUIRED");
+      assert.match(json.message, /terms of service/i);
+    });
+
+    it("Permits /api/auth/otp/send on registration when termsAccepted is true", async () => {
+      const req = new NextRequest("http://localhost:3000/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: "9876543232",
+          fullName: "Arup Roy",
+          role: "worker",
+          intent: "registration",
+          termsAccepted: true,
+        }),
+      });
+      const res = await sendOtpApiHandler(req);
+      assert.equal(res.status, 200);
+      const json = await res.json();
+      assert.equal(json.success, true);
+      assert.ok(json.sandboxCode);
+    });
+
+    it("Persists consent versions and audit record upon verification", async () => {
+      const phone = "9876543233";
+      const sendRes = await sendOtp({
+        phone,
+        fullName: "Kalyan Deka",
+        role: "worker",
+        intent: "registration",
+        termsAccepted: true,
+      });
+      assert.equal(sendRes.success, true);
+
+      const verifyRes = await verifyOtp({
+        phone,
+        otp: sendRes.sandboxCode!,
+        fullName: "Kalyan Deka",
+        role: "worker",
+        intent: "registration",
+        termsAccepted: true,
+      });
+      assert.equal(verifyRes.success, true);
+
+      const consentStore = getMemoryConsentStore();
+      const consentRecord = consentStore.get("+919876543233");
+      assert.ok(consentRecord);
+      assert.equal(consentRecord.termsVersion, CURRENT_TERMS_VERSION);
+      assert.equal(consentRecord.privacyVersion, CURRENT_PRIVACY_VERSION);
+      assert.equal(consentRecord.purpose, "workforce_identity_registration");
+    });
+  });
+
+  // ==========================================================================
+  // Section 10: End-to-End Complete Registration, Logout and Login Lifecycle
+  // ==========================================================================
+  describe("Section 10: Complete Registration, Logout & Login Lifecycle", () => {
+    it("Artisan registers, logs out, logs back in, and preserves identity", async () => {
+      const phone = "9876543234";
+
+      // 1. Register as artisan
+      const regSend = await sendOtp({
+        phone,
+        fullName: "Dharmendra Nath",
+        role: "worker",
+        intent: "registration",
+        termsAccepted: true,
+      });
+      assert.equal(regSend.success, true);
+
+      const regVerify = await verifyOtp({
+        phone,
+        otp: regSend.sandboxCode!,
+        fullName: "Dharmendra Nath",
+        role: "worker",
+        intent: "registration",
+        termsAccepted: true,
+      });
+      assert.equal(regVerify.success, true);
+      const registeredUserId = regVerify.user?.id;
+      assert.ok(registeredUserId);
+      assert.equal(regVerify.user?.role, "worker");
+
+      // 2. Simulate Logout
+      const logoutRes = await logoutApiHandler();
+      assert.equal(logoutRes.status, 200);
+
+      // Reset rate limit cooldown so immediate login test succeeds
+      __resetMemoryRateLimitStore();
+
+      // 3. Log back in with registered phone
+      const loginSend = await sendOtp({
+        phone,
+        intent: "login",
+      });
+      assert.equal(loginSend.success, true);
+
+      // 4. Verify OTP on login
+      const loginVerify = await verifyOtp({
+        phone,
+        otp: loginSend.sandboxCode!,
+        intent: "login",
+      });
+      assert.equal(loginVerify.success, true);
+      // Identity must match registered user, not create a duplicate
+      assert.equal(loginVerify.user?.id, registeredUserId);
+      assert.equal(loginVerify.user?.role, "worker");
+      assert.equal(loginVerify.user?.fullName, "Dharmendra Nath");
+    });
+
+    it("Contractor registers, logs out, logs in, and preserves contractor organization", async () => {
+      const phone = "9876543235";
+
+      // 1. Register as contractor
+      const regSend = await sendOtp({
+        phone,
+        fullName: "Kamrup Builders",
+        role: "contractor",
+        intent: "registration",
+        termsAccepted: true,
+      });
+      assert.equal(regSend.success, true);
+
+      const regVerify = await verifyOtp({
+        phone,
+        otp: regSend.sandboxCode!,
+        fullName: "Kamrup Builders",
+        role: "contractor",
+        intent: "registration",
+        termsAccepted: true,
+      });
+      assert.equal(regVerify.success, true);
+      assert.equal(regVerify.user?.role, "contractor");
+      assert.equal(regVerify.redirectUrl, "/contractor/dashboard");
+
+      // Reset rate limiter cooldown
+      __resetMemoryRateLimitStore();
+
+      // 2. Log in again
+      const loginSend = await sendOtp({
+        phone,
+        intent: "login",
+      });
+      assert.equal(loginSend.success, true);
+
+      const loginVerify = await verifyOtp({
+        phone,
+        otp: loginSend.sandboxCode!,
+        intent: "login",
+      });
+      assert.equal(loginVerify.success, true);
+      assert.equal(loginVerify.user?.role, "contractor");
+      assert.equal(loginVerify.redirectUrl, "/contractor/dashboard");
     });
   });
 });

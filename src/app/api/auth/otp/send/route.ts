@@ -36,6 +36,20 @@ export async function POST(request: NextRequest) {
 
     const data = parseResult.data;
 
+    // Server-side Consent Validation for registration
+    if (data.intent === "registration" && data.termsAccepted === false) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "CONSENT_REQUIRED",
+          challengeCreated: false,
+          hasActiveChallenge: false,
+          message: "Please accept the Terms of Service and Privacy Policy to continue.",
+        },
+        { status: 400 }
+      );
+    }
+
     const clientIp =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip") ||
@@ -46,6 +60,10 @@ export async function POST(request: NextRequest) {
       role: data.role,
       fullName: data.fullName,
       intent: data.intent,
+      termsAccepted: data.termsAccepted,
+      privacyAccepted: data.privacyAccepted,
+      termsVersion: data.termsVersion,
+      privacyVersion: data.privacyVersion,
       clientIp,
     });
 

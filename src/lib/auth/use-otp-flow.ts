@@ -60,8 +60,18 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
   const [otp, setOtp] = React.useState("");
   const [fullName, setFullName] = React.useState("");
   const [role, setRole] = React.useState<string>(initialRole);
-  const [termsAccepted, setTermsAccepted] = React.useState(false);
+  const [termsAccepted, setTermsAcceptedState] = React.useState(false);
   const [privacyAccepted, setPrivacyAccepted] = React.useState(false);
+  const [consentError, setConsentError] = React.useState<string | null>(null);
+
+  const setTermsAccepted = React.useCallback((accepted: boolean) => {
+    setTermsAcceptedState(accepted);
+    setPrivacyAccepted(accepted);
+    if (accepted) {
+      setConsentError(null);
+      setErrorMessage((prev) => (prev?.includes("Terms of Service") ? null : prev));
+    }
+  }, []);
   const [isSandbox, setIsSandbox] = React.useState(false);
   const [sandboxCode, setSandboxCode] = React.useState<string | null>(null);
   const [hasActiveChallenge, setHasActiveChallenge] = React.useState(false);
@@ -244,12 +254,12 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     if (intent === "registration") {
       if (!targetFullName || targetFullName.length < 2) {
         setErrorMessage("Please enter your full name (minimum 2 characters).");
-        setState("invalid_phone");
         return false;
       }
       if (!termsAccepted) {
-        setErrorMessage("Please accept the Terms of Service and Privacy Policy to continue.");
-        setState("invalid_phone");
+        const msg = "Please accept the Terms of Service and Privacy Policy to continue.";
+        setErrorMessage(msg);
+        setConsentError(msg);
         return false;
       }
     }
@@ -268,6 +278,7 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
 
     setState("requesting");
     setErrorMessage(null);
+    setConsentError(null);
     setInfoMessage(null);
 
     try {
@@ -279,6 +290,10 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
           role,
           fullName: targetFullName || undefined,
           intent,
+          termsAccepted,
+          privacyAccepted: termsAccepted,
+          termsVersion: "2026.1",
+          privacyVersion: "2026.1",
         }),
       });
 
@@ -449,6 +464,10 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
           role,
           fullName: fullName.trim() || undefined,
           intent,
+          termsAccepted,
+          privacyAccepted: termsAccepted,
+          termsVersion: "2026.1",
+          privacyVersion: "2026.1",
         }),
       });
 
@@ -621,6 +640,8 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
     setTermsAccepted,
     privacyAccepted,
     setPrivacyAccepted,
+    consentError,
+    setConsentError,
     isSandbox,
     sandboxCode,
     hasActiveChallenge,
