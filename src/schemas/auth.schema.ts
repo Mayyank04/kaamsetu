@@ -35,7 +35,20 @@ export const phoneAuthSchema = z.object({
     .min(2, "Full name must be at least 2 characters")
     .max(100, "Full name must not exceed 100 characters")
     .optional(),
+  termsAccepted: z.boolean().optional().default(false),
+  privacyAccepted: z.boolean().optional().default(false),
   intent: z.enum(["registration", "login"]).default("login"),
+});
+
+export const registrationInputSchema = phoneAuthSchema.extend({
+  fullName: z
+    .string({ required_error: "Full name is required for registration" })
+    .trim()
+    .min(2, "Full name must be at least 2 characters")
+    .max(100, "Full name must not exceed 100 characters"),
+  termsAccepted: z.literal(true, {
+    errorMap: () => ({ message: "Please accept the Terms of Service and Privacy Policy to continue." }),
+  }),
 });
 
 export const otpVerificationSchema = z.object({
@@ -69,4 +82,5 @@ export const otpVerificationSchema = z.object({
 });
 
 export type PhoneAuthInput = z.infer<typeof phoneAuthSchema>;
+export type RegistrationInput = z.infer<typeof registrationInputSchema>;
 export type OtpVerificationInput = z.infer<typeof otpVerificationSchema>;
