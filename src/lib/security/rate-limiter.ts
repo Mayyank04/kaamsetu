@@ -20,6 +20,7 @@ export interface RateLimitResult {
   reason?: string;
   isInfrastructureError?: boolean;
   statusCode?: number;
+  errorCode?: string;
 }
 
 export type RateLimitNamespace =
@@ -41,6 +42,10 @@ interface MemoryBucket {
 const memoryStore: Map<string, MemoryBucket> =
   (globalThis as any).__kaamsetu_memory_rate_limit_store ||
   ((globalThis as any).__kaamsetu_memory_rate_limit_store = new Map<string, MemoryBucket>());
+
+export function __resetMemoryRateLimitStore(): void {
+  memoryStore.clear();
+}
 
 /**
  * Resolves the server-only HMAC secret for privacy-preserving rate limit keys.
@@ -218,6 +223,7 @@ export async function checkRateLimit(
           nextAllowedAt: undefined,
           isInfrastructureError: true,
           statusCode: 503,
+          errorCode: "DATABASE_UNAVAILABLE",
           reason:
             "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
         };
@@ -246,6 +252,7 @@ export async function checkRateLimit(
         nextAllowedAt: undefined,
         isInfrastructureError: true,
         statusCode: 503,
+        errorCode: "DATABASE_UNAVAILABLE",
         reason:
           "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
       };
@@ -268,6 +275,7 @@ export async function checkRateLimit(
         nextAllowedAt: undefined,
         isInfrastructureError: true,
         statusCode: 503,
+        errorCode: "DATABASE_UNAVAILABLE",
         reason:
           "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
       };
@@ -289,6 +297,7 @@ export async function checkRateLimit(
       nextAllowedAt: undefined,
       isInfrastructureError: true,
       statusCode: 503,
+      errorCode: "DATABASE_UNAVAILABLE",
       reason:
         "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
     };
@@ -348,8 +357,9 @@ export async function validateOtpSendRateLimit(
       nextAllowedAt: undefined,
       isInfrastructureError: true,
       statusCode: 503,
+      errorCode: "AUTH_CONFIGURATION_ERROR",
       reason:
-        "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
+        "Authentication service configuration error. Your profile draft has been saved. Please retry in a moment.",
     };
   }
 

@@ -428,8 +428,9 @@ describe("PHASE 39.3 CRITICAL AUTHENTICATION RESTORATION TEST SUITE", () => {
         assert.equal(res.remainingSeconds, undefined, "Remaining seconds must NOT be fabricated");
         assert.equal(res.nextAllowedAt, undefined, "nextAllowedAt must NOT be fabricated");
         assert.ok(
-          res.reason?.includes("Authentication rate limiter temporarily unavailable"),
-          "Reason must state rate limiter unavailable"
+          res.reason?.includes("Authentication service configuration error") ||
+            res.reason?.includes("Authentication rate limiter temporarily unavailable"),
+          "Reason must state configuration error or rate limiter unavailable"
         );
       } finally {
         process.env.RATE_LIMIT_HMAC_SECRET = originalSecret;

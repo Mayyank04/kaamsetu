@@ -258,7 +258,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     if (rateLimit.isInfrastructureError) {
       return {
         success: false,
-        code: "DATABASE_UNAVAILABLE",
+        code: (rateLimit.errorCode as AuthErrorCode) || "DATABASE_UNAVAILABLE",
         challengeCreated: false,
         hasActiveChallenge: false,
         isInfrastructureError: true,

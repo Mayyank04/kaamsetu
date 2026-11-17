@@ -53,7 +53,8 @@
     "test:phase39": "tsx test/phase-39-production-reconstruction.test.ts",
     "test:phase39.1": "tsx test/phase-39-1-otp-cooldown-recovery.test.ts",
     "test:phase39.2": "tsx test/phase-39-2-runtime-otp-recovery.test.ts",
-    "test:phase39.3": "tsx test/phase-39-3-auth-restoration.test.ts"
+    "test:phase39.3": "tsx test/phase-39-3-auth-restoration.test.ts",
+    "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
