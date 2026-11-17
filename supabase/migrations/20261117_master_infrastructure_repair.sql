@@ -6,6 +6,10 @@
 -- Classification: CLASS_B_CONTROLLED_ROLLOUT
 -- ==============================================================================
 
+-- Required PostgreSQL Extensions
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- 1. Create app_role enum if it does not already exist
 DO $$
 BEGIN
