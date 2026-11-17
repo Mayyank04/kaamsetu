@@ -447,10 +447,14 @@ export function OnboardingWizard() {
       {/* INLINE AUTHENTICATION MODAL (Triggered when unauthenticated artisan approves Step 3) */}
       {showAuthModal && (
         <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 animate-in fade-in overflow-y-auto">
-          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-6 sm:p-8 shadow-sovereign-md space-y-4 relative my-auto">
+          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-6 sm:p-8 shadow-sovereign-md space-y-4 relative my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
             <button
               type="button"
-              onClick={() => setShowAuthModal(false)}
+              onClick={() => {
+                setShowAuthModal(false);
+                otpFlow.setErrorMessage(null);
+                otpFlow.setConsentError(null);
+              }}
               className="absolute right-4 top-4 text-charcoal-muted hover:text-forest transition-colors p-1"
               aria-label="Close"
             >
@@ -593,7 +597,9 @@ export function OnboardingWizard() {
                       checked={otpFlow.termsAccepted}
                       onChange={(e) => otpFlow.setTermsAccepted(e.target.checked)}
                       disabled={otpFlow.isLoading}
-                      className="mt-0.5 h-4 w-4 rounded-xs border-forest/30 text-forest focus:ring-2 focus:ring-forest/20 accent-forest cursor-pointer"
+                      aria-invalid={!!(otpFlow.consentError || (!otpFlow.termsAccepted && otpFlow.errorMessage?.includes("Terms of Service")))}
+                      aria-describedby="onboarding-consent-error"
+                      className="mt-0.5 h-4 w-4 min-w-[16px] min-h-[16px] shrink-0 rounded-xs border-forest/30 text-forest focus:ring-2 focus:ring-forest/20 accent-[#153E35] cursor-pointer"
                     />
                     <label
                       htmlFor="onboarding-modal-consent"
@@ -604,6 +610,7 @@ export function OnboardingWizard() {
                         href="/terms"
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="text-forest underline font-bold hover:text-forest-600 focus:outline-none focus:ring-1 focus:ring-forest/30 rounded-2xs"
                       >
                         Terms of Service
@@ -613,6 +620,7 @@ export function OnboardingWizard() {
                         href="/privacy"
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="text-forest underline font-bold hover:text-forest-600 focus:outline-none focus:ring-1 focus:ring-forest/30 rounded-2xs"
                       >
                         Privacy Policy
@@ -622,7 +630,7 @@ export function OnboardingWizard() {
                   </div>
                   {/* Visible inline validation message when checkbox is not selected upon submission attempt */}
                   {(otpFlow.consentError || (!otpFlow.termsAccepted && otpFlow.errorMessage?.includes("Terms of Service"))) && (
-                    <p className="text-[11px] text-red-600 font-medium pl-6.5 animate-in fade-in">
+                    <p id="onboarding-consent-error" role="alert" className="text-[11px] text-red-600 font-medium pl-6 animate-in fade-in">
                       Please accept the Terms of Service and Privacy Policy to continue.
                     </p>
                   )}

@@ -37,14 +37,14 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
       <div className="p-5 space-y-4 flex-1 flex flex-col">
         {/* Worker Header: Portrait & Essential Info */}
         <div className="flex items-start gap-4">
-          <div className="relative h-18 w-18 min-w-[72px] min-h-[72px] shrink-0 overflow-hidden rounded-sm border-2 border-forest/15 bg-forest/5 shadow-xs">
+          <div className="relative w-[72px] h-[72px] min-w-[72px] min-h-[72px] max-w-[72px] max-h-[72px] shrink-0 overflow-hidden rounded-sm border-2 border-forest/15 bg-forest/5 shadow-xs">
             {professional.photoUrl ? (
               <Image
                 src={professional.photoUrl}
                 alt={`Dignified portrait of ${professional.fullName}, ${professional.primaryTrade}`}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                sizes="72px"
+                width={72}
+                height={72}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-forest text-ivory font-bold text-lg">

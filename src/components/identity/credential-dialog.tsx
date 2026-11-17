@@ -93,13 +93,13 @@ export function CredentialDialog({ worker, trigger }: CredentialDialogProps) {
           {/* Header Row: Portrait & Identity Details */}
           <div className="flex flex-col sm:flex-row items-start gap-5">
             {worker.photoUrl ? (
-              <div className="relative h-24 w-24 rounded-sm overflow-hidden border-2 border-forest/20 shrink-0 bg-forest/5 shadow-sovereign-sm">
+              <div className="relative w-[96px] h-[96px] min-w-[96px] min-h-[96px] max-w-[96px] max-h-[96px] rounded-sm overflow-hidden border-2 border-forest/20 shrink-0 bg-forest/5 shadow-sovereign-sm">
                 <Image
                   src={worker.photoUrl}
                   alt={worker.fullName}
-                  fill
-                  className="object-cover"
-                  sizes="96px"
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover"
                 />
               </div>
             ) : (

@@ -226,15 +226,27 @@ export default function RegisterPage() {
                   required
                   checked={otpFlow.termsAccepted}
                   onChange={(e) => otpFlow.setTermsAccepted(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded-xs border-forest/30 text-forest focus:ring-forest/20"
+                  className="mt-0.5 h-4 w-4 min-w-[16px] min-h-[16px] shrink-0 rounded-xs border-forest/30 text-forest focus:ring-forest/20 accent-[#153E35] cursor-pointer"
                 />
-                <label htmlFor="terms" className="text-xs text-charcoal-muted leading-relaxed">
+                <label htmlFor="terms" className="text-xs text-charcoal-muted leading-relaxed cursor-pointer select-none">
                   I agree to the{" "}
-                  <Link href="/terms" target="_blank" className="text-forest underline font-bold">
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-forest underline font-bold"
+                  >
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" target="_blank" className="text-forest underline font-bold">
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-forest underline font-bold"
+                  >
                     Privacy Policy
                   </Link>
                   .
