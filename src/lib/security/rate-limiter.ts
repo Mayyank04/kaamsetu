@@ -219,7 +219,7 @@ export async function checkRateLimit(
           isInfrastructureError: true,
           statusCode: 503,
           reason:
-            "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
+            "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
         };
       }
 
@@ -247,7 +247,7 @@ export async function checkRateLimit(
         isInfrastructureError: true,
         statusCode: 503,
         reason:
-          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
+          "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
       };
     } catch (err: unknown) {
       console.error(
@@ -269,7 +269,7 @@ export async function checkRateLimit(
         isInfrastructureError: true,
         statusCode: 503,
         reason:
-          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
+          "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
       };
     }
   }
@@ -289,7 +289,8 @@ export async function checkRateLimit(
       nextAllowedAt: new Date(Date.now() + 300000).toISOString(),
       isInfrastructureError: true,
       statusCode: 503,
-      reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
+      reason:
+        "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
     };
   }
 
@@ -348,8 +349,7 @@ export async function validateOtpSendRateLimit(
         nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
         isInfrastructureError: true,
         statusCode: 503,
-        reason:
-          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
+        reason: "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
       };
     }
     throw err;
