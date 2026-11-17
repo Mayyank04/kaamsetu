@@ -56,16 +56,28 @@ Worker Spoken Testimony (Language: ${language}):
 Extract the structured profile according to the strict non-invention system rules. Output strictly valid JSON.
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `${ONBOARDING_SYSTEM_PROMPT}\n\n${userPrompt}`,
-    });
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: `${ONBOARDING_SYSTEM_PROMPT}\n\n${userPrompt}`,
+      });
+    } catch {
+      // Fallback to gemini-1.5-flash
+      response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: `${ONBOARDING_SYSTEM_PROMPT}\n\n${userPrompt}`,
+      });
+    }
 
     const rawText = response.text || "{}";
     const cleaned = rawText.replace(/```json\n?|```/g, "").trim();
     const parsedJson = JSON.parse(cleaned);
 
-    return onboardingExtractedProfileSchema.parse(parsedJson);
+    return onboardingExtractedProfileSchema.parse({
+      ...parsedJson,
+      extractionMethod: "gemini_ai",
+    });
   } catch (error) {
     console.warn("Gemini live extraction failed or returned unparseable schema, falling back to deterministic parser:", error);
     return extractDeterministicFallback(transcript, language);
@@ -365,5 +377,6 @@ export function extractDeterministicFallback(
     state,
     missingFields: missing,
     confidenceScore: 0.72,
+    extractionMethod: "deterministic_parser",
   };
 }
