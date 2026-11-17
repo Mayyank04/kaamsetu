@@ -68,8 +68,8 @@ export const AUTH_ERRORS: Record<AuthErrorCode, AuthErrorDescriptor> = {
   DATABASE_UNAVAILABLE: {
     code: "DATABASE_UNAVAILABLE",
     statusCode: 503,
-    message: "Database service temporarily unavailable.",
-    userMessage: "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
+    message: "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
+    userMessage: "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
   },
   OTP_CHALLENGE_CREATION_FAILED: {
     code: "OTP_CHALLENGE_CREATION_FAILED",

@@ -237,7 +237,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
         isInfrastructureError: true,
         message:
           rateLimit.reason ||
-          "Verification is temporarily unavailable. Your profile draft has been saved. Please try again later.",
+          "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment.",
         retryAfterSeconds: rateLimit.remainingSeconds || 60,
         nextAllowedAt: rateLimit.nextAllowedAt,
         statusCode: rateLimit.statusCode || 503,
