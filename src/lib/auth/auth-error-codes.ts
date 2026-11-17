@@ -5,6 +5,7 @@
 
 export type AuthErrorCode =
   | "INVALID_PHONE"
+  | "CONSENT_REQUIRED"
   | "RATE_LIMITED"
   | "ACTIVE_CHALLENGE_EXISTS"
   | "OTP_EXPIRED"
@@ -32,6 +33,12 @@ export const AUTH_ERRORS: Record<AuthErrorCode, AuthErrorDescriptor> = {
     statusCode: 400,
     message: "Enter a valid 10-digit Indian mobile number beginning with 6, 7, 8 or 9.",
     userMessage: "Enter a valid 10-digit Indian mobile number beginning with 6, 7, 8 or 9.",
+  },
+  CONSENT_REQUIRED: {
+    code: "CONSENT_REQUIRED",
+    statusCode: 400,
+    message: "Please accept the Terms of Service and Privacy Policy to continue.",
+    userMessage: "Please accept the Terms of Service and Privacy Policy to continue.",
   },
   RATE_LIMITED: {
     code: "RATE_LIMITED",
@@ -115,6 +122,7 @@ export const AUTH_ERRORS: Record<AuthErrorCode, AuthErrorDescriptor> = {
 
 export const AUTH_ERROR_CODES = {
   INVALID_PHONE: "INVALID_PHONE",
+  CONSENT_REQUIRED: "CONSENT_REQUIRED",
   RATE_LIMITED: "RATE_LIMITED",
   ACTIVE_CHALLENGE_EXISTS: "ACTIVE_CHALLENGE_EXISTS",
   OTP_EXPIRED: "OTP_EXPIRED",
@@ -132,6 +140,7 @@ export const AUTH_ERROR_CODES = {
 
 export const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   INVALID_PHONE: AUTH_ERRORS.INVALID_PHONE.userMessage,
+  CONSENT_REQUIRED: AUTH_ERRORS.CONSENT_REQUIRED.userMessage,
   RATE_LIMITED: AUTH_ERRORS.RATE_LIMITED.userMessage,
   ACTIVE_CHALLENGE_EXISTS: AUTH_ERRORS.ACTIVE_CHALLENGE_EXISTS.userMessage,
   OTP_EXPIRED: AUTH_ERRORS.OTP_EXPIRED.userMessage,

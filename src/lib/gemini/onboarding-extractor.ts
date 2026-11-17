@@ -37,6 +37,51 @@ SCHEMA TO RETURN (JSON):
 OUTPUT FORMAT: Strict JSON matching the requested structure.
 `;
 
+/**
+ * Resolves priority candidate models for Gemini extraction with progressive fallback.
+ * Validates configured environment model and falls back through verified stable versions.
+ */
+export function getGeminiModelCandidates(): string[] {
+  const configured = env.GEMINI_MODEL || process.env.GEMINI_MODEL;
+  const candidates = [
+    configured,
+    "gemini-3.8-flash",
+    "gemini-3.5-flash",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+  ].filter(Boolean) as string[];
+  return Array.from(new Set(candidates));
+}
+
+/**
+ * Executes a single Gemini generation request with an 8-second circuit breaker.
+ */
+async function generateWithTimeout(
+  ai: GoogleGenAI,
+  model: string,
+  prompt: string,
+  timeoutMs = 8000
+): Promise<string> {
+  const generatePromise = ai.models.generateContent({
+    model,
+    contents: prompt,
+  });
+
+  let timer: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`TIMEOUT: Request to model ${model} exceeded ${timeoutMs}ms limit.`));
+    }, timeoutMs);
+  });
+
+  try {
+    const response = await Promise.race([generatePromise, timeoutPromise]);
+    return response.text || "{}";
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 export async function extractOnboardingProfile(
   req: OnboardingExtractionRequest
 ): Promise<OnboardingExtractedProfile> {
@@ -47,41 +92,82 @@ export async function extractOnboardingProfile(
     return extractDeterministicFallback(transcript, language);
   }
 
-  try {
-    const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-    const userPrompt = `
+  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+  const userPrompt = `
 Worker Spoken Testimony (Language: ${language}):
 "${transcript}"
 
 Extract the structured profile according to the strict non-invention system rules. Output strictly valid JSON.
 `;
+  const fullPrompt = `${ONBOARDING_SYSTEM_PROMPT}\n\n${userPrompt}`;
 
-    let response;
+  const candidates = getGeminiModelCandidates();
+  let lastError: unknown = null;
+
+  for (const model of candidates) {
     try {
-      response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: `${ONBOARDING_SYSTEM_PROMPT}\n\n${userPrompt}`,
+      let rawText: string;
+      try {
+        rawText = await generateWithTimeout(ai, model, fullPrompt, 8000);
+      } catch (firstErr: any) {
+        const status = firstErr?.status || (firstErr?.message?.includes("404") ? 404 : undefined);
+        const msg = String(firstErr?.message || "");
+
+        // Permanent 404 Model Error: Skip immediately without retry
+        if (status === 404 || msg.includes("not found") || msg.includes("NOT_FOUND")) {
+          console.warn(`[GEMINI_MODEL_UNAVAILABLE] Model ${model} not available on this API version (HTTP 404). Trying next candidate.`);
+          lastError = firstErr;
+          continue;
+        }
+
+        // Fatal auth or bad request: Do not retry
+        if (status === 400 || status === 401 || status === 403) {
+          console.warn(`[GEMINI_REQUEST_REJECTED] Model ${model} rejected request with HTTP ${status}. Skipping live models.`);
+          lastError = firstErr;
+          break;
+        }
+
+        // Transient error (429 rate limit, 503 high demand, timeout): Bounded 1-retry with backoff
+        if (status === 429 || status === 503 || msg.includes("high demand") || msg.includes("TIMEOUT")) {
+          console.warn(`[GEMINI_TRANSIENT_BACKOFF] Model ${model} experienced transient issue (${status || "timeout"}). Retrying once after 750ms.`);
+          await new Promise((r) => setTimeout(r, 750));
+          rawText = await generateWithTimeout(ai, model, fullPrompt, 8000);
+        } else {
+          throw firstErr;
+        }
+      }
+
+      const cleaned = rawText.replace(/```json\n?|```/g, "").trim();
+      const parsedJson = JSON.parse(cleaned);
+
+      const validated = onboardingExtractedProfileSchema.safeParse({
+        ...parsedJson,
+        extractionMethod: "gemini_ai",
       });
-    } catch {
-      // Fallback to gemini-1.5-flash
-      response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: `${ONBOARDING_SYSTEM_PROMPT}\n\n${userPrompt}`,
-      });
+
+      if (validated.success) {
+        return validated.data;
+      } else {
+        console.warn(`[GEMINI_SCHEMA_MISMATCH] Model ${model} produced output failing schema validation:`, validated.error.format());
+        lastError = validated.error;
+      }
+    } catch (modelErr: any) {
+      lastError = modelErr;
+      const status = modelErr?.status;
+      if (status === 404) {
+        console.warn(`[GEMINI_MODEL_404] Model ${model} returned 404. Proceeding to fallback.`);
+      } else {
+        console.warn(`[GEMINI_MODEL_ATTEMPT_FAILED] Model ${model} failed:`, modelErr?.message || modelErr);
+      }
     }
-
-    const rawText = response.text || "{}";
-    const cleaned = rawText.replace(/```json\n?|```/g, "").trim();
-    const parsedJson = JSON.parse(cleaned);
-
-    return onboardingExtractedProfileSchema.parse({
-      ...parsedJson,
-      extractionMethod: "gemini_ai",
-    });
-  } catch (error) {
-    console.warn("Gemini live extraction failed or returned unparseable schema, falling back to deterministic parser:", error);
-    return extractDeterministicFallback(transcript, language);
   }
+
+  console.warn(
+    "[GEMINI_ALL_MODELS_EXHAUSTED] All live Gemini model candidates failed or timed out. Falling back to deterministic parser without fabrication:",
+    lastError instanceof Error ? lastError.message : String(lastError)
+  );
+
+  return extractDeterministicFallback(transcript, language);
 }
 
 /**
@@ -113,34 +199,43 @@ export function extractDeterministicFallback(
   const lower = transcript.toLowerCase();
   const missing: string[] = [];
 
-  // 1. Identify Name
+  // 1. Identify Name (strictly preserving authentic spoken identity without fabricating surnames)
   let name = "Craftsperson";
   const nameMatch =
-    transcript.match(/(?:naam|name|amra|naan|nanu|moi|নাম|नाम)\s+(?:hai|is|devi|sharma|মোৰ|হৈছে|মই)?\s*([A-Za-z\u0980-\u09FF\u0900-\u097F]+(?:\s+[A-Za-z\u0980-\u09FF\u0900-\u097F]+)?)/i) ||
+    transcript.match(/(?:naam|name|amra|naan|nanu|moi|নাম|नाम)\s+(?:hai|is|মোৰ|হৈছে|মই)?\s*([A-Za-z\u0980-\u09FF\u0900-\u097F]+(?:\s+[A-Za-z\u0980-\u09FF\u0900-\u097F]+)?)/i) ||
     transcript.match(/(?:Main|Mera naam|Hum|I am|Nanu|Naan|মোৰ নাম|মই)\s+([A-Za-z\u0980-\u09FF\u0900-\u097F\s]+?)(?:\s+(?:hoon|hai|from|pichhle|past|se|ধৰি|হৈছে)|\.|\,)/i);
 
   if (nameMatch && nameMatch[1] && nameMatch[1].trim().length > 2) {
-    name = nameMatch[1].trim().replace(/[।\,\.\?\!]+$/, "").trim();
+    let raw = nameMatch[1].trim().replace(/[।\,\.\?\!]+$/, "").trim();
+    raw = raw.replace(/\s+(?:hai|hoon|is|se|from|ধৰি|হৈছে)$/i, "").trim();
+    if (raw.length > 2) {
+      name = raw;
+    }
   } else if (lower.includes("rameshwar") || transcript.includes("रामेश्वर") || transcript.includes("ৰামেশ্বৰ")) {
-    name = "Rameshwar Sharma";
+    name = "Rameshwar";
   } else if (lower.includes("dipak") || transcript.includes("দীপক")) {
-    name = "Dipak Kalita";
+    name = "Dipak";
   } else if (lower.includes("bipul") || transcript.includes("বিপুল")) {
-    name = "Bipul Das";
+    name = "Bipul";
   } else if (lower.includes("ratan") || transcript.includes("ৰতন")) {
-    name = "Ratan Gogoi";
+    name = "Ratan";
   } else if (lower.includes("pranab") || transcript.includes("প্ৰণৱ")) {
-    name = "Pranab Sarma";
+    name = "Pranab";
   } else if (lower.includes("sunita") || transcript.includes("सुनीता")) {
-    name = "Sunita Devi";
+    name = "Sunita";
   } else if (lower.includes("rafiq") || transcript.includes("रफीक") || transcript.includes("रफ़ीक")) {
     name = "Mohammed Rafiq";
   } else if (lower.includes("ananya") || transcript.includes("அனன்யா")) {
-    name = "Ananya Murugan";
+    name = "Ananya";
   } else if (lower.includes("animesh") || transcript.includes("অনিমেষ")) {
-    name = "Animesh Mukherjee";
+    name = "Animesh";
   } else {
     missing.push("Full Legal Name");
+  }
+
+  // If only a single name was extracted, flag full surname for worker confirmation
+  if (name !== "Craftsperson" && !name.includes(" ")) {
+    missing.push("Full Legal Name / Surname (Optional)");
   }
 
   // 2. Identify Experience Years (Strict: NEVER default if unmentioned; return null for unstated)

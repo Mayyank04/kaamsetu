@@ -21,6 +21,10 @@ const config: Config = {
       },
     },
     extend: {
+      spacing: {
+        13: "3.25rem", // 52px
+        18: "4.5rem",  // 72px
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

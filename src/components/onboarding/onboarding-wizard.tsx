@@ -234,6 +234,11 @@ export function OnboardingWizard() {
       otpFlow.setStep(2);
       return;
     }
+    if (!otpFlow.termsAccepted) {
+      otpFlow.setErrorMessage("Please accept the Terms of Service and Privacy Policy to continue.");
+      otpFlow.setConsentError("Please accept the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
     await otpFlow.requestOtp(undefined, pendingSubmission?.fullName);
   };
 
@@ -441,8 +446,8 @@ export function OnboardingWizard() {
 
       {/* INLINE AUTHENTICATION MODAL (Triggered when unauthenticated artisan approves Step 3) */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-6 sm:p-8 shadow-sovereign-md space-y-5 relative">
+        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 animate-in fade-in overflow-y-auto">
+          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-6 sm:p-8 shadow-sovereign-md space-y-4 relative my-auto">
             <button
               type="button"
               onClick={() => setShowAuthModal(false)}
@@ -577,6 +582,51 @@ export function OnboardingWizard() {
                     </span>
                   </div>
                 )}
+
+                {/* Consent Section (Unchecked by default with Terms & Privacy Policy links) */}
+                <div className="space-y-1.5 text-left pt-1">
+                  <div className="flex items-start gap-2.5">
+                    <input
+                      type="checkbox"
+                      id="onboarding-modal-consent"
+                      name="termsAccepted"
+                      checked={otpFlow.termsAccepted}
+                      onChange={(e) => otpFlow.setTermsAccepted(e.target.checked)}
+                      disabled={otpFlow.isLoading}
+                      className="mt-0.5 h-4 w-4 rounded-xs border-forest/30 text-forest focus:ring-2 focus:ring-forest/20 accent-forest cursor-pointer"
+                    />
+                    <label
+                      htmlFor="onboarding-modal-consent"
+                      className="text-xs text-charcoal-muted leading-relaxed cursor-pointer select-none"
+                    >
+                      I agree to the{" "}
+                      <Link
+                        href="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-forest underline font-bold hover:text-forest-600 focus:outline-none focus:ring-1 focus:ring-forest/30 rounded-2xs"
+                      >
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        href="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-forest underline font-bold hover:text-forest-600 focus:outline-none focus:ring-1 focus:ring-forest/30 rounded-2xs"
+                      >
+                        Privacy Policy
+                      </Link>
+                      .
+                    </label>
+                  </div>
+                  {/* Visible inline validation message when checkbox is not selected upon submission attempt */}
+                  {(otpFlow.consentError || (!otpFlow.termsAccepted && otpFlow.errorMessage?.includes("Terms of Service"))) && (
+                    <p className="text-[11px] text-red-600 font-medium pl-6.5 animate-in fade-in">
+                      Please accept the Terms of Service and Privacy Policy to continue.
+                    </p>
+                  )}
+                </div>
 
                 <Button
                   type={otpFlow.isCooldown && otpFlow.hasActiveChallenge ? "button" : "submit"}

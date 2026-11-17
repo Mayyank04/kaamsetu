@@ -13,19 +13,43 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_phone_unique
 -- This allows sovereign cryptographic worker identities and direct service-role profile management.
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
 
--- 3. Ensure all lifecycle and verification columns exist on public.profiles
+-- 3. Ensure all lifecycle, verification and legal consent columns exist on public.profiles
 ALTER TABLE public.profiles
     ADD COLUMN IF NOT EXISTS account_status TEXT NOT NULL DEFAULT 'active',
     ADD COLUMN IF NOT EXISTS phone_verification_status TEXT NOT NULL DEFAULT 'sandbox_unverified',
     ADD COLUMN IF NOT EXISTS verification_method TEXT NOT NULL DEFAULT 'sandbox',
     ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT false,
     ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ,
-    ADD COLUMN IF NOT EXISTS privacy_accepted_at TIMESTAMPTZ;
+    ADD COLUMN IF NOT EXISTS privacy_accepted_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS terms_version TEXT NOT NULL DEFAULT '2026.1',
+    ADD COLUMN IF NOT EXISTS privacy_version TEXT NOT NULL DEFAULT '2026.1',
+    ADD COLUMN IF NOT EXISTS consent_purpose TEXT NOT NULL DEFAULT 'workforce_identity_registration';
 
 -- Indices on public.profiles for high-throughput lookup
 CREATE INDEX IF NOT EXISTS idx_profiles_phone ON public.profiles (phone);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles (role);
 CREATE INDEX IF NOT EXISTS idx_profiles_account_status ON public.profiles (account_status);
+
+-- 3.5. Immutable User Consent Audit Ledger (DPDP Act 2023 Compliance)
+CREATE TABLE IF NOT EXISTS public.user_consents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    phone_hash TEXT NOT NULL,
+    terms_version TEXT NOT NULL DEFAULT '2026.1',
+    privacy_version TEXT NOT NULL DEFAULT '2026.1',
+    purpose TEXT NOT NULL DEFAULT 'workforce_identity_registration',
+    intent TEXT NOT NULL DEFAULT 'registration',
+    accepted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    withdrawn_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_consents_lookup 
+    ON public.user_consents (user_id, phone_hash, accepted_at DESC);
+
+ALTER TABLE public.user_consents ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.user_consents FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE public.user_consents TO service_role;
 
 -- 4. Ensure public.contractor_organizations table and columns
 CREATE TABLE IF NOT EXISTS public.contractor_organizations (
@@ -102,7 +126,7 @@ BEGIN
             false;
         RETURN;
     ELSE
-        -- Insert brand new authoritative profile
+        -- Insert brand new authoritative profile with legal consent metadata
         INSERT INTO public.profiles (
             id,
             phone,
@@ -114,6 +138,9 @@ BEGIN
             phone_verified,
             terms_accepted_at,
             privacy_accepted_at,
+            terms_version,
+            privacy_version,
+            consent_purpose,
             created_at,
             updated_at
         )
@@ -128,6 +155,9 @@ BEGIN
             p_phone_verified,
             now(),
             now(),
+            '2026.1',
+            '2026.1',
+            'workforce_identity_registration',
             now(),
             now()
         )

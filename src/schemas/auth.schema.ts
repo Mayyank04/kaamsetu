@@ -35,8 +35,10 @@ export const phoneAuthSchema = z.object({
     .min(2, "Full name must be at least 2 characters")
     .max(100, "Full name must not exceed 100 characters")
     .optional(),
-  termsAccepted: z.boolean().optional().default(false),
-  privacyAccepted: z.boolean().optional().default(false),
+  termsAccepted: z.boolean().optional(),
+  privacyAccepted: z.boolean().optional(),
+  termsVersion: z.string().optional().default("2026.1"),
+  privacyVersion: z.string().optional().default("2026.1"),
   intent: z.enum(["registration", "login"]).default("login"),
 });
 
@@ -79,6 +81,10 @@ export const otpVerificationSchema = z.object({
     .default("worker"),
   fullName: z.string().optional(),
   intent: z.enum(["registration", "login"]).optional(),
+  termsAccepted: z.boolean().optional(),
+  privacyAccepted: z.boolean().optional(),
+  termsVersion: z.string().optional(),
+  privacyVersion: z.string().optional(),
 });
 
 export type PhoneAuthInput = z.infer<typeof phoneAuthSchema>;
