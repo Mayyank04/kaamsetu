@@ -60,12 +60,12 @@ export async function POST(request: NextRequest) {
         sandboxCode: result.sandboxCode,
         isInfrastructureError: result.isInfrastructureError,
         requiresDemoCode: result.requiresDemoCode,
-        retryAfterSeconds: result.retryAfterSeconds,
-        nextAllowedAt: result.nextAllowedAt,
+        retryAfterSeconds: result.isInfrastructureError ? undefined : result.retryAfterSeconds,
+        nextAllowedAt: result.isInfrastructureError ? undefined : result.nextAllowedAt,
       },
       {
         status: result.statusCode || (result.success ? 200 : 400),
-        headers: result.retryAfterSeconds
+        headers: !result.isInfrastructureError && result.retryAfterSeconds
           ? { "Retry-After": String(result.retryAfterSeconds) }
           : undefined,
       }

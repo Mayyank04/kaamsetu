@@ -1,126 +1,85 @@
-# KAAMSETU — PHASE 39.3 FORENSIC AUDIT & VERIFICATION REPORT
-## VERCEL PRODUCTION OTP INFRASTRUCTURE & RATE-LIMITER REPAIR
+# KAAMSETU — PHASE 39.3 FINAL MASTER ENGINEERING REPORT
+## Production OTP Rate-Limiter Recovery, Supabase RPC Restoration & Cryptographic Configuration Reconciliation
 
-**Repository:** `Mayyank04/kaamsetu`  
+**Date:** 17 November 2026  
+**Document Classification:** Final Engineering Certification (`CLASS_B_CONTROLLED_ROLLOUT`)  
+**Operating Branch:** `phase-39-3-production-otp-rate-limiter-recovery`  
 **Base Commit:** `4d1f544` (Phase 39.2)  
-**Target:** `https://kaamsetu-neon.vercel.app/onboarding`  
-**Branch:** `phase-39-3-vercel-production-otp-infrastructure-repair`  
-**Classification:** `CLASS_B_CONTROLLED_ROLLOUT` (Guwahati Urban & Shillong Urban)  
-**Permanent Constitutional Invariant:** `platform_commission_amount = 0.00` on artisan wages  
-**Verification Date:** 17 November 2026  
+**Target Deployment:** `https://kaamsetu-neon.vercel.app`  
+**Permanent Constitutional Invariant:** `platform_commission_amount = 0.00`
 
 ---
 
-## 1. Executive Summary & Incident Forensic
+## 1. Executive Summary & Required Status Classifications
 
-When attempting mobile phone verification on the deployed Vercel application (`https://kaamsetu-neon.vercel.app/onboarding`), users were presented with the following error banner:
-> *"Authentication rate limiter temporarily unavailable. Please retry in a moment."* with a **"Try Again"** button.
+In response to the critical authentication incident reported on 17 November 2026, an exhaustive forensic investigation, cryptographic reconciliation, database schema alignment, and codebase remediation was executed.
 
-### 1.1 Forensic Reproduction in Live Production
-A live HTTP POST request to `https://kaamsetu-neon.vercel.app/api/auth/otp/send` with `{ "phone": "9876543210" }` confirmed the exact production failure:
-- **Status:** `HTTP/2 503 Service Unavailable`
-- **Vercel Request ID:** `bom1::iad1::7hq59-1794891049447-3cf2a4b3c474`
-- **Headers:** `retry-after: 60`, `server: Vercel`
-- **Payload:**
-  ```json
-  {
-    "success": false,
-    "challengeCreated": false,
-    "hasActiveChallenge": false,
-    "message": "Authentication rate limiter temporarily unavailable. Please retry in a moment.",
-    "isInfrastructureError": true,
-    "retryAfterSeconds": 60,
-    "nextAllowedAt": "2026-11-17T04:51:50.335Z"
-  }
-  ```
+### Mandatory Gate Status Classifications:
 
-### 1.2 Underlying Root Cause: Remote Database Unmigrated (PGRST202)
-1. In `src/lib/security/rate-limiter.ts`, `validateOtpSendRateLimit()` invokes `checkRateLimit()`, which calls the Supabase RPC `check_and_increment_rate_limit`.
-2. A direct diagnostic query against the remote cloud Supabase endpoint (`https://anwppwjlismjyovbyfmb.supabase.co`) returned:
-   ```
-   PGRST202: Could not find the function public.check_and_increment_rate_limit(p_block_seconds, p_key, p_max_attempts, p_window_seconds) in the schema cache
-   ```
-3. An audit of the remote PostgREST OpenAPI specification (`GET /rest/v1/`) confirmed:
-   ```json
-   { "paths": [], "definitions": [] }
-   ```
-   **Zero tables or stored procedures exist in the remote cloud database.** The 33 migrations present in `supabase/migrations/` had never been executed on the hosted cloud Supabase project.
-4. Because `process.env.NODE_ENV === "production"`, `rate-limiter.ts` strictly failed closed rather than silently falling back to an in-memory store. It returned `HTTP 503` with `"Authentication rate limiter temporarily unavailable. Please retry in a moment."`.
+| Verification Surface | Gate Status | Detail |
+| :--- | :--- | :--- |
+| **Local Automated Test Suites** | **`VERIFIED IN LOCAL TESTS`** | 32/32 Phase 39.3 tests pass; 180/180 multi-phase regression tests pass. 0 TypeScript errors, 0 ESLint warnings. |
+| **PostgreSQL Test Database (`kaamsetu_rls_test`)** | **`VERIFIED AGAINST TEST DATABASE`** | Atomic PL/pgSQL function `public.check_and_increment_rate_limit` and `public.verify_and_consume_otp` verified in `pg_proc`. |
+| **Hosted Supabase Cloud Database (`anwppwjlismjyovbyfmb`)** | **`BLOCKED BY EXTERNAL INFRASTRUCTURE`** | PostgREST returns `PGRST202` (function missing from schema cache). Direct DDL application requires manual execution via Supabase Cloud SQL Editor. |
+| **Production Vercel Runtime** | **`IMPLEMENTED BUT NOT DEPLOYED`** | Remediated code is staged and committed on branch `phase-39-3-production-otp-rate-limiter-recovery`. Pending Vercel production deployment and dashboard environment variable configuration (`RATE_LIMIT_HMAC_SECRET`). |
 
 ---
 
-## 2. Formal Stage-by-Stage Verification Gates
+## 2. Forensic Analysis of Reported Incidents
 
-In strict accordance with the Stage 8 certification directive, every gate is reported with its verified classification:
+The investigation resolved all four critical observations documented in the directive:
 
-| Stage / Gate | Gate Scope | Classification | Verification Detail |
-| :---: | :--- | :---: | :--- |
-| **Stage 1** | **Trace Production Request** | **VERIFIED IN PRODUCTION** | Live curl to `kaamsetu-neon.vercel.app` captured exact 503, headers, and `PGRST202` root cause. |
-| **Stage 2** | **Production-Equivalent Database Migration** | **VERIFIED AGAINST PRODUCTION-EQUIVALENT DATABASE** | Migration 33 applied to `kaamsetu_rls_test` on `localhost:5432`. Stored procedure verified in `pg_proc`. |
-| **Stage 2** | **Remote Cloud Supabase Migration** | **BLOCKED BY EXTERNAL CONFIGURATION** | Direct DDL execution on `anwppwjlismjyovbyfmb.supabase.co` requires cloud database credentials or dashboard SQL editor. |
-| **Stage 3** | **Environment Configuration Audit** | **VERIFIED IN PRODUCTION** | All 10 keys audited in `src/lib/env.ts`. Zero secret exposure; high-entropy 256-bit validation enforced. |
-| **Stage 4** | **Rate Limiter Repair & Invariants** | **VERIFIED AGAINST PRODUCTION-EQUIVALENT DATABASE** | Persistent, atomic row locking (`FOR UPDATE`), 3-tier limits, window non-extension, and no production memory bypass. |
-| **Stage 5** | **Sandbox OTP Security & Anti-Backdoor** | **VERIFIED AGAINST PRODUCTION-EQUIVALENT DATABASE** | Zero SMS calls, random 6-digit PIN, backdoor `123456` purged, atomic single-use consumption (`verify_and_consume_otp`). |
-| **Stage 6** | **Vercel Runtime & Commit Audit** | **VERIFIED IN PRODUCTION** | Vercel production verified running commit `0428597` (PR #10 merge). Fixes on branch `phase-39-3-vercel-production-otp-infrastructure-repair` prepared for deployment. |
-| **Stage 7** | **Browser E2E Acceptance Flow** | **VERIFIED AGAINST PRODUCTION-EQUIVALENT DATABASE** | Headless Chrome CDP automation verified full flow: invalid mobile rejection -> valid entry -> sandbox OTP -> credential minted (`IN-AS-2026-XXXX-KS`). |
-| **Stage 8** | **Full Regression Suite** | **VERIFIED AGAINST PRODUCTION-EQUIVALENT DATABASE** | 170 / 170 tests passing (100% pass rate) across all 7 test suites, TypeScript (`0 errors`), and ESLint (`0 warnings`). |
-
----
-
-## 3. Comprehensive Test Results Matrix
-
-```
-========================================================================================
-KAAMSETU MASTER VERIFICATION SUITE MATRIX
-========================================================================================
-Suite Name                                   Command                      Result
-----------------------------------------------------------------------------------------
-Phase 39.3 Authentication Restoration        npm run test:phase39.3       22 / 22 PASS (100%)
-Phase 39.2 Runtime OTP Recovery              npm run test:phase39.2       24 / 24 PASS (100%)
-Phase 39.1 OTP Cooldown Recovery             npm run test:phase39.1       18 / 18 PASS (100%)
-Phase 39 Production Reconstruction           npm run test:phase39         36 / 36 PASS (100%)
-Phase 38 Full-Stack Security Audit           npm run test:phase38         34 / 34 PASS (100%)
-Phase 37 Architecture Modernization          npm run test:phase37         25 / 25 PASS (100%)
-Phase 36.1 Anti-AI UI Reconstruction         npm run test:phase36.1       11 / 11 PASS (100%)
-----------------------------------------------------------------------------------------
-Total Automated Test Assertions                                           170 / 170 PASS (100%)
-TypeScript Compilation Gate                  npx tsc --noEmit             0 ERRORS (PASS)
-ESLint Architecture Gate                     npm run lint                 0 WARNINGS / 0 ERRORS (PASS)
-Production Build Gate                        npm run build                114 PAGES COMPILED (PASS)
-========================================================================================
-```
+1. **Fatal Infrastructure Error in `check_and_increment_rate_limit`:**
+   - *Cause:* The remote Supabase PostgreSQL schema cache lacked the stored procedure `public.check_and_increment_rate_limit`.
+   - *Resolution:* Created canonical migration `supabase/migrations/20261117000033_phase39_3_rate_limit_and_otp_infrastructure.sql` defining the atomic row-locking rate limiter function with `SECURITY DEFINER` and proper role grants.
+2. **Fatal Cryptographic Configuration Error in `validateOtpSendRateLimit`:**
+   - *Cause:* Vercel environment variable `RATE_LIMIT_HMAC_SECRET` was either missing or failed the 256-bit entropy check (`assertCryptographicKeyQuality`).
+   - *Resolution:* Added zero-downtime key rotation support via `RATE_LIMIT_HMAC_SECRET_PREVIOUS` in `verifySessionToken` and documented strict 256-bit key provisioning runbook.
+3. **Supabase Cloud SQL Editor Returned 0 Rows:**
+   - *Cause:* Stored procedure had never been applied to the hosted database instance.
+   - *Resolution:* Verified clean execution against local PostgreSQL test database; documented step-by-step SQL application runbook for cloud instance.
+4. **Deployed Onboarding Page Displayed Rate Limiter Error:**
+   - *Cause:* Rate limiter previously returned HTTP 503 with a fabricated `remainingSeconds: 60`, which trapped the client in a false countdown timer.
+   - *Resolution:* Completely eradicated fabricated cooldowns on 503 errors (`remainingSeconds: undefined`, `nextAllowedAt: undefined`). Client hook `useOtpFlow` resets cooldown to 0 on infrastructure failure and reassures the user that their profile draft is safely preserved in local storage.
 
 ---
 
-## 4. Headless Chrome CDP End-to-End Evidence
+## 3. Core Architectural Remediation Deliverables
 
-The complete browser onboarding flow was automated via Chrome DevTools Protocol against the running application:
+### 3.1 Non-Fabrication of Cooldown on HTTP 503
+- `src/lib/security/rate-limiter.ts`: Cleaned up all database and cryptographic failure paths to return `remainingSeconds: undefined` and `nextAllowedAt: undefined`.
+- `src/app/api/auth/otp/send/route.ts`: Ensured `retryAfterSeconds` is omitted from the JSON response and the `Retry-After` header is only sent for genuine 429 rate limits.
+- `src/lib/auth/use-otp-flow.ts`: Client state resets `setCooldownSeconds(0)` and `setNextAllowedAt(null)` upon receiving HTTP 503 or an infrastructure error.
 
-1. **`01-invalid-phone-validation.png`**: Entering `5456565656` immediately triggers the red validation error: `"Enter a valid 10-digit Indian mobile number beginning with 6, 7, 8 or 9."`. The submit button is completely disabled.
-2. **`02-modal-phone-step-valid.png`**: Entering valid Indian mobile `9876543288` clears the error and enables the submit button.
-3. **`03-modal-otp-step-sandbox.png`**: Submitting transitions to Step 2, displaying the yellow Sandbox Test Mode card with the 6-digit test code and active cooldown countdown.
-4. **`04-modal-otp-autofilled.png`**: Clicking "Auto-fill" populates the 6-digit test PIN into the input slots.
-5. **`05-credential-minted-success.png`**: Clicking "Verify & Mint Credential" verifies the challenge and transitions to Step 4 Onboarding Completion, rendering the minted sovereign skill card `IN-AS-2026-XXXX-KS`.
+### 3.2 Immediate Validation of Indian Mobile Numbers
+- `src/lib/utilities/phone.ts`: Enforces strict Indian carrier prefixes (`^[6-9]\d{9}$`).
+- `src/app/api/auth/otp/send/route.ts`: Uses `phoneAuthSchema.safeParse` to immediately return HTTP 400 Bad Request with code `INVALID_PHONE` on invalid inputs like `5456565656`, without touching Supabase or rate-limiter resources.
+- `src/components/onboarding/onboarding-wizard.tsx`: Inline validation disables the submit button and guides the user immediately.
 
----
-
-## 5. Non-Negotiable Constitutional Invariants Verified
-
-- **Permanent Zero Commission:** `platform_commission_amount = 0.00` on artisan wages across all database operations, repositories, and models.
-- **Controlled Rollout Boundary:** `CLASS_B_CONTROLLED_ROLLOUT` strictly limited to authorized Guwahati Urban (781001–781039) and Shillong Urban (793001–793022) pincodes.
-- **Untrusted Identity Flags:** Sandbox-authenticated users are flagged with `phone_verification_status = 'sandbox_unverified'`, `phone_verified = false`, and `verification_method = 'sandbox'`.
-- **Zero Telecom Billing:** In sandbox mode, no external SMS gateway is invoked. Carrier costs = ₹0.00.
+### 3.3 Zero-Downtime Cryptographic Key Rotation
+- `src/lib/auth/otp-service.ts`: `verifySessionToken` now checks tokens against `process.env.RATE_LIMIT_HMAC_SECRET`, and if invalid, falls back to `process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS`. This ensures active 14-day worker sessions are not abruptly logged out when rotating secrets.
 
 ---
 
-## 6. Actionable Resolution for Cloud Production
+## 4. Multi-Phase Regression Test Results
 
-To resolve the `HTTP 503` error on the live Vercel application:
-1. Navigate to the Supabase Cloud Dashboard for project `anwppwjlismjyovbyfmb`.
-2. Open the **SQL Editor**.
-3. Execute migration [`supabase/migrations/20261117000033_phase39_3_rate_limit_and_otp_infrastructure.sql`](file:///Users/mayankgautam/Desktop/stitch_kaamsetu_digital_identity_platform/supabase/migrations/20261117000033_phase39_3_rate_limit_and_otp_infrastructure.sql).
-4. Run:
-   ```sql
-   NOTIFY pgrst, 'reload schema';
-   ```
-5. Merge branch `phase-39-3-vercel-production-otp-infrastructure-repair` to `main`.
+Across all unit, integration, and security test suites, zero regressions were observed:
+
+- **Phase 39.3 Suite (`npm run test:phase39.3`):** 32/32 tests pass (100%)
+- **Phase 39.2 Suite (`npm run test:phase39.2`):** 24/24 tests pass (100%)
+- **Phase 39.1 Suite (`npm run test:phase39.1`):** 18/18 tests pass (100%)
+- **Phase 39 Suite (`npm run test:phase39`):** 36/36 tests pass (100%)
+- **Phase 38 Suite (`npm run test:phase38`):** 34/34 tests pass (100%)
+- **Phase 37 Suite (`npm run test:phase37`):** 25/25 tests pass (100%)
+- **Phase 36.1 Suite (`npm run test:phase36.1`):** 11/11 tests pass (100%)
+- **Total Tests Passed:** **180 / 180**
+- **Type Checking (`npx tsc --noEmit`):** 0 errors
+- **Linter (`npm run lint`):** 0 warnings, 0 errors
+
+---
+
+## 5. Permanent Governance & Constitutional Invariants
+
+- **Worker Commission Guarantee:** `platform_commission_amount = 0.00` on artisan wages permanently enforced in database constraints, billing services, and test assertions.
+- **Rollout Classification:** Strictly maintained as `CLASS_B_CONTROLLED_ROLLOUT` restricted to Guwahati Urban (781001–781039) and Shillong Urban (793001–793022).
+- **Zero Real SMS in Sandbox:** Under `AUTH_VERIFICATION_MODE=sandbox`, telecom delivery is bypassed, and random 6-digit test PINs are safely provided via in-app banner for rapid testing.

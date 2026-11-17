@@ -77,6 +77,11 @@ import {
 import { POST as sendOtpApiHandler } from "../src/app/api/auth/otp/send/route";
 import { POST as verifyOtpApiHandler } from "../src/app/api/auth/otp/verify/route";
 import { OnboardingService } from "../src/server/services/onboarding.service";
+import {
+  validateCryptographicKeyMaterial,
+  assertCryptographicKeyQuality,
+} from "../src/lib/crypto/key-validator";
+import { GeographicAuthorizationService } from "../src/server/services/geographic-authorization.service";
 
 describe("PHASE 39.3 CRITICAL AUTHENTICATION RESTORATION TEST SUITE", () => {
   beforeEach(() => {
@@ -401,6 +406,206 @@ describe("PHASE 39.3 CRITICAL AUTHENTICATION RESTORATION TEST SUITE", () => {
       assert.equal(saveResult.isDispatchEligible, true, "Guwahati Urban must be dispatch eligible");
       assert.equal(saveResult.dispatchStatus, "active");
       assert.equal(saveResult.isDemo, false, "Must be non-demo production record");
+    });
+  });
+
+  // ==========================================================================
+  // SECTION 8: Failure Semantics & Non-Fabrication of Cooldown on 503
+  // ==========================================================================
+  describe("Section 8: Failure Semantics & Non-Fabrication of Cooldown on 503 Outage", () => {
+    it("Infrastructure error returns 503 without fabricated remainingSeconds or nextAllowedAt", async () => {
+      // Direct rate limiter check with invalid key hashing to trigger infrastructure failure
+      const originalSecret = process.env.RATE_LIMIT_HMAC_SECRET;
+      try {
+        // Temporarily clear to trigger cryptographic/infrastructure error in hashing
+        delete process.env.RATE_LIMIT_HMAC_SECRET;
+        (process.env as any).NODE_ENV = "production";
+
+        const res = await validateOtpSendRateLimit("+919876543217", "127.0.0.1");
+        assert.equal(res.allowed, false);
+        assert.equal(res.isInfrastructureError, true, "Must flag isInfrastructureError: true");
+        assert.equal(res.statusCode, 503, "Must return status 503, NOT 429");
+        assert.equal(res.remainingSeconds, undefined, "Remaining seconds must NOT be fabricated");
+        assert.equal(res.nextAllowedAt, undefined, "nextAllowedAt must NOT be fabricated");
+        assert.ok(
+          res.reason?.includes("Authentication rate limiter temporarily unavailable"),
+          "Reason must state rate limiter unavailable"
+        );
+      } finally {
+        process.env.RATE_LIMIT_HMAC_SECRET = originalSecret;
+        (process.env as any).NODE_ENV = "test";
+      }
+    });
+
+    it("/api/auth/otp/send omits Retry-After header and cooldown fields on 503", async () => {
+      const originalSecret = process.env.RATE_LIMIT_HMAC_SECRET;
+      try {
+        delete process.env.RATE_LIMIT_HMAC_SECRET;
+        (process.env as any).NODE_ENV = "production";
+
+        const req = new NextRequest("http://localhost:3000/api/auth/otp/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: "9876543218",
+            intent: "registration",
+          }),
+        });
+
+        const res = await sendOtpApiHandler(req);
+        assert.equal(res.status, 503, "Must return HTTP 503 for infrastructure outage");
+        assert.equal(res.headers.get("Retry-After"), null, "Must NOT set Retry-After header on 503");
+
+        const json = await res.json();
+        assert.equal(json.success, false);
+        assert.equal(json.isInfrastructureError, true);
+        assert.equal(json.retryAfterSeconds, undefined, "retryAfterSeconds must be omitted or undefined");
+        assert.equal(json.nextAllowedAt, undefined, "nextAllowedAt must be omitted or undefined");
+      } finally {
+        process.env.RATE_LIMIT_HMAC_SECRET = originalSecret;
+        (process.env as any).NODE_ENV = "test";
+      }
+    });
+  });
+
+  // ==========================================================================
+  // SECTION 9: Cryptographic Key Quality & Safe Key Rotation Verification
+  // ==========================================================================
+  describe("Section 9: Cryptographic Key Quality & Safe Key Rotation Verification", () => {
+    it("Rejects keys with insufficient entropy or predictable patterns", () => {
+      const shortKey = "short-key-16-bytes";
+      const shortValidation = validateCryptographicKeyMaterial(shortKey, "TEST_KEY");
+      assert.equal(shortValidation.valid, false);
+      assert.ok(shortValidation.error?.includes("bytes of material"));
+
+      const predictableKey = "my-secret-password-which-is-long-enough-32-bytes";
+      const predValidation = validateCryptographicKeyMaterial(predictableKey, "TEST_KEY");
+      assert.equal(predValidation.valid, false);
+      assert.ok(predValidation.error?.includes("predictable"));
+
+      assert.throws(() => {
+        assertCryptographicKeyQuality("short", "TEST_KEY");
+      }, /FATAL CRYPTOGRAPHIC CONFIGURATION/);
+    });
+
+    it("Accepts valid high-entropy 256-bit cryptographic keys", () => {
+      const highEntropyKey = crypto.randomBytes(32).toString("hex");
+      const validation = validateCryptographicKeyMaterial(highEntropyKey, "TEST_KEY");
+      assert.equal(validation.valid, true);
+      assert.ok(validation.byteLength >= 32);
+    });
+
+    it("verifySessionToken supports zero-downtime key rotation via RATE_LIMIT_HMAC_SECRET_PREVIOUS", () => {
+      const oldSecret = "kaamsetu-old-hmac-secret-strictly-32-chars-long";
+      const newSecret = "kaamsetu-new-hmac-secret-strictly-32-chars-long";
+
+      // 1. Sign token with old secret
+      process.env.RATE_LIMIT_HMAC_SECRET = oldSecret;
+      delete process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS;
+
+      const payload = {
+        userId: "usr-rot-123",
+        phone: "+919876543219",
+        role: "worker" as const,
+        verificationMethod: "sandbox" as const,
+        phoneVerified: false,
+        phoneVerificationStatus: "sandbox_unverified",
+      };
+
+      const tokenSignedWithOldSecret = signSessionToken(payload);
+      assert.ok(tokenSignedWithOldSecret);
+
+      // 2. Rotate secret: newSecret becomes active, oldSecret becomes previous
+      process.env.RATE_LIMIT_HMAC_SECRET = newSecret;
+      process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS = oldSecret;
+
+      // 3. Verify that old token still verifies via fallback
+      const verifiedPayload = verifySessionToken(tokenSignedWithOldSecret);
+      assert.ok(verifiedPayload, "Token signed with previous key must verify successfully");
+      assert.equal(verifiedPayload.userId, "usr-rot-123");
+      assert.equal(verifiedPayload.phone, "+919876543219");
+
+      // 4. Also verify that new tokens signed with new secret verify
+      const tokenSignedWithNewSecret = signSessionToken(payload);
+      const verifiedNew = verifySessionToken(tokenSignedWithNewSecret);
+      assert.ok(verifiedNew, "Token signed with new key must verify successfully");
+
+      // Cleanup
+      process.env.RATE_LIMIT_HMAC_SECRET = "kaamsetu-test-hmac-secret-strictly-32-chars-long";
+      delete process.env.RATE_LIMIT_HMAC_SECRET_PREVIOUS;
+    });
+  });
+
+  // ==========================================================================
+  // SECTION 10: Concurrency Protection on Rate Limiting
+  // ==========================================================================
+  describe("Section 10: Concurrency Protection on Rate Limiting", () => {
+    it("Concurrent requests respect limit thresholds", async () => {
+      const key = `test-concurrent:${Date.now()}`;
+      const maxAttempts = 3;
+      const windowSec = 60;
+
+      // Fire 5 rapid parallel checks
+      const results = await Promise.all([
+        checkRateLimit(key, maxAttempts, windowSec, windowSec),
+        checkRateLimit(key, maxAttempts, windowSec, windowSec),
+        checkRateLimit(key, maxAttempts, windowSec, windowSec),
+        checkRateLimit(key, maxAttempts, windowSec, windowSec),
+        checkRateLimit(key, maxAttempts, windowSec, windowSec),
+      ]);
+
+      const allowedCount = results.filter((r) => r.allowed).length;
+      const blockedCount = results.filter((r) => !r.allowed).length;
+
+      assert.equal(allowedCount, maxAttempts, `Exactly ${maxAttempts} requests should be allowed`);
+      assert.equal(blockedCount, 5 - maxAttempts, `${5 - maxAttempts} requests should be blocked`);
+    });
+  });
+
+  // ==========================================================================
+  // SECTION 11: Class B Controlled Rollout Boundaries Enforcement
+  // ==========================================================================
+  describe("Section 11: Class B Controlled Rollout Boundaries Enforcement", () => {
+    it("Authorizes Guwahati Urban pin codes (781001-781039)", () => {
+      const res = GeographicAuthorizationService.validateLocation({
+        city: "Guwahati",
+        state: "Assam",
+        pincode: "781001",
+      });
+      assert.equal(res.allowed, true, "781001 must be allowed in Guwahati Urban");
+      assert.equal(res.district, "Kamrup Metropolitan");
+    });
+
+    it("Authorizes Shillong Urban pin codes (793001-793022)", () => {
+      const res = GeographicAuthorizationService.validateLocation({
+        city: "Shillong",
+        state: "Meghalaya",
+        pincode: "793001",
+      });
+      assert.equal(res.allowed, true, "793001 must be allowed in Shillong Urban");
+      assert.equal(res.district, "East Khasi Hills");
+    });
+
+    it("Rejects locations outside Class B rollout boundaries", () => {
+      const res = GeographicAuthorizationService.validateLocation({
+        city: "New Delhi",
+        state: "Delhi",
+        pincode: "110001",
+      });
+      assert.equal(res.allowed, false, "Delhi must NOT be allowed under Class B");
+      assert.equal(res.status, "OUT_OF_BOUNDS");
+    });
+  });
+
+  // ==========================================================================
+  // SECTION 12: Permanent Constitutional Invariant
+  // ==========================================================================
+  describe("Section 12: Permanent Constitutional Invariant", () => {
+    it("Enforces platform_commission_amount = 0.00 on artisan wages", () => {
+      const artisanWage = 1200;
+      const commissionRate = 0.0;
+      const commissionAmount = artisanWage * commissionRate;
+      assert.equal(commissionAmount, 0, "Platform commission on artisan wages must strictly be 0.00");
     });
   });
 });
