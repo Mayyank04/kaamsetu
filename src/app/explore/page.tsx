@@ -222,7 +222,7 @@ export default function ExplorePage() {
 
       {/* 2. Search & Filters Bar */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="rounded-md border border-forest/15 bg-card p-6 shadow-sovereign-sm space-y-5">
+        <div className="rounded-md border border-forest/15 bg-card p-4 sm:p-6 shadow-sovereign-sm space-y-5">
           {/* Main Search Input */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-forest/50" />
@@ -236,7 +236,7 @@ export default function ExplorePage() {
           </div>
 
           {/* Secondary Filter Dropdowns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
             {/* 1. Profession / Category */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">

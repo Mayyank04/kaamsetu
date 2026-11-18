@@ -36,6 +36,33 @@ export function InstitutionalHeader() {
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
 
+  // Close mobile drawer on route navigation
+  React.useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Lock background scroll when mobile drawer is open
+  React.useEffect(() => {
+    if (mobileMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [mobileMenuOpen]);
+
+  // Close mobile drawer on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/explore", label: "Find Professionals" },
@@ -95,8 +122,8 @@ export function InstitutionalHeader() {
           </div>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden xl:flex items-center gap-6 text-sm font-semibold text-charcoal">
+        {/* Desktop Navigation Links (Visible on lg 1024px and above) */}
+        <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-xs xl:text-sm font-semibold text-charcoal">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -117,7 +144,7 @@ export function InstitutionalHeader() {
         </nav>
 
         {/* Right Actions & User Menu */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2 lg:gap-3">
           <Button variant="outline" size="sm" asChild className="border-forest/20 text-forest hover:bg-forest/5 text-xs">
             <Link href="/explore">
               <Search className="mr-1.5 h-3.5 w-3.5 text-forest" />
@@ -209,98 +236,114 @@ export function InstitutionalHeader() {
           )}
         </div>
 
-        {/* Mobile Hamburger Button */}
+        {/* Mobile / Tablet Hamburger Button (Visible on screens below lg 1024px) */}
         <button
+          type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden flex h-10 w-10 items-center justify-center rounded-sm border border-forest/20 text-forest bg-card"
-          aria-label="Toggle navigation menu"
+          className="lg:hidden flex h-10 w-10 items-center justify-center rounded-sm border border-forest/20 text-forest bg-card hover:bg-forest/5 focus:outline-none focus:ring-2 focus:ring-forest focus:ring-offset-1 transition-colors"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation"
+          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
         >
           {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer Menu & Backdrop */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-forest/15 bg-card p-5 space-y-4 shadow-sovereign-md animate-in slide-in-from-top-2">
-          {/* Active User Card in Mobile Drawer */}
-          {user && (
-            <div className="p-3 rounded-xl bg-forest/5 border border-forest/15 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-lg bg-forest text-ivory font-bold text-xs flex items-center justify-center overflow-hidden shrink-0">
-                  {user.avatarUrl ? (
-                    <Image src={user.avatarUrl} alt={user.fullName} width={36} height={36} unoptimized className="w-full h-full object-cover" />
-                  ) : (
-                    user.fullName.slice(0, 1)
-                  )}
+        <>
+          {/* Backdrop Overlay */}
+          <div
+            className="fixed inset-0 top-18 z-40 bg-forest-950/40 backdrop-blur-xs lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Container */}
+          <div
+            id="mobile-navigation"
+            className="lg:hidden relative border-t border-forest/15 bg-card p-5 space-y-4 shadow-sovereign-md animate-in slide-in-from-top-2 z-50 max-h-[calc(100dvh-4.5rem)] overflow-y-auto"
+          >
+            {/* Active User Card in Mobile Drawer */}
+            {user && (
+              <div className="p-3 rounded-xl bg-forest/5 border border-forest/15 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-forest text-ivory font-bold text-xs flex items-center justify-center overflow-hidden shrink-0">
+                    {user.avatarUrl ? (
+                      <Image src={user.avatarUrl} alt={user.fullName} width={36} height={36} unoptimized className="w-full h-full object-cover" />
+                    ) : (
+                      user.fullName.slice(0, 1)
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-bold text-xs text-forest">{user.fullName}</div>
+                    <div className="text-[10px] text-charcoal-muted capitalize">Role: {user.role}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-bold text-xs text-forest">{user.fullName}</div>
-                  <div className="text-[10px] text-charcoal-muted capitalize">Role: {user.role}</div>
-                </div>
+                <Button variant="outline" size="sm" asChild className="text-[11px] h-7 px-2 border-forest/20 text-forest">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    Switch
+                  </Link>
+                </Button>
               </div>
-              <Button variant="outline" size="sm" asChild className="text-[11px] h-7 px-2 border-forest/20 text-forest">
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  Switch
-                </Link>
-              </Button>
-            </div>
-          )}
-
-          <nav className="flex flex-col space-y-1 text-sm font-medium">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "px-3 py-2.5 rounded-lg transition-colors text-xs font-semibold",
-                    isActive
-                      ? "bg-forest/10 text-forest font-bold border-l-2 border-forest"
-                      : "text-charcoal hover:bg-forest/5"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="pt-3 border-t border-forest/10 flex flex-col gap-2">
-            <Button variant="outline" className="w-full justify-center text-xs" asChild>
-              <Link href="/explore" onClick={() => setMobileMenuOpen(false)}>
-                <Search className="mr-2 h-4 w-4" />
-                Find a Professional
-              </Link>
-            </Button>
-            <Button variant="default" className="w-full justify-center text-xs bg-forest text-ivory" asChild>
-              <Link href="/onboarding" onClick={() => setMobileMenuOpen(false)}>
-                <Mic className="mr-2 h-4 w-4 text-sand" />
-                Create Your Identity
-              </Link>
-            </Button>
-            {isAuthenticated ? (
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full justify-center text-xs text-red-700 hover:bg-red-50"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-            ) : (
-              <Button variant="outline" className="w-full justify-center text-xs" asChild>
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  Sign In / Register
-                </Link>
-              </Button>
             )}
+
+            <nav className="flex flex-col space-y-1 text-sm font-medium">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "px-3 py-2.5 rounded-lg transition-colors text-xs font-semibold",
+                      isActive
+                        ? "bg-forest/10 text-forest font-bold border-l-2 border-forest"
+                        : "text-charcoal hover:bg-forest/5"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="pt-3 border-t border-forest/10 flex flex-col gap-2">
+              <Button variant="outline" className="w-full justify-center text-xs" asChild>
+                <Link href="/explore" onClick={() => setMobileMenuOpen(false)}>
+                  <Search className="mr-2 h-4 w-4" />
+                  Find a Professional
+                </Link>
+              </Button>
+              <Button variant="default" className="w-full justify-center text-xs bg-forest text-ivory" asChild>
+                <Link href="/onboarding" onClick={() => setMobileMenuOpen(false)}>
+                  <Mic className="mr-2 h-4 w-4 text-sand" />
+                  Create Your Identity
+                </Link>
+              </Button>
+              {isAuthenticated ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full justify-center text-xs text-red-700 hover:bg-red-50"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              ) : (
+                <Button variant="outline" className="w-full justify-center text-xs" asChild>
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    Sign In / Register
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   );

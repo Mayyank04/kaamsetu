@@ -59,8 +59,8 @@ export function QRDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4">
-      <div className="bg-card w-full max-w-sm rounded-md border border-forest/20 shadow-sovereign-md p-6 space-y-5 animate-in zoom-in-95 duration-200 text-center">
+    <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-card w-full max-w-sm rounded-md border border-forest/20 shadow-sovereign-md p-5 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-200 text-center my-auto max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <div className="flex items-center justify-between pb-3 border-b border-forest/10">
           <div className="flex items-center gap-2 text-forest">
             <QrCode className="w-4 h-4" />

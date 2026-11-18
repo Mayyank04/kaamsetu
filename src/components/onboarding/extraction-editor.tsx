@@ -135,7 +135,7 @@ export function ExtractionEditor({
       )}
 
       {/* Main Review Card */}
-      <div className="rounded-md border border-forest/15 bg-card p-6 shadow-sovereign-sm space-y-6">
+      <div className="rounded-md border border-forest/15 bg-card p-4 sm:p-6 shadow-sovereign-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-forest/10 pb-4">
           <div>
             <h3 className="font-bold text-forest text-lg">

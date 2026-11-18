@@ -132,7 +132,7 @@ export function SovereignSuccessCard({
       <div className="max-w-2xl mx-auto">
         <div
           id="sovereign-card-print-target"
-          className="relative overflow-hidden rounded-md bg-forest text-ivory p-6 sm:p-8 shadow-sovereign-md border-2 border-sand/40 print:border-black print:text-black"
+          className="relative overflow-hidden rounded-md bg-forest text-ivory p-4 sm:p-8 shadow-sovereign-md border-2 border-sand/40 print:border-black print:text-black"
         >
 
           {/* Top Bar: Emblem & Registry Meta */}

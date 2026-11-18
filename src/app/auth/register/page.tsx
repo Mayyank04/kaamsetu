@@ -129,7 +129,7 @@ export default function RegisterPage() {
         )}
 
         {/* Registration Card */}
-        <div className="bg-card rounded-md border border-forest/15 p-6 sm:p-7 shadow-sovereign-sm space-y-5">
+        <div className="bg-card rounded-md border border-forest/15 p-4 sm:p-7 shadow-sovereign-sm space-y-5">
           {/* Role Selector Tabs */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-forest block">
