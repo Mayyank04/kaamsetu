@@ -9,6 +9,7 @@ import { verifySessionToken } from "@/lib/auth/otp-service";
 export interface AuthenticatedUser {
   id: string;
   phone: string | null;
+  email?: string | null;
   fullName: string;
   role: AppRole;
   avatarUrl?: string | null;
@@ -157,9 +158,10 @@ export async function getAuthenticatedSession(): Promise<{
     if (sessionCookie) {
       const verified = verifySessionToken(sessionCookie);
       if (verified) {
-        let fullName = "Verified User";
+        let fullName = verified.fullName || "Verified User";
         let verifiedRole: AppRole = verified.role;
         let phone: string | null = verified.phone;
+        let email: string | null = verified.email || null;
         let workerProfileId: string | null = null;
         let slug: string | null = null;
         let contractorOrgId: string | null = null;
@@ -169,7 +171,7 @@ export async function getAuthenticatedSession(): Promise<{
             const adminClient = createAdminClient();
             const { data: profile } = await adminClient
               .from("profiles")
-              .select("id, role, full_name, phone, avatar_url")
+              .select("id, role, full_name, phone, email, avatar_url")
               .eq("id", verified.userId)
               .maybeSingle();
 
@@ -177,6 +179,7 @@ export async function getAuthenticatedSession(): Promise<{
               verifiedRole = profile.role as AppRole;
               fullName = profile.full_name || fullName;
               phone = profile.phone || phone;
+              email = profile.email || email;
             }
 
             if (verifiedRole === "worker") {
@@ -208,6 +211,7 @@ export async function getAuthenticatedSession(): Promise<{
           user: {
             id: verified.userId,
             phone,
+            email,
             fullName,
             role: verifiedRole,
             avatarUrl: null,

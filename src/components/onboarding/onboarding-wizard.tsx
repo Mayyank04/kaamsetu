@@ -30,10 +30,13 @@ import {
   Clock,
   Copy,
   CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/use-auth";
-import { useOtpFlow } from "@/lib/auth/use-otp-flow";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -62,22 +65,21 @@ export function OnboardingWizard() {
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [draftRestored, setDraftRestored] = React.useState(false);
 
-  // Inline Auth Verification Modal for unauthenticated artisans
-  const [showAuthModal, setShowAuthModal] = React.useState(false);
+  // Direct Account Creation Modal for unauthenticated artisans (NO OTP)
+  const [showDirectAuthModal, setShowDirectAuthModal] = React.useState(false);
+  const [authModalMode, setAuthModalMode] = React.useState<"register" | "login">("register");
   const [pendingSubmission, setPendingSubmission] = React.useState<ApprovedProfileSubmission | null>(null);
 
-  const otpFlow = useOtpFlow({
-    role: "worker",
-    intent: "registration",
-    storageKey: "kaamsetu_onboarding_otp",
-    onSuccess: async () => {
-      await refreshSession();
-      setShowAuthModal(false);
-      if (pendingSubmission) {
-        await executeSave(pendingSubmission);
-      }
-    },
-  });
+  // Direct Auth Form State
+  const [authFullName, setAuthFullName] = React.useState("");
+  const [authEmail, setAuthEmail] = React.useState("");
+  const [authPhone, setAuthPhone] = React.useState("");
+  const [authPassword, setAuthPassword] = React.useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = React.useState("");
+  const [authShowPassword, setAuthShowPassword] = React.useState(false);
+  const [authTermsAccepted, setAuthTermsAccepted] = React.useState(false);
+  const [authLoading, setAuthLoading] = React.useState(false);
+  const [authError, setAuthError] = React.useState<string | null>(null);
 
   const i18n = ONBOARDING_I18N[language] || ONBOARDING_I18N.en;
 
@@ -98,15 +100,15 @@ export function OnboardingWizard() {
         }
       }
     } catch {
-      // Ignore parse errors
+      // Ignore corrupted localStorage
     }
   }, []);
 
-  // 2. Persist draft state to localStorage
+  // 2. Persist draft state continuously
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      if (currentStep < 4 && (currentStep > 1 || transcript || extractedProfile)) {
+    if (currentStep < 4) {
+      try {
         localStorage.setItem(
           STORAGE_DRAFT_KEY,
           JSON.stringify({
@@ -115,40 +117,52 @@ export function OnboardingWizard() {
             inputMode,
             transcript,
             extractedProfile,
+            savedAt: new Date().toISOString(),
           })
         );
-      } else if (currentStep === 4) {
-        localStorage.removeItem(STORAGE_DRAFT_KEY);
+      } catch {
+        // Ignore quota limits
       }
-    } catch {
-      // Ignore storage errors
     }
   }, [currentStep, language, inputMode, transcript, extractedProfile]);
 
-  // Handle Step 2 -> AI Extraction via POST /api/worker/onboarding/extract
-  const handleAnalyze = async () => {
-    if (!transcript.trim() || transcript.trim().length < 10) {
-      setAnalysisError(
-        language === "hi"
-          ? "कृपया अपने काम के बारे में कम से कम 10 अक्षर बोलें या लिखें।"
-          : "Please describe your work with at least 10 characters."
-      );
-      return;
-    }
+  // Step 1: Language & Mode Selection
+  const handleSelectLanguage = (lang: SupportedLanguageCode) => {
+    setLanguage(lang);
+  };
 
+  const handleSelectMode = (mode: "voice" | "text") => {
+    setInputMode(mode);
+    setCurrentStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Step 2: Analysis of Audio or Text Input
+  const handleAnalyze = async (audioBlob?: Blob, textInput?: string) => {
     setIsAnalyzing(true);
     setAnalysisError(null);
 
     try {
-      const response = await fetch("/api/worker/onboarding/extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          transcript: transcript.trim(),
-          language,
-          inputMode,
-        }),
-      });
+      let response: Response;
+
+      if (audioBlob) {
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "recording.webm");
+        formData.append("language", language);
+
+        response = await fetch("/api/ai/extract-skill", {
+          method: "POST",
+          body: formData,
+        });
+      } else if (textInput) {
+        response = await fetch("/api/ai/extract-skill", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: textInput, language }),
+        });
+      } else {
+        throw new Error("No input provided for analysis.");
+      }
 
       const result = await response.json();
 
@@ -190,7 +204,8 @@ export function OnboardingWizard() {
       if (!response.ok || !result.success) {
         if (response.status === 401 || result.error?.code === "UNAUTHENTICATED") {
           setPendingSubmission(approved);
-          setShowAuthModal(true);
+          setAuthFullName(approved.fullName || "");
+          setShowDirectAuthModal(true);
           return;
         }
         throw new Error(
@@ -215,37 +230,121 @@ export function OnboardingWizard() {
     }
   };
 
-  // Step 3: Check auth before save, opening inline phone verification if unauthenticated
+  // Step 3: Check auth before save, opening direct registration modal if unauthenticated
   const handleApprove = async (approved: ApprovedProfileSubmission) => {
     if (!isAuthenticated) {
       setPendingSubmission(approved);
-      otpFlow.setFullName(approved.fullName || "");
-      setShowAuthModal(true);
+      setAuthFullName(approved.fullName || "");
+      setShowDirectAuthModal(true);
       return;
     }
 
     await executeSave(approved);
   };
 
-  // Inline Modal: Send OTP
-  const handleSendInlineOtp = async (e: React.FormEvent) => {
+  // Direct Auth Modal Submit (Register or Login without OTP)
+  const handleDirectAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otpFlow.isCooldown && otpFlow.hasActiveChallenge) {
-      otpFlow.setStep(2);
-      return;
-    }
-    if (!otpFlow.termsAccepted) {
-      otpFlow.setErrorMessage("Please accept the Terms of Service and Privacy Policy to continue.");
-      otpFlow.setConsentError("Please accept the Terms of Service and Privacy Policy to continue.");
-      return;
-    }
-    await otpFlow.requestOtp(undefined, pendingSubmission?.fullName);
-  };
+    setAuthError(null);
 
-  // Inline Modal: Verify OTP & Auto-Save Profile
-  const handleVerifyInlineOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await otpFlow.verifyCode();
+    if (authModalMode === "register") {
+      if (!authFullName.trim() || authFullName.trim().length < 2) {
+        setAuthError("Full name must be at least 2 characters.");
+        return;
+      }
+      if (!authEmail.trim() || !authEmail.includes("@")) {
+        setAuthError("Please enter a valid email address.");
+        return;
+      }
+      if (!authPassword || authPassword.length < 8) {
+        setAuthError("Password must be at least 8 characters long.");
+        return;
+      }
+      if (authPassword !== authConfirmPassword) {
+        setAuthError("Passwords do not match.");
+        return;
+      }
+      if (!authTermsAccepted) {
+        setAuthError("Please accept the Terms of Service and Privacy Policy to continue.");
+        return;
+      }
+
+      setAuthLoading(true);
+      try {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: authFullName.trim(),
+            email: authEmail.trim().toLowerCase(),
+            password: authPassword,
+            confirmPassword: authConfirmPassword,
+            phone: authPhone.trim() ? authPhone.trim() : undefined,
+            role: "worker",
+            termsAccepted: true,
+            privacyAccepted: true,
+          }),
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "Failed to create account.");
+        }
+
+        await refreshSession();
+        setShowDirectAuthModal(false);
+
+        // Immediately execute profile save now that user is authenticated
+        if (pendingSubmission) {
+          await executeSave(pendingSubmission);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Registration failed.";
+        setAuthError(msg);
+      } finally {
+        setAuthLoading(false);
+      }
+    } else {
+      // Login mode
+      if (!authEmail.trim()) {
+        setAuthError("Please enter your email or mobile number.");
+        return;
+      }
+      if (!authPassword) {
+        setAuthError("Please enter your password.");
+        return;
+      }
+
+      setAuthLoading(true);
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            identifier: authEmail.trim(),
+            password: authPassword,
+          }),
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "Invalid credentials.");
+        }
+
+        await refreshSession();
+        setShowDirectAuthModal(false);
+
+        // Immediately execute profile save
+        if (pendingSubmission) {
+          await executeSave(pendingSubmission);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Sign in failed.";
+        setAuthError(msg);
+      } finally {
+        setAuthLoading(false);
+      }
+    }
   };
 
   const handleReset = () => {
@@ -301,102 +400,103 @@ export function OnboardingWizard() {
                   onClick={() => {
                     if (stepNumber < currentStep) {
                       setCurrentStep(stepNumber);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     }
                   }}
-                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all ${
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
                     isCompleted
-                      ? "bg-forest text-sand border-2 border-forest hover:bg-forest-600"
+                      ? "bg-forest text-ivory ring-2 ring-forest"
                       : isCurrent
-                      ? "bg-sand text-forest border-2 border-forest shadow-sovereign-sm"
-                      : "bg-ivory border-2 border-forest/20 text-forest/40"
+                      ? "bg-sand text-forest ring-2 ring-forest shadow-sm"
+                      : "bg-surface-elevated text-charcoal-muted border border-forest/20"
                   }`}
+                  aria-label={`Step ${stepNumber}: ${stepTitles[stepNumber].en}`}
                 >
-                  {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : stepNumber}
+                  {isCompleted ? <Check className="w-4 h-4 text-ivory" /> : stepNumber}
                 </button>
                 <span
-                  className={`mt-2 text-[11px] sm:text-xs font-medium tracking-tight text-center hidden sm:block ${
-                    isCurrent
-                      ? "text-forest font-bold"
-                      : isCompleted
-                      ? "text-forest/80"
-                      : "text-forest/40"
+                  className={`mt-1.5 text-[11px] font-medium hidden sm:block ${
+                    isCurrent ? "text-forest font-bold" : "text-charcoal-muted"
                   }`}
                 >
-                  {language === "hi"
-                    ? stepTitles[stepNumber].hi
-                    : stepTitles[stepNumber].en}
+                  {stepTitles[stepNumber][language === "hi" ? "hi" : "en"]}
                 </span>
               </div>
             );
           })}
         </div>
 
-        {/* Progress track behind steps */}
-        <div className="absolute top-4 sm:top-5 left-8 right-8 h-0.5 bg-forest/15 -z-10" />
+        {/* Progress Bar Line */}
+        <div className="max-w-xl mx-auto h-0.5 bg-forest/15 relative -top-7 sm:-top-9 -z-10">
+          <div
+            className="h-full bg-forest transition-all duration-300"
+            style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+          />
+        </div>
       </div>
 
-      {/* Error Banners */}
+      {/* Analysis or Submission Error Alert */}
       {(analysisError || submitError) && (
-        <div className="p-4 rounded-md bg-red-50 border border-red-200 text-red-900 text-xs flex items-center justify-between gap-3 animate-in fade-in">
-          <div className="flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-            <span className="leading-relaxed font-medium">
-              {analysisError || submitError}
-            </span>
+        <div className="p-4 rounded-md bg-red-50 border border-red-200 text-xs text-red-800 flex items-start gap-3">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-semibold">Unable to proceed:</span>
+            <p className="text-red-700">{analysisError || submitError}</p>
           </div>
-          {analysisError ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleAnalyze}
-              className="border-red-300 text-red-800 hover:bg-red-100 h-8 text-xs shrink-0"
-            >
-              <RefreshCw className="w-3 h-3 mr-1.5" />
-              Retry
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setSubmitError(null)}
-              className="text-red-700 hover:bg-red-100 h-8 text-xs shrink-0"
-            >
-              Dismiss
-            </Button>
-          )}
         </div>
       )}
 
       {/* STEP 1: Language & Input Mode Selection */}
       {currentStep === 1 && (
-        <div className="animate-in fade-in duration-300">
-          <div className="text-center max-w-xl mx-auto mb-8 space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest/5 border border-forest/15 text-forest text-xs font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 text-sand-500" />
-              <span>STEP 1 OF 4</span>
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="text-center space-y-2 max-w-xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-forest/5 border border-forest/15 text-forest text-xs font-mono">
+              <ShieldCheck className="w-3.5 h-3.5 text-forest" />
+              <span>STEP 1 OF 4: VERNACULAR ONBOARDING</span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-forest tracking-tight">
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-forest tracking-tight">
               {i18n.step1Title}
             </h1>
-            <p className="text-forest/75 text-sm sm:text-base leading-relaxed">
+            <p className="text-forest/75 text-xs sm:text-sm leading-relaxed">
               {i18n.step1Subtitle}
             </p>
           </div>
 
           <LanguageSelector
             selectedLanguage={language}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={handleSelectLanguage}
             inputMode={inputMode}
             onSelectInputMode={setInputMode}
-            onContinue={() => setCurrentStep(2)}
+            onContinue={() => {
+              setCurrentStep(2);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           />
         </div>
       )}
 
-      {/* STEP 2: Spoken or Typed Craft Attestation */}
+      {/* STEP 2: Audio Voice Recording or Vernacular Text Input */}
       {currentStep === 2 && (
-        <div className="animate-in fade-in duration-300">
-          <div className="text-center max-w-xl mx-auto mb-6 space-y-2">
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentStep(1);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest hover:text-forest-600 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Change Language / Mode</span>
+            </button>
+
+            <span className="text-[11px] font-mono text-charcoal-muted uppercase">
+              {language.toUpperCase()} • {inputMode.toUpperCase()}
+            </span>
+          </div>
+
+          <div className="text-center space-y-2 max-w-xl mx-auto">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-forest/5 border border-forest/15 text-forest text-xs font-mono">
               <Mic className="w-3.5 h-3.5 text-forest" />
               <span>STEP 2 OF 4: {inputMode === "voice" ? "VOICE ATTESTATION" : "TEXT ATTESTATION"}</span>
@@ -444,16 +544,15 @@ export function OnboardingWizard() {
         </div>
       )}
 
-      {/* INLINE AUTHENTICATION MODAL (Triggered when unauthenticated artisan approves Step 3) */}
-      {showAuthModal && (
+      {/* DIRECT AUTHENTICATION MODAL (Triggered when unauthenticated artisan approves Step 3 — ZERO OTP) */}
+      {showDirectAuthModal && (
         <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 animate-in fade-in overflow-y-auto">
-          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-6 sm:p-8 shadow-sovereign-md space-y-4 relative my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
+          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-6 sm:p-7 shadow-sovereign-md space-y-4 relative my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
             <button
               type="button"
               onClick={() => {
-                setShowAuthModal(false);
-                otpFlow.setErrorMessage(null);
-                otpFlow.setConsentError(null);
+                setShowDirectAuthModal(false);
+                setAuthError(null);
               }}
               className="absolute right-4 top-4 text-charcoal-muted hover:text-forest transition-colors p-1"
               aria-label="Close"
@@ -462,281 +561,242 @@ export function OnboardingWizard() {
             </button>
 
             <div className="space-y-1.5 text-center">
-              <div className="w-12 h-12 rounded-xs bg-forest/10 border border-forest/20 text-forest mx-auto flex items-center justify-center">
-                <Lock className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-xs bg-forest/10 border border-forest/20 text-forest mx-auto flex items-center justify-center">
+                <UserCheck className="w-5 h-5" />
               </div>
               <h3 className="font-serif text-xl sm:text-2xl font-bold text-forest">
-                Verify Mobile Number
+                {authModalMode === "register" ? "Save Your Skill Profile" : "Sign In to Save Profile"}
               </h3>
               <p className="text-xs text-charcoal-muted leading-relaxed">
-                To issue your official cryptographic sovereign credential: Verify your mobile number to securely save your skill profile. Your information will remain available when you return.
+                {authModalMode === "register"
+                  ? "Create an account with password to securely issue and save your cryptographic sovereign credential. No OTP or SMS required."
+                  : "Sign in with your email or mobile number and password to complete your profile registration."}
               </p>
             </div>
 
+            {/* Mode Switcher */}
+            <div className="flex border-b border-forest/15">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModalMode("register");
+                  setAuthError(null);
+                }}
+                className={`flex-1 py-2 text-xs font-semibold text-center border-b-2 transition-colors ${
+                  authModalMode === "register"
+                    ? "border-forest text-forest"
+                    : "border-transparent text-charcoal-muted hover:text-forest"
+                }`}
+              >
+                Create Account
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModalMode("login");
+                  setAuthError(null);
+                }}
+                className={`flex-1 py-2 text-xs font-semibold text-center border-b-2 transition-colors ${
+                  authModalMode === "login"
+                    ? "border-forest text-forest"
+                    : "border-transparent text-charcoal-muted hover:text-forest"
+                }`}
+              >
+                Sign In
+              </button>
+            </div>
+
             {/* Error Banner */}
-            {otpFlow.errorMessage && (
+            {authError && (
               <div className="p-3 rounded-xs bg-red-50 border border-red-200 text-xs text-red-800 flex items-start gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                <div className="flex-1 space-y-1">
-                  <span>{otpFlow.errorMessage}</span>
-                  {otpFlow.isCooldown && otpFlow.step === 1 && (
-                    <div className="text-[11px] font-medium text-red-700 flex items-center gap-1 pt-0.5">
-                      <Clock className="w-3.5 h-3.5 text-red-600" />
-                      <span>Retry in {otpFlow.cooldownSeconds}s</span>
+                <span className="flex-1 text-[12px]">{authError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleDirectAuthSubmit} className="space-y-3.5">
+              {authModalMode === "register" ? (
+                <>
+                  {/* Full Name */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-medium text-charcoal block">
+                      Full Legal Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={authFullName}
+                      onChange={(e) => setAuthFullName(e.target.value)}
+                      placeholder="e.g. Ramesh Sharma"
+                      className="w-full h-10 px-3 text-xs bg-surface border border-forest/20 rounded-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-forest"
+                    />
+                  </div>
+
+                  {/* Email Address */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-medium text-charcoal block">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="ramesh@example.com"
+                      className="w-full h-10 px-3 text-xs bg-surface border border-forest/20 rounded-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-forest"
+                    />
+                  </div>
+
+                  {/* Optional Mobile Number */}
+                  <div className="space-y-1 text-left">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-charcoal">
+                        Mobile Number (Optional contact detail)
+                      </label>
+                      <span className="text-[10px] text-charcoal-muted">No OTP required</span>
                     </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Sandbox Disclosure & Helper */}
-            {otpFlow.isSandbox && otpFlow.sandboxCode && (
-              <div className="p-3.5 rounded-xs bg-sand/20 border border-sand-600/30 text-xs text-forest space-y-2.5 animate-in fade-in">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[11px] text-forest">
-                    <ShieldCheck className="w-4 h-4 text-forest" />
-                    <span>Sandbox Test Mode</span>
-                  </div>
-                  <span className="text-[10px] bg-sand/40 text-forest font-semibold px-2 py-0.5 rounded-xs border border-sand/60">
-                    No SMS Sent
-                  </span>
-                </div>
-                <p className="text-[11px] text-charcoal-muted leading-relaxed">
-                  SMS dispatch is disabled in this environment. Use the active verification test code below:
-                </p>
-                <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xs border border-forest/15 shadow-2xs">
-                  <span className="font-mono text-base font-bold tracking-widest text-forest">
-                    {otpFlow.sandboxCode}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={otpFlow.autoFillSandboxCode}
-                      className="px-2.5 py-1 text-[11px] font-semibold bg-forest/10 hover:bg-forest/20 text-forest rounded-xs transition-colors"
-                    >
-                      Auto-fill
-                    </button>
-                    <button
-                      type="button"
-                      onClick={otpFlow.copySandboxCode}
-                      className="px-2.5 py-1 text-[11px] font-semibold bg-forest hover:bg-forest-600 text-ivory rounded-xs transition-colors flex items-center gap-1"
-                    >
-                      {otpFlow.copiedCode ? (
-                        <>
-                          <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Non-sandbox Info Notice */}
-            {!otpFlow.isSandbox && otpFlow.infoMessage && !otpFlow.errorMessage && (
-              <div className="p-3 rounded-xs bg-forest/5 border border-forest/20 text-xs text-forest flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 shrink-0 text-forest" />
-                <span>{otpFlow.infoMessage}</span>
-              </div>
-            )}
-
-            {otpFlow.step === 1 ? (
-              <form onSubmit={handleSendInlineOtp} className="space-y-4">
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                    Indian Mobile Number
-                  </label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3.5 rounded-l-xs border border-r-0 border-forest/20 bg-forest/5 text-xs font-mono font-bold text-forest">
-                      +91
-                    </span>
                     <input
                       type="tel"
-                      required
-                      placeholder="98765 43210"
-                      value={otpFlow.phone}
-                      onChange={(e) => otpFlow.setPhone(e.target.value)}
-                      disabled={otpFlow.isLoading}
-                      className="w-full h-11 px-3.5 rounded-r-xs border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20 font-mono"
+                      value={authPhone}
+                      onChange={(e) => setAuthPhone(e.target.value)}
+                      placeholder="9876543210"
+                      maxLength={10}
+                      className="w-full h-10 px-3 text-xs font-mono bg-surface border border-forest/20 rounded-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-forest"
                     />
                   </div>
-                  {/* Inline validation feedback for invalid Indian mobile */}
-                  {otpFlow.phone.trim().length > 0 && !otpFlow.isPhoneValid && (
-                    <p className="text-[11px] text-red-600 font-medium pt-1">
-                      Enter a valid 10-digit Indian mobile number beginning with 6, 7, 8 or 9.
-                    </p>
-                  )}
-                </div>
 
-                {/* Sandbox Disclosure on Step 1 */}
-                {otpFlow.isSandbox && (
-                  <div className="p-2.5 rounded-xs bg-sand/20 border border-sand-600/30 text-[11px] text-forest flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      <ShieldCheck className="w-3.5 h-3.5 text-forest shrink-0" />
-                      <span>Sandbox Verification Mode</span>
+                  {/* Password */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-medium text-charcoal block">
+                      Password (min 8 characters)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={authShowPassword ? "text" : "password"}
+                        required
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="Choose a secure password"
+                        className="w-full h-10 px-3 pr-9 text-xs bg-surface border border-forest/20 rounded-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-forest"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setAuthShowPassword(!authShowPassword)}
+                        className="absolute right-2.5 top-2.5 text-charcoal-muted hover:text-forest"
+                        tabIndex={-1}
+                      >
+                        {authShowPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
-                    <span className="text-[10px] bg-sand/40 text-forest font-semibold px-2 py-0.5 rounded-xs border border-sand/60">
-                      Simulated SMS
-                    </span>
                   </div>
-                )}
 
-                {/* Consent Section (Unchecked by default with Terms & Privacy Policy links) */}
-                <div className="space-y-1.5 text-left pt-1">
-                  <div className="flex items-start gap-2.5">
+                  {/* Confirm Password */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-medium text-charcoal block">
+                      Confirm Password
+                    </label>
                     <input
-                      type="checkbox"
-                      id="onboarding-modal-consent"
-                      name="termsAccepted"
-                      checked={otpFlow.termsAccepted}
-                      onChange={(e) => otpFlow.setTermsAccepted(e.target.checked)}
-                      disabled={otpFlow.isLoading}
-                      aria-invalid={!!(otpFlow.consentError || (!otpFlow.termsAccepted && otpFlow.errorMessage?.includes("Terms of Service")))}
-                      aria-describedby="onboarding-consent-error"
-                      className="mt-0.5 h-4 w-4 min-w-[16px] min-h-[16px] shrink-0 rounded-xs border-forest/30 text-forest focus:ring-2 focus:ring-forest/20 accent-[#153E35] cursor-pointer"
+                      type={authShowPassword ? "text" : "password"}
+                      required
+                      value={authConfirmPassword}
+                      onChange={(e) => setAuthConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      className="w-full h-10 px-3 text-xs bg-surface border border-forest/20 rounded-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-forest"
                     />
-                    <label
-                      htmlFor="onboarding-modal-consent"
-                      className="text-xs text-charcoal-muted leading-relaxed cursor-pointer select-none"
-                    >
-                      I agree to the{" "}
-                      <Link
-                        href="/terms"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-forest underline font-bold hover:text-forest-600 focus:outline-none focus:ring-1 focus:ring-forest/30 rounded-2xs"
-                      >
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link
-                        href="/privacy"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-forest underline font-bold hover:text-forest-600 focus:outline-none focus:ring-1 focus:ring-forest/30 rounded-2xs"
-                      >
-                        Privacy Policy
-                      </Link>
-                      .
-                    </label>
                   </div>
-                  {/* Visible inline validation message when checkbox is not selected upon submission attempt */}
-                  {(otpFlow.consentError || (!otpFlow.termsAccepted && otpFlow.errorMessage?.includes("Terms of Service"))) && (
-                    <p id="onboarding-consent-error" role="alert" className="text-[11px] text-red-600 font-medium pl-6 animate-in fade-in">
-                      Please accept the Terms of Service and Privacy Policy to continue.
-                    </p>
-                  )}
-                </div>
 
-                <Button
-                  type={otpFlow.isCooldown && otpFlow.hasActiveChallenge ? "button" : "submit"}
-                  onClick={
-                    otpFlow.isCooldown && otpFlow.hasActiveChallenge
-                      ? () => otpFlow.setStep(2)
-                      : undefined
-                  }
-                  disabled={
-                    otpFlow.isLoading ||
-                    (!otpFlow.isPhoneValid && (!otpFlow.isCooldown || !otpFlow.hasActiveChallenge)) ||
-                    (otpFlow.isCooldown && !otpFlow.hasActiveChallenge)
-                  }
-                  className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span>{otpFlow.getPrimaryButtonText()}</span>
-                  {!otpFlow.isLoading && !otpFlow.isCooldown && (
-                    <ArrowRight className="w-4 h-4 ml-1.5" />
-                  )}
-                </Button>
-
-                {otpFlow.hasActiveChallenge && (
-                  <button
-                    type="button"
-                    onClick={() => otpFlow.setStep(2)}
-                    className="w-full text-center text-xs text-forest underline hover:text-forest-600 font-semibold"
-                  >
-                    Already have a verification code? Enter code →
-                  </button>
-                )}
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyInlineOtp} className="space-y-4">
-                <div className="space-y-1.5 text-left">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                      Enter 6-Digit Code
-                    </label>
-                    <span className="text-[11px] text-charcoal-muted font-mono">
-                      +91 {otpFlow.phone.replace(/\D/g, "").slice(-10)}
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    required
-                    value={otpFlow.otp}
-                    onChange={(e) => otpFlow.setOtp(e.target.value.replace(/\D/g, ""))}
-                    placeholder="123456"
-                    autoFocus
-                    className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xs border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={otpFlow.editPhone}
-                    disabled={otpFlow.isLoading}
-                    className="flex-1 h-11 border-forest/20 text-forest text-xs"
-                  >
-                    Change Number
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={otpFlow.isLoading || otpFlow.otp.length !== 6}
-                    className="flex-1 h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs"
-                  >
-                    {otpFlow.isLoading ? "Verifying..." : "Verify & Mint Credential"}
-                  </Button>
-                </div>
-
-                {/* Resend Action with Active Ticking Timer */}
-                <div className="text-center pt-1">
-                  {otpFlow.isCooldown ? (
-                    <div className="text-xs text-charcoal-muted flex items-center justify-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-forest" />
-                      <span>Resend code in</span>
-                      <span className="font-mono font-bold text-forest">{otpFlow.cooldownSeconds}s</span>
+                  {/* Consent */}
+                  <div className="pt-1 text-left space-y-1">
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        id="onboarding-modal-consent"
+                        name="termsAccepted"
+                        required
+                        checked={authTermsAccepted}
+                        onChange={(e) => setAuthTermsAccepted(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 rounded-xs border-forest/30 text-forest focus:ring-forest cursor-pointer"
+                      />
+                      <label htmlFor="onboarding-modal-consent" className="text-[11px] text-charcoal-muted leading-relaxed cursor-pointer select-none">
+                        I agree to the{" "}
+                        <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="font-semibold text-forest underline">
+                          Terms of Service
+                        </Link>{" "}
+                        and{" "}
+                        <Link href="/privacy" target="_blank" onClick={(e) => e.stopPropagation()} className="font-semibold text-forest underline">
+                          Privacy Policy
+                        </Link>
+                        .
+                      </label>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => otpFlow.requestOtp()}
-                      disabled={otpFlow.isLoading}
-                      className="text-xs text-forest underline hover:text-forest-600 font-semibold"
-                    >
-                      Resend Verification Code
-                    </button>
-                  )}
-                </div>
+                    {authError && authError.includes("Terms of Service") && (
+                      <p id="onboarding-consent-error" role="alert" className="text-[11px] text-red-600 font-medium pl-6 animate-in fade-in">
+                        Please accept the Terms of Service and Privacy Policy to continue.
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Login Form */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-medium text-charcoal block">
+                      Email or Mobile Number
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="ramesh@example.com or 9876543210"
+                      className="w-full h-10 px-3 text-xs bg-surface border border-forest/20 rounded-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-forest"
+                    />
+                  </div>
 
-                {/* Terms and Privacy policy links */}
-                <div className="text-center text-[10px] text-charcoal-muted space-x-1 pt-1">
-                  <span>By verifying, you accept the</span>
-                  <Link href="/terms" target="_blank" className="underline hover:text-forest">Terms</Link>
-                  <span>and</span>
-                  <Link href="/privacy" target="_blank" className="underline hover:text-forest">Privacy Policy</Link>
-                </div>
-              </form>
-            )}
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-medium text-charcoal block">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={authShowPassword ? "text" : "password"}
+                        required
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="Enter password"
+                        className="w-full h-10 px-3 pr-9 text-xs bg-surface border border-forest/20 rounded-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-forest"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setAuthShowPassword(!authShowPassword)}
+                        className="absolute right-2.5 top-2.5 text-charcoal-muted hover:text-forest"
+                        tabIndex={-1}
+                      >
+                        {authShowPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <Button
+                type="submit"
+                disabled={authLoading}
+                className="w-full h-11 bg-forest hover:bg-forest-600 text-ivory text-xs font-semibold rounded-xs shadow-xs transition-colors flex items-center justify-center gap-2 mt-2"
+              >
+                {authLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{authModalMode === "register" ? "Creating & Saving..." : "Signing In..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{authModalMode === "register" ? "Create Account & Save Profile" : "Sign In & Save Profile"}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+            </form>
           </div>
         </div>
       )}

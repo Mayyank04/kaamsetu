@@ -135,9 +135,10 @@ export async function updateSession(request: NextRequest) {
         user: {
           id: verifiedPayload.userId,
           role: verifiedPayload.role,
-          email: verifiedPayload.phone,
+          email: verifiedPayload.email || verifiedPayload.phone || null,
           user_metadata: {
-            phone: verifiedPayload.phone,
+            phone: verifiedPayload.phone || null,
+            email: verifiedPayload.email || null,
             role: verifiedPayload.role,
           },
         } as any,

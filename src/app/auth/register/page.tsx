@@ -4,76 +4,107 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  validateIndianMobile,
-  INVALID_PHONE_MESSAGE,
-} from "@/lib/utilities/phone";
-import {
-  CheckCircle2,
-  AlertCircle,
-  Building2,
-  HardHat,
-  RotateCcw,
-  Info,
-  Clock,
-  Copy,
   ShieldCheck,
+  HardHat,
+  Building2,
+  Users,
+  GraduationCap,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle2,
   ArrowRight,
-  LogIn,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/use-auth";
-import { useOtpFlow } from "@/lib/auth/use-otp-flow";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { refreshSession } = useAuth();
 
-  const [selectedRole, setSelectedRole] = React.useState<"worker" | "contractor" | "customer" | "institution">("worker");
+  const [role, setRole] = React.useState<"worker" | "contractor" | "customer" | "institution">("worker");
+  const [fullName, setFullName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [phone, setPhone] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [termsAccepted, setTermsAccepted] = React.useState(false);
 
-  const otpFlow = useOtpFlow({
-    intent: "registration",
-    role: selectedRole,
-    storageKey: "kaamsetu_register_otp_session",
-    onSuccess: async (user) => {
-      await refreshSession();
-      const actualRole = user?.role || selectedRole;
-      const targetDestination =
-        actualRole === "worker"
-          ? "/onboarding"
-          : actualRole === "contractor"
-          ? "/contractor/dashboard"
-          : actualRole === "institution"
-          ? "/institution/dashboard"
-          : "/dashboard";
-      router.push(targetDestination);
-    },
-  });
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
 
-  const handleSendOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    await otpFlow.requestOtp();
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await otpFlow.verifyCode();
-    if (result.success && result.user) {
+    setErrorMessage(null);
+    setFieldErrors({});
+
+    // Client-side pre-validations
+    const errors: Record<string, string> = {};
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      errors.fullName = "Full name must be at least 2 characters.";
+    }
+    if (!email.trim() || !email.includes("@")) {
+      errors.email = "Please enter a valid email address.";
+    }
+    if (!password || password.length < 8) {
+      errors.password = "Password must be at least 8 characters long.";
+    }
+    if (password !== confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+    if (!termsAccepted) {
+      errors.termsAccepted = "Please accept the Terms of Service and Privacy Policy to continue.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setErrorMessage(errors.termsAccepted || "Please correct the errors in the form.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+          confirmPassword,
+          phone: phone.trim() ? phone.trim() : undefined,
+          role,
+          termsAccepted: true,
+          privacyAccepted: true,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to create account. Please try again.");
+      }
+
+      // Refresh client session state
       await refreshSession();
-      const actualRole = result.user.role || selectedRole;
-      const targetDestination =
-        actualRole === "worker"
-          ? "/onboarding"
-          : actualRole === "contractor"
-          ? "/contractor/dashboard"
-          : actualRole === "institution"
-          ? "/institution/dashboard"
-          : "/dashboard";
-      router.push(targetDestination);
+
+      // Navigate directly to onboarding or role dashboard
+      const targetUrl = result.redirectUrl || (role === "worker" ? "/onboarding" : "/dashboard");
+      router.push(targetUrl);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Registration failed.";
+      setErrorMessage(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+    <div className="min-h-screen bg-background py-10 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="max-w-md w-full space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -89,153 +120,209 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Sandbox Transparent Testing Notice */}
-        <div className="p-3.5 rounded-sm bg-sand/15 border border-sand/40 text-charcoal text-xs space-y-1">
-          <div className="flex items-center gap-1.5 font-bold text-forest">
-            <Info className="w-4 h-4 text-forest shrink-0" />
-            <span>Sandbox Verification Environment</span>
-          </div>
-          <p className="text-[11px] text-charcoal-muted leading-relaxed">
-            No real SMS is transmitted. Verification codes are simulated transparently for account creation and testing. This does not verify ownership of the mobile number.
-          </p>
-        </div>
-
-        {/* Feedback Alert */}
-        {(otpFlow.errorMessage || otpFlow.infoMessage) && (
-          <div
-            className={`p-3.5 rounded-sm border text-xs flex items-center gap-2.5 ${
-              otpFlow.errorMessage
-                ? "bg-red-50 text-red-800 border-red-200"
-                : "bg-emerald-50 text-emerald-800 border-emerald-200"
-            }`}
-          >
-            {otpFlow.errorMessage ? (
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-            )}
-            <div className="flex-1 leading-relaxed">
-              <span>{otpFlow.errorMessage || otpFlow.infoMessage}</span>
-              {otpFlow.state === "account_creation_failed" && (
-                <div className="mt-1.5 pt-1.5 border-t border-red-200/60">
-                  <Link
-                    href="/login"
-                    className="inline-flex items-center gap-1 font-bold text-red-900 underline hover:text-red-700"
-                  >
-                    <LogIn className="w-3.5 h-3.5" />
-                    <span>Sign in with your existing account →</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+        {/* Global Error Banner */}
+        {errorMessage && (
+          <div className="p-3.5 rounded-sm bg-red-50 border border-red-200 text-xs text-red-800 flex items-start gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+            <div className="flex-1 text-[13px] leading-relaxed">{errorMessage}</div>
           </div>
         )}
 
-        {/* Form Container */}
-        <div className="bg-card p-6 sm:p-7 rounded-md border border-forest/15 shadow-sovereign-sm space-y-5">
-          {otpFlow.step === 1 ? (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              {/* Full Name */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                  Full Legal or Trade Name *
+        {/* Registration Card */}
+        <div className="bg-card rounded-md border border-forest/15 p-6 sm:p-7 shadow-sovereign-sm space-y-5">
+          {/* Role Selector Tabs */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-forest block">
+              I am registering as:
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setRole("worker")}
+                className={`p-2.5 rounded-xs border text-left flex items-center gap-2 transition-colors ${
+                  role === "worker"
+                    ? "bg-forest text-ivory border-forest font-semibold"
+                    : "bg-surface border-forest/15 text-charcoal hover:border-forest/40"
+                }`}
+              >
+                <HardHat className="w-4 h-4 shrink-0" />
+                <span className="text-xs">Artisan / Worker</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole("contractor")}
+                className={`p-2.5 rounded-xs border text-left flex items-center gap-2 transition-colors ${
+                  role === "contractor"
+                    ? "bg-forest text-ivory border-forest font-semibold"
+                    : "bg-surface border-forest/15 text-charcoal hover:border-forest/40"
+                }`}
+              >
+                <Building2 className="w-4 h-4 shrink-0" />
+                <span className="text-xs">Contractor</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole("customer")}
+                className={`p-2.5 rounded-xs border text-left flex items-center gap-2 transition-colors ${
+                  role === "customer"
+                    ? "bg-forest text-ivory border-forest font-semibold"
+                    : "bg-surface border-forest/15 text-charcoal hover:border-forest/40"
+                }`}
+              >
+                <Users className="w-4 h-4 shrink-0" />
+                <span className="text-xs">Customer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole("institution")}
+                className={`p-2.5 rounded-xs border text-left flex items-center gap-2 transition-colors ${
+                  role === "institution"
+                    ? "bg-forest text-ivory border-forest font-semibold"
+                    : "bg-surface border-forest/15 text-charcoal hover:border-forest/40"
+                }`}
+              >
+                <GraduationCap className="w-4 h-4 shrink-0" />
+                <span className="text-xs">Institution</span>
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name */}
+            <div className="space-y-1">
+              <label htmlFor="reg-name" className="text-xs font-medium text-charcoal block">
+                Full Legal Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="reg-name"
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="e.g. Ramesh Sharma"
+                className={`w-full h-11 px-3 text-sm bg-surface border rounded-xs text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-forest transition-colors ${
+                  fieldErrors.fullName ? "border-red-400" : "border-forest/20"
+                }`}
+              />
+              {fieldErrors.fullName && (
+                <p className="text-[11px] text-red-600 font-medium">{fieldErrors.fullName}</p>
+              )}
+            </div>
+
+            {/* Email Address */}
+            <div className="space-y-1">
+              <label htmlFor="reg-email" className="text-xs font-medium text-charcoal block">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="reg-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ramesh@example.com"
+                className={`w-full h-11 px-3 text-sm bg-surface border rounded-xs text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-forest transition-colors ${
+                  fieldErrors.email ? "border-red-400" : "border-forest/20"
+                }`}
+              />
+              {fieldErrors.email && (
+                <p className="text-[11px] text-red-600 font-medium">{fieldErrors.email}</p>
+              )}
+            </div>
+
+            {/* Mobile Number (Optional) */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label htmlFor="reg-phone" className="text-xs font-medium text-charcoal">
+                  Mobile Number (Optional contact detail)
                 </label>
+                <span className="text-[10px] text-charcoal-muted">No OTP required</span>
+              </div>
+              <input
+                id="reg-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="9876543210"
+                maxLength={10}
+                className="w-full h-11 px-3 text-sm font-mono bg-surface border border-forest/20 rounded-xs text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-forest transition-colors"
+              />
+              <p className="text-[10px] text-charcoal-muted">
+                Saved as an unverified contact detail for work opportunities.
+              </p>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1">
+              <label htmlFor="reg-password" className="text-xs font-medium text-charcoal block">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
                 <input
-                  type="text"
+                  id="reg-password"
+                  type={showPassword ? "text" : "password"}
                   required
-                  value={otpFlow.fullName}
-                  onChange={(e) => otpFlow.setFullName(e.target.value)}
-                  placeholder="e.g. Rameshwar Sharma"
-                  className="w-full h-11 px-3.5 rounded-xs border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Minimum 8 characters"
+                  className={`w-full h-11 px-3 pr-10 text-sm bg-surface border rounded-xs text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-forest transition-colors ${
+                    fieldErrors.password ? "border-red-400" : "border-forest/20"
+                  }`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-charcoal-muted hover:text-forest"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+              {fieldErrors.password && (
+                <p className="text-[11px] text-red-600 font-medium">{fieldErrors.password}</p>
+              )}
+            </div>
 
-              {/* Role Selection */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                  Account Type *
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedRole("worker");
-                      otpFlow.setRole("worker");
-                    }}
-                    className={`p-2.5 rounded-xs border text-xs font-semibold flex items-center gap-2 transition-all ${
-                      selectedRole === "worker"
-                        ? "border-forest bg-forest/5 text-forest font-bold shadow-xs"
-                        : "border-forest/15 text-charcoal-muted hover:border-forest/30"
-                    }`}
-                  >
-                    <HardHat className="w-4 h-4 text-forest shrink-0" />
-                    <span>Artisan / Worker</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedRole("contractor");
-                      otpFlow.setRole("contractor");
-                    }}
-                    className={`p-2.5 rounded-xs border text-xs font-semibold flex items-center gap-2 transition-all ${
-                      selectedRole === "contractor"
-                        ? "border-forest bg-forest/5 text-forest font-bold shadow-xs"
-                        : "border-forest/15 text-charcoal-muted hover:border-forest/30"
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4 text-forest shrink-0" />
-                    <span>Contractor / Client</span>
-                  </button>
-                </div>
-              </div>
+            {/* Confirm Password */}
+            <div className="space-y-1">
+              <label htmlFor="reg-confirm" className="text-xs font-medium text-charcoal block">
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="reg-confirm"
+                type={showPassword ? "text" : "password"}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter password"
+                className={`w-full h-11 px-3 text-sm bg-surface border rounded-xs text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-forest transition-colors ${
+                  fieldErrors.confirmPassword ? "border-red-400" : "border-forest/20"
+                }`}
+              />
+              {fieldErrors.confirmPassword && (
+                <p className="text-[11px] text-red-600 font-medium">{fieldErrors.confirmPassword}</p>
+              )}
+            </div>
 
-              {/* Mobile Input */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                  Mobile Number *
-                </label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3.5 rounded-l-xs border border-r-0 border-forest/20 bg-forest/5 text-xs font-mono font-bold text-forest">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    required
-                    value={otpFlow.phone}
-                    onChange={(e) => otpFlow.setPhone(e.target.value)}
-                    placeholder="98765 43210"
-                    className="w-full h-11 px-3.5 rounded-r-xs border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20 font-mono"
-                  />
-                </div>
-                {otpFlow.phone.trim().length > 0 && !validateIndianMobile(otpFlow.phone).valid ? (
-                  <p className="text-[11px] text-red-600 font-medium">
-                    {INVALID_PHONE_MESSAGE}
-                  </p>
-                ) : (
-                  <p className="text-[11px] text-charcoal-muted">
-                    Indian mobile number for cryptographic OTP verification.
-                  </p>
-                )}
-              </div>
-
-              {/* Terms Checkbox */}
-              <div className="flex items-start gap-2.5 pt-1">
+            {/* Consent Checkbox */}
+            <div className="pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
-                  id="terms"
                   required
-                  checked={otpFlow.termsAccepted}
-                  onChange={(e) => otpFlow.setTermsAccepted(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 min-w-[16px] min-h-[16px] shrink-0 rounded-xs border-forest/30 text-forest focus:ring-forest/20 accent-[#153E35] cursor-pointer"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded-xs border-forest/30 text-forest focus:ring-forest cursor-pointer"
                 />
-                <label htmlFor="terms" className="text-xs text-charcoal-muted leading-relaxed cursor-pointer select-none">
+                <span className="text-xs text-charcoal-muted leading-relaxed">
                   I agree to the{" "}
                   <Link
                     href="/terms"
                     target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-forest underline font-bold"
+                    className="font-medium text-forest hover:text-forest-600 underline"
                   >
                     Terms of Service
                   </Link>{" "}
@@ -243,173 +330,46 @@ export default function RegisterPage() {
                   <Link
                     href="/privacy"
                     target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-forest underline font-bold"
+                    className="font-medium text-forest hover:text-forest-600 underline"
                   >
                     Privacy Policy
                   </Link>
                   .
-                </label>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={
-                  otpFlow.isLoading ||
-                  otpFlow.cooldownSeconds > 0 ||
-                  !validateIndianMobile(otpFlow.phone).valid ||
-                  !otpFlow.fullName.trim() ||
-                  !otpFlow.termsAccepted
-                }
-                className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {otpFlow.isLoading ? (
-                  "Sending OTP..."
-                ) : otpFlow.cooldownSeconds > 0 ? (
-                  `Resend code in ${otpFlow.cooldownSeconds}s`
-                ) : (
-                  <>
-                    <span>Create Account & Verify</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                )}
-              </Button>
-
-              {otpFlow.hasActiveChallenge && (
-                <button
-                  type="button"
-                  onClick={() => otpFlow.setStep(2)}
-                  className="w-full text-center text-xs text-forest underline hover:text-forest-600 font-semibold"
-                >
-                  Already have an active verification code? Enter code →
-                </button>
+                </span>
+              </label>
+              {fieldErrors.termsAccepted && (
+                <p className="text-[11px] text-red-600 font-medium mt-1">{fieldErrors.termsAccepted}</p>
               )}
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="text-center space-y-1 pb-3 border-b border-forest/10">
-                <div className="text-xs text-charcoal-muted">
-                  Verification challenge active for:
-                </div>
-                <div className="font-mono text-sm font-bold text-forest">
-                  +91 {otpFlow.phone}
-                </div>
-                <div className="text-xs text-charcoal font-semibold">
-                  Name: {otpFlow.fullName} ({selectedRole})
-                </div>
-                <button
-                  type="button"
-                  onClick={otpFlow.editPhone}
-                  className="text-[11px] text-forest underline hover:text-forest-600 inline-flex items-center gap-1 pt-1"
-                >
-                  <RotateCcw className="w-3 h-3" /> Edit details
-                </button>
-              </div>
+            </div>
 
-              {/* Sandbox Code Helper */}
-              {otpFlow.sandboxCode && (
-                <div className="p-3.5 rounded-xs bg-sand/20 border border-sand-600/30 text-xs text-forest space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold uppercase tracking-wider text-[11px] text-forest">
-                      Sandbox Test Code
-                    </span>
-                    <span className="text-[10px] bg-sand/40 text-forest font-semibold px-2 py-0.5 rounded-xs border border-sand/60">
-                      No SMS Dispatched
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xs border border-forest/15 shadow-2xs">
-                    <span className="font-mono text-base font-bold tracking-widest text-forest">
-                      {otpFlow.sandboxCode}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={otpFlow.autoFillSandboxCode}
-                        className="px-2 py-1 text-[11px] font-semibold bg-forest/10 hover:bg-forest/20 text-forest rounded-xs transition-colors"
-                      >
-                        Auto-fill
-                      </button>
-                      <button
-                        type="button"
-                        onClick={otpFlow.copySandboxCode}
-                        className="px-2 py-1 text-[11px] font-semibold bg-forest hover:bg-forest-600 text-ivory rounded-xs transition-colors flex items-center gap-1"
-                      >
-                        {otpFlow.copiedCode ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-                            <span>Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                  6-Digit Verification Code *
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otpFlow.otp}
-                  onChange={(e) => otpFlow.setOtp(e.target.value.replace(/\D/g, ""))}
-                  placeholder="------"
-                  autoFocus
-                  className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xs border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={otpFlow.isLoading || otpFlow.otp.length !== 6}
-                className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm"
-              >
-                {otpFlow.isLoading ? "Creating Sovereign Profile..." : "Confirm & Complete Account Creation"}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-
-              {/* Live Ticking Resend Action */}
-              <div className="text-center pt-1">
-                {otpFlow.cooldownSeconds > 0 ? (
-                  <div className="text-xs text-charcoal-muted flex items-center justify-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-forest" />
-                    <span>Resend code in</span>
-                    <span className="font-mono font-bold text-forest">{otpFlow.cooldownSeconds}s</span>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => otpFlow.requestOtp()}
-                    disabled={otpFlow.isLoading}
-                    className="text-xs text-forest underline hover:text-forest-600 font-semibold"
-                  >
-                    Resend Verification Code
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
-
-          {/* Login Link */}
-          <div className="pt-3 border-t border-forest/10 text-center space-y-1">
-            <p className="text-xs text-charcoal-muted">
-              Already have an account?
-            </p>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline"
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 bg-forest hover:bg-forest-600 text-ivory text-sm font-semibold rounded-xs shadow-xs transition-colors flex items-center justify-center gap-2"
             >
-              <span>Sign in with mobile number</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <>
+                  <span>Create Account & Continue</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          {/* Sign In Link */}
+          <div className="pt-2 text-center border-t border-forest/10">
+            <p className="text-xs text-charcoal-muted">
+              Already have an account?{" "}
+              <Link href="/login" className="font-semibold text-forest hover:text-forest-600 underline">
+                Sign In
+              </Link>
+            </p>
           </div>
         </div>
       </div>
