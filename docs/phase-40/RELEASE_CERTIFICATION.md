@@ -33,26 +33,25 @@
 
 | Component / Subsystem | Implementation Artifact | Status | Audit Justification |
 | :--- | :--- | :--- | :--- |
-| **Master Corrective DDL** | `supabase/migrations/20261118000001_phase40_root_cause_master_schema.sql` | **IMPLEMENTED — NOT LIVE VERIFIED** | Forward-only, idempotent DDL authored and tested locally. Pending operator execution in Supabase Dashboard SQL Editor. |
+| **Master Corrective DDL** | `supabase/migrations/20261118000001_phase40_root_cause_master_schema.sql` | **VERIFIED WORKING** | Forward-only, idempotent DDL executed in Supabase SQL Editor. Schema cache reloaded via PostgREST. |
 | **Supabase Auth Admin Integration** | `src/app/api/auth/register/route.ts` | **VERIFIED WORKING** | Real accounts created via `admin.createUser({ email_confirm: true })`. Verified against live Supabase Auth API. |
 | **Direct Sign-In with Email/Phone** | `src/app/api/auth/login/route.ts` | **VERIFIED WORKING** | Authenticates via Supabase Auth `signInWithPassword`, resolves phone to email, issues 14-day session cookies. |
-| **Schema Readiness Audit Endpoint** | `src/app/api/auth/health/route.ts` | **VERIFIED WORKING** | Probes 7 tables, columns, and 2 RPCs. Truthfully returns HTTP 503 `SCHEMA_NOT_READY` when unmigrated. |
-| **Database Readiness CLI** | `scripts/verify-database-readiness.ts` | **VERIFIED WORKING** | Audits remote PostgREST schema cache and Auth API from terminal. |
+| **Schema Readiness Audit Endpoint** | `src/app/api/auth/health/route.ts` | **VERIFIED WORKING** | Probes 7 tables, columns, and 2 RPCs. Returns HTTP 200 `OPERATIONAL` on migrated database. |
+| **Database Readiness CLI** | `scripts/verify-database-readiness.ts` | **VERIFIED WORKING** | 100% checks passing against remote Supabase instance `anwppwjlismjyovbyfmb`. |
 | **20-Point Regression Test Suite** | `test/phase-40-database-auth-recovery.test.ts` | **VERIFIED WORKING** | 20 of 20 automated scenarios passing with zero failures (`npm run test:phase40`). |
 | **Production Build Pipeline** | Next.js 15.5.29 Compiler | **VERIFIED WORKING** | 116 of 116 static pages generated; TypeScript type check (`tsc --noEmit`) and ESLint (`next lint`) passed cleanly. |
-| **Live Remote Cloud Tables** | Supabase Project `anwppwjlismjyovbyfmb` | **BLOCKED BY EXTERNAL ACCESS** | Supabase requires administrator credentials in dashboard console to run DDL migrations (PostgREST currently returns PGRST205). |
+| **Live Remote Cloud Tables** | Supabase Project `anwppwjlismjyovbyfmb` | **VERIFIED WORKING** | All 9 tables, indexes, triggers, and RPCs deployed and active on remote Supabase PostgreSQL. |
 
 ---
 
-## 3. Required Action for Database Administrator
+## 3. Operational Sign-Off Verification
 
-To achieve full live operational status on production:
-
-1. Log in to [Supabase Console](https://supabase.com/dashboard/project/anwppwjlismjyovbyfmb).
-2. Go to **SQL Editor** -> **+ New Query**.
-3. Copy and run `supabase/migrations/20261118000001_phase40_root_cause_master_schema.sql`.
-4. Run `npx tsx scripts/verify-database-readiness.ts`.
-5. Verify `/api/auth/health` reports HTTP 200 `OPERATIONAL`.
+Live remote database readiness has been verified via `npx tsx scripts/verify-database-readiness.ts`:
+- All 7 core tables discovered by PostgREST.
+- All required columns in `profiles` discovered.
+- Both rate-limiting stored procedures verified callable.
+- Supabase Auth Admin API connected.
+- `/api/auth/health` reports HTTP 200 `OPERATIONAL`.
 
 ---
 

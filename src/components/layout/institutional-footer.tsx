@@ -26,9 +26,9 @@ export function InstitutionalFooter() {
 
       {/* Main Footer Links */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Col */}
-          <div className="space-y-4 md:col-span-1">
+          <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-xs bg-sand text-forest font-black text-xs">
                 KS
@@ -144,11 +144,11 @@ export function InstitutionalFooter() {
         </div>
 
         {/* Bottom Strip */}
-        <div className="mt-12 pt-6 border-t border-forest-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-ivory/60">
+        <div className="mt-12 pt-6 border-t border-forest-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-ivory/60 text-center sm:text-left">
           <div>
             © {new Date().getFullYear()} KAAMSETU Sovereign Trust Infrastructure. Built for India&apos;s Skilled Workforce.
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center sm:justify-end gap-3 sm:gap-4 flex-wrap">
             <span>Server: Supabase SSR</span>
             <span>•</span>
             <span>Intelligence: Google Gemini</span>

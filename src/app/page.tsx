@@ -107,18 +107,18 @@ export default function HomePage() {
               </div>
 
               {/* Institutional Assurance Strip */}
-              <div className="pt-8 border-t border-forest/15 grid grid-cols-3 gap-6 max-w-xl">
+              <div className="pt-8 border-t border-forest/15 grid grid-cols-3 gap-3 sm:gap-6 max-w-xl">
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-forest">300–900</div>
-                  <div className="text-xs text-charcoal-muted mt-0.5">KAAMSCORE™ Trust Index</div>
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-forest">300–900</div>
+                  <div className="text-[10px] sm:text-xs text-charcoal-muted mt-0.5">KAAMSCORE™ Trust Index</div>
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-forest">₹0.00</div>
-                  <div className="text-xs text-charcoal-muted mt-0.5">Zero Platform Commission</div>
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-forest">₹0.00</div>
+                  <div className="text-[10px] sm:text-xs text-charcoal-muted mt-0.5">Zero Platform Commission</div>
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-forest">100%</div>
-                  <div className="text-xs text-charcoal-muted mt-0.5">Direct Worker Entitlement</div>
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-forest">100%</div>
+                  <div className="text-[10px] sm:text-xs text-charcoal-muted mt-0.5">Direct Worker Entitlement</div>
                 </div>
               </div>
             </div>

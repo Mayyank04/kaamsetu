@@ -101,7 +101,7 @@ export default function LoginPage() {
         )}
 
         {/* Login Card */}
-        <div className="bg-card rounded-md border border-forest/15 p-6 sm:p-7 shadow-sovereign-sm space-y-5">
+        <div className="bg-card rounded-md border border-forest/15 p-4 sm:p-7 shadow-sovereign-sm space-y-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Identifier (Email or Phone) */}
             <div className="space-y-1">

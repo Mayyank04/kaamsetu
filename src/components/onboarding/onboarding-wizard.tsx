@@ -547,7 +547,7 @@ export function OnboardingWizard() {
       {/* DIRECT AUTHENTICATION MODAL (Triggered when unauthenticated artisan approves Step 3 — ZERO OTP) */}
       {showDirectAuthModal && (
         <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 animate-in fade-in overflow-y-auto">
-          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-6 sm:p-7 shadow-sovereign-md space-y-4 relative my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
+          <div className="bg-card w-full max-w-md rounded-md border border-forest/20 p-4 sm:p-6 shadow-sovereign-md space-y-4 relative my-auto max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <button
               type="button"
               onClick={() => {

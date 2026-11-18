@@ -56,7 +56,7 @@ export function ProfileHero({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-md bg-card border border-forest/15 shadow-sovereign-md p-6 sm:p-8 space-y-6">
+    <div className="relative overflow-hidden rounded-md bg-card border border-forest/15 shadow-sovereign-md p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Top Protocol Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-forest/10 text-xs">
         <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function ProfileHero({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"

@@ -613,8 +613,8 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
 
       {/* Controlled Paid Pilot Checkout Modal (Workstream A.3) */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4">
-          <div className="bg-card rounded-md max-w-4xl w-full p-6 sm:p-8 shadow-sovereign-md border border-forest/20 space-y-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card rounded-md max-w-4xl w-full p-4 sm:p-6 lg:p-8 shadow-sovereign-md border border-forest/20 space-y-6 max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto">
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-2xl font-bold text-forest-950 font-serif">
@@ -791,8 +791,8 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
 
       {/* Two-Sided Worker Invitation Modal (Workstream B.2) */}
       {showInviteWorkerModal && (
-        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4">
-          <div className="bg-card rounded-md max-w-md w-full p-6 shadow-sovereign-md border border-forest/20 space-y-4">
+        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card rounded-md max-w-md w-full p-4 sm:p-6 shadow-sovereign-md border border-forest/20 space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto">
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-lg font-bold text-forest-950">Send Workforce Crew Invitation</h3>
@@ -880,8 +880,8 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
 
       {/* New Project Modal */}
       {showNewProjectModal && (
-        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4">
-          <div className="bg-card rounded-md max-w-md w-full p-6 shadow-sovereign-md border border-forest/20 space-y-4">
+        <div className="fixed inset-0 z-50 bg-forest-950/75 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card rounded-md max-w-md w-full p-4 sm:p-6 shadow-sovereign-md border border-forest/20 space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto">
             <div className="flex justify-between items-start">
               <h3 className="text-lg font-bold text-forest-950">Create New Project</h3>
               <button

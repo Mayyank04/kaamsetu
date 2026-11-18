@@ -15,7 +15,7 @@ export function SovereignCard({ worker, className = "" }: SovereignCardProps) {
       className={`relative w-full max-w-md overflow-hidden rounded-md border border-forest/20 bg-card shadow-credential-card ${className}`}
     >
       {/* 1. Institutional Top Anchor Header in Deep Forest Green */}
-      <div className="relative bg-forest px-6 py-4 text-ivory">
+      <div className="relative bg-forest px-4 py-3 sm:px-6 sm:py-4 text-ivory">
         {/* Holographic Security Overlay Pattern */}
         <div className="absolute inset-0 opacity-10 bg-paper-grid pointer-events-none" />
 
@@ -42,12 +42,12 @@ export function SovereignCard({ worker, className = "" }: SovereignCardProps) {
       </div>
 
       {/* 2. Card Body: Crisp Ivory & Paper Surface */}
-      <div className="p-6 bg-card space-y-5">
+      <div className="p-4 sm:p-6 bg-card space-y-4 sm:space-y-5">
         {/* Profile Main Row */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold tracking-tight text-forest-700">
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-forest-700 truncate">
                 {worker.fullName}
               </h3>
               {worker.aadhaarVerified && (

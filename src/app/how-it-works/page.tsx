@@ -283,7 +283,7 @@ export default function HowItWorksPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-card p-8 rounded-md border border-forest/15 shadow-sovereign-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-card p-4 sm:p-6 lg:p-8 rounded-md border border-forest/15 shadow-sovereign-sm">
             {/* Sliders */}
             <div className="lg:col-span-7 space-y-5">
               <div>
