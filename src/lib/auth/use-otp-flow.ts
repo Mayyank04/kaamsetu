@@ -323,19 +323,28 @@ export function useOtpFlow(options: UseOtpFlowOptions = {}) {
         return false;
       }
 
-      // Handle 503 Database / Infrastructure Unavailable (NEVER invent a fake 60s cooldown)
+      // Handle 503 Database / Infrastructure / Rate-limiter Unavailable (NEVER invent a fake 60s cooldown)
       if (
         res.status === 503 ||
         data.code === "DATABASE_UNAVAILABLE" ||
+        data.code === "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE" ||
+        data.code === "OTP_PROVIDER_UNAVAILABLE" ||
         data.isInfrastructureError
       ) {
         setState("database_unavailable");
         setCooldownSeconds(0);
         setNextAllowedAt(null);
-        setErrorMessage(
-          data.message ||
-            "Authentication rate limiter temporarily unavailable. Your profile draft has been saved. Please retry in a moment."
-        );
+        let errorMsg = data.message;
+        if (!errorMsg) {
+          if (data.code === "RATE_LIMIT_INFRASTRUCTURE_UNAVAILABLE") {
+            errorMsg = "Authentication rate limiter is temporarily unavailable. Your profile draft has been saved. Please retry in a moment.";
+          } else if (data.code === "OTP_PROVIDER_UNAVAILABLE") {
+            errorMsg = "Verification dispatch provider is temporarily unavailable. Please retry shortly.";
+          } else {
+            errorMsg = "Authentication database is temporarily unreachable. Your profile draft has been saved. Please retry in a moment.";
+          }
+        }
+        setErrorMessage(errorMsg);
         return false;
       }
 
