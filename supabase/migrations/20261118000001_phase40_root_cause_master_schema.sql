@@ -339,7 +339,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION public.get_rate_limit_status(p_key text)
 RETURNS TABLE(
-  exists boolean,
+  is_existing boolean,
   attempt_count integer,
   remaining_seconds integer,
   is_blocked boolean
