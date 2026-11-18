@@ -57,6 +57,7 @@
     "test:phase39.4": "tsx test/phase-39-4-complete-lifecycle.test.ts",
     "test:phase39.5": "tsx test/phase-39-5-gemini-and-homepage.test.ts",
     "test:phase39.6": "tsx test/phase-39-6-root-cause-recovery.test.ts",
+    "test:phase39.7": "tsx test/phase-39-7-direct-registration.test.ts",
     "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"
   },
   "dependencies": {

@@ -4,26 +4,16 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  validateIndianMobile,
-  INVALID_PHONE_MESSAGE,
-} from "@/lib/utilities/phone";
-import {
-  Smartphone,
-  CheckCircle2,
-  AlertCircle,
-  Building2,
-  HardHat,
-  RotateCcw,
-  Info,
-  Clock,
-  Copy,
   ShieldCheck,
+  Eye,
+  EyeOff,
+  AlertCircle,
   ArrowRight,
-  UserPlus,
+  Loader2,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/use-auth";
-import { useOtpFlow } from "@/lib/auth/use-otp-flow";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,46 +21,57 @@ export default function LoginPage() {
   const redirectTarget = searchParams.get("redirect") || "";
 
   const { refreshSession } = useAuth();
-  const [selectedRole, setSelectedRole] = React.useState<"worker" | "contractor" | "institution" | "customer">("worker");
 
-  const otpFlow = useOtpFlow({
-    intent: "login",
-    role: selectedRole,
-    storageKey: "kaamsetu_login_otp_session",
-    onSuccess: async (user) => {
-      await refreshSession();
-      const actualRole = user?.role || selectedRole;
-      const targetDestination =
-        redirectTarget ||
-        (actualRole === "contractor"
-          ? "/contractor/dashboard"
-          : actualRole === "institution"
-          ? "/institution/dashboard"
-          : "/dashboard");
-      router.push(targetDestination);
-    },
-  });
+  const [identifier, setIdentifier] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
 
-  const handleSendOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    await otpFlow.requestOtp();
-  };
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await otpFlow.verifyCode();
-    if (result.success && result.user) {
+    setErrorMessage(null);
+
+    if (!identifier.trim()) {
+      setErrorMessage("Please enter your email or mobile number.");
+      return;
+    }
+
+    if (!password) {
+      setErrorMessage("Please enter your password.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: identifier.trim(),
+          password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Invalid credentials. Please try again.");
+      }
+
+      // Refresh client session state
       await refreshSession();
-      const actualRole = result.user.role || selectedRole;
-      const targetDestination =
-        redirectTarget ||
-        result.redirectUrl ||
-        (actualRole === "contractor"
-          ? "/contractor/dashboard"
-          : actualRole === "institution"
-          ? "/institution/dashboard"
-          : "/dashboard");
-      router.push(targetDestination);
+
+      // Navigate to destination
+      const destination = redirectTarget || result.redirectUrl || "/dashboard";
+      router.push(destination);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Sign in failed.";
+      setErrorMessage(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,277 +92,90 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Sandbox Transparent Testing Notice */}
-        <div className="p-3.5 rounded-sm bg-sand/15 border border-sand/40 text-charcoal text-xs space-y-1">
-          <div className="flex items-center gap-1.5 font-bold text-forest">
-            <Info className="w-4 h-4 text-forest shrink-0" />
-            <span>Sandbox Verification Environment</span>
-          </div>
-          <p className="text-[11px] text-charcoal-muted leading-relaxed">
-            No real SMS is transmitted. Verification codes are simulated transparently for account creation and testing.
-          </p>
-        </div>
-
-        {/* Feedback Alert */}
-        {(otpFlow.errorMessage || otpFlow.infoMessage) && (
-          <div
-            className={`p-3.5 rounded-sm border text-xs flex items-center gap-2.5 ${
-              otpFlow.errorMessage
-                ? "bg-red-50 text-red-800 border-red-200"
-                : "bg-emerald-50 text-emerald-800 border-emerald-200"
-            }`}
-          >
-            {otpFlow.errorMessage ? (
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-            )}
-            <div className="flex-1 leading-relaxed">
-              <span>{otpFlow.errorMessage || otpFlow.infoMessage}</span>
-              {otpFlow.state === "account_not_found" && (
-                <div className="mt-1.5 pt-1.5 border-t border-red-200/60">
-                  <Link
-                    href="/auth/register"
-                    className="inline-flex items-center gap-1 font-bold text-red-900 underline hover:text-red-700"
-                  >
-                    <UserPlus className="w-3.5 h-3.5" />
-                    <span>Create a new account now →</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+        {/* Global Error Banner */}
+        {errorMessage && (
+          <div className="p-3.5 rounded-sm bg-red-50 border border-red-200 text-xs text-red-800 flex items-start gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+            <div className="flex-1 text-[13px] leading-relaxed">{errorMessage}</div>
           </div>
         )}
 
-        {/* Form Container */}
-        <div className="bg-card p-6 sm:p-7 rounded-md border border-forest/15 shadow-sovereign-sm space-y-5">
-          {otpFlow.step === 1 ? (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              {/* Role Selection */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                  Select Account Type
+        {/* Login Card */}
+        <div className="bg-card rounded-md border border-forest/15 p-6 sm:p-7 shadow-sovereign-sm space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Identifier (Email or Phone) */}
+            <div className="space-y-1">
+              <label htmlFor="login-id" className="text-xs font-medium text-charcoal block">
+                Email Address or Mobile Number
+              </label>
+              <input
+                id="login-id"
+                type="text"
+                required
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="ramesh@example.com or 9876543210"
+                className="w-full h-11 px-3 text-sm bg-surface border border-forest/20 rounded-xs text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-forest transition-colors"
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label htmlFor="login-password" className="text-xs font-medium text-charcoal block">
+                  Password
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedRole("worker");
-                      otpFlow.setRole("worker");
-                    }}
-                    className={`p-2.5 rounded-xs border text-xs font-semibold flex items-center gap-2 transition-all ${
-                      selectedRole === "worker"
-                        ? "border-forest bg-forest/5 text-forest font-bold shadow-xs"
-                        : "border-forest/15 text-charcoal-muted hover:border-forest/30"
-                    }`}
-                  >
-                    <HardHat className="w-4 h-4 text-forest shrink-0" />
-                    <span>Artisan / Worker</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedRole("contractor");
-                      otpFlow.setRole("contractor");
-                    }}
-                    className={`p-2.5 rounded-xs border text-xs font-semibold flex items-center gap-2 transition-all ${
-                      selectedRole === "contractor"
-                        ? "border-forest bg-forest/5 text-forest font-bold shadow-xs"
-                        : "border-forest/15 text-charcoal-muted hover:border-forest/30"
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4 text-forest shrink-0" />
-                    <span>Contractor / Client</span>
-                  </button>
-                </div>
               </div>
-
-              {/* Mobile Input */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                  Mobile Number *
-                </label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3.5 rounded-l-xs border border-r-0 border-forest/20 bg-forest/5 text-xs font-mono font-bold text-forest">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    required
-                    value={otpFlow.phone}
-                    onChange={(e) => otpFlow.setPhone(e.target.value)}
-                    placeholder="98765 43210"
-                    className="w-full h-11 px-3.5 rounded-r-xs border border-forest/20 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-forest/20 font-mono"
-                  />
-                </div>
-                {otpFlow.phone.trim().length > 0 && !validateIndianMobile(otpFlow.phone).valid ? (
-                  <p className="text-[11px] text-red-600 font-medium">
-                    {INVALID_PHONE_MESSAGE}
-                  </p>
-                ) : (
-                  <p className="text-[11px] text-charcoal-muted">
-                    Registered Indian mobile number for cryptographic OTP verification.
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                disabled={otpFlow.isLoading || otpFlow.cooldownSeconds > 0 || !validateIndianMobile(otpFlow.phone).valid}
-                className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {otpFlow.isLoading ? (
-                  "Sending OTP..."
-                ) : otpFlow.cooldownSeconds > 0 ? (
-                  `Resend code in ${otpFlow.cooldownSeconds}s`
-                ) : (
-                  <>
-                    <span>Send Verification Code</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                )}
-              </Button>
-
-              {otpFlow.hasActiveChallenge && (
-                <button
-                  type="button"
-                  onClick={() => otpFlow.setStep(2)}
-                  className="w-full text-center text-xs text-forest underline hover:text-forest-600 font-semibold"
-                >
-                  Already have an active verification code? Enter code →
-                </button>
-              )}
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="text-center space-y-1 pb-3 border-b border-forest/10">
-                <div className="text-xs text-charcoal-muted">
-                  Verification challenge active for:
-                </div>
-                <div className="font-mono text-sm font-bold text-forest">
-                  +91 {otpFlow.phone}
-                </div>
-                <button
-                  type="button"
-                  onClick={otpFlow.editPhone}
-                  className="text-[11px] text-forest underline hover:text-forest-600 inline-flex items-center gap-1"
-                >
-                  <RotateCcw className="w-3 h-3" /> Change mobile number
-                </button>
-              </div>
-
-              {/* Sandbox Code Helper */}
-              {otpFlow.sandboxCode && (
-                <div className="p-3.5 rounded-xs bg-sand/20 border border-sand-600/30 text-xs text-forest space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold uppercase tracking-wider text-[11px] text-forest">
-                      Sandbox Test Code
-                    </span>
-                    <span className="text-[10px] bg-sand/40 text-forest font-semibold px-2 py-0.5 rounded-xs border border-sand/60">
-                      No SMS Dispatched
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xs border border-forest/15 shadow-2xs">
-                    <span className="font-mono text-base font-bold tracking-widest text-forest">
-                      {otpFlow.sandboxCode}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={otpFlow.autoFillSandboxCode}
-                        className="px-2 py-1 text-[11px] font-semibold bg-forest/10 hover:bg-forest/20 text-forest rounded-xs transition-colors"
-                      >
-                        Auto-fill
-                      </button>
-                      <button
-                        type="button"
-                        onClick={otpFlow.copySandboxCode}
-                        className="px-2 py-1 text-[11px] font-semibold bg-forest hover:bg-forest-600 text-ivory rounded-xs transition-colors flex items-center gap-1"
-                      >
-                        {otpFlow.copiedCode ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-                            <span>Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-forest uppercase tracking-wider block">
-                  6-Digit Verification Code *
-                </label>
+              <div className="relative">
                 <input
-                  type="text"
-                  maxLength={6}
-                  value={otpFlow.otp}
-                  onChange={(e) => otpFlow.setOtp(e.target.value.replace(/\D/g, ""))}
-                  placeholder="------"
-                  autoFocus
-                  className="w-full h-12 text-center tracking-widest text-lg font-mono font-bold rounded-xs border border-forest/20 bg-background focus:outline-none focus:ring-2 focus:ring-forest/20"
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full h-11 px-3 pr-10 text-sm bg-surface border border-forest/20 rounded-xs text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-forest transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-charcoal-muted hover:text-forest"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+            </div>
 
-              <Button
-                type="submit"
-                disabled={otpFlow.isLoading || otpFlow.otp.length !== 6}
-                className="w-full h-11 bg-forest hover:bg-forest-500 text-ivory font-bold text-xs shadow-sovereign-sm"
-              >
-                {otpFlow.isLoading ? "Verifying Credentials..." : "Verify & Sign In"}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-
-              {/* Live Ticking Resend Action */}
-              <div className="text-center pt-1">
-                {otpFlow.cooldownSeconds > 0 ? (
-                  <div className="text-xs text-charcoal-muted flex items-center justify-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-forest" />
-                    <span>Resend code in</span>
-                    <span className="font-mono font-bold text-forest">{otpFlow.cooldownSeconds}s</span>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => otpFlow.requestOtp()}
-                    disabled={otpFlow.isLoading}
-                    className="text-xs text-forest underline hover:text-forest-600 font-semibold"
-                  >
-                    Resend Verification Code
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
-
-          {/* Registration Link */}
-          <div className="pt-3 border-t border-forest/10 text-center space-y-1">
-            <p className="text-xs text-charcoal-muted">
-              Don&apos;t have an account yet?
-            </p>
-            <Link
-              href="/auth/register"
-              className="inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline"
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 bg-forest hover:bg-forest-600 text-ivory text-sm font-semibold rounded-xs shadow-xs transition-colors flex items-center justify-center gap-2"
             >
-              <span>Create an account</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing In...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </form>
 
-        {/* Footer Legal Disclosures */}
-        <div className="text-center text-[11px] text-charcoal-muted space-x-1.5">
-          <span>By continuing, you agree to our</span>
-          <Link href="/terms" className="underline hover:text-forest">Terms of Service</Link>
-          <span>and</span>
-          <Link href="/privacy" className="underline hover:text-forest">Privacy Policy</Link>
+          {/* Create Account Link */}
+          <div className="pt-2 text-center border-t border-forest/10">
+            <p className="text-xs text-charcoal-muted">
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="font-semibold text-forest hover:text-forest-600 underline">
+                Create Account
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

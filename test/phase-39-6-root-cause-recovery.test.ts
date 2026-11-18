@@ -53,8 +53,8 @@ describe("PHASE 39.6: FAILURE A — OTP CONSENT MODAL & VALIDATION RECOVERY", ()
       "Checkbox must be bound to termsAccepted form state"
     );
     assert.ok(
-      wizardContent.includes("checked={otpFlow.termsAccepted}"),
-      "Checkbox checked state must be bound to otpFlow.termsAccepted"
+      wizardContent.includes("checked={authTermsAccepted}") || wizardContent.includes("checked={otpFlow.termsAccepted}"),
+      "Checkbox checked state must be bound to termsAccepted"
     );
   });
 

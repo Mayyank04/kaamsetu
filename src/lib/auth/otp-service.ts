@@ -197,11 +197,14 @@ export function hashOtpCode(otp: string): string {
  */
 export function signSessionToken(payload: {
   userId?: string;
-  phone: string;
+  phone?: string | null;
+  email?: string | null;
+  fullName?: string | null;
   role: AppRole;
   verificationMethod?: string;
   phoneVerified?: boolean;
   phoneVerificationStatus?: string;
+  accountStatus?: string;
   exp?: number;
 }): string {
   const secret = getRateLimitHmacSecret();
@@ -219,11 +222,14 @@ export function signSessionToken(payload: {
  */
 export function verifySessionToken(token: string): {
   userId: string;
-  phone: string;
+  phone: string | null;
+  email?: string | null;
+  fullName?: string | null;
   role: AppRole;
   verificationMethod?: string;
   phoneVerified?: boolean;
   phoneVerificationStatus?: string;
+  accountStatus?: string;
 } | null {
   try {
     const parts = token.split(".");
@@ -270,11 +276,14 @@ export function verifySessionToken(token: string): {
 
     return {
       userId: json.userId,
-      phone: json.phone,
+      phone: json.phone || null,
+      email: json.email || null,
+      fullName: json.fullName || null,
       role: json.role,
       verificationMethod: json.verificationMethod,
       phoneVerified: json.phoneVerified,
       phoneVerificationStatus: json.phoneVerificationStatus,
+      accountStatus: json.accountStatus,
     };
   } catch {
     return null;
