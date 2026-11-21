@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     const geoValidation = GeographicAuthorizationService.validateLocation({
       city: data.city,
       state: data.state,
+      district: data.district,
       pincode: data.pincode,
       latitude: data.latitude,
       longitude: data.longitude,

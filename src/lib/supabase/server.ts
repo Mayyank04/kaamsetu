@@ -7,7 +7,24 @@ import { env } from "@/lib/env";
  * Server Actions, and Route Handlers.
  */
 export async function createServerSupabaseClient() {
-  const cookieStore = await cookies();
+  let cookieStore: any;
+  try {
+    cookieStore = await cookies();
+  } catch {
+    // When called outside Next.js request scope (e.g. standalone test runners)
+    return createServerClient(
+      env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-kaamsetu.supabase.co",
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key",
+      {
+        cookies: {
+          getAll() {
+            return [];
+          },
+          setAll() {},
+        },
+      }
+    );
+  }
 
   return createServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-kaamsetu.supabase.co",

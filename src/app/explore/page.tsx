@@ -21,15 +21,23 @@ import { Badge } from "@/components/ui/badge";
 import { ProfessionalCard } from "@/components/identity/professional-card";
 import { FEATURED_PROFESSIONALS } from "@/lib/data/professionals";
 import { PROFESSIONS_DATA } from "@/lib/data/professions";
+import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
 import { WorkerProfile } from "@/types/identity";
 
 export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [selectedSkill, setSelectedSkill] = React.useState("all");
+  const [selectedState, setSelectedState] = React.useState("all");
+  const [selectedDistrict, setSelectedDistrict] = React.useState("all");
   const [selectedLocation, setSelectedLocation] = React.useState("all");
   const [selectedExperience, setSelectedExperience] = React.useState("all");
   const [selectedAvailability, setSelectedAvailability] = React.useState("all");
+
+  const allStates = React.useMemo(() => GeographicAuthorizationService.getAllStates(), []);
+  const availableDistricts = React.useMemo(() => {
+    return selectedState !== "all" ? GeographicAuthorizationService.getDistrictsForState(selectedState) : [];
+  }, [selectedState]);
 
   const [professionals, setProfessionals] = React.useState(FEATURED_PROFESSIONALS);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -72,6 +80,8 @@ export default function ExplorePage() {
         if (searchQuery.trim()) params.set("search", searchQuery.trim());
         if (selectedCategory !== "all") params.set("category", selectedCategory);
         if (selectedSkill !== "all") params.set("skill", selectedSkill);
+        if (selectedState !== "all") params.set("state", selectedState);
+        if (selectedDistrict !== "all") params.set("district", selectedDistrict);
         if (selectedLocation !== "all") params.set("city", selectedLocation);
         if (selectedAvailability !== "all") params.set("availability", selectedAvailability);
 
@@ -162,6 +172,8 @@ export default function ExplorePage() {
     searchQuery,
     selectedCategory,
     selectedSkill,
+    selectedState,
+    selectedDistrict,
     selectedLocation,
     selectedExperience,
     selectedAvailability,
@@ -171,6 +183,8 @@ export default function ExplorePage() {
     setSearchQuery("");
     setSelectedCategory("all");
     setSelectedSkill("all");
+    setSelectedState("all");
+    setSelectedDistrict("all");
     setSelectedLocation("all");
     setSelectedExperience("all");
     setSelectedAvailability("all");
@@ -180,6 +194,8 @@ export default function ExplorePage() {
     searchQuery.trim() !== "" ||
     selectedCategory !== "all" ||
     selectedSkill !== "all" ||
+    selectedState !== "all" ||
+    selectedDistrict !== "all" ||
     selectedLocation !== "all" ||
     selectedExperience !== "all" ||
     selectedAvailability !== "all";
@@ -236,7 +252,7 @@ export default function ExplorePage() {
           </div>
 
           {/* Secondary Filter Dropdowns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-3 pt-1">
             {/* 1. Profession / Category */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
@@ -245,7 +261,7 @@ export default function ExplorePage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
                 <option value="all">All Professions</option>
                 {PROFESSIONS_DATA.map((cat) => (
@@ -256,17 +272,61 @@ export default function ExplorePage() {
               </select>
             </div>
 
-            {/* 2. Location / District */}
+            {/* 2. State / UT (Nationwide 36 entities) */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                Location (District/City)
+                State / UT (36)
+              </label>
+              <select
+                value={selectedState}
+                onChange={(e) => {
+                  setSelectedState(e.target.value);
+                  setSelectedDistrict("all");
+                }}
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+              >
+                <option value="all">All States & UTs</option>
+                {allStates.map((st) => (
+                  <option key={st.code} value={st.name}>
+                    {st.name} {st.isUnionTerritory ? "(UT)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 3. District (Dynamic) */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+                District
+              </label>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => setSelectedDistrict(e.target.value)}
+                disabled={selectedState === "all" || availableDistricts.length === 0}
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest disabled:opacity-50"
+              >
+                <option value="all">
+                  {selectedState === "all" ? "Select State First" : "All Districts"}
+                </option>
+                {availableDistricts.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 4. Location (City / Metro Hub) */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+                City / Metro Hub
               </label>
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
-                <option value="all">All Locations (India)</option>
+                <option value="all">All Cities</option>
                 {locations.map((loc) => (
                   <option key={loc} value={loc}>
                     {loc}
@@ -275,7 +335,7 @@ export default function ExplorePage() {
               </select>
             </div>
 
-            {/* 3. Skill Filter */}
+            {/* 5. Skill Filter */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
                 Specialized Skill
@@ -283,7 +343,7 @@ export default function ExplorePage() {
               <select
                 value={selectedSkill}
                 onChange={(e) => setSelectedSkill(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
                 <option value="all">All Skills</option>
                 {popularSkills.map((sk) => (
@@ -294,7 +354,7 @@ export default function ExplorePage() {
               </select>
             </div>
 
-            {/* 4. Experience Filter */}
+            {/* 6. Experience Filter */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
                 Experience
@@ -302,7 +362,7 @@ export default function ExplorePage() {
               <select
                 value={selectedExperience}
                 onChange={(e) => setSelectedExperience(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
                 <option value="all">Any Experience</option>
                 <option value="3">3+ Years</option>
@@ -312,7 +372,7 @@ export default function ExplorePage() {
               </select>
             </div>
 
-            {/* 5. Availability Filter */}
+            {/* 7. Availability Filter */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
                 Availability
@@ -320,7 +380,7 @@ export default function ExplorePage() {
               <select
                 value={selectedAvailability}
                 onChange={(e) => setSelectedAvailability(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
                 <option value="all">All Statuses</option>
                 <option value="available">Available for Direct Hire</option>

@@ -25,6 +25,10 @@ export interface Database {
           phone_verification_status?: string;
           verification_method?: string;
           phone_verified?: boolean;
+          state?: string | null;
+          district?: string | null;
+          city?: string | null;
+          pincode?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -150,6 +154,8 @@ export interface Database {
           daily_rate_max: number | null;
           city: string;
           state: string;
+          district?: string | null;
+          locality?: string | null;
           pincode: string;
           service_radius_km: number;
           languages: string[];
@@ -177,6 +183,8 @@ export interface Database {
           daily_rate_max?: number | null;
           city: string;
           state: string;
+          district?: string | null;
+          locality?: string | null;
           pincode: string;
           service_radius_km?: number;
           languages?: string[];

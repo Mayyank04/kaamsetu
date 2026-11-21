@@ -6,6 +6,8 @@ import {
 } from "@/lib/supabase/db/institutions";
 import { InstitutionDashboardView } from "@/components/dashboard/institution-dashboard-view";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Institutional Partnerships & Vocational Cohorts | KAAMSETU Digital Identity",
   description:

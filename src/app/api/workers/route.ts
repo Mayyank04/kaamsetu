@@ -9,7 +9,10 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || undefined;
     const categorySlug = searchParams.get("category") || undefined;
     const skill = searchParams.get("skill") || undefined;
+    const state = searchParams.get("state") || undefined;
+    const district = searchParams.get("district") || undefined;
     const city = searchParams.get("city") || undefined;
+    const pincode = searchParams.get("pincode") || undefined;
     const minExperience = searchParams.get("minExp")
       ? parseInt(searchParams.get("minExp")!, 10)
       : undefined;
@@ -34,7 +37,10 @@ export async function GET(request: NextRequest) {
       search,
       categorySlug,
       skill,
+      state,
+      district,
       city,
+      pincode,
       minExperience,
       maxExperience,
       availability,
@@ -49,7 +55,10 @@ export async function GET(request: NextRequest) {
         search,
         categorySlug,
         skill,
+        state,
+        district,
         city,
+        pincode,
         minExperience,
         maxExperience,
         availability,

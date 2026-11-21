@@ -4,6 +4,8 @@ import { requireContractor } from "@/lib/auth/server";
 import { getContractorDashboardData } from "@/lib/supabase/db/contractors";
 import { ContractorDashboardView } from "@/components/dashboard/contractor-dashboard-view";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Contractor Pro SaaS Dashboard | KAAMSETU Digital Identity",
   description:

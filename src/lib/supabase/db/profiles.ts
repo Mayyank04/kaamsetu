@@ -7,7 +7,10 @@ export interface WorkerFilterParams {
   search?: string;
   categorySlug?: string;
   skill?: string;
+  state?: string;
+  district?: string;
   city?: string;
+  pincode?: string;
   minExperience?: number;
   maxExperience?: number;
   availability?: "all" | "available" | "on_site";
@@ -95,9 +98,27 @@ export async function getPublishedWorkerProfiles(
       );
     }
 
+    if (filters.state && filters.state !== "all") {
+      result = result.filter(
+        (w) => w.state.toLowerCase() === filters.state!.toLowerCase()
+      );
+    }
+
+    if (filters.district && filters.district !== "all") {
+      result = result.filter(
+        (w) => (w as any).district?.toLowerCase() === filters.district!.toLowerCase()
+      );
+    }
+
     if (filters.city && filters.city !== "all") {
       result = result.filter(
         (w) => w.city.toLowerCase() === filters.city!.toLowerCase()
+      );
+    }
+
+    if (filters.pincode && filters.pincode.trim()) {
+      result = result.filter(
+        (w) => w.pincode === filters.pincode!.trim()
       );
     }
 
@@ -138,8 +159,20 @@ export async function getPublishedWorkerProfiles(
     query = query.or(`headline.ilike.${q},bio.ilike.${q},city.ilike.${q}`);
   }
 
+  if (filters.state && filters.state !== "all") {
+    query = query.ilike("state", filters.state);
+  }
+
+  if (filters.district && filters.district !== "all") {
+    query = query.ilike("district", filters.district);
+  }
+
   if (filters.city && filters.city !== "all") {
     query = query.ilike("city", filters.city);
+  }
+
+  if (filters.pincode && filters.pincode.trim()) {
+    query = query.eq("pincode", filters.pincode.trim());
   }
 
   if (filters.minExperience !== undefined) {
