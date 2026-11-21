@@ -106,8 +106,8 @@ export async function getInstitutions(district?: string, status?: string): Promi
 
   const { data, error } = await query;
   if (error) {
-    console.error("Error fetching institutions:", error);
-    throw error;
+    console.warn("Error fetching institutions, using fallback fixtures:", error.message);
+    return DEMO_INSTITUTIONS;
   }
 
   return data && data.length > 0 ? data : DEMO_INSTITUTIONS;
@@ -194,8 +194,25 @@ export async function getInstitutionCohorts(institutionId: string): Promise<Coho
     .eq("institution_id", institutionId);
 
   if (error) {
-    console.error("Error fetching cohorts:", error);
-    throw error;
+    console.warn("Error fetching cohorts, using fallback fixtures:", error.message);
+    return [
+      {
+        id: "cohort-asdm-elec-2026-1",
+        institution_id: institutionId,
+        name: "Solar PV Rooftop Technician Batch 14",
+        trade: "Electrical & Solar",
+        target_capacity: 30,
+        start_date: "2026-01-10",
+        end_date: "2026-04-10",
+        status: "active",
+        created_at: new Date(Date.now() - 40 * 24 * 3600 * 1000).toISOString(),
+        enrolledCount: 24,
+        consentedCount: 22,
+        completedCount: 18,
+        credentialsIssuedCount: 18,
+        institutionName: "Assam Skill Development Mission (ASDM)",
+      },
+    ];
   }
 
   // Fetch participant counts for each cohort

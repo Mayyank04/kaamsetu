@@ -9,7 +9,7 @@ import { PROFESSIONS_DATA } from "@/lib/data/professions";
 export async function getOccupations(): Promise<Occupation[]> {
   if (!isConfigured.supabase) {
     return PROFESSIONS_DATA.map((p, idx) => ({
-      id: `11111111-1111-1111-1111-11111111110${idx + 1}`,
+      id: `11111111-1111-1111-1111-1111111111${String(idx + 1).padStart(2, "0")}`,
       name: p.title,
       hindi_name: p.hindiTitle,
       slug: p.slug,

@@ -54,6 +54,8 @@ export const onboardingExtractedProfileSchema = z.object({
   bio: z.string().min(20),
   city: z.string().optional().default(""),
   state: z.string().optional().default(""),
+  district: z.string().optional().default(""),
+  locality: z.string().optional().default(""),
   missingFields: z.array(z.string()).default([]),
   confidenceScore: z.number().min(0).max(1).default(0.95),
   extractionMethod: z.enum(["gemini_ai", "deterministic_parser"]).default("deterministic_parser"),
@@ -69,6 +71,8 @@ export const approvedProfileSubmissionSchema = z.object({
   yearsExperience: z.number().int().min(0).max(60).nullable().default(null),
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
+  district: z.string().optional(),
+  locality: z.string().optional(),
   pincode: z
     .string()
     .trim()
@@ -89,7 +93,7 @@ export const approvedProfileSubmissionSchema = z.object({
   audioRecordingId: z.string().optional().nullable(),
   hasVoiceAttestation: z.boolean().optional(),
   workerConfirmedVoice: z.boolean().optional(),
-  allowNonDispatchProfile: z.boolean().optional().default(false),
+  allowNonDispatchProfile: z.boolean().optional().default(true),
   isPublished: z.boolean().optional(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),

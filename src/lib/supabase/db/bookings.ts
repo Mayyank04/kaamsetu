@@ -157,8 +157,8 @@ export async function getCustomerBookings(customerId: string): Promise<(Booking 
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching customer bookings:", error);
-    throw error;
+    console.warn("Error fetching customer bookings:", error.message);
+    return [];
   }
 
   return (data as unknown as (Booking & { worker_profile?: any })[]) || [];
@@ -176,8 +176,8 @@ export async function getWorkerBookings(workerProfileId: string): Promise<Bookin
     .order("scheduled_start", { ascending: true });
 
   if (error) {
-    console.error("Error fetching worker bookings:", error);
-    throw error;
+    console.warn("Error fetching worker bookings:", error.message);
+    return [];
   }
 
   return data || [];

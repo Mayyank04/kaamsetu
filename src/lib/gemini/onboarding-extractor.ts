@@ -470,6 +470,8 @@ export function extractDeterministicFallback(
     bio,
     city,
     state,
+    district: "",
+    locality: "",
     missingFields: missing,
     confidenceScore: 0.72,
     extractionMethod: "deterministic_parser",

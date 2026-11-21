@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getCustomerBookings } from "@/lib/supabase/db/bookings";
 import { CustomerBookingsContainer } from "@/components/customer/customer-bookings-container";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Customer Service Bookings | KAAMSETU Sovereign Trust",
   description:

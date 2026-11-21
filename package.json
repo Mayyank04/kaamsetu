@@ -60,6 +60,7 @@
     "test:phase39.7": "tsx test/phase-39-7-direct-registration.test.ts",
     "test:phase40": "tsx --env-file=.env.local --test test/phase-40-database-auth-recovery.test.ts",
     "test:phase41": "tsx --env-file=.env.local --test test/phase-41-responsive-frontend.test.ts",
+    "test:phase42": "tsx --env-file=.env.local --test test/phase-42-india-wide-expansion.test.ts",
     "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"
   },
   "dependencies": {

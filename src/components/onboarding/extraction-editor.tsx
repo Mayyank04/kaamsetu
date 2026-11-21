@@ -48,6 +48,9 @@ export function ExtractionEditor({
   const [yearsExperience, setYearsExperience] = React.useState<number | null>(extractedData.experienceYears);
   const [city, setCity] = React.useState(extractedData.city || "");
   const [state, setState] = React.useState(extractedData.state || "");
+  const [district, setDistrict] = React.useState(extractedData.district || "");
+  const [locality, setLocality] = React.useState(extractedData.locality || "");
+  const [isManualLocality, setIsManualLocality] = React.useState(false);
   const [pincode, setPincode] = React.useState("");
   const [pinError, setPinError] = React.useState<string | null>(null);
   const [headline, setHeadline] = React.useState(extractedData.headline);
@@ -61,19 +64,36 @@ export function ExtractionEditor({
     (extractedData as any).dailyRateMax ?? null
   );
 
+  const allStates = React.useMemo(() => GeographicAuthorizationService.getAllStates(), []);
+  const availableDistricts = React.useMemo(() => {
+    return state ? GeographicAuthorizationService.getDistrictsForState(state) : [];
+  }, [state]);
+
   const normalizedPin = pincode.replace(/\D/g, "");
   const isPinIncomplete = normalizedPin.length > 0 && normalizedPin.length < 6;
 
+  // Auto-resolve State and District when 6-digit PIN is entered
+  React.useEffect(() => {
+    if (normalizedPin.length === 6) {
+      const pinMatch = GeographicAuthorizationService.lookupPincode(normalizedPin);
+      if (pinMatch && pinMatch.found) {
+        if (!state && pinMatch.state) setState(pinMatch.state);
+        if (!district && pinMatch.district) setDistrict(pinMatch.district);
+        if (!city && pinMatch.suggestedCity) setCity(pinMatch.suggestedCity);
+      }
+    }
+  }, [normalizedPin, state, district, city]);
+
   // Compute live geographic status for UI guidance ONLY when a complete 6-digit PIN is provided.
-  // Avoids flashing premature red error alerts during onboarding drafting.
   const geoStatus = React.useMemo(() => {
     if (normalizedPin.length !== 6) return null;
     return GeographicAuthorizationService.validateLocation({
       city,
       state,
+      district,
       pincode: normalizedPin,
     });
-  }, [city, state, normalizedPin]);
+  }, [city, state, district, normalizedPin]);
 
   const handleAddSkill = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,8 +122,10 @@ export function ExtractionEditor({
       category,
       ncoCode: ncoCode.trim() || undefined,
       yearsExperience,
-      city,
-      state,
+      city: city.trim(),
+      state: state.trim(),
+      district: district.trim() || undefined,
+      locality: locality.trim() || undefined,
       pincode: cleanPin,
       skills,
       equipmentHandled: extractedData.equipmentHandled,
@@ -113,7 +135,7 @@ export function ExtractionEditor({
       bio,
       languages: [language.toUpperCase(), "Hindi"],
       voiceTranscript,
-      allowNonDispatchProfile: geoStatus ? !geoStatus.allowed : false,
+      allowNonDispatchProfile: true, // Seamless nationwide worker identity onboarding
     });
   };
 
@@ -217,37 +239,86 @@ export function ExtractionEditor({
         </div>
 
         {/* Operating Location & Live Geographic Validation */}
-        <div className="space-y-3 pt-2 border-t border-forest/10">
-          <label className="font-bold uppercase tracking-wider text-xs text-forest block">
-            Operating City, State & PIN Code *
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="space-y-4 pt-2 border-t border-forest/10">
+          <div className="flex items-center justify-between">
+            <label className="font-bold uppercase tracking-wider text-xs text-forest block">
+              Operating Location & PIN Code (All 28 States & 8 UTs) *
+            </label>
+            <span className="text-[11px] text-forest/70 font-medium">
+              Nationwide Registration Enabled
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:grid-cols-4">
+            {/* 1. State / UT Dropdown */}
             <div>
+              <label className="text-[10px] uppercase font-bold text-charcoal-muted block mb-1">State / UT *</label>
+              <select
+                value={state}
+                onChange={(e) => {
+                  setState(e.target.value);
+                  setDistrict("");
+                }}
+                required
+                className="w-full h-11 px-3 rounded-xs border border-forest/20 text-xs text-forest bg-card focus:outline-none focus:border-forest"
+              >
+                <option value="">Select State / UT</option>
+                {allStates.map((st) => (
+                  <option key={st.code} value={st.name}>
+                    {st.name} {st.isUnionTerritory ? "(UT)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 2. District Dropdown */}
+            <div>
+              <label className="text-[10px] uppercase font-bold text-charcoal-muted block mb-1">District</label>
+              {availableDistricts.length > 0 ? (
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xs border border-forest/20 text-xs text-forest bg-card focus:outline-none focus:border-forest"
+                >
+                  <option value="">Select District</option>
+                  {availableDistricts.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="District (e.g. Kamrup)"
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xs border border-forest/20 text-xs text-forest focus:outline-none focus:border-forest"
+                />
+              )}
+            </div>
+
+            {/* 3. City / Town / Village */}
+            <div>
+              <label className="text-[10px] uppercase font-bold text-charcoal-muted block mb-1">City / Town / Village *</label>
               <input
                 type="text"
-                placeholder="City (e.g. Guwahati)"
+                placeholder="City or Town (e.g. Guwahati)"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 required
-                className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm text-forest focus:outline-none focus:border-forest"
+                className="w-full h-11 px-3 rounded-xs border border-forest/20 text-xs text-forest focus:outline-none focus:border-forest"
               />
             </div>
+
+            {/* 4. PIN Code */}
             <div>
-              <input
-                type="text"
-                placeholder="State (e.g. Assam)"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                required
-                className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm text-forest focus:outline-none focus:border-forest"
-              />
-            </div>
-            <div>
+              <label className="text-[10px] uppercase font-bold text-charcoal-muted block mb-1">6-Digit PIN *</label>
               <input
                 type="text"
                 inputMode="numeric"
                 pattern="[1-9][0-9]{5}"
-                placeholder="6-Digit PIN Code *"
+                placeholder="PIN Code (e.g. 781001)"
                 maxLength={6}
                 required
                 value={pincode}
@@ -255,9 +326,31 @@ export function ExtractionEditor({
                   setPincode(e.target.value.replace(/\D/g, ""));
                   if (pinError) setPinError(null);
                 }}
-                className="w-full h-11 px-3 rounded-xs border border-forest/20 text-sm font-mono text-forest focus:outline-none focus:border-forest"
+                className="w-full h-11 px-3 rounded-xs border border-forest/20 text-xs font-mono text-forest focus:outline-none focus:border-forest"
               />
             </div>
+          </div>
+
+          {/* Optional Locality / Village entry */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setIsManualLocality(!isManualLocality)}
+              className="text-[11px] text-forest underline hover:text-forest-dark"
+            >
+              {isManualLocality ? "− Hide locality or village name" : "+ Add specific village, hamlet, or ward"}
+            </button>
+            {isManualLocality && (
+              <div className="w-full sm:w-1/2">
+                <input
+                  type="text"
+                  placeholder="Village / Locality / Ward Name"
+                  value={locality}
+                  onChange={(e) => setLocality(e.target.value)}
+                  className="w-full h-9 px-3 rounded-xs border border-forest/20 text-xs text-forest focus:outline-none focus:border-forest"
+                />
+              </div>
+            )}
           </div>
 
           {pinError && (
@@ -272,34 +365,37 @@ export function ExtractionEditor({
             </div>
           )}
 
-          {/* Real-time Geographic Scope Feedback */}
+          {/* Real-time Geographic Scope & Capability Feedback */}
           {geoStatus && (
             <div
               className={`p-3.5 rounded-md text-xs border flex items-start gap-2.5 ${
                 geoStatus.status === "AUTHORIZED"
                   ? "bg-emerald-50 text-emerald-900 border-emerald-200"
                   : geoStatus.status === "NON_DISPATCH_AREA"
-                  ? "bg-amber-50 text-amber-900 border-amber-200"
-                  : "bg-red-50 text-red-900 border-red-200"
+                  ? "bg-teal-50 text-teal-900 border-teal-200"
+                  : "bg-sand/30 text-forest border-forest/20"
               }`}
             >
               {geoStatus.status === "AUTHORIZED" ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               ) : (
-                <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                <Info className="w-4 h-4 text-teal-700 shrink-0 mt-0.5" />
               )}
               <div className="space-y-1">
-                <div className="font-bold">
-                  {geoStatus.status === "AUTHORIZED"
-                    ? "Active Class B Controlled Rollout Zone"
-                    : geoStatus.status === "NON_DISPATCH_AREA"
-                    ? "Non-Dispatch Operating Scope"
-                    : "Geographic Boundary Notice"}
+                <div className="font-bold flex items-center gap-2">
+                  <span>
+                    {geoStatus.status === "AUTHORIZED"
+                      ? "Active Class B Controlled Rollout Zone"
+                      : "Nationwide Sovereign Workforce Registry"}
+                  </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-forest/10 font-mono">
+                    {geoStatus.status === "AUTHORIZED" ? "Full Dispatch & Profile" : "Identity, Profile & Credential Active"}
+                  </span>
                 </div>
                 <p className="text-[11px] leading-relaxed">
                   {geoStatus.status === "AUTHORIZED"
                     ? "Your location is within our active commercial dispatch zone (Guwahati Urban or Shillong Urban). Customer bookings and job dispatch are enabled."
-                    : geoStatus.reason}
+                    : `${geoStatus.reason || "Nationwide profile creation permitted."} Sovereign digital credentials, public discovery, and portfolio showcase are fully supported.`}
                 </p>
               </div>
             </div>
