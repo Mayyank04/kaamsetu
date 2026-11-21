@@ -23,9 +23,13 @@ import { FEATURED_PROFESSIONALS } from "@/lib/data/professionals";
 import { PROFESSIONS_DATA } from "@/lib/data/professions";
 import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
 import { WorkerProfile } from "@/types/identity";
+import { useTranslation } from "@/lib/i18n/i18n-context";
+import { Store, ShoppingBag } from "lucide-react";
 
 export default function ExplorePage() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedProfileType, setSelectedProfileType] = React.useState<"all" | "service_professional" | "goods_vendor">("all");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [selectedSkill, setSelectedSkill] = React.useState("all");
   const [selectedState, setSelectedState] = React.useState("all");
@@ -78,6 +82,7 @@ export default function ExplorePage() {
       try {
         const params = new URLSearchParams();
         if (searchQuery.trim()) params.set("search", searchQuery.trim());
+        if (selectedProfileType !== "all") params.set("profileType", selectedProfileType);
         if (selectedCategory !== "all") params.set("category", selectedCategory);
         if (selectedSkill !== "all") params.set("skill", selectedSkill);
         if (selectedState !== "all") params.set("state", selectedState);
@@ -148,6 +153,14 @@ export default function ExplorePage() {
                 min: w.daily_rate_min || 1100,
                 max: w.daily_rate_max || 1800,
               },
+              profileType: w.profile_type || "service_professional",
+              businessName: w.business_name || undefined,
+              vendorType: w.vendor_type || undefined,
+              stallType: w.stall_type || undefined,
+              operatingHours: w.operating_hours || undefined,
+              productCatalog: w.product_catalog || [],
+              deliveryAvailable: Boolean(w.delivery_available),
+              contactPreference: w.contact_preference || "phone",
               availabilityStatus: (w.availability_status as any) || "available",
               createdAt: w.created_at || new Date().toISOString(),
               updatedAt: w.updated_at || new Date().toISOString(),
@@ -170,6 +183,7 @@ export default function ExplorePage() {
     };
   }, [
     searchQuery,
+    selectedProfileType,
     selectedCategory,
     selectedSkill,
     selectedState,
@@ -181,6 +195,7 @@ export default function ExplorePage() {
 
   const handleResetFilters = () => {
     setSearchQuery("");
+    setSelectedProfileType("all");
     setSelectedCategory("all");
     setSelectedSkill("all");
     setSelectedState("all");
@@ -192,6 +207,7 @@ export default function ExplorePage() {
 
   const hasActiveFilters =
     searchQuery.trim() !== "" ||
+    selectedProfileType !== "all" ||
     selectedCategory !== "all" ||
     selectedSkill !== "all" ||
     selectedState !== "all" ||
@@ -239,6 +255,46 @@ export default function ExplorePage() {
       {/* 2. Search & Filters Bar */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
         <div className="rounded-md border border-forest/15 bg-card p-4 sm:p-6 shadow-sovereign-sm space-y-5">
+          {/* Profile Type Navigation: All vs Services vs Vendors */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-forest/10 pb-4">
+            <button
+              type="button"
+              onClick={() => setSelectedProfileType("all")}
+              className={`px-3 py-1.5 rounded-xs text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                selectedProfileType === "all"
+                  ? "bg-forest text-ivory shadow-xs font-bold"
+                  : "bg-forest/5 text-forest hover:bg-forest/10"
+              }`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>{t.explore.allListings}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedProfileType("service_professional")}
+              className={`px-3 py-1.5 rounded-xs text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                selectedProfileType === "service_professional"
+                  ? "bg-forest text-ivory shadow-xs font-bold"
+                  : "bg-forest/5 text-forest hover:bg-forest/10"
+              }`}
+            >
+              <Briefcase className="h-3.5 w-3.5" />
+              <span>{t.explore.serviceProfessionals}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedProfileType("goods_vendor")}
+              className={`px-3 py-1.5 rounded-xs text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                selectedProfileType === "goods_vendor"
+                  ? "bg-forest text-ivory shadow-xs font-bold"
+                  : "bg-forest/5 text-forest hover:bg-forest/10"
+              }`}
+            >
+              <Store className="h-3.5 w-3.5" />
+              <span>{t.explore.vendorsAndArtisans}</span>
+            </button>
+          </div>
+
           {/* Main Search Input */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-forest/50" />

@@ -6,9 +6,24 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type AppRole = "worker" | "customer" | "contractor" | "admin" | "institution";
+export type AppRole = "worker" | "vendor" | "customer" | "contractor" | "admin" | "institution";
 export type BookingStatus = "requested" | "confirmed" | "in_progress" | "completed" | "cancelled";
 export type AvailabilityState = "available" | "on_site" | "unavailable";
+
+export type ProfileType = "service_professional" | "goods_vendor" | "hybrid_artisan";
+export type StallType = "mobile_cart" | "fixed_stall" | "home_workshop" | "kiosk" | "retail_shop" | "other";
+export type ContactPreference = "phone" | "whatsapp" | "in_person" | "any";
+
+export interface VendorProduct {
+  id: string;
+  name: string;
+  name_vernacular?: string;
+  category: string;
+  price: number;
+  unit: string;
+  in_stock: boolean;
+  description?: string;
+}
 
 export interface Database {
   public: {
@@ -166,6 +181,14 @@ export interface Database {
           is_published: boolean;
           availability_status: AvailabilityState;
           travel_willingness: "same_district" | "adjacent_districts" | "interstate" | "remote_only";
+          profile_type?: ProfileType;
+          business_name?: string | null;
+          vendor_type?: string | null;
+          stall_type?: StallType | null;
+          operating_hours?: string | null;
+          product_catalog?: VendorProduct[] | Json;
+          delivery_available?: boolean;
+          contact_preference?: ContactPreference;
           created_at: string;
           updated_at: string;
         };
@@ -195,6 +218,14 @@ export interface Database {
           is_published?: boolean;
           availability_status?: AvailabilityState;
           travel_willingness?: "same_district" | "adjacent_districts" | "interstate" | "remote_only";
+          profile_type?: ProfileType;
+          business_name?: string | null;
+          vendor_type?: string | null;
+          stall_type?: StallType | null;
+          operating_hours?: string | null;
+          product_catalog?: VendorProduct[] | Json;
+          delivery_available?: boolean;
+          contact_preference?: ContactPreference;
           created_at?: string;
           updated_at?: string;
         };
@@ -212,6 +243,8 @@ export interface Database {
           daily_rate_max?: number | null;
           city?: string;
           state?: string;
+          district?: string | null;
+          locality?: string | null;
           pincode?: string;
           service_radius_km?: number;
           languages?: string[];
@@ -222,6 +255,14 @@ export interface Database {
           is_published?: boolean;
           availability_status?: AvailabilityState;
           travel_willingness?: "same_district" | "adjacent_districts" | "interstate" | "remote_only";
+          profile_type?: ProfileType;
+          business_name?: string | null;
+          vendor_type?: string | null;
+          stall_type?: StallType | null;
+          operating_hours?: string | null;
+          product_catalog?: VendorProduct[] | Json;
+          delivery_available?: boolean;
+          contact_preference?: ContactPreference;
           created_at?: string;
           updated_at?: string;
         };

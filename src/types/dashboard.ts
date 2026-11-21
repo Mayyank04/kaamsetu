@@ -1,4 +1,10 @@
-import { AvailabilityState } from "@/types/database.types";
+import {
+  AvailabilityState,
+  ProfileType,
+  StallType,
+  ContactPreference,
+  VendorProduct,
+} from "@/types/database.types";
 
 export type SkillVerificationType =
   | "self_declared"
@@ -106,6 +112,14 @@ export interface DashboardWorkerProfile {
   digiLockerLinked: boolean;
   isPublished: boolean;
   availabilityStatus: AvailabilityState;
+  profileType?: ProfileType;
+  businessName?: string;
+  vendorType?: string;
+  stallType?: StallType;
+  operatingHours?: string;
+  productCatalog?: VendorProduct[];
+  deliveryAvailable?: boolean;
+  contactPreference?: ContactPreference;
   createdAt: string;
   updatedAt: string;
 }

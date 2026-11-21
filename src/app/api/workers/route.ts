@@ -8,6 +8,13 @@ export async function GET(request: NextRequest) {
 
     const search = searchParams.get("search") || undefined;
     const categorySlug = searchParams.get("category") || undefined;
+    const profileType = (searchParams.get("profileType") as
+      | "all"
+      | "service_professional"
+      | "goods_vendor"
+      | "hybrid_artisan") || undefined;
+    const vendorType = searchParams.get("vendorType") || undefined;
+    const stallType = searchParams.get("stallType") || undefined;
     const skill = searchParams.get("skill") || undefined;
     const state = searchParams.get("state") || undefined;
     const district = searchParams.get("district") || undefined;
@@ -36,6 +43,9 @@ export async function GET(request: NextRequest) {
     const workers = await getPublishedWorkerProfiles({
       search,
       categorySlug,
+      profileType,
+      vendorType,
+      stallType,
       skill,
       state,
       district,
@@ -54,6 +64,9 @@ export async function GET(request: NextRequest) {
       filters: {
         search,
         categorySlug,
+        profileType,
+        vendorType,
+        stallType,
         skill,
         state,
         district,

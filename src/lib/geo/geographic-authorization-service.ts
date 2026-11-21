@@ -33,6 +33,7 @@ export interface LocationValidationRequest {
   latitude?: number | null;
   longitude?: number | null;
   dispatchCategory?: "standard_vocational" | "heavy_epc_infrastructure";
+  allowNonDispatchProfile?: boolean;
 }
 
 export type RegionalOperatingStatus = 
