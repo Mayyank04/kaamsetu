@@ -3,6 +3,7 @@ import { InstitutionalHeader } from "@/components/layout/institutional-header";
 import { InstitutionalFooter } from "@/components/layout/institutional-footer";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth/use-auth";
+import { I18nProvider } from "@/lib/i18n/i18n-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,12 +40,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-background text-foreground font-sans antialiased">
-        <AuthProvider>
-          <InstitutionalHeader />
-          <main className="flex-1">{children}</main>
-          <InstitutionalFooter />
-          <Toaster />
-        </AuthProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <InstitutionalHeader />
+            <main className="flex-1">{children}</main>
+            <InstitutionalFooter />
+            <Toaster />
+          </AuthProvider>
+        </I18nProvider>
       </body>
     </html>
   );

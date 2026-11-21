@@ -6,7 +6,7 @@ import { WorkerProfile } from "@/types/identity";
 import { TrustBadge } from "@/components/identity/trust-badge";
 import { CredentialDialog } from "@/components/identity/credential-dialog";
 import { formatINR } from "@/lib/utils";
-import { MapPin, CheckCircle2, Shield, Eye, Award } from "lucide-react";
+import { MapPin, CheckCircle2, Shield, Eye, Award, Clock, Store, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProfessionalCardProps {
@@ -19,6 +19,14 @@ interface ProfessionalCardProps {
 
 export function ProfessionalCard({ professional }: ProfessionalCardProps) {
   const workerSlug = `${professional.fullName.toLowerCase().replace(/\s+/g, "-")}-${professional.location.city.toLowerCase()}`;
+  const isVendor = professional.profileType === "goods_vendor" || professional.profileType === "hybrid_artisan";
+  const stallTypeLabel: Record<string, string> = {
+    fixed_stall: "Fixed Stall",
+    mobile_cart: "Mobile Cart",
+    home_workshop: "Home Workshop",
+    kiosk: "Kiosk",
+    retail_shop: "Retail Shop",
+  };
 
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-md border border-forest/15 bg-card shadow-sovereign-sm hover:shadow-sovereign-md hover:border-forest/35 transition-all duration-300">
@@ -28,9 +36,17 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
           <Shield className="h-3 w-3 text-forest" />
           <span>{professional.registryId}</span>
         </div>
-        <span className="rounded-xs bg-sand/30 text-sand-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border border-sand/40">
-          [DEMO RECORD]
-        </span>
+        <div className="flex items-center gap-1.5">
+          {isVendor && professional.stallType && (
+            <span className="rounded-xs bg-forest/10 text-forest px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border border-forest/20 flex items-center gap-1">
+              <Store className="h-2.5 w-2.5" />
+              {stallTypeLabel[professional.stallType] || "Local Vendor"}
+            </span>
+          )}
+          <span className="rounded-xs bg-sand/30 text-sand-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border border-sand/40">
+            [DEMO RECORD]
+          </span>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -59,7 +75,7 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
                 href={`/profile/${workerSlug}`}
                 className="font-bold text-forest text-base leading-snug truncate hover:underline hover:text-forest-600 transition-colors"
               >
-                {professional.fullName}
+                {professional.businessName ? professional.businessName : professional.fullName}
               </a>
               {professional.aadhaarVerified && (
                 <CheckCircle2
@@ -70,7 +86,7 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
             </div>
 
             <p className="text-xs font-semibold text-charcoal line-clamp-1">
-              {professional.primaryTrade}
+              {professional.businessName ? `${professional.fullName} • ${professional.primaryTrade}` : professional.primaryTrade}
             </p>
 
             <div className="flex items-center gap-1 text-[11px] text-charcoal-muted">
@@ -79,6 +95,13 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
                 {professional.location.city}, {professional.location.state} • {professional.yearsExperience} yrs
               </span>
             </div>
+
+            {professional.operatingHours && (
+              <div className="flex items-center gap-1 text-[10px] text-forest font-medium pt-0.5">
+                <Clock className="h-3 w-3 text-forest/70 shrink-0" />
+                <span className="truncate">{professional.operatingHours}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -107,21 +130,40 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
           <TrustBadge type="peer_verified" />
         </div>
 
-        {/* Sub-Trades Chips */}
+        {/* Sub-Trades or Products Chips */}
         <div className="space-y-1 pt-1 flex-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted">
-            Specialized Skills
+            {isVendor && professional.productCatalog && professional.productCatalog.length > 0
+              ? "Featured Goods & Items"
+              : "Specialized Skills"}
           </span>
           <div className="flex flex-wrap gap-1">
-            {professional.subTrades.slice(0, 3).map((trade, i) => (
-              <span
-                key={i}
-                className="text-[10px] px-2 py-0.5 rounded-xs bg-card border border-forest/15 text-forest font-medium"
-              >
-                {trade}
+            {isVendor && professional.productCatalog && professional.productCatalog.length > 0 ? (
+              professional.productCatalog.slice(0, 3).map((item, i) => (
+                <span
+                  key={item.id || i}
+                  className="text-[10px] px-2 py-0.5 rounded-xs bg-sand/15 border border-sand/40 text-sand-800 font-medium flex items-center gap-1"
+                >
+                  <span>{item.name}</span>
+                  <span className="font-bold text-forest">₹{item.price}/{item.unit}</span>
+                </span>
+              ))
+            ) : (
+              professional.subTrades.slice(0, 3).map((trade, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] px-2 py-0.5 rounded-xs bg-card border border-forest/15 text-forest font-medium"
+                >
+                  {trade}
+                </span>
+              ))
+            )}
+            {isVendor && professional.productCatalog && professional.productCatalog.length > 3 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-xs bg-forest/5 text-charcoal-muted">
+                +{professional.productCatalog.length - 3} items
               </span>
-            ))}
-            {professional.subTrades.length > 3 && (
+            )}
+            {!isVendor && professional.subTrades.length > 3 && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-xs bg-forest/5 text-charcoal-muted">
                 +{professional.subTrades.length - 3}
               </span>
@@ -133,9 +175,15 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
       {/* Card Footer: Rate & Action Button */}
       <div className="p-4 pt-0 border-t border-forest/10 mt-auto bg-card flex items-center justify-between">
         <div>
-          <span className="text-[10px] text-charcoal-muted block">Estimated Daily Rate</span>
+          <span className="text-[10px] text-charcoal-muted block">
+            {isVendor && professional.productCatalog && professional.productCatalog.length > 0
+              ? "Starting Price"
+              : "Estimated Daily Rate"}
+          </span>
           <span className="text-xs font-bold text-forest">
-            {professional.dailyRateEstimate
+            {isVendor && professional.productCatalog && professional.productCatalog.length > 0
+              ? `₹${professional.productCatalog[0].price} / ${professional.productCatalog[0].unit}`
+              : professional.dailyRateEstimate
               ? `${formatINR(professional.dailyRateEstimate.min)} – ${formatINR(professional.dailyRateEstimate.max)}`
               : "Standard Rate"}
           </span>

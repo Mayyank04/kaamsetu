@@ -17,6 +17,8 @@ import {
   LayoutDashboard,
   CalendarCheck,
   CheckCircle2,
+  Globe,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,11 +32,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/use-auth";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 export function InstitutionalHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
+  const { locale, setLocale, t } = useTranslation();
 
   // Close mobile drawer on route navigation
   React.useEffect(() => {
@@ -145,6 +149,57 @@ export function InstitutionalHeader() {
 
         {/* Right Actions & User Menu */}
         <div className="hidden md:flex items-center gap-2 lg:gap-3">
+          {/* Vernacular Language Switcher */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm border border-forest/20 bg-card hover:bg-forest/5 text-xs text-forest font-semibold transition-colors outline-none cursor-pointer"
+                aria-label="Select vernacular language"
+              >
+                <Globe className="w-3.5 h-3.5 text-forest/70" />
+                <span>
+                  {locale === "en" ? "English" : locale === "hi" ? "हिन्दी" : locale === "as" ? "অসমীয়া" : "বাংলা"}
+                </span>
+                <ChevronDown className="w-3 h-3 text-forest/50" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44 p-1.5">
+              <DropdownMenuLabel className="text-[10px] uppercase font-bold text-charcoal-muted tracking-wider px-2 py-1">
+                Select Language
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setLocale("en")}
+                className="text-xs flex items-center justify-between cursor-pointer py-1.5 px-2"
+              >
+                <span className="font-medium">English</span>
+                {locale === "en" && <Check className="w-3.5 h-3.5 text-forest" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setLocale("hi")}
+                className="text-xs flex items-center justify-between cursor-pointer py-1.5 px-2"
+              >
+                <span className="font-medium">हिन्दी (Hindi)</span>
+                {locale === "hi" && <Check className="w-3.5 h-3.5 text-forest" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setLocale("as")}
+                className="text-xs flex items-center justify-between cursor-pointer py-1.5 px-2"
+              >
+                <span className="font-medium">অসমীয়া (Assamese)</span>
+                {locale === "as" && <Check className="w-3.5 h-3.5 text-forest" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setLocale("bn")}
+                className="text-xs flex items-center justify-between cursor-pointer py-1.5 px-2"
+              >
+                <span className="font-medium">বাংলা (Bengali)</span>
+                {locale === "bn" && <Check className="w-3.5 h-3.5 text-forest" />}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button variant="outline" size="sm" asChild className="border-forest/20 text-forest hover:bg-forest/5 text-xs">
             <Link href="/explore">
               <Search className="mr-1.5 h-3.5 w-3.5 text-forest" />
@@ -287,6 +342,40 @@ export function InstitutionalHeader() {
                 </Button>
               </div>
             )}
+
+            {/* Mobile Vernacular Selector */}
+            <div className="p-3 bg-forest/5 rounded-md border border-forest/10 space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted flex items-center gap-1.5">
+                <Globe className="w-3 h-3 text-forest" />
+                Language / भाषा / ভাষা
+              </span>
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                {(["en", "hi", "as", "bn"] as const).map((code) => {
+                  const names: Record<string, string> = {
+                    en: "English",
+                    hi: "हिन्दी",
+                    as: "অসমীয়া",
+                    bn: "বাংলা",
+                  };
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setLocale(code)}
+                      className={cn(
+                        "py-1.5 px-2 rounded-xs border text-left font-medium transition-colors flex items-center justify-between",
+                        locale === code
+                          ? "bg-forest text-ivory border-forest font-bold"
+                          : "bg-card text-charcoal border-forest/15 hover:bg-forest/5"
+                      )}
+                    >
+                      <span>{names[code]}</span>
+                      {locale === code && <Check className="w-3 h-3 text-sand" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <nav className="flex flex-col space-y-1 text-sm font-medium">
               {navLinks.map((link) => {

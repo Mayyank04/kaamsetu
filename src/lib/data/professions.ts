@@ -14,7 +14,8 @@ export interface ProfessionCategory {
     | "home_personal_services"
     | "agriculture_rural"
     | "transport_logistics"
-    | "digital_professional_services";
+    | "digital_professional_services"
+    | "retail_small_vendor";
 }
 
 export const PROFESSIONS_DATA: ProfessionCategory[] = [
@@ -292,5 +293,67 @@ export const PROFESSIONS_DATA: ProfessionCategory[] = [
     icon: "Activity",
     averageDailyRate: { min: 1100, max: 1900 },
     sector: "construction_trades",
+  },
+
+  // SECTOR 7: Small Vendors, Micro-Enterprises & Local Artisans
+  {
+    id: "prof-23",
+    slug: "fresh-produce-vegetables",
+    title: "Fresh Produce & Vegetables",
+    hindiTitle: "फल एवं सब्जी विक्रेता",
+    description: "Farm-fresh vegetable vending, seasonal fruit stalls, mobile produce carts, and local mandi wholesale procurement.",
+    workerCount: 0,
+    popularSkills: ["Seasonal Produce Sourcing", "Weighing & Daily Grading", "Local Mandi Procurement", "Cart & Stall Setup"],
+    icon: "ShoppingBag",
+    averageDailyRate: { min: 600, max: 1200 },
+    sector: "retail_small_vendor",
+  },
+  {
+    id: "prof-24",
+    slug: "street-food-tea",
+    title: "Street Food, Tea & Refreshments",
+    hindiTitle: "स्ट्रीट फूड एवं चाय नाश्ता",
+    description: "Traditional tea preparation, regional street delicacies, snacks, and hygienic mobile catering stalls.",
+    workerCount: 0,
+    popularSkills: ["Masala Chai Preparation", "Fresh Snacks & Frying", "Food Hygiene & Storage", "Kiosk Customer Management"],
+    icon: "Coffee",
+    averageDailyRate: { min: 700, max: 1400 },
+    sector: "retail_small_vendor",
+  },
+  {
+    id: "prof-25",
+    slug: "tailoring-apparel",
+    title: "Custom Tailoring & Apparel",
+    hindiTitle: "सिलाई एवं परिधान",
+    description: "Bespoke pattern cutting, traditional ethnic dressmaking, alterations, and home-based garment workshops.",
+    workerCount: 0,
+    popularSkills: ["Blouse & Kurta Stitching", "Pattern Cutting & Measurement", "Garment Alteration", "Interlocking & Finishing"],
+    icon: "Scissors",
+    averageDailyRate: { min: 750, max: 1500 },
+    sector: "retail_small_vendor",
+  },
+  {
+    id: "prof-26",
+    slug: "handicrafts-pottery",
+    title: "Handicrafts & Pottery",
+    hindiTitle: "हस्तशिल्प एवं मिट्टी के बर्तन",
+    description: "Terracotta pottery, cane & bamboo crafts, hand-loomed artifact creation, and cultural souvenir vending.",
+    workerCount: 0,
+    popularSkills: ["Terracotta Wheel Throwing", "Bamboo Weaving & Joinery", "Kiln Firing", "Artisanal Finishing"],
+    icon: "Layers",
+    averageDailyRate: { min: 800, max: 1600 },
+    sector: "retail_small_vendor",
+  },
+  {
+    id: "prof-27",
+    slug: "footwear-leather-repair",
+    title: "Footwear & Leather Care",
+    hindiTitle: "जूता सिलाई एवं चमड़ा कार्य",
+    description: "Handmade leather footwear, sole stitching, cobbler services, and traditional leather goods restoration.",
+    workerCount: 0,
+    popularSkills: ["Hand Stitching Leather", "Sole Replacement & Gluing", "Leather Buffing & Polish", "Custom Orthopedic Fit"],
+    icon: "ShieldCheck",
+    averageDailyRate: { min: 650, max: 1300 },
+    sector: "retail_small_vendor",
   },
 ];

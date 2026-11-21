@@ -103,7 +103,12 @@ export function calculateKaamScore(inputs: ScoreInputs): KaamScoreBreakdown {
   let expPoints = 0;
   let expStatus = "Experience Unreported";
   let expDetails = "Years of experience was not stated in testimony. Marked as unreported to avoid false claims.";
-  if (inputs.yearsExperience !== null) {
+  if (
+    inputs.yearsExperience !== null &&
+    inputs.yearsExperience !== undefined &&
+    typeof inputs.yearsExperience === "number" &&
+    !isNaN(inputs.yearsExperience)
+  ) {
     expPoints = Math.min(150, inputs.yearsExperience * 10);
     expStatus = `${inputs.yearsExperience} Years Stated Practice`;
     expDetails = `Worker self-declared ${inputs.yearsExperience} years of hands-on trade practice.`;

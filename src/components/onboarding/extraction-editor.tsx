@@ -42,6 +42,19 @@ export function ExtractionEditor({
 
   // Editable Form State initialized from Voice / Text Extraction
   const [fullName, setFullName] = React.useState(extractedData.fullName);
+  const [profileType, setProfileType] = React.useState<"service_professional" | "goods_vendor" | "hybrid_artisan">(
+    extractedData.profileType || "service_professional"
+  );
+  const [businessName, setBusinessName] = React.useState(extractedData.businessName || "");
+  const [vendorType, setVendorType] = React.useState(extractedData.vendorType || "");
+  const [stallType, setStallType] = React.useState<"mobile_cart" | "fixed_stall" | "home_workshop" | "kiosk" | "retail_shop" | "other">(
+    extractedData.stallType || "fixed_stall"
+  );
+  const [operatingHours, setOperatingHours] = React.useState(extractedData.operatingHours || "");
+  const [deliveryAvailable, setDeliveryAvailable] = React.useState(Boolean(extractedData.deliveryAvailable));
+  const [contactPreference, setContactPreference] = React.useState<"phone" | "whatsapp" | "in_person" | "any">(
+    extractedData.contactPreference || "phone"
+  );
   const [occupation, setOccupation] = React.useState(extractedData.occupation);
   const [category, setCategory] = React.useState(extractedData.category);
   const [ncoCode, setNcoCode] = React.useState(extractedData.ncoCode || "");
@@ -120,6 +133,14 @@ export function ExtractionEditor({
       fullName,
       occupation,
       category,
+      profileType,
+      businessName: businessName.trim() || undefined,
+      vendorType: vendorType.trim() || undefined,
+      stallType,
+      operatingHours: operatingHours.trim() || undefined,
+      productCatalog: extractedData.productCatalog || [],
+      deliveryAvailable,
+      contactPreference,
       ncoCode: ncoCode.trim() || undefined,
       yearsExperience,
       city: city.trim(),
@@ -176,6 +197,103 @@ export function ExtractionEditor({
             </Badge>
           </div>
         </div>
+
+        {/* Profile Identity Type */}
+        <div className="p-3 bg-forest/5 rounded-xs border border-forest/15 space-y-2 text-xs">
+          <label className="font-bold uppercase tracking-wider text-forest block">
+            Workforce Role Category *
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setProfileType("service_professional")}
+              className={`p-2.5 rounded-xs border text-left transition-colors cursor-pointer ${
+                profileType === "service_professional"
+                  ? "bg-forest text-ivory border-forest font-bold"
+                  : "bg-card text-charcoal border-forest/20 hover:bg-forest/5"
+              }`}
+            >
+              <div className="font-semibold text-xs">Service Professional</div>
+              <div className="text-[10px] opacity-80">Electrician, Plumber, Mason, Welder</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setProfileType("goods_vendor")}
+              className={`p-2.5 rounded-xs border text-left transition-colors cursor-pointer ${
+                profileType === "goods_vendor"
+                  ? "bg-forest text-ivory border-forest font-bold"
+                  : "bg-card text-charcoal border-forest/20 hover:bg-forest/5"
+              }`}
+            >
+              <div className="font-semibold text-xs">Local Vendor / Merchant</div>
+              <div className="text-[10px] opacity-80">Produce, Street Food, Tea, Retail Cart</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setProfileType("hybrid_artisan")}
+              className={`p-2.5 rounded-xs border text-left transition-colors cursor-pointer ${
+                profileType === "hybrid_artisan"
+                  ? "bg-forest text-ivory border-forest font-bold"
+                  : "bg-card text-charcoal border-forest/20 hover:bg-forest/5"
+              }`}
+            >
+              <div className="font-semibold text-xs">Hybrid Artisan</div>
+              <div className="text-[10px] opacity-80">Custom Tailor, Cobbler, Handicrafts</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Vendor Specific Inputs if goods_vendor or hybrid_artisan */}
+        {(profileType === "goods_vendor" || profileType === "hybrid_artisan") && (
+          <div className="p-3.5 bg-sand/15 rounded-xs border border-sand/40 space-y-3 text-xs">
+            <div className="font-bold text-forest uppercase tracking-wider text-[11px]">
+              Vendor Stall & Business Setup Details
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="font-semibold text-charcoal block mb-1">
+                  Business / Stall Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Maa Kamakhya Fresh Greens"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xs border border-forest/20 text-xs text-forest bg-card focus:outline-none focus:border-forest"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-charcoal block mb-1">
+                  Stall Type
+                </label>
+                <select
+                  value={stallType}
+                  onChange={(e) => setStallType(e.target.value as any)}
+                  className="w-full h-10 px-2 rounded-xs border border-forest/20 text-xs text-forest bg-card focus:outline-none focus:border-forest"
+                >
+                  <option value="fixed_stall">Fixed Market Stall</option>
+                  <option value="mobile_cart">Mobile Cart / Thela</option>
+                  <option value="home_workshop">Home Workshop</option>
+                  <option value="kiosk">Street Kiosk</option>
+                  <option value="retail_shop">Retail Shop</option>
+                  <option value="other">Other Setup</option>
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold text-charcoal block mb-1">
+                  Operating Hours
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 06:00 - 13:00, 16:30 - 20:30"
+                  value={operatingHours}
+                  onChange={(e) => setOperatingHours(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xs border border-forest/20 text-xs text-forest bg-card focus:outline-none focus:border-forest"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Basic Info Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">

@@ -34,12 +34,33 @@ export const onboardingExtractionRequestSchema = z.object({
 
 export type OnboardingExtractionRequest = z.infer<typeof onboardingExtractionRequestSchema>;
 
+// Vendor product schema
+export const vendorProductSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Product name is required"),
+  name_vernacular: z.string().optional(),
+  category: z.string().default("General"),
+  price: z.number().min(0),
+  unit: z.string().default("unit"),
+  in_stock: z.boolean().default(true),
+  description: z.string().optional(),
+});
+export type VendorProductInput = z.infer<typeof vendorProductSchema>;
+
 // Zod output validation for structured worker extraction (Never invent information)
 export const onboardingExtractedProfileSchema = z.object({
   fullName: z.string().min(2).default("Craftsperson"),
   occupation: z.string().min(2, "Occupation could not be determined"),
   category: z.string().min(2, "Trade category is required"),
   ncoCode: z.string().optional().default("NCO-2015 / NSQF Level 4"),
+  profileType: z.enum(["service_professional", "goods_vendor", "hybrid_artisan"]).optional(),
+  businessName: z.string().optional(),
+  vendorType: z.string().optional(),
+  stallType: z.enum(["mobile_cart", "fixed_stall", "home_workshop", "kiosk", "retail_shop", "other"]).optional(),
+  operatingHours: z.string().optional(),
+  productCatalog: z.array(vendorProductSchema).optional(),
+  deliveryAvailable: z.boolean().optional(),
+  contactPreference: z.enum(["phone", "whatsapp", "in_person", "any"]).optional(),
   experienceYears: z.number().int().min(0).max(60).nullable().default(null),
   employmentType: z.enum(["self_employed", "contract_worker", "salaried", "guild_master"]).default("self_employed"),
   skills: z.array(z.string()).min(1, "At least one skill must be identified"),
@@ -68,6 +89,14 @@ export const approvedProfileSubmissionSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   occupation: z.string().min(2, "Occupation is required"),
   category: z.string().min(2, "Category is required"),
+  profileType: z.enum(["service_professional", "goods_vendor", "hybrid_artisan"]).optional(),
+  businessName: z.string().optional(),
+  vendorType: z.string().optional(),
+  stallType: z.enum(["mobile_cart", "fixed_stall", "home_workshop", "kiosk", "retail_shop", "other"]).optional(),
+  operatingHours: z.string().optional(),
+  productCatalog: z.array(vendorProductSchema).optional(),
+  deliveryAvailable: z.boolean().optional(),
+  contactPreference: z.enum(["phone", "whatsapp", "in_person", "any"]).optional(),
   yearsExperience: z.number().int().min(0).max(60).nullable().default(null),
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),

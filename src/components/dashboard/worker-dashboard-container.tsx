@@ -529,6 +529,24 @@ export function WorkerDashboardContainer({
                   <span className="text-xs text-charcoal-muted uppercase tracking-wider block">Service Radius</span>
                   <span className="text-sm text-charcoal font-medium">Up to {data.profile.serviceRadiusKm} km</span>
                 </div>
+                {data.profile.businessName && (
+                  <div>
+                    <span className="text-xs text-charcoal-muted uppercase tracking-wider block">Business / Stall Name</span>
+                    <span className="text-base font-bold text-forest">{data.profile.businessName}</span>
+                  </div>
+                )}
+                {data.profile.stallType && (
+                  <div>
+                    <span className="text-xs text-charcoal-muted uppercase tracking-wider block">Stall Type</span>
+                    <span className="text-sm font-semibold text-forest capitalize">{data.profile.stallType.replace(/_/g, " ")}</span>
+                  </div>
+                )}
+                {data.profile.operatingHours && (
+                  <div>
+                    <span className="text-xs text-charcoal-muted uppercase tracking-wider block">Operating Hours</span>
+                    <span className="text-sm font-semibold text-forest">{data.profile.operatingHours}</span>
+                  </div>
+                )}
                 <div>
                   <span className="text-xs text-charcoal-muted uppercase tracking-wider block">Public Profile Link</span>
                   <Link
@@ -541,6 +559,38 @@ export function WorkerDashboardContainer({
                 </div>
               </div>
             </div>
+
+            {/* Vendor Goods & Produce Catalog */}
+            {data.profile.productCatalog && data.profile.productCatalog.length > 0 && (
+              <div className="pt-6 border-t border-forest/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-forest text-sm">Goods & Produce Catalog ({data.profile.productCatalog.length} items)</h3>
+                    <p className="text-xs text-charcoal-muted">Items, produce, or handcrafted goods offered with transparent pricing.</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">
+                    Vendor Active
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {data.profile.productCatalog.map((prod, i) => (
+                    <div key={prod.id || i} className="p-3 bg-forest/5 rounded-xs border border-forest/15 space-y-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-bold text-forest text-xs">{prod.name}</span>
+                        <span className="text-xs font-bold text-forest whitespace-nowrap">₹{prod.price} / {prod.unit}</span>
+                      </div>
+                      {prod.name_vernacular && (
+                        <div className="text-[10px] text-charcoal-muted font-medium">{prod.name_vernacular}</div>
+                      )}
+                      {prod.description && (
+                        <p className="text-[11px] text-charcoal line-clamp-2">{prod.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import { KaamScoreDetails } from "./kaamscore";
+import { ProfileType, StallType, ContactPreference, VendorProduct } from "./database.types";
 
 export interface SkillBadge {
   id: string;
@@ -63,6 +64,14 @@ export interface WorkerProfile {
     max: number;
   };
   availabilityStatus: "available" | "on_site" | "booked";
+  profileType?: ProfileType;
+  businessName?: string;
+  vendorType?: string;
+  stallType?: StallType;
+  operatingHours?: string;
+  productCatalog?: VendorProduct[];
+  deliveryAvailable?: boolean;
+  contactPreference?: ContactPreference;
   createdAt: string;
   updatedAt: string;
 }
