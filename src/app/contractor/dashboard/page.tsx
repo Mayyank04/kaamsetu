@@ -26,7 +26,7 @@ export default async function ContractorDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ivory-50 via-background to-ivory-100/40">
+    <div className="min-h-screen bg-background">
       <ContractorDashboardView initialData={dashboardData} />
     </div>
   );

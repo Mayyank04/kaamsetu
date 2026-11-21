@@ -63,7 +63,7 @@ export default async function PublicProfilePage({ params }: ProfilePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ivory-50 via-background to-ivory-100/30">
+    <div className="min-h-screen bg-background">
       <PublicProfileContainer data={data} />
     </div>
   );

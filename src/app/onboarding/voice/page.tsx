@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function VoiceOnboardingPage() {
   return (
-    <div className="min-h-[calc(100vh-8rem)] bg-gradient-to-b from-ivory-50 via-background to-ivory-100/50 py-8">
+    <div className="min-h-[calc(100vh-8rem)] bg-background py-8">
       <OnboardingWizard />
     </div>
   );
