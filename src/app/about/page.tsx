@@ -25,7 +25,7 @@ export default function AboutPage() {
   return (
     <div className="space-y-20 pb-24">
       {/* 1. Header Banner */}
-      <section className="relative overflow-hidden border-b border-forest/15 bg-gradient-to-b from-[#FFFFFF] via-[#F7F5F0] to-[#E9EFEA]/40 pt-16 pb-20">
+      <section className="relative overflow-hidden border-b border-forest/15 bg-card pt-16 pb-20">
         <div className="absolute inset-0 bg-paper-grid opacity-35 pointer-events-none" />
 
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center space-y-6">

@@ -56,7 +56,7 @@ export default function HomePage() {
           Headline: "Every skill deserves to be seen."
           Two CTAs: "Create Your Identity" and "Find a Professional"
          ========================================================================= */}
-      <section className="relative overflow-hidden border-b border-forest/15 bg-gradient-to-b from-[#FFFFFF] via-[#F7F5F0] to-[#E9EFEA]/40 pt-12 pb-20 lg:pt-20 lg:pb-28">
+      <section className="relative overflow-hidden border-b border-forest/15 bg-card pt-12 pb-16 lg:pt-16 lg:pb-20">
         <div className="absolute inset-0 bg-paper-grid opacity-35 pointer-events-none" />
 
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,7 +76,7 @@ export default function HomePage() {
 
               {/* Approved Supporting Copy */}
               <p className="text-lg sm:text-xl text-charcoal-muted leading-relaxed max-w-2xl font-normal">
-                Whether you are an electrician, carpenter, weaver or technician, KAAMSETU helps you build a professional identity around the work you know. Showcase your experience, share your work and connect with people looking for your skills.
+                Whether you are an electrician, carpenter, mason, plumber, or technician, KAAMSETU helps you build a recognized digital work profile. Document your hands-on experience, showcase your completed work, and connect with customers and contractors looking for your craft.
               </p>
 
               {/* Two Direct CTAs */}
@@ -128,6 +128,77 @@ export default function HomePage() {
               <div className="relative w-full max-w-md">
                 <SovereignCard worker={FEATURED_PROFESSIONALS[0]} />
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 3: PLATFORM ORIENTATION (5 Core Questions Answered Above the Fold)
+         ========================================================================= */}
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-md border border-forest/15 bg-card p-6 sm:p-8 space-y-6 shadow-xs">
+          <div className="border-b border-forest/10 pb-4">
+            <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20 mb-2">
+              Platform Overview
+            </Badge>
+            <h2 className="text-xl sm:text-2xl font-bold text-forest">
+              How KAAMSETU Serves India&apos;s Skilled Workforce
+            </h2>
+            <p className="text-xs sm:text-sm text-charcoal-muted mt-1">
+              Transparent answers to how the platform works for workers, customers, and contractors.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="p-4 rounded-xs border border-forest/10 bg-ivory space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase text-sand-800 bg-sand/30 px-2 py-0.5 rounded-xs inline-block">
+                01. What It Does
+              </span>
+              <h3 className="font-bold text-forest text-sm">Verified Digital Work Profile</h3>
+              <p className="text-xs text-charcoal-muted leading-relaxed">
+                Documents hands-on vocational skills, years of experience, and customer feedback into a portable, scannable digital credential.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xs border border-forest/10 bg-ivory space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase text-sand-800 bg-sand/30 px-2 py-0.5 rounded-xs inline-block">
+                02. Who Benefits
+              </span>
+              <h3 className="font-bold text-forest text-sm">Artisans, Contractors & Clients</h3>
+              <p className="text-xs text-charcoal-muted leading-relaxed">
+                Trade workers build independent reputation, contractors staff vetted crews, and homeowners find reliable professionals directly.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xs border border-forest/10 bg-ivory space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase text-sand-800 bg-sand/30 px-2 py-0.5 rounded-xs inline-block">
+                03. How to Register
+              </span>
+              <h3 className="font-bold text-forest text-sm">3-Minute Guided Intake</h3>
+              <p className="text-xs text-charcoal-muted leading-relaxed">
+                Describe your craft by voice or simple form. Direct account creation without SMS gateway delays or OTP verification deadlocks.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xs border border-forest/10 bg-ivory space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase text-sand-800 bg-sand/30 px-2 py-0.5 rounded-xs inline-block">
+                04. How to Connect
+              </span>
+              <h3 className="font-bold text-forest text-sm">Nationwide Search & Inquiry</h3>
+              <p className="text-xs text-charcoal-muted leading-relaxed">
+                Search professionals by state, district, trade, and rate. Contact verified artisans directly with zero middleman deductions.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xs border border-forest/10 bg-ivory space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase text-sand-800 bg-sand/30 px-2 py-0.5 rounded-xs inline-block">
+                05. Operating Areas
+              </span>
+              <h3 className="font-bold text-forest text-sm">Nationwide & Pilot Zones</h3>
+              <p className="text-xs text-charcoal-muted leading-relaxed">
+                Identity & discovery active across all 36 States and UTs. Direct booking dispatch is active in Guwahati and Shillong pilot zones.
+              </p>
             </div>
           </div>
         </div>
@@ -263,7 +334,7 @@ export default function HomePage() {
       {/* =========================================================================
           SECTION 5: HOW IT WORKS
          ========================================================================= */}
-      <section id="how-it-works" className="border-y border-forest/15 bg-gradient-to-b from-[#F7F5F0] via-[#EFF5F0] to-[#F7F5F0] py-20">
+      <section id="how-it-works" className="border-y border-forest/15 bg-card py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <Badge variant="outline" className="text-xs bg-forest/5 text-forest border-forest/20">

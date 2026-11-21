@@ -143,7 +143,7 @@ export default function ExplorePage() {
               badges: [],
               experience: [],
               endorsements: [],
-              qrVerificationUrl: `https://kaamsetu.gov.in/verify/${w.registry_id}`,
+              qrVerificationUrl: `/verify/${w.registry_id}`,
               dailyRateEstimate: {
                 min: w.daily_rate_min || 1100,
                 max: w.daily_rate_max || 1800,
@@ -203,7 +203,7 @@ export default function ExplorePage() {
   return (
     <div className="space-y-12 pb-24">
       {/* 1. Header Banner */}
-      <section className="relative overflow-hidden border-b border-forest/15 bg-gradient-to-b from-[#FFFFFF] via-[#F7F5F0] to-[#E9EFEA]/40 pt-14 pb-16">
+      <section className="relative overflow-hidden border-b border-forest/15 bg-card pt-14 pb-16">
         <div className="absolute inset-0 bg-paper-grid opacity-35 pointer-events-none" />
 
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center space-y-4">

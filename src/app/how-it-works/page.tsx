@@ -67,7 +67,7 @@ export default function HowItWorksPage() {
   return (
     <div className="space-y-24 pb-24">
       {/* 1. Page Header */}
-      <section className="relative overflow-hidden border-b border-forest/15 bg-gradient-to-b from-[#FFFFFF] via-[#F7F5F0] to-[#E9EFEA]/40 pt-16 pb-20">
+      <section className="relative overflow-hidden border-b border-forest/15 bg-card pt-16 pb-20">
         <div className="absolute inset-0 bg-paper-grid opacity-35 pointer-events-none" />
 
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center space-y-6">
@@ -271,7 +271,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* 3. Interactive KAAMSCORE Calculator */}
-      <section className="border-y border-forest/15 bg-gradient-to-b from-[#F7F5F0] via-[#EFF5F0] to-[#F7F5F0] py-20">
+      <section className="border-y border-forest/15 bg-card py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl space-y-12">
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <Badge variant="sovereign">Interactive Simulator</Badge>

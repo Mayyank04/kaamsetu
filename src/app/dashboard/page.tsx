@@ -12,7 +12,7 @@ export default async function DashboardPage() {
   const dashboardData = await getWorkerDashboardData();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ivory-50 via-background to-ivory-100/40">
+    <div className="min-h-screen bg-background">
       <WorkerDashboardContainer initialData={dashboardData} />
     </div>
   );

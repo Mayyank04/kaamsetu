@@ -569,7 +569,7 @@ export function OnboardingWizard() {
               </h3>
               <p className="text-xs text-charcoal-muted leading-relaxed">
                 {authModalMode === "register"
-                  ? "Create an account with password to securely issue and save your cryptographic sovereign credential. No OTP or SMS required."
+                  ? "Create an account to securely save your digital work profile. No OTP or SMS required."
                   : "Sign in with your email or mobile number and password to complete your profile registration."}
               </p>
             </div>

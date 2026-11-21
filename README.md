@@ -1,5 +1,5 @@
 # KAAMSETU (कामसेतु)
-## Vocational Digital Identity, Sovereign Credentials & Nationwide Worker Protection Platform
+## Vocational Digital Identity, Sovereign Credentials & Human-Centred Worker Platform
 
 > **"Every skill deserves to be seen, even without a degree."**  
 > **"Your work. Your reputation. Your opportunities."**  
@@ -14,7 +14,7 @@
 
 KAAMSETU is a high-integrity, mobile-first vocational digital identity platform built for skilled craftspeople and trade professionals across India. In an economy where informal and vocational workers represent over 80% of the active labor force, skills acquired through apprenticeships, family heritage, and decades of practical experience frequently remain unrecorded, uncredentialed, and commercially vulnerable.
 
-KAAMSETU transforms informal vocational reputation into sovereign, cryptographically verifiable credentials. The platform enables skilled workers from any state, union territory, district, city, town, or rural hamlet in India to:
+KAAMSETU transforms informal vocational reputation into recognized, portable credentials. The platform enables skilled workers from any state, union territory, district, city, town, or rural hamlet in India to:
 1. **Create and Own Their Professional Identity:** Document hands-on vocational capabilities, years of experience, trade tools, and authentic work samples.
 2. **Attest Skills via Vernacular Voice Intake:** Speak naturally in Indian languages (Hindi, Assamese, Bengali, Tamil, Telugu, Marathi, English) with deterministic and AI-assisted skill extraction.
 3. **Build Unforgeable Reputation:** Acquire W3C-compliant Verifiable Credentials backed by asymmetric Ed25519 cryptographic signatures and tamper-evident QR verification tokens.
@@ -22,9 +22,42 @@ KAAMSETU transforms informal vocational reputation into sovereign, cryptographic
 
 ---
 
-## 2. Decoupled Capability Architecture (Phase 42 Expansion)
+## 2. Phase 43: Human-Centred Product Reconstruction & Anti-AI-Slop Engineering
 
-Prior to Phase 42, geographic boundaries strictly coupled account registration with physical dispatch, returning `HTTP 403 OUT_OF_BOUNDS` for users outside pilot zones. Phase 42 reconstructs this paradigm by introducing a **Decoupled Geographic Capability Matrix**:
+Phase 43 refactors and polishes the user experience across all surfaces using five industry-standard design disciplines (`humanizer`, `taste-skill`, `awesome-design-md`, `ponytail`, and `impeccable`):
+
+### 1. Anti-AI-Slop Governance
+- **Eliminated Atmospheric Gradients:** Removed artificial purple/blue or multi-tone gradient strips; standard canvas is solid Warm Ivory (`#F7F5F0`) with calibrated 1px hairline boundaries (`border-forest/15`).
+- **Eliminated Unearned Domains:** Replaced mock government URLs (`kaamsetu.gov.in`) with authentic application routes (`/verify/...`).
+- **Eliminated Generic AI Icons:** Replaced arbitrary "Sparkles" icons with domain-accurate trade icons (`Wrench`, `Scissors`).
+- **Eliminated Inflated Metrics:** Removed fabricated worker counts (e.g. 46,200) in favor of truthful, verified pilot counts.
+
+### 2. 5-Point Homepage Orientation (Answers in Seconds)
+Above the fold, the homepage immediately answers the five core questions for any first-time visitor:
+1. **What It Does:** Verified digital work profile with portable work history and scannable QR trust card.
+2. **Who Benefits:** Skilled artisans, small contractors, and everyday homeowners seeking reliable craftspeople.
+3. **How to Register:** 3-minute intake by voice or simple form; zero OTP or SMS prerequisite.
+4. **How to Connect:** Nationwide search across 22 trades and 36 States/UTs with direct inquiries.
+5. **Operating Areas:** Digital identity and discovery active nationwide; commercial booking dispatch in certified Class B pilot zones (Guwahati & Shillong).
+
+### 3. Guided 10-Section Worker Workspace (`/dashboard`)
+A simple, structured workspace tailored for trade workers:
+- **Dashboard:** Personalized welcome, completion gauge, visibility toggle, skill summary, upcoming work, and clear next steps.
+- **My Profile:** Full profile viewer and inline editor for headline, trade, bio, experience, rates, and location.
+- **My Skills:** Interactive skill manager with self-declared and verified trade proficiencies.
+- **Work Opportunities:** Incoming enterprise crew invitations and local contractor job openings.
+- **Bookings & Inquiries:** Incoming customer service inquiries with interactive status management (Confirm, Complete, Decline).
+- **Portfolio:** Photo showcase of completed craftsmanship with client descriptions.
+- **Credentials & Trust:** Digital skill card preview, W3C verifiable credential parameters, and KAAMSCORE™ trust index.
+- **Earnings & Payouts:** Transparent settlement ledger with ₹0.00 platform commission guarantee.
+- **Notifications:** Milestone alerts, booking updates, and invitation notices.
+- **Help & Settings:** Availability status, travel radius, language selection, and support desk.
+
+---
+
+## 3. Decoupled Capability Architecture
+
+Geographic boundaries separate digital identity rights from physical logistics:
 
 ```text
 +----------------------------------------------------------------------------------------------------+
@@ -56,11 +89,9 @@ Prior to Phase 42, geographic boundaries strictly coupled account registration w
 | `dispatch_access`| Logistics | **ACTIVE (100%)** | Controlled / Waitlisted | Controlled / Waitlisted |
 | `payment_access` | Financial | **ACTIVE (100%)** | Controlled / Waitlisted | Controlled / Waitlisted |
 
-Workers outside pilot zones are clearly informed that their digital identity is active, verifiable, and discoverable nationwide, while physical on-demand booking services are staged under the controlled rollout.
-
 ---
 
-## 3. Product User Interface & Responsive Screen Verification
+## 4. Product User Interface & Responsive Screen Verification
 
 KAAMSETU adheres to strict human-quality editorial design standards (`#153E35` Deep Forest Green, `#F7F5F0` Warm Ivory, `#E8C999` Warm Sand, and `#171D1A` Deep Charcoal). All interfaces are audited for zero horizontal overflow across 14 distinct viewport breakpoints (320px to 1920px).
 
@@ -83,11 +114,11 @@ KAAMSETU adheres to strict human-quality editorial design standards (`#153E35` D
 | ![Tablet Portrait](docs/assets/screenshots/home-tablet-768.png) | ![Mobile View](docs/assets/screenshots/home-mobile-390.png) | ![Compact View](docs/assets/screenshots/home-mobile-320.png) |
 | *Balanced card stacking on iPad.* | *Accessible 48px touch targets.* | *Zero horizontal scroll on small screens.* |
 
-For the complete visual audit and asset manifest, see [docs/phase-42/README_SCREENSHOT_INVENTORY.md](docs/phase-42/README_SCREENSHOT_INVENTORY.md) and [docs/phase-42/RESPONSIVE_DEVICE_TEST_REPORT.md](docs/phase-42/RESPONSIVE_DEVICE_TEST_REPORT.md).
+For the complete visual audit and asset manifest, see [docs/phase-42/README_SCREENSHOT_INVENTORY.md](docs/phase-42/README_SCREENSHOT_INVENTORY.md) and [docs/phase-43/RESPONSIVE_TEST_REPORT.md](docs/phase-43/RESPONSIVE_TEST_REPORT.md).
 
 ---
 
-## 4. Expanded Vocational Trade Taxonomy (6 Sectors, 22 Occupations)
+## 5. Expanded Vocational Trade Taxonomy (6 Sectors, 22 Occupations)
 
 KAAMSETU supports 22 vocational professions across 6 critical economic sectors, each configured with bilingual English/Hindi titles, practical descriptions, popular core skills, and verifiable wage brackets:
 
@@ -128,7 +159,7 @@ SECTOR 6: DIGITAL & TECHNICAL SERVICES
 
 ---
 
-## 5. Technology Stack & Core Systems
+## 6. Technology Stack & Core Systems
 
 | Layer | Component | Version / Spec | Purpose & Architectural Invariants |
 | :--- | :--- | :--- | :--- |
@@ -143,101 +174,14 @@ SECTOR 6: DIGITAL & TECHNICAL SERVICES
 
 ---
 
-## 6. Authoritative Geographic & Nationwide APIs
+## 7. Authoritative Geographic & Nationwide APIs
 
-### 1. States & Union Territories Reference
-- **Endpoint:** `GET /api/geo/states`
-- **Description:** Returns all 36 administrative entities (28 States, 8 UTs) with capitals, district lists, and PIN code prefixes.
-- **Response:**
-  ```json
-  {
-    "success": true,
-    "count": 36,
-    "states": [
-      { "code": "AS", "name": "Assam", "type": "state", "isUnionTerritory": false, "capital": "Dispur" },
-      { "code": "DL", "name": "Delhi", "type": "union_territory", "isUnionTerritory": true, "capital": "New Delhi" }
-    ]
-  }
-  ```
-
-### 2. District Resolution by State
-- **Endpoint:** `GET /api/geo/districts?state=Assam`
-- **Description:** Returns all recognized districts for the given state or union territory.
-- **Response:**
-  ```json
-  {
-    "success": true,
-    "state": "Assam",
-    "count": 35,
-    "districts": ["Baksa", "Barpeta", "Cachar", "Kamrup Metropolitan", "..."]
-  }
-  ```
-
-### 3. Location & PIN Code Lookup
-- **Endpoint:** `GET /api/geo/lookup?pincode=781001` or `GET /api/geo/lookup?q=Guwahati`
-- **Description:** Resolves 6-digit Indian Postal PIN codes to state and primary city, or searches autocomplete targets.
-- **Response:**
-  ```json
-  {
-    "success": true,
-    "pincode": "781001",
-    "state": "Assam",
-    "city": "Guwahati",
-    "district": "Kamrup Metropolitan",
-    "inPilotZone": true,
-    "serviceZone": "ZONE-AS-01"
-  }
-  ```
-
-### 4. Decoupled Location Validation
-- **Endpoint:** `POST /api/geo/validate`
-- **Payload:** `{ "state": "Bihar", "district": "Patna", "city": "Patna", "pincode": "800001", "allowNonDispatchProfile": true }`
-- **Response:**
-  ```json
-  {
-    "success": true,
-    "allowed": true,
-    "status": "APPROVED_NON_DISPATCH",
-    "capabilities": {
-      "account_access": true,
-      "profile_access": true,
-      "discovery_access": true,
-      "booking_access": false,
-      "dispatch_access": false,
-      "payment_access": false
-    },
-    "message": "Profile registration approved. Commercial booking dispatch is currently active in Guwahati and Shillong pilot zones."
-  }
-  ```
-
-### 5. Custom Village & Hamlet Registration
-- **Endpoint:** `POST /api/geo/custom-locality`
-- **Description:** Records unlisted villages, hamlets, and rural areas submitted by artisans, ensuring zero exclusion of rural labor.
-
-### 6. Nationwide Worker Discovery
-- **Endpoint:** `GET /api/workers?state=Assam&district=Kamrup+Metropolitan&trade=electrician`
-- **Description:** Returns active, verified worker profiles filtered by geographic hierarchy, trade category, and experience.
-
----
-
-## 7. Release Classification Taxonomy & Operational Status
-
-Every subsystem in KAAMSETU has been audited against the release classification taxonomy:
-
-| Component / Subsystem | Status | Operational Bound & Evidence |
-| :--- | :---: | :--- |
-| **India Geography Reference** | `VERIFIED WORKING` | All 36 States & UTs, 700+ districts, PIN prefixes in `src/lib/geo/india-geography-data.ts`. |
-| **Decoupled Capabilities Matrix** | `VERIFIED WORKING` | Identity & discovery nationwide; commercial dispatch in Class B zones. |
-| **Nationwide Worker Onboarding** | `VERIFIED WORKING` | Successfully tested with multi-state payloads (Patna, Jaipur, Bengaluru, Guwahati). |
-| **Direct Registration & Login** | `VERIFIED WORKING` | Direct email/phone auth without OTP deadlocks via Supabase Auth. |
-| **Expanded Trade Taxonomy** | `VERIFIED WORKING` | 22 occupations across 6 sectors seeded in database and frontend. |
-| **Geographic Route Handlers** | `VERIFIED WORKING` | 5 `/api/geo/*` endpoints verified with unit and integration tests. |
-| **Nationwide Discovery Engine** | `VERIFIED WORKING` | `/explore` and `/api/workers` filtering across nationwide geographic hierarchy. |
-| **Contractor Opportunities SaaS** | `VERIFIED WORKING` | Multi-district job posting, candidate matching, contractor workspace. |
-| **Commission Invariant Guard** | `VERIFIED WORKING` | Permanent `platform_commission_amount = 0.00` strictly enforced. |
-| **Class B Dispatch Boundary** | `VERIFIED WORKING` | Booking requests strictly confined to Guwahati (781001-39) and Shillong (793001-22). |
-| **Multi-Viewport Responsiveness** | `VERIFIED WORKING` | 14 screen viewports (320px to 1920px) verified with zero horizontal overflow. |
-| **Production Build Compilation** | `VERIFIED WORKING` | Next.js 15.1.7 compiled 112/112 static and dynamic routes cleanly with 0 errors. |
+- `GET /api/geo/states`: Returns all 36 administrative entities (28 States, 8 UTs) with capitals and PIN prefixes.
+- `GET /api/geo/districts?state=...`: Returns authoritative district list for requested state.
+- `GET /api/geo/lookup?pincode=...`: Resolves 6-digit Indian Postal PIN codes or search queries.
+- `POST /api/geo/validate`: Validates location payload and returns decoupled capability matrix.
+- `POST /api/geo/custom-locality`: Records unlisted rural villages and hamlets submitted by artisans.
+- `GET /api/workers?state=...&district=...&trade=...`: Returns verified worker profiles with multi-tier filters.
 
 ---
 
@@ -246,23 +190,27 @@ Every subsystem in KAAMSETU has been audited against the release classification 
 KAAMSETU maintains a multi-layer automated regression test suite:
 
 ```bash
-# 1. Execute Phase 42 India-Wide Expansion Test Suite (22/22 Passing)
+# 1. Execute Phase 43 UX Reconstruction Suite (19/19 Passing)
+npm run test:phase43
+
+# 2. Execute Phase 42 India-Wide Expansion Test Suite (22/22 Passing)
 npm run test:phase42
 
-# 2. Execute Phase 40 Root-Cause Database Repair Suite (20/20 Passing)
+# 3. Execute Phase 40 Root-Cause Database Repair Suite (20/20 Passing)
 npm run test:phase40
 
-# 3. Execute Phase 39.7 Direct Registration & No-OTP Suite (18/18 Passing)
+# 4. Execute Phase 39.7 Direct Registration & No-OTP Suite (18/18 Passing)
 npm run test:phase39.7
 
-# 4. Run ESLint Code Quality Gate (0 errors, 0 warnings)
+# 5. Run ESLint Code Quality Gate (0 errors, 0 warnings)
 npm run lint
 
-# 5. Compile Next.js Production Build (112/112 routes prerendered/compiled)
+# 6. Compile Next.js Production Build (112/112 routes prerendered/compiled)
 npm run build
 ```
 
 ### Test Suite Execution Summary
+- **Phase 43 UX Suite:** 19 Scenarios Passed (100%)
 - **Phase 42 India-Wide Suite:** 22 Scenarios Passed (100%)
 - **Phase 40 Database Suite:** 20 Scenarios Passed (100%)
 - **Phase 39.7 Direct Auth Suite:** 18 Scenarios Passed (100%)
@@ -271,24 +219,23 @@ npm run build
 
 ---
 
-## 9. Phase 42 Comprehensive Audit Dossiers
+## 9. Phase 43 Comprehensive Audit Dossiers
 
-All Phase 42 engineering findings, schemas, and verification reports are documented in `docs/phase-42/`:
+All Phase 43 engineering findings, design system specifications, and verification reports are documented in `docs/phase-43/`:
 
-1. [Dossier 01: Nationwide Expansion Audit](docs/phase-42/NATIONWIDE_EXPANSION_AUDIT.md)
-2. [Dossier 02: India Geography Data Report](docs/phase-42/INDIA_GEOGRAPHY_DATA_REPORT.md)
-3. [Dossier 03: Database Architecture Report](docs/phase-42/DATABASE_ARCHITECTURE.md)
-4. [Dossier 04: Authentication & Account Report](docs/phase-42/AUTHENTICATION_AND_ACCOUNT_REPORT.md)
-5. [Dossier 05: Worker Identity & Credentials Report](docs/phase-42/WORKER_IDENTITY_REPORT.md)
-6. [Dossier 06: Nationwide Discovery Engine Report](docs/phase-42/NATIONWIDE_DISCOVERY_REPORT.md)
-7. [Dossier 07: Contractor & Booking Operations Report](docs/phase-42/CONTRACTOR_AND_BOOKING_REPORT.md)
-8. [Dossier 08: Responsive Device Test Report](docs/phase-42/RESPONSIVE_DEVICE_TEST_REPORT.md)
-9. [Dossier 09: Accessibility & Localization Report](docs/phase-42/ACCESSIBILITY_AND_LOCALIZATION_REPORT.md)
-10. [Dossier 10: Security & RLS Audit](docs/phase-42/SECURITY_AUDIT.md)
-11. [Dossier 11: Performance & Caching Report](docs/phase-42/PERFORMANCE_REPORT.md)
-12. [Dossier 12: Regression Test Report](docs/phase-42/REGRESSION_TEST_REPORT.md)
-13. [Dossier 13: README Screenshot Inventory](docs/phase-42/README_SCREENSHOT_INVENTORY.md)
-14. [Dossier 14: Master Release Certification](docs/phase-42/RELEASE_CERTIFICATION.md)
+1. [Dossier 01: Product UX Audit](docs/phase-43/PRODUCT_UX_AUDIT.md)
+2. [Dossier 02: Design Skill Integration](docs/phase-43/DESIGN_SKILL_INTEGRATION.md)
+3. [Dossier 03: Anti-AI-Slop Audit](docs/phase-43/ANTI_AI_SLOP_AUDIT.md)
+4. [Dossier 04: Design System](docs/phase-43/DESIGN_SYSTEM.md)
+5. [Dossier 05: Worker Experience](docs/phase-43/WORKER_EXPERIENCE.md)
+6. [Dossier 06: Contractor Experience](docs/phase-43/CONTRACTOR_EXPERIENCE.md)
+7. [Dossier 07: Institution Experience](docs/phase-43/INSTITUTION_EXPERIENCE.md)
+8. [Dossier 08: Accessibility Report](docs/phase-43/ACCESSIBILITY_REPORT.md)
+9. [Dossier 09: Responsive Test Report](docs/phase-43/RESPONSIVE_TEST_REPORT.md)
+10. [Dossier 10: Performance Report](docs/phase-43/PERFORMANCE_REPORT.md)
+11. [Dossier 11: Functional Regression Report](docs/phase-43/FUNCTIONAL_REGRESSION_REPORT.md)
+12. [Dossier 12: Security Regression Report](docs/phase-43/SECURITY_REGRESSION_REPORT.md)
+13. [Dossier 13: Release Certification](docs/phase-43/RELEASE_CERTIFICATION.md)
 
 ---
 

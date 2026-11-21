@@ -15,7 +15,7 @@ export default async function CustomerBookingsPage() {
   const initialBookings = await getCustomerBookings(customerId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ivory-50 via-background to-ivory-100/40">
+    <div className="min-h-screen bg-background">
       <CustomerBookingsContainer initialBookings={initialBookings} />
     </div>
   );
