@@ -47,6 +47,10 @@ export function PublicProfileContainer({ data }: PublicProfileContainerProps) {
         dailyRateMin={data.profile.dailyRateMin}
         dailyRateMax={data.profile.dailyRateMax}
         onRequestBooking={handleOpenBooking}
+        occupation={data.profile.occupation}
+        category={data.profile.category}
+        skills={data.skills.map((s) => s.name)}
+        productCatalog={data.profile.productCatalog}
       />
 
       {/* 4. Portfolio Projects Gallery */}

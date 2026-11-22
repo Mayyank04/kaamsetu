@@ -60,6 +60,10 @@ export interface TranslationResult {
   preservedEntitiesCount: number;
   disclaimer?: string;
   modelTimestamp?: string;
+  isFallback?: boolean;
+  isPartial?: boolean;
+  isUntranslated?: boolean;
+  fallbackReason?: string;
 }
 
 export interface LanguageDetectionResult {

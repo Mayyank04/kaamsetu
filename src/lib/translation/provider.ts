@@ -68,6 +68,13 @@ export class DeterministicTranslationProvider implements TranslationProvider {
       gu: "હું ગુવાહાટીમાં એક નાની દરજીની દુકાન ચલાવું છું.",
       pa: "ਮੈਂ ਗੁਵਾਹਾਟੀ ਵਿੱਚ ਇੱਕ ਛੋਟੀ ਦਰਜ਼ੀ ਦੀ ਦੁਕਾਨ ਚਲਾਉਂਦਾ ਹਾਂ।",
     },
+    "I am a certified electrician.": {
+      hi: "मैं एक प्रमाणित इलेक्ट्रीशियन हूँ।",
+      as: "মই এজন প্ৰমাণিত ইলেক্ট্ৰিচিয়ান।",
+      bn: "আমি একজন প্রত্যয়িত ইলেকট্রিশিয়ান।",
+      ta: "நான் ஒரு சான்றளிக்கப்பட்ட எலக்ட்ரீஷியன்.",
+      te: "నేను సర్టిఫైడ్ ఎలక్ట్రీషియన్‌ని.",
+    },
     "Verified master artisan with 15 years experience in handloom weaving.": {
       hi: "हथकरघा बुनाई में 15 वर्षों के अनुभव के साथ सत्यापित कुशल कारीगर।",
       as: "তাঁতশাল বোৱাত ১৫ বছৰৰ অভিজ্ঞতা থকা প্ৰত্যায়িত ওস্তাদ শিল্পী।",
@@ -126,6 +133,8 @@ export class DeterministicTranslationProvider implements TranslationProvider {
         provider: this.name,
         cached: false,
         confidence: 0.98,
+        isFallback: false,
+        isPartial: false,
         characterCount: restoredText.length,
         preservedEntitiesCount: preservedCount,
         disclaimer: getTranslationDisclaimer(req.contentType, req.text),
@@ -133,29 +142,36 @@ export class DeterministicTranslationProvider implements TranslationProvider {
     }
 
     // 2. Synthesize translation for common trade profiles using vernacular vocabulary
-    const targetCap = ALL_TRANSLATION_CAPABILITIES[req.targetLanguage as any];
-    const sourceCap = ALL_TRANSLATION_CAPABILITIES[source as any];
+    const targetCap = ALL_TRANSLATION_CAPABILITIES[req.targetLanguage];
+    const sourceCap = ALL_TRANSLATION_CAPABILITIES[source];
 
     // Build respectful readable translation using vocabulary mapping
     let translated = maskedText;
+    let substitutionsCount = 0;
     for (const [engWord, maps] of Object.entries(this.vocabulary)) {
       if (maps[req.targetLanguage]) {
         const wordRegex = new RegExp(`\\b${engWord}\\b`, "gi");
-        translated = translated.replace(wordRegex, maps[req.targetLanguage]);
+        if (wordRegex.test(translated)) {
+          translated = translated.replace(wordRegex, maps[req.targetLanguage]);
+          substitutionsCount++;
+        }
       }
     }
 
     // If target is Hindi and source was English/vernacular
     if (req.targetLanguage === "hi" && source === "en") {
+      const initial = translated;
       translated = translated
         .replace(/I am a/gi, "मैं हूँ एक")
         .replace(/Shop/gi, "दुकान")
         .replace(/Services/gi, "सेवाएं")
         .replace(/Daily/gi, "दैनिक")
         .replace(/Experience/gi, "अनुभव");
+      if (translated !== initial) substitutionsCount++;
     }
 
     const { restoredText, preservedCount } = restoreEntities(translated, entities);
+    const hasChanged = translated !== maskedText;
 
     return {
       translatedText: restoredText,
@@ -163,10 +179,18 @@ export class DeterministicTranslationProvider implements TranslationProvider {
       targetLanguage: req.targetLanguage,
       provider: this.name,
       cached: false,
-      confidence: 0.85,
+      confidence: hasChanged ? 0.50 : 0.0,
+      isFallback: true,
+      isPartial: hasChanged,
+      isUntranslated: !hasChanged,
+      fallbackReason: hasChanged
+        ? "Deterministic trade vocabulary approximation; full sentence translation was unavailable."
+        : "Sentence not found in offline dictionary; preserved original text.",
       characterCount: restoredText.length,
       preservedEntitiesCount: preservedCount,
-      disclaimer: getTranslationDisclaimer(req.contentType, req.text),
+      disclaimer: hasChanged
+        ? "Partial trade lexicon match. Please verify exact requirements with the worker."
+        : "Translation unavailable in offline dictionary. Original text retained.",
     };
   }
 }
@@ -241,7 +265,7 @@ ${maskedText}`;
       let timer: NodeJS.Timeout | null = null;
       try {
         const timeoutPromise = new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error(`Timeout on model ${model}`)), 1200);
+          timer = setTimeout(() => reject(new Error(`Timeout on model ${model}`)), 6000);
         });
         const callPromise = ai.models
           .generateContent({
@@ -272,6 +296,8 @@ ${maskedText}`;
       provider: this.name,
       cached: false,
       confidence: 0.95,
+      isFallback: false,
+      isPartial: false,
       characterCount: restoredText.length,
       preservedEntitiesCount: preservedCount,
       disclaimer: getTranslationDisclaimer(req.contentType, req.text),

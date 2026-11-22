@@ -82,9 +82,12 @@ KAAMSETU establishes a **sovereign digital skill identity** that workers and ven
 
 - **Direct Authentication (Zero-SMS Friction):** Reliable mobile-number authentication without SMS OTP deadlocks, third-party telecom delays, or session loss.
 - **39-Language Vernacular Localization:** Instant interface switching across 22 Eighth Schedule languages and 16 Regional Varieties with Right-to-Left (RTL) script support.
-- **Universal Content Translation:** In-place translation of worker bios, vendor shop descriptions, service rate sheets, and customer booking instructions.
+- **Dynamic Trade-Specific Taxonomies & Schemas (Phase 47):** Custom dynamic fields for 7 primary Indian trade sectors including Electrician CEA permits, Tailor alterations, FSSAI restaurant licensing, Mechanic repairs, and Farmer seasonal harvesting.
+- **Multi-Device Vendor Draft Persistence (Phase 47):** Cloud-synced and local-storage backed auto-saving for informal vendors and artisans with seamless cross-device resumption.
+- **First-Screen Worker Priority Action Hub (Phase 47):** Answers *"What can I do next to find suitable work?"* with real-time availability toggling, public discovery controls, dispatch radius tuning, and inquiry badges.
+- **Intelligent Voice Assistant with Conversational Review (Phase 47):** 9-step speech processing pipeline with editable parameter review cards supporting worker onboarding, vendor registration, trade search, language switching, and catalog additions.
+- **Universal Content Translation:** In-place translation of worker bios, vendor shop descriptions, service rate sheets, and customer booking instructions with honest fallback badges.
 - **Two-Way Cross-Language Communication:** Preserves original customer and vendor messages while displaying bidirectional translations on demand.
-- **Intelligent Spoken Voice Translation:** Speech-to-text pipeline with real-time transcription, BCP 47 locale mapping, intent extraction, and voice synthesis.
 - **Hierarchical Location Navigation:** Complete India-wide geographic cascade across 36 States/UTs, 700+ Districts, Subdistricts, and PIN codes.
 - **Dedicated Vendor Hub (`/vendor/dashboard`):** Real-time profile completion gauge, itemized catalog manager, operating hours, and inquiry inbox.
 - **Permanent Zero-Commission Invariant:** Cryptographically and database-enforced `platform_commission_amount = 0.00` on artisan wages.
@@ -384,6 +387,9 @@ npm run check:deploy  # Run pre-flight health probe CLI
 ## 22. Automated Test Suites
 
 ```bash
+# Product Experience Excellence, Intelligent UX & Full-Stack Reliability (Phase 47)
+npm run test:phase47
+
 # Universal Translation & Cross-Language Communication Suite (Phase 46)
 npm run test:phase46
 

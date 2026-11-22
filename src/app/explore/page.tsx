@@ -39,6 +39,33 @@ export default function ExplorePage() {
   const [selectedLocation, setSelectedLocation] = React.useState("all");
   const [selectedExperience, setSelectedExperience] = React.useState("all");
   const [selectedAvailability, setSelectedAvailability] = React.useState("all");
+  const [selectedPincode, setSelectedPincode] = React.useState("");
+  const [selectedLanguage, setSelectedLanguage] = React.useState("all");
+  const [sortBy, setSortBy] = React.useState<"recommended" | "experience" | "kaamscore">("recommended");
+  const [recentSearches, setRecentSearches] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("kaamsetu_recent_searches");
+      if (saved) setRecentSearches(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  const addRecentSearch = (term: string) => {
+    if (!term.trim()) return;
+    setRecentSearches((prev) => {
+      const updated = [term.trim(), ...prev.filter((t) => t.toLowerCase() !== term.trim().toLowerCase())].slice(0, 5);
+      try {
+        localStorage.setItem("kaamsetu_recent_searches", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem("kaamsetu_recent_searches");
+  };
 
   const allStates = React.useMemo(() => GeographicAuthorizationService.getAllStates(), []);
   const availableDistricts = React.useMemo(() => {
@@ -205,6 +232,9 @@ export default function ExplorePage() {
     setSelectedLocation("all");
     setSelectedExperience("all");
     setSelectedAvailability("all");
+    setSelectedPincode("");
+    setSelectedLanguage("all");
+    setSortBy("recommended");
   };
 
   const hasActiveFilters =
@@ -216,7 +246,31 @@ export default function ExplorePage() {
     selectedDistrict !== "all" ||
     selectedLocation !== "all" ||
     selectedExperience !== "all" ||
-    selectedAvailability !== "all";
+    selectedAvailability !== "all" ||
+    selectedPincode.trim() !== "" ||
+    selectedLanguage !== "all" ||
+    sortBy !== "recommended";
+
+  const sortedProfessionals = React.useMemo(() => {
+    let list = [...professionals];
+    if (selectedPincode.trim()) {
+      list = list.filter((p) => p.location.pincode?.includes(selectedPincode.trim()));
+    }
+    if (selectedLanguage !== "all") {
+      list = list.filter((p) =>
+        p.languages?.some((l) => l.toLowerCase().includes(selectedLanguage.toLowerCase()))
+      );
+    }
+    if (sortBy === "experience") {
+      list.sort((a, b) => (b.yearsExperience || 0) - (a.yearsExperience || 0));
+    } else if (sortBy === "kaamscore") {
+      list.sort((a, b) => (b.kaamScore?.totalScore || 0) - (a.kaamScore?.totalScore || 0));
+    } else {
+      // recommended: verified credentials prioritized
+      list.sort((a, b) => (b.aadhaarVerified ? 1 : 0) - (a.aadhaarVerified ? 1 : 0));
+    }
+    return list;
+  }, [professionals, selectedPincode, selectedLanguage, sortBy]);
 
   return (
     <div className="space-y-12 pb-24">
@@ -297,15 +351,55 @@ export default function ExplorePage() {
             </button>
           </div>
 
+          {/* 1-Click Category Shortcuts */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <span className="text-[11px] font-bold text-charcoal-muted uppercase tracking-wider shrink-0 mr-1">
+              Popular Trades:
+            </span>
+            {[
+              { label: "All", value: "all" },
+              { label: "⚡ Electrician", value: "electrician" },
+              { label: "✂️ Tailor", value: "tailor" },
+              { label: "🪚 Carpenter", value: "carpenter" },
+              { label: "🔧 Plumber", value: "plumber" },
+              { label: "🍲 Food & Tea", value: "street_food" },
+              { label: "🛵 Mechanic", value: "mechanic" },
+              { label: "🌾 Farmer", value: "farmer" },
+              { label: "🧵 Handloom", value: "handloom" },
+              { label: "📚 Home Tutor", value: "tutor" },
+            ].map((cat) => (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(cat.value);
+                  if (cat.value === "all") setSearchQuery("");
+                }}
+                className={`px-2.5 py-1 rounded text-xs whitespace-nowrap border transition-colors ${
+                  selectedCategory === cat.value
+                    ? "bg-forest text-ivory border-forest font-bold"
+                    : "bg-background text-charcoal border-forest/15 hover:border-forest/30"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
           {/* Main Search Input & Voice Trigger */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="relative flex items-center">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-forest/50" />
               <input
                 type="text"
-                placeholder={t.explore?.searchPlaceholder || "Search by worker name, craft, tool, or city..."}
+                placeholder={t.explore?.searchPlaceholder || "Search by trade, craft, tool, locality, or merchant..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && searchQuery.trim()) {
+                    addRecentSearch(searchQuery.trim());
+                  }
+                }}
                 className="w-full h-13 pl-12 pr-28 rounded-sm border border-forest/20 bg-background text-sm text-foreground focus:outline-none focus:border-forest focus:ring-2 focus:ring-sand/60 shadow-inner"
               />
               <button
@@ -323,13 +417,65 @@ export default function ExplorePage() {
               </button>
             </div>
 
+            {/* Helpful Search Examples & Recent Searches */}
+            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-charcoal-muted pt-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-semibold text-forest">Try searching:</span>
+                {[
+                  "Electrician in Paltan Bazaar",
+                  "Tailor for Mekhela Sador",
+                  "Handloom Silk Weaver",
+                  "Borewell Plumber",
+                  "Auto Mechanic",
+                ].map((eg) => (
+                  <button
+                    key={eg}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(eg);
+                      addRecentSearch(eg);
+                    }}
+                    className="underline text-forest hover:text-forest-600 transition-colors"
+                  >
+                    {eg}
+                  </button>
+                ))}
+              </div>
+
+              {recentSearches.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-charcoal-muted">Recent:</span>
+                  {recentSearches.map((rec) => (
+                    <button
+                      key={rec}
+                      type="button"
+                      onClick={() => setSearchQuery(rec)}
+                      className="px-1.5 py-0.5 rounded bg-forest/5 border border-forest/15 text-forest hover:bg-forest/10"
+                    >
+                      {rec}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={clearRecentSearches}
+                    className="text-red-700 hover:underline text-[10px]"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Collapsible Voice Assistant */}
             {isVoiceOpen && (
               <div className="p-1 animate-in fade-in slide-in-from-top-2 duration-300">
                 <IntelligentVoiceAssistant
                   targetMode="search"
                   onIntentConfirmed={(intent: ExtractedVoiceIntent) => {
-                    if (intent.primaryTrade) setSearchQuery(intent.primaryTrade);
+                    if (intent.primaryTrade) {
+                      setSearchQuery(intent.primaryTrade);
+                      addRecentSearch(intent.primaryTrade);
+                    }
                     if (intent.city && intent.city !== "Guwahati") setSelectedLocation(intent.city);
                     if (intent.state && intent.state !== "Assam") setSelectedState(intent.state);
                     setIsVoiceOpen(false);
@@ -340,7 +486,7 @@ export default function ExplorePage() {
           </div>
 
           {/* Secondary Filter Dropdowns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-8 gap-3 pt-1">
             {/* 1. Profession / Category */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
@@ -404,41 +550,39 @@ export default function ExplorePage() {
               </select>
             </div>
 
-            {/* 4. Location (City / Metro Hub) */}
+            {/* 4. PIN Code Filter */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                City / Metro Hub
+                PIN Code
               </label>
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
-              >
-                <option value="all">All Cities</option>
-                {locations.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
-                  </option>
-                ))}
-              </select>
+              <input
+                type="text"
+                maxLength={6}
+                value={selectedPincode}
+                onChange={(e) => setSelectedPincode(e.target.value)}
+                placeholder="e.g. 781001"
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-mono focus:outline-none focus:border-forest"
+              />
             </div>
 
-            {/* 5. Skill Filter */}
+            {/* 5. Language Spoken Filter */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                Specialized Skill
+                Language Spoken
               </label>
               <select
-                value={selectedSkill}
-                onChange={(e) => setSelectedSkill(e.target.value)}
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
                 className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
-                <option value="all">All Skills</option>
-                {popularSkills.map((sk) => (
-                  <option key={sk} value={sk}>
-                    {sk}
-                  </option>
-                ))}
+                <option value="all">All Languages</option>
+                <option value="hindi">Hindi</option>
+                <option value="assamese">Assamese</option>
+                <option value="bengali">Bengali</option>
+                <option value="tamil">Tamil</option>
+                <option value="telugu">Telugu</option>
+                <option value="marathi">Marathi</option>
+                <option value="english">English</option>
               </select>
             </div>
 
@@ -454,9 +598,8 @@ export default function ExplorePage() {
               >
                 <option value="all">Any Experience</option>
                 <option value="3">3+ Years</option>
-                <option value="5">5+ Years (Proven)</option>
+                <option value="5">5+ Years</option>
                 <option value="10">10+ Years (Senior)</option>
-                <option value="15">15+ Years (Master)</option>
               </select>
             </div>
 
@@ -471,8 +614,24 @@ export default function ExplorePage() {
                 className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
               >
                 <option value="all">All Statuses</option>
-                <option value="available">Available for Direct Hire</option>
+                <option value="available">Available for Hire</option>
                 <option value="on_site">Currently On-Site</option>
+              </select>
+            </div>
+
+            {/* 8. Relevant Sorting Control */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+                Sort By
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+              >
+                <option value="recommended">Recommended (Verified First)</option>
+                <option value="experience">Experience (High to Low)</option>
+                <option value="kaamscore">KAAMSCORE™ Ranking</option>
               </select>
             </div>
           </div>
@@ -481,11 +640,11 @@ export default function ExplorePage() {
           <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-forest/10 text-xs">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-forest">
-                {isLoading ? "Searching database..." : `${professionals.length} Certified Professionals Found`}
+                {isLoading ? "Searching database..." : `${sortedProfessionals.length} Professionals Found`}
               </span>
               <span className="text-charcoal-muted">•</span>
               <span className="text-[11px] text-charcoal-muted">
-                Live Supabase Query with Demo Labelling
+                Zero Commission Platform Guarantee
               </span>
             </div>
 
@@ -506,15 +665,16 @@ export default function ExplorePage() {
 
       {/* 3. Professionals Results Grid */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        {professionals.length === 0 ? (
+        {sortedProfessionals.length === 0 ? (
           <div className="rounded-md border border-dashed border-forest/25 p-12 text-center space-y-4 bg-card/50">
             <SlidersHorizontal className="mx-auto h-12 w-12 text-forest/30" />
             <div className="space-y-1">
               <h3 className="text-base font-bold text-forest">
                 No Certified Professionals Found
               </h3>
-              <p className="text-xs text-charcoal-muted max-w-sm mx-auto">
-                No workers matched your specific combination of profession, skill, and location filters.
+              <p className="text-xs text-charcoal-muted max-w-md mx-auto">
+                No professionals matched your exact combination of trade, location, and filters.
+                Try broadening your keywords, selecting a neighboring district, or clearing filters.
               </p>
             </div>
             <Button
@@ -523,12 +683,12 @@ export default function ExplorePage() {
               onClick={handleResetFilters}
               className="text-xs border-forest/20 text-forest"
             >
-              Reset Filters
+              Clear All Filters
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {professionals.map((pro) => (
+            {sortedProfessionals.map((pro) => (
               <ProfessionalCard key={pro.id} professional={pro} />
             ))}
           </div>
