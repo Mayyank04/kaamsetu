@@ -168,37 +168,57 @@ export class OnboardingService {
 
         let targetWorkerProfileId = existingProfile?.id;
 
+        const corePayload = {
+          headline: data.headline,
+          bio: data.bio,
+          years_experience: data.yearsExperience,
+          daily_rate_min: data.dailyRateMin ?? null,
+          daily_rate_max: data.dailyRateMax ?? null,
+          city: data.city,
+          state: data.state,
+          pincode: resolvedPincode,
+          languages: data.languages,
+          kaamscore: provisionalScore,
+          kaamscore_level: scoreLevel,
+          is_published: isPublished,
+          is_dispatch_eligible: geoValidation.isDispatchEligible,
+          dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
+        };
+
+        const extendedFields = {
+          district: data.district || geoValidation.district || null,
+          locality: data.locality || null,
+          profile_type: data.profileType || "service_professional",
+          business_name: data.businessName || null,
+          vendor_type: data.vendorType || null,
+          stall_type: data.stallType || null,
+          operating_hours: data.operatingHours || null,
+          product_catalog: data.productCatalog || [],
+          delivery_available: Boolean(data.deliveryAvailable),
+          contact_preference: data.contactPreference || "phone",
+        };
+
         if (existingProfile) {
-          const { error: updateErr } = await supabase
+          let { error: updateErr } = await supabase
             .from("worker_profiles")
             .update({
-              headline: data.headline,
-              bio: data.bio,
-              years_experience: data.yearsExperience,
-              daily_rate_min: data.dailyRateMin ?? null,
-              daily_rate_max: data.dailyRateMax ?? null,
-              city: data.city,
-              state: data.state,
-              district: data.district || geoValidation.district || null,
-              locality: data.locality || null,
-              pincode: resolvedPincode,
-              languages: data.languages,
-              kaamscore: provisionalScore,
-              kaamscore_level: scoreLevel,
-              is_published: isPublished,
-              is_dispatch_eligible: geoValidation.isDispatchEligible,
-              dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
-              profile_type: data.profileType || "service_professional",
-              business_name: data.businessName || null,
-              vendor_type: data.vendorType || null,
-              stall_type: data.stallType || null,
-              operating_hours: data.operatingHours || null,
-              product_catalog: data.productCatalog || [],
-              delivery_available: Boolean(data.deliveryAvailable),
-              contact_preference: data.contactPreference || "phone",
+              ...corePayload,
+              ...extendedFields,
               updated_at: new Date().toISOString(),
             })
             .eq("id", existingProfile.id);
+
+          if (updateErr && (updateErr.message.includes("schema cache") || updateErr.message.includes("does not exist"))) {
+            console.warn("[OnboardingService] Extended columns not yet migrated; updating core schema:", updateErr.message);
+            const retryUpdate = await supabase
+              .from("worker_profiles")
+              .update({
+                ...corePayload,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existingProfile.id);
+            updateErr = retryUpdate.error;
+          }
 
           if (updateErr) {
             if (process.env.NODE_ENV !== "production") {
@@ -208,40 +228,35 @@ export class OnboardingService {
             }
           }
         } else {
-          const { data: inserted, error: insertErr } = await supabase
+          let { data: inserted, error: insertErr } = await supabase
             .from("worker_profiles")
             .insert({
               user_id: user.id,
               registry_id: registryId,
               slug,
               occupation_id: matchedOcc?.id || fallbackOccupations[0].id,
-              headline: data.headline,
-              bio: data.bio,
-              years_experience: data.yearsExperience,
-              daily_rate_min: data.dailyRateMin ?? null,
-              daily_rate_max: data.dailyRateMax ?? null,
-              city: data.city,
-              state: data.state,
-              district: data.district || geoValidation.district || null,
-              locality: data.locality || null,
-              pincode: resolvedPincode,
-              languages: data.languages,
-              kaamscore: provisionalScore,
-              kaamscore_level: scoreLevel,
-              is_published: isPublished,
-              is_dispatch_eligible: geoValidation.isDispatchEligible,
-              dispatch_status: geoValidation.isDispatchEligible ? "active" : "non_dispatch_region",
-              profile_type: data.profileType || "service_professional",
-              business_name: data.businessName || null,
-              vendor_type: data.vendorType || null,
-              stall_type: data.stallType || null,
-              operating_hours: data.operatingHours || null,
-              product_catalog: data.productCatalog || [],
-              delivery_available: Boolean(data.deliveryAvailable),
-              contact_preference: data.contactPreference || "phone",
+              ...corePayload,
+              ...extendedFields,
             })
             .select("id")
             .single();
+
+          if (insertErr && (insertErr.message.includes("schema cache") || insertErr.message.includes("does not exist"))) {
+            console.warn("[OnboardingService] Extended columns not yet migrated; inserting core schema:", insertErr.message);
+            const retryInsert = await supabase
+              .from("worker_profiles")
+              .insert({
+                user_id: user.id,
+                registry_id: registryId,
+                slug,
+                occupation_id: matchedOcc?.id || fallbackOccupations[0].id,
+                ...corePayload,
+              })
+              .select("id")
+              .single();
+            inserted = retryInsert.data;
+            insertErr = retryInsert.error;
+          }
 
           if (insertErr || !inserted) {
             if (process.env.NODE_ENV !== "production") {

@@ -4,6 +4,7 @@ import { InstitutionalFooter } from "@/components/layout/institutional-footer";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth/use-auth";
 import { I18nProvider } from "@/lib/i18n/i18n-context";
+import { PwaRegister } from "@/components/pwa/pwa-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
@@ -46,6 +48,7 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
             <InstitutionalFooter />
             <Toaster />
+            <PwaRegister />
           </AuthProvider>
         </I18nProvider>
       </body>
