@@ -24,10 +24,12 @@ import { PROFESSIONS_DATA } from "@/lib/data/professions";
 import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
 import { WorkerProfile } from "@/types/identity";
 import { useTranslation } from "@/lib/i18n/i18n-context";
-import { Store, ShoppingBag } from "lucide-react";
+import { Store, ShoppingBag, Mic } from "lucide-react";
+import { IntelligentVoiceAssistant, ExtractedVoiceIntent } from "@/components/voice/intelligent-voice-assistant";
 
 export default function ExplorePage() {
   const { t } = useTranslation();
+  const [isVoiceOpen, setIsVoiceOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedProfileType, setSelectedProfileType] = React.useState<"all" | "service_professional" | "goods_vendor">("all");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
@@ -295,16 +297,46 @@ export default function ExplorePage() {
             </button>
           </div>
 
-          {/* Main Search Input */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-forest/50" />
-            <input
-              type="text"
-              placeholder={t.explore?.searchPlaceholder || "Search by worker name, craft, tool, or city..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-13 pl-12 pr-4 rounded-sm border border-forest/20 bg-background text-sm text-foreground focus:outline-none focus:border-forest focus:ring-2 focus:ring-sand/60 shadow-inner"
-            />
+          {/* Main Search Input & Voice Trigger */}
+          <div className="space-y-3">
+            <div className="relative flex items-center">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-forest/50" />
+              <input
+                type="text"
+                placeholder={t.explore?.searchPlaceholder || "Search by worker name, craft, tool, or city..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-13 pl-12 pr-28 rounded-sm border border-forest/20 bg-background text-sm text-foreground focus:outline-none focus:border-forest focus:ring-2 focus:ring-sand/60 shadow-inner"
+              />
+              <button
+                type="button"
+                onClick={() => setIsVoiceOpen((prev) => !prev)}
+                className={`absolute right-2.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isVoiceOpen
+                    ? "bg-forest text-ivory shadow-xs"
+                    : "bg-forest/10 text-forest hover:bg-forest/15"
+                }`}
+                aria-label="Voice Search"
+              >
+                <Mic className="h-3.5 w-3.5" />
+                <span>Voice</span>
+              </button>
+            </div>
+
+            {/* Collapsible Voice Assistant */}
+            {isVoiceOpen && (
+              <div className="p-1 animate-in fade-in slide-in-from-top-2 duration-300">
+                <IntelligentVoiceAssistant
+                  targetMode="search"
+                  onIntentConfirmed={(intent: ExtractedVoiceIntent) => {
+                    if (intent.primaryTrade) setSearchQuery(intent.primaryTrade);
+                    if (intent.city && intent.city !== "Guwahati") setSelectedLocation(intent.city);
+                    if (intent.state && intent.state !== "Assam") setSelectedState(intent.state);
+                    setIsVoiceOpen(false);
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Secondary Filter Dropdowns */}

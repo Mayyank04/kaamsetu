@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Layers, CheckCircle2, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface ProfileServicesProps {
   dailyRateMin?: number | null;
@@ -15,6 +16,7 @@ export function ProfileServices({
   dailyRateMax,
   onRequestBooking,
 }: ProfileServicesProps) {
+  const { t } = useTranslation();
   const minRateStr = dailyRateMin ? `₹${dailyRateMin} / day` : "Scope-Based Consultation";
   const maxRateStr = dailyRateMax ? `₹${dailyRateMax} / day` : "Custom Project Contracting";
 
@@ -52,7 +54,7 @@ export function ProfileServices({
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-forest" />
             <h2 className="font-serif text-xl sm:text-2xl font-bold text-forest">
-              Services Offered & Transparent Rates
+              {t.profile?.bookService ? "Services Offered & Transparent Rates" : "Services & Rates"}
             </h2>
           </div>
           <p className="text-xs text-charcoal-muted mt-0.5">
@@ -81,14 +83,19 @@ export function ProfileServices({
               </p>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 border-t border-forest/10 flex items-center justify-between">
+              <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Zero Commission Applied
+              </span>
+
               <Button
-                variant="outline"
                 size="sm"
+                variant="outline"
                 onClick={() => onRequestBooking(svc.title)}
-                className="text-xs h-8 border-forest/20 text-forest hover:bg-forest/5"
+                className="text-xs border-forest/20 text-forest hover:bg-forest/5 h-8 font-medium"
               >
-                Request This Service
+                {t.profile?.bookService || "Request Service"}
               </Button>
             </div>
           </div>

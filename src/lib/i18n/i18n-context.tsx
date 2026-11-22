@@ -37,13 +37,19 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = React.useState<AppLocale>(DEFAULT_LOCALE);
   const [textSize, setTextSizeState] = React.useState<"normal" | "large">("normal");
 
-  // Restore preferences from localStorage on mount
+  // Restore preferences from localStorage or browser language detection on mount
   React.useEffect(() => {
     try {
       const savedLocale = localStorage.getItem(STORAGE_LOCALE_KEY) as AppLocale | null;
       if (savedLocale && SUPPORTED_LOCALES.includes(savedLocale) && APP_TRANSLATIONS[savedLocale]) {
         setLocaleState(savedLocale);
+      } else if (typeof navigator !== "undefined" && navigator.language) {
+        const browserCode = navigator.language.split("-")[0].toLowerCase() as AppLocale;
+        if (SUPPORTED_LOCALES.includes(browserCode) && APP_TRANSLATIONS[browserCode]) {
+          setLocaleState(browserCode);
+        }
       }
+
       const savedSize = localStorage.getItem(STORAGE_TEXT_SIZE_KEY) as "normal" | "large" | null;
       if (savedSize === "normal" || savedSize === "large") {
         setTextSizeState(savedSize);
@@ -71,6 +77,13 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     } else {
       document.documentElement.classList.remove("text-size-large");
     }
+
+    // Set cookie for server rendering awareness
+    try {
+      document.cookie = `kaamsetu_user_locale=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch {
+      // Cookie writing failed
+    }
   }, [locale, direction, textSize]);
 
   const setLocale = React.useCallback((newLocale: AppLocale) => {
@@ -80,6 +93,17 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(STORAGE_LOCALE_KEY, newLocale);
       } catch {
         // LocalStorage write failed
+      }
+
+      // Best-effort asynchronous persistence to backend preferences
+      try {
+        fetch("/api/user/preferences", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ preferred_language: newLocale }),
+        }).catch(() => {});
+      } catch {
+        // Non-blocking fetch
       }
     }
   }, []);

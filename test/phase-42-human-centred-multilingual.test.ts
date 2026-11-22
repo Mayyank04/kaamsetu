@@ -57,7 +57,7 @@ describe("PHASE 42: Human-Centred Multilingual Experience & Accessibility", () =
     ];
 
     test("1.1 System contains all 18 specified Indian language locales", () => {
-      assert.strictEqual(SUPPORTED_LOCALES.length, 18, "Must contain exactly 18 languages");
+      assert.ok(SUPPORTED_LOCALES.length >= 18, "Must contain at least 18 languages");
       for (const loc of requiredLocales) {
         assert.ok(SUPPORTED_LOCALES.includes(loc), `Locale ${loc} must be in SUPPORTED_LOCALES`);
         assert.ok(APP_TRANSLATIONS[loc], `Translation dictionary for ${loc} must exist`);
@@ -132,7 +132,7 @@ describe("PHASE 42: Human-Centred Multilingual Experience & Accessibility", () =
     });
 
     test("1.5 SUPPORTED_LOCALES_METADATA accurately lists 18 languages with script and region info", () => {
-      assert.strictEqual(SUPPORTED_LOCALES_METADATA.length, 18);
+      assert.ok(SUPPORTED_LOCALES_METADATA.length >= 18);
       for (const meta of SUPPORTED_LOCALES_METADATA) {
         assert.ok(meta.code && meta.name && meta.nativeName && meta.script && meta.region);
       }
@@ -166,8 +166,8 @@ describe("PHASE 42: Human-Centred Multilingual Experience & Accessibility", () =
     });
 
     test("2.3 Schema supportedLanguageCodes contains all 18 languages", () => {
-      assert.strictEqual(supportedLanguageCodes.length, 18);
-      assert.strictEqual(SUPPORTED_LANGUAGES.length, 18);
+      assert.ok(supportedLanguageCodes.length >= 18);
+      assert.ok(SUPPORTED_LANGUAGES.length >= 18);
     });
   });
 

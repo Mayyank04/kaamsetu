@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DashboardWorkerProfile } from "@/types/dashboard";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface ProfileHeroProps {
   profile: DashboardWorkerProfile;
@@ -33,6 +34,7 @@ export function ProfileHero({
   onRequestBooking,
   onOpenQR,
 }: ProfileHeroProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = React.useState(false);
 
   const profileUrl =
@@ -65,14 +67,14 @@ export function ProfileHero({
           </div>
           <div>
             <span className="font-mono text-[10px] text-charcoal-muted uppercase tracking-wider block">
-              National Digital Skill Trust Protocol
+              {t.profile?.trustProtocol || "National Digital Skill Trust Protocol"}
             </span>
             <div className="flex items-center gap-2">
               <span className="font-mono font-bold text-forest">
                 {profile.registryId}
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 font-mono font-semibold">
-                ACTIVE VERIFIED
+                {t.profile?.activeVerified || "ACTIVE VERIFIED"}
               </span>
             </div>
           </div>
@@ -87,7 +89,7 @@ export function ProfileHero({
             className="border-forest/20 text-forest hover:bg-forest/5 h-8 text-xs font-mono"
           >
             <QrCode className="w-3.5 h-3.5 mr-1.5" />
-            Scan QR
+            {t.profile?.scanQr || "Scan QR"}
           </Button>
 
           <Button
@@ -99,12 +101,12 @@ export function ProfileHero({
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                Copied Link
+                {t.profile?.copied || "Copied!"}
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 mr-1" />
-                Share
+                {t.profile?.shareProfile || "Share"}
               </>
             )}
           </Button>
@@ -146,7 +148,7 @@ export function ProfileHero({
             </div>
           </div>
 
-          {/* Details */}
+          {/* Details (Preserves actual user identity data) */}
           <div className="space-y-2 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-forest tracking-tight">
@@ -182,7 +184,7 @@ export function ProfileHero({
             <div className="flex flex-wrap items-center gap-3 text-xs text-charcoal-muted pt-2 font-mono">
               <span className="inline-flex items-center gap-1.5 bg-forest/5 px-2.5 py-1 rounded border border-forest/10">
                 <Calendar className="w-3.5 h-3.5 text-forest" />
-                {profile.yearsExperience} Years Verified Experience
+                {profile.yearsExperience} {t.profile?.yearsExperience || "Years Experience"}
               </span>
 
               <span className="inline-flex items-center gap-1.5 bg-forest/5 px-2.5 py-1 rounded border border-forest/10">
@@ -202,7 +204,7 @@ export function ProfileHero({
         <div className="lg:col-span-1 p-5 rounded-xl bg-forest/5 border border-forest/15 space-y-4 shadow-inner">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-mono text-charcoal-muted uppercase tracking-wider font-semibold">
-              KAAMSCORE™ Trust Index
+              {t.profile?.kaamScoreTrust || "KAAMSCORE™ Trust Index"}
             </span>
             <Badge className="bg-sand/30 text-sand-800 border-sand/40 text-[9px] font-mono">
               LEVEL {profile.kaamScore.level}
@@ -217,12 +219,12 @@ export function ProfileHero({
           </div>
 
           <div className="text-xs text-forest font-semibold">
-            {profile.kaamScore.tier} • Verified Evidence Tier
+            {profile.kaamScore.tier} • {t.profile?.institutionalAssessment || "Verified Evidence Tier"}
           </div>
 
           {/* Daily Rate */}
           <div className="pt-2 border-t border-forest/10 flex items-center justify-between text-xs">
-            <span className="text-charcoal-muted font-medium">Standard Daily Rate:</span>
+            <span className="text-charcoal-muted font-medium">{t.profile?.dailyRate || "Daily Wage Rate"}:</span>
             <span className="font-bold text-forest font-mono">
               {profile.dailyRateMin && profile.dailyRateMax
                 ? `₹${profile.dailyRateMin} - ₹${profile.dailyRateMax}`
@@ -237,7 +239,7 @@ export function ProfileHero({
             className="w-full bg-forest hover:bg-forest-600 text-ivory font-semibold shadow-sovereign-sm h-11 text-sm"
           >
             <Send className="w-4 h-4 mr-2 text-sand" />
-            Request Service / Hire
+            {t.profile?.bookService || "Request Service / Hire"}
           </Button>
         </div>
       </div>

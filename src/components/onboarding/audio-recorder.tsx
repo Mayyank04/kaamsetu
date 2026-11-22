@@ -42,7 +42,7 @@ interface SpeechRecognitionInstance {
 }
 
 // Map language codes to BCP-47 for Web Speech API
-const BCP47_MAP: Record<SupportedLanguageCode, string> = {
+const BCP47_MAP: Record<string, string> = {
   hi: "hi-IN",
   en: "en-IN",
   as: "as-IN",
@@ -61,6 +61,27 @@ const BCP47_MAP: Record<SupportedLanguageCode, string> = {
   mni: "mni-IN",
   ks: "ks-IN",
   sa: "sa-IN",
+  doi: "doi-IN",
+  kok: "kok-IN",
+  mai: "mai-IN",
+  sat: "sat-IN",
+  sd: "sd-IN",
+  bho: "bho-IN",
+  raj: "raj-IN",
+  hne: "hne-IN",
+  bgc: "bgc-IN",
+  tcy: "tcy-IN",
+  kha: "kha-IN",
+  grt: "grt-IN",
+  lus: "lus-IN",
+  trp: "trp-IN",
+  anp: "anp-IN",
+  mag: "mag-IN",
+  gbm: "gbm-IN",
+  kfy: "kfy-IN",
+  bhb: "bhb-IN",
+  hoc: "hoc-IN",
+  unr: "unr-IN",
 };
 
 export function AudioRecorder({
