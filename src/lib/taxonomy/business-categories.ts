@@ -657,3 +657,100 @@ export function getSubcategoryByCode(categoryCode: string, subcategoryCode: stri
   const cat = getCategoryByCode(categoryCode);
   return cat?.subcategories.find((s) => s.code === subcategoryCode);
 }
+
+// Multilingual search synonyms and vernacular trade aliases
+export const VERNACULAR_TRADE_ALIASES: Record<string, { categoryCode: string; subcategoryCode?: string }> = {
+  // Electrician aliases
+  electrician: { categoryCode: "home_repair", subcategoryCode: "electrician" },
+  "बिजली मिस्त्री": { categoryCode: "home_repair", subcategoryCode: "electrician" },
+  "इलेक्ट्रीशियन": { categoryCode: "home_repair", subcategoryCode: "electrician" },
+  "bijli": { categoryCode: "home_repair", subcategoryCode: "electrician" },
+  "ইলেক্ট্ৰিচিয়ান": { categoryCode: "home_repair", subcategoryCode: "electrician" },
+  "ইলেকট্রিশিয়ান": { categoryCode: "home_repair", subcategoryCode: "electrician" },
+  "மின்சார வல்லுநர்": { categoryCode: "home_repair", subcategoryCode: "electrician" },
+  "ఎలక్ట్రీషియన్": { categoryCode: "home_repair", subcategoryCode: "electrician" },
+
+  // Tailor aliases
+  tailor: { categoryCode: "clothing", subcategoryCode: "tailor" },
+  "दर्जी": { categoryCode: "clothing", subcategoryCode: "tailor" },
+  "darji": { categoryCode: "clothing", subcategoryCode: "tailor" },
+  "দৰ্জী": { categoryCode: "clothing", subcategoryCode: "tailor" },
+  "দর্জি": { categoryCode: "clothing", subcategoryCode: "tailor" },
+  "தையல்காரர்": { categoryCode: "clothing", subcategoryCode: "tailor" },
+  "దర్జీ": { categoryCode: "clothing", subcategoryCode: "tailor" },
+  "शिंपी": { categoryCode: "clothing", subcategoryCode: "tailor" },
+
+  // Carpenter aliases
+  carpenter: { categoryCode: "home_repair", subcategoryCode: "carpenter" },
+  "बढ़ई": { categoryCode: "home_repair", subcategoryCode: "carpenter" },
+  "badhai": { categoryCode: "home_repair", subcategoryCode: "carpenter" },
+  "বাঢ়ৈ": { categoryCode: "home_repair", subcategoryCode: "carpenter" },
+  "ছুতোর": { categoryCode: "home_repair", subcategoryCode: "carpenter" },
+  "தச்சர்": { categoryCode: "home_repair", subcategoryCode: "carpenter" },
+  "వడ్రంగి": { categoryCode: "home_repair", subcategoryCode: "carpenter" },
+  "सुतार": { categoryCode: "home_repair", subcategoryCode: "carpenter" },
+
+  // Plumber aliases
+  plumber: { categoryCode: "home_repair", subcategoryCode: "plumber" },
+  "नलकार": { categoryCode: "home_repair", subcategoryCode: "plumber" },
+  "प्लम्बर": { categoryCode: "home_repair", subcategoryCode: "plumber" },
+  "প্লাম্বাৰ": { categoryCode: "home_repair", subcategoryCode: "plumber" },
+  "குழாய் பழுதுபார்ப்பவர்": { categoryCode: "home_repair", subcategoryCode: "plumber" },
+
+  // Produce / Vegetable / Greens aliases
+  produce: { categoryCode: "retail_commerce", subcategoryCode: "vegetable_vendor" },
+  "सब्जी": { categoryCode: "retail_commerce", subcategoryCode: "vegetable_vendor" },
+  "শাক-পাচলি": { categoryCode: "retail_commerce", subcategoryCode: "vegetable_vendor" },
+  "শাকসবজি": { categoryCode: "retail_commerce", subcategoryCode: "vegetable_vendor" },
+  "காய்கறி": { categoryCode: "retail_commerce", subcategoryCode: "vegetable_vendor" },
+  "కూరగాయలు": { categoryCode: "retail_commerce", subcategoryCode: "vegetable_vendor" },
+
+  // Handloom / Weaving aliases
+  handloom: { categoryCode: "arts_crafts", subcategoryCode: "handloom_weaver" },
+  "हथकरघा": { categoryCode: "arts_crafts", subcategoryCode: "handloom_weaver" },
+  "ताঁতশাল": { categoryCode: "arts_crafts", subcategoryCode: "handloom_weaver" },
+  "கைத்தறி": { categoryCode: "arts_crafts", subcategoryCode: "handloom_weaver" },
+};
+
+export function searchTaxonomyMultilingual(query: string): {
+  matchedCategory?: BusinessCategory;
+  matchedSubcategory?: BusinessSubcategory;
+  matchedTerm?: string;
+} {
+  if (!query || !query.trim()) return {};
+  const clean = query.trim().toLowerCase();
+
+  // 1. Direct alias match
+  for (const [alias, target] of Object.entries(VERNACULAR_TRADE_ALIASES)) {
+    if (clean.includes(alias.toLowerCase())) {
+      const cat = getCategoryByCode(target.categoryCode);
+      const sub = target.subcategoryCode && cat
+        ? cat.subcategories.find((s) => s.code === target.subcategoryCode)
+        : undefined;
+      return { matchedCategory: cat, matchedSubcategory: sub, matchedTerm: alias };
+    }
+  }
+
+  // 2. Name search across categories
+  for (const cat of INDIAN_BUSINESS_CATEGORIES) {
+    if (
+      cat.name.toLowerCase().includes(clean) ||
+      cat.hindiName.includes(clean) ||
+      cat.description.toLowerCase().includes(clean)
+    ) {
+      return { matchedCategory: cat };
+    }
+
+    for (const sub of cat.subcategories) {
+      if (
+        sub.name.toLowerCase().includes(clean) ||
+        sub.hindiName.includes(clean) ||
+        sub.description.toLowerCase().includes(clean)
+      ) {
+        return { matchedCategory: cat, matchedSubcategory: sub };
+      }
+    }
+  }
+
+  return {};
+}

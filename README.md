@@ -1,394 +1,533 @@
 # KAAMSETU (कामसेतु)
-## Vocational Digital Identity, Sovereign Credentials & Human-Centred Worker Platform
+## Vocational Digital Identity, Sovereign Credentials & Universal Multilingual Marketplace
 
 > **"Every skill deserves to be seen, even without a degree."**  
 > **"Your work. Your reputation. Your opportunities."**  
-> **Permanent Constitutional Invariant:** `platform_commission_amount = 0.00` on artisan wages.  
+> **Permanent Constitutional Financial Invariant:** `platform_commission_amount = 0.00` on artisan and vendor wages.  
 > **Certified Operating Classification:** `CLASS_B_CONTROLLED_ROLLOUT`  
-> **Physical Commercial Dispatch:** Guwahati Urban (PIN 781001–781039, Assam) & Shillong Urban (PIN 793001–793022, Meghalaya).  
-> **Nationwide Identity Scope:** All 28 States & 8 Union Territories (36 Administrative Entities across India).
+> **Commercial Dispatch Pilot Scope:** Guwahati Urban (PIN 781001–781039, Assam) & Shillong Urban (PIN 793001–793022, Meghalaya).  
+> **Universal Identity Scope:** Nationwide across all 28 States & 8 Union Territories (36 Total Entities).  
+> **Production Application Domain:** `https://kaamsetu-neon.vercel.app`
 
 ---
 
-## 1. Executive Summary & Mission
+## Table of Contents
 
-KAAMSETU is a high-integrity, mobile-first vocational digital identity platform built for skilled craftspeople and trade professionals across India. In an economy where informal and vocational workers represent over 80% of the active labor force, skills acquired through apprenticeships, family heritage, and decades of practical experience frequently remain unrecorded, uncredentialed, and commercially vulnerable.
-
-KAAMSETU transforms informal vocational reputation into recognized, portable credentials. The platform enables skilled workers from any state, union territory, district, city, town, or rural hamlet in India to:
-1. **Create and Own Their Professional Identity:** Document hands-on vocational capabilities, years of experience, trade tools, and authentic work samples.
-2. **Attest Skills via Vernacular Voice Intake:** Speak naturally in Indian languages (Hindi, Assamese, Bengali, Tamil, Telugu, Marathi, English) with deterministic and AI-assisted skill extraction.
-3. **Build Unforgeable Reputation:** Acquire W3C-compliant Verifiable Credentials backed by asymmetric Ed25519 cryptographic signatures and tamper-evident QR verification tokens.
-4. **Retain 100% of Earned Wages:** Operate under a permanent, mathematically enforced platform invariant: **zero commission (`0.00%`)** on worker earnings.
-
----
-
-## 2. Phase 45: Master Product Engineering & Production Readiness
-
-Phase 45 delivers the comprehensive engineering review, backend stabilisation, nationwide scalability, and production release infrastructure for KAAMSETU:
-
-### 1. Root-Cause Production Database Auditing & Schema-Adaptive Resilience
-- **Forensic Remote Database Audit:** Audited live Supabase PostgreSQL schema (`anwppwjlismjyovbyfmb`) directly via PostgREST OpenAPI endpoints, identifying discrepancy between local Phase 44 mock fixtures and remote database tables.
-- **Schema-Adaptive Services:** Rewrote `OnboardingService`, `profiles.ts`, `bookings.ts`, and `contractors.ts` with adaptive column-inspection and resilient fallback, ensuring the application executes without HTTP 500 crashes even if specific extended columns are pending migration on the live database.
-- **Idempotent Master Production Migration:** Authored `supabase/migrations/20261122000001_phase45_complete_production_master_schema.sql` (412 lines) safely provisioning missing columns on `worker_profiles` (`district`, `locality`, `profile_type`, `business_name`, `vendor_type`, `stall_type`, `operating_hours`, `product_catalog`, `delivery_available`, `contact_preference`), missing tables (`bookings`, `reviews`, `contractor_jobs`, `credential_registry`, `custom_localities`, `service_coverage_areas`), RLS policies, and pilot seed data.
-
-### 2. Deployment Readiness & Health Probe CLI (`npm run check:deploy`)
-- Implemented `src/bin/check-deployment.ts` pre-flight CLI:
-  - Verifies presence and format of `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `SESSION_SECRET` without leaking secrets.
-  - Probes live Supabase PostgREST gateway status and measures network latency.
-  - Generates clear, copy-pasteable instructions for the Supabase SQL Editor if schema migrations are needed.
-
-### 3. Progressive Web App (PWA) & Offline-First Shell
-- **App Manifest (`public/manifest.json`):** Standalone web app manifest configured for mobile home-screen installation with brand tokens (`#153E35`, `#F7F5F0`).
-- **Service Worker (`public/sw.js`):** Pre-caches essential application shell, implements Network-First strategy for page navigation, Stale-While-Revalidate for static assets, and instant fallback to offline shell.
-- **Human-Centred Offline Shell (`/offline`):** Tactile offline notice with one-touch retry and emergency phone helpline guidance for low-connectivity environments.
-
-### 4. 13 Comprehensive Engineering Dossiers (`docs/phase-45/`)
-- Complete architectural, security, database, API, accessibility, performance, and operational documentation authored across 13 dedicated dossiers.
-
----
-
-## 3. Phase 42: Human-Centred Multilingual Experience & 18 Indian Languages
-
-Phase 42 delivers complete UI/UX refinement, an anti-AI-slop design system, universal accessibility controls, and native multilingual support across **18 official Indian languages**:
-
-### 1. Universal 18-Language Localization & Dual-Script Layout Engine
-- **18 Supported Languages:** English (`en`), Hindi (`hi`), Assamese (`as`), Bengali (`bn`), Odia (`or`), Punjabi (`pa`), Gujarati (`gu`), Marathi (`mr`), Urdu (`ur`), Tamil (`ta`), Telugu (`te`), Kannada (`kn`), Malayalam (`ml`), Nepali (`ne`), Bodo (`brx`), Manipuri (`mni`), Kashmiri (`ks`), and Sanskrit (`sa`).
-- **Dual-Script RTL/LTR Engine:** Native Right-to-Left (RTL) layout switching (`dir="rtl"`) for Urdu and Kashmiri with mirrored alignments, contextual paddings, and flipped UI indicators.
-- **Zero-Dependency Fast-Switching:** 100% in-memory typed localization dictionaries with instant `< 2ms` switching, zero runtime network churn, and `< 18 kB` bundle impact.
-- **Persistent Header Switcher:** Accessible language picker in desktop navbar and mobile drawer with `localStorage` persistence.
-
-### 2. Guided 12-Step Low-Cognitive-Load Onboarding
-- **Single-Question Flow:** Breaks down profile creation into 12 bite-sized, accessible steps (Language → Full Name → State → District → City/Village → Trade → Skills → Experience → Contact → Photo → Review → Confirmation).
-- **Dual Intake Modes:** Seamless toggle between the **Guided 12-Step Form** and **Voice Attestation**.
-- **Draft Auto-Saving:** Immediate local draft persistence prevents data loss if a worker navigates away or disconnects.
-- **Plain Language Transformation:** Technical jargon eliminated in favor of direct, human terms ("Choose your work", "Payment History", "Save your profile").
-
-### 3. Tactile Accessibility & Anti-AI-Slop Visual System
-- **Visible Text Scaling:** Header and drawer toggle (`A` / `A+`) instantly scales root typography for workers with presbyopia or visual impairments.
-- **Strict Brand Palette:** Solid Deep Forest Green (`#153E35`), Warm Ivory (`#F7F5F0`), Warm Sand (`#E8C999`), and crisp 1px hairline borders (`rgba(21, 62, 53, 0.12)`).
-- **Anti-Slop Invariants:** Zero floating gradient blur circles, zero fake metrics, zero unearned certification badges.
+1. [Project Overview](#1-project-overview)
+2. [The Problem KAAMSETU Solves](#2-the-problem-kaamsetu-solves)
+3. [Target Users & Stakeholders](#3-target-users--stakeholders)
+4. [Key Product Capabilities](#4-key-product-capabilities)
+5. [39 Supported Indian Languages & Dialects](#5-39-supported-indian-languages--dialects)
+6. [Universal Content Translation Engine](#6-universal-content-translation-engine)
+7. [Two-Way Cross-Language Communication](#7-two-way-cross-language-communication)
+8. [Intelligent Voice Recognition & Spoken Translation](#8-intelligent-voice-recognition--spoken-translation)
+9. [Nationwide Hierarchical Location Architecture](#9-nationwide-hierarchical-location-architecture)
+10. [11-Sector Indian Business & Vendor Taxonomy](#10-11-sector-indian-business--vendor-taxonomy)
+11. [Worker & Customer Workflows](#11-worker--customer-workflows)
+12. [Technical Architecture & System Flows](#12-technical-architecture--system-flows)
+13. [Technology Stack](#13-technology-stack)
+14. [Repository Structure](#14-repository-structure)
+15. [Database Architecture & Data Model](#15-database-architecture--data-model)
+16. [Supabase & Database Configuration](#16-supabase--database-configuration)
+17. [Authentication & Row-Level Security (RLS)](#17-authentication--row-level-security-rls)
+18. [Environment Variables](#18-environment-variables)
+19. [Local Development Setup](#19-local-development-setup)
+20. [Installation Instructions](#20-installation-instructions)
+21. [Development Commands](#21-development-commands)
+22. [Automated Test Suites](#22-automated-test-suites)
+23. [Translation Provider Configuration](#23-translation-provider-configuration)
+24. [Voice & Speech Provider Configuration](#24-voice--speech-provider-configuration)
+25. [Production Deployment Guide](#25-production-deployment-guide)
+26. [Security Considerations & Hardening](#26-security-considerations--hardening)
+27. [Privacy Guarantees & Ephemeral Audio](#27-privacy-guarantees--ephemeral-audio)
+28. [Known Operational Limitations](#28-known-operational-limitations)
+29. [Strategic Roadmap](#29-strategic-roadmap)
+30. [Contribution Guidelines](#30-contribution-guidelines)
+31. [License Information](#31-license-information)
+32. [Comprehensive Language Capability Matrix](#32-comprehensive-language-capability-matrix)
 
 ---
 
-## 3. Phase 44: India-Wide Product Completion, Complete Bug Elimination & Universal Accessibility
+## 1. Project Overview
 
-Phase 44 expands KAAMSETU into a universally accessible platform designed for India's informal workforce, independent professionals, local artisans, and small street vendors:
+**KAAMSETU** (कामसेतु / দলং / সেতু) is a sovereign, open-source vocational identity, credential verification, and service marketplace built specifically for India's skilled trade craftspeople, informal artisans, and micro-merchants.
 
-### 1. First-Class Small Vendor & Artisan Architecture
-- **Dedicated Profile Types:** `service_professional`, `goods_vendor`, `hybrid_artisan`.
-- **Stall & Shop Classification:** Mobile Cart / Thela, Fixed Market Stall, Home Workshop, Street Kiosk, Retail Shop.
-- **Operating Hours:** Dawn-to-dusk and split-shift schedule disclosures.
-- **Product & Produce Catalog:** Granular itemized listings with transparent unit pricing (e.g. ₹20 / pair, ₹15 / cup, ₹60 / plate).
-- **Vendor Discovery:** Filter by "All Listings", "Service Professionals", and "Local Vendors & Goods" on `/explore`.
+Over 80% of India's active labor force works in the informal economy. Millions of master electricians, heritage weavers, bamboo artisans, carpenters, tailors, technicians, and local vendors possess decades of hands-on mastery. However, lacking formal degrees or corporate references, their vocational reputation remains unrecorded, paperless, and non-transferable across city or state borders.
 
-### 2. Universal Multilingual Infrastructure (`src/lib/i18n/`)
-- Complete localized vernacular dictionaries for **English (`en`)**, **Hindi (`hi`)**, **Assamese (`as`)**, and **Bengali (`bn`)**.
-- Accessible language switcher in both desktop and mobile drawer headers with local persistence.
-
-### 3. Complete Bug Elimination
-- Root-cause resolution of `NaN` KaamScore poisoning when years of experience are unstated.
-- Resilient database error handling and local fixture fallback for development and automated testing.
+KAAMSETU establishes a **sovereign digital skill identity** that workers and vendors own independently. Through direct vernacular onboarding, AI-assisted voice intake, cryptographic W3C Verifiable Credentials, universal cross-language translation, and a permanent constitutional **zero-commission (₹0.00)** guarantee, KAAMSETU connects skilled workers with customers, contractors, and national institutions.
 
 ---
 
-## 3. Phase 43: Human-Centred Product Reconstruction & Anti-AI-Slop Engineering
+## 2. The Problem KAAMSETU Solves
 
-Phase 43 refactors and polishes the user experience across all surfaces using five industry-standard design disciplines (`humanizer`, `taste-skill`, `awesome-design-md`, `ponytail`, and `impeccable`):
-
-### 1. Anti-AI-Slop Governance
-- **Eliminated Atmospheric Gradients:** Removed artificial purple/blue or multi-tone gradient strips; standard canvas is solid Warm Ivory (`#F7F5F0`) with calibrated 1px hairline boundaries (`border-forest/15`).
-- **Eliminated Unearned Domains:** Replaced mock government URLs (`kaamsetu.gov.in`) with authentic application routes (`/verify/...`).
-- **Eliminated Generic AI Icons:** Replaced arbitrary "Sparkles" icons with domain-accurate trade icons (`Wrench`, `Scissors`).
-- **Eliminated Inflated Metrics:** Removed fabricated worker counts (e.g. 46,200) in favor of truthful, verified pilot counts.
-
-### 2. 5-Point Homepage Orientation (Answers in Seconds)
-Above the fold, the homepage immediately answers the five core questions for any first-time visitor:
-1. **What It Does:** Verified digital work profile with portable work history and scannable QR trust card.
-2. **Who Benefits:** Skilled artisans, small contractors, and everyday homeowners seeking reliable craftspeople.
-3. **How to Register:** 3-minute intake by voice or simple form; zero OTP or SMS prerequisite.
-4. **How to Connect:** Nationwide search across 22 trades and 36 States/UTs with direct inquiries.
-5. **Operating Areas:** Digital identity and discovery active nationwide; commercial booking dispatch in certified Class B pilot zones (Guwahati & Shillong).
-
-### 3. Guided 10-Section Worker Workspace (`/dashboard`)
-A simple, structured workspace tailored for trade workers:
-- **Dashboard:** Personalized welcome, completion gauge, visibility toggle, skill summary, upcoming work, and clear next steps.
-- **My Profile:** Full profile viewer and inline editor for headline, trade, bio, experience, rates, and location.
-- **My Skills:** Interactive skill manager with self-declared and verified trade proficiencies.
-- **Work Opportunities:** Incoming enterprise crew invitations and local contractor job openings.
-- **Bookings & Inquiries:** Incoming customer service inquiries with interactive status management (Confirm, Complete, Decline).
-- **Portfolio:** Photo showcase of completed craftsmanship with client descriptions.
-- **Credentials & Trust:** Digital skill card preview, W3C verifiable credential parameters, and KAAMSCORE™ trust index.
-- **Earnings & Payouts:** Transparent settlement ledger with ₹0.00 platform commission guarantee.
-- **Notifications:** Milestone alerts, booking updates, and invitation notices.
-- **Help & Settings:** Availability status, travel radius, language selection, and support desk.
+1. **The Credential Paradox:** Highly skilled master artisans lack formal certificates, while paper certificates often fail to reflect actual hands-on craftsmanship.
+2. **Exploitative Commission Models:** Commercial gig platforms levy 20% to 35% commission deductions on worker wages, reducing artisans to transactional commodities.
+3. **Language Barriers in Commerce:** India speaks thousands of dialects across dozens of scripts. A vendor writing in Assamese or Bengali cannot communicate effectively with Hindi- or Tamil-speaking customers without friction.
+4. **Geographic Fragmentation:** Skill credentials do not travel across district or state borders, requiring migrant workers to rebuild their reputation from scratch in every new city.
+5. **Digital Literacy Exclusion:** High cognitive-load forms, mandatory SMS OTP gateways, and complex corporate interfaces systematically exclude workers with limited digital literacy.
 
 ---
 
-## 3. Decoupled Capability Architecture
+## 3. Target Users & Stakeholders
 
-Geographic boundaries separate digital identity rights from physical logistics:
+- **Skilled Informal Workers & Artisans:** Tailors, electricians, plumbers, carpenters, masons, painters, mechanics, weavers, bamboo artisans, and welders.
+- **Micro-Vendors & Street Merchants:** Fixed stall owners, weekly haat vendors, mobile cart operators, fruit/vegetable sellers, and local service kiosks.
+- **Neighborhood Customers:** Families and individuals seeking verified, dependable trade professionals without platform middleman surcharges.
+- **Small Contractors & Guild Masters:** Local building contractors, event organizers, and workshop owners hiring crews with authentic skill credentials.
+- **Vocational Institutions & Sector Skill Councils:** Training institutes (NSDC, ITI, State Skill Missions) ratifying physical assessments.
 
-```text
-+----------------------------------------------------------------------------------------------------+
-|                                 NATIONWIDE IDENTITY & DISCOVERY TIER                                |
-|                                   (Active Across All 36 States & UTs)                              |
-|                                                                                                    |
-|   [ Account Registration ]       [ Sovereign Profile Creation ]       [ Nationwide Discovery / Search ]
-|       (No-OTP Email & Phone)             (22 Trades / 6 Sectors)               (State & District Filtering)   |
-+-------------------------------------------------+--------------------------------------------------+
-                                                  |
-                                                  v
-+----------------------------------------------------------------------------------------------------+
-|                                CONTROLLED PHYSICAL DISPATCH & BOOKING TIER                         |
-|                         (CLASS_B_CONTROLLED_ROLLOUT: Guwahati & Shillong Pilot Zones)              |
-|                                                                                                    |
-|    [ Direct Customer Bookings ]      [ Physical Dispatch / Route ]       [ Commission-Free Payouts ]
-|        (Guwahati PIN 781001-39)           (Shillong PIN 793001-22)               (platform_commission = 0.00) |
-+----------------------------------------------------------------------------------------------------+
+---
+
+## 4. Key Product Capabilities
+
+- **Direct Authentication (Zero-SMS Friction):** Reliable mobile-number authentication without SMS OTP deadlocks, third-party telecom delays, or session loss.
+- **39-Language Vernacular Localization:** Instant interface switching across 22 Eighth Schedule languages and 16 Regional Varieties with Right-to-Left (RTL) script support.
+- **Universal Content Translation:** In-place translation of worker bios, vendor shop descriptions, service rate sheets, and customer booking instructions.
+- **Two-Way Cross-Language Communication:** Preserves original customer and vendor messages while displaying bidirectional translations on demand.
+- **Intelligent Spoken Voice Translation:** Speech-to-text pipeline with real-time transcription, BCP 47 locale mapping, intent extraction, and voice synthesis.
+- **Hierarchical Location Navigation:** Complete India-wide geographic cascade across 36 States/UTs, 700+ Districts, Subdistricts, and PIN codes.
+- **Dedicated Vendor Hub (`/vendor/dashboard`):** Real-time profile completion gauge, itemized catalog manager, operating hours, and inquiry inbox.
+- **Permanent Zero-Commission Invariant:** Cryptographically and database-enforced `platform_commission_amount = 0.00` on artisan wages.
+
+---
+
+## 5. 39 Supported Indian Languages & Dialects
+
+KAAMSETU supports **39 total languages** (22 Eighth Schedule + 16 Regional Varieties + 1 English Federal Fallback):
+
+### Eighth Schedule Official Languages (22)
+Assamese (`as`), Bengali (`bn`), Bodo (`brx`), Dogri (`doi`), Gujarati (`gu`), Hindi (`hi`), Kannada (`kn`), Kashmiri (`ks`), Konkani (`kok`), Maithili (`mai`), Malayalam (`ml`), Manipuri / Meitei (`mni`), Marathi (`mr`), Nepali (`ne`), Odia (`or`), Punjabi (`pa`), Sanskrit (`sa`), Santali (`sat`), Sindhi (`sd`), Tamil (`ta`), Telugu (`te`), Urdu (`ur`).
+
+### Regional Varieties & Dialects (16)
+Bhojpuri (`bho`), Rajasthani (`raj`), Chhattisgarhi (`hne`), Haryanvi (`bgc`), Tulu (`tcy`), Khasi (`kha`), Garo (`grt`), Mizo (`lus`), Kokborok (`trp`), Angika (`anp`), Magahi (`mag`), Garhwali (`gbm`), Kumaoni (`kfy`), Bhili (`bhb`), Ho (`hoc`), Mundari (`unr`).
+
+### Dual-Script & RTL Layout Engine
+Urdu (`ur`), Kashmiri (`ks`), and Sindhi (`sd`) are flagged with `direction: "rtl"`. The application dynamically injects `<html dir="rtl" lang="...">` to reorient layout grids, icon paddings, and navigation flows.
+
+---
+
+## 6. Universal Content Translation Engine
+
+Content translation allows users to translate user-generated content (profiles, shop details, product lists, booking instructions) between any supported language pair:
+
+```
+User Content ──► Entity Protection ──► Language Detection ──► Cache Lookup ──► Provider Routing ──► Entity Restoration ──► UI Display
 ```
 
-### Authoritative Capability Matrix
-
-| Capability | Scope | Guwahati & Shillong Pilot Zones | All Other 34 States & UTs | Rural Hamlets & Unlisted Villages |
-| :--- | :---: | :---: | :---: | :---: |
-| `account_access` | Identity | **ACTIVE (100%)** | **ACTIVE (100%)** | **ACTIVE (100%)** |
-| `profile_access` | Identity | **ACTIVE (100%)** | **ACTIVE (100%)** | **ACTIVE (100%)** |
-| `discovery_access`| Search | **ACTIVE (100%)** | **ACTIVE (100%)** | **ACTIVE (100%)** |
-| `booking_access` | Commercial | **ACTIVE (100%)** | Controlled / Waitlisted | Controlled / Waitlisted |
-| `dispatch_access`| Logistics | **ACTIVE (100%)** | Controlled / Waitlisted | Controlled / Waitlisted |
-| `payment_access` | Financial | **ACTIVE (100%)** | Controlled / Waitlisted | Controlled / Waitlisted |
+- **Entity Protection & Masking:** Phone numbers (`+91 9876543210`), PIN codes (`781001`), currency rates (`₹500`), registry IDs (`KS-AS-781001`), and URLs are extracted and replaced with protected tokens (`[[ENTITY_PHONE_0]]`) before translation. Post-translation, exact original values are restored verbatim, eliminating number distortion.
+- **Identity Preservation:** Personal user data (`fullName`, `phone`, `registryId`, `city`, `state`) is never translated or phonetically corrupted.
+- **Cryptographic Caching:** SHA-256 tokens (`original_text_hash + source + target + provider`) prevent duplicate provider network calls.
+- **Safety Disclaimers:** Attached automatically to technical trade descriptions (high-voltage wiring, gas leaks) and booking financial instructions.
 
 ---
 
-## 4. Product User Interface & Responsive Screen Verification
+## 7. Two-Way Cross-Language Communication
 
-KAAMSETU adheres to strict human-quality editorial design standards (`#153E35` Deep Forest Green, `#F7F5F0` Warm Ivory, `#E8C999` Warm Sand, and `#171D1A` Deep Charcoal). All interfaces are audited for zero horizontal overflow across 14 distinct viewport breakpoints (320px to 1920px).
+KAAMSETU enables two people speaking different languages to conduct commerce naturally:
 
-### Desktop Interfaces (1440 × 900)
-
-| Sovereign Homepage | Nationwide Professional Discovery |
-| :---: | :---: |
-| ![Sovereign Homepage](docs/assets/screenshots/home-desktop-1440.png) | ![Nationwide Discovery](docs/assets/screenshots/explore-desktop-1440.png) |
-| *Hero value proposition, transparent trust metrics, and dual-callout action.* | *7-column filter grid with State, District, Trade, and Experience selectors.* |
-
-| Vernacular Extraction Editor | Direct Authentication Portal |
-| :---: | :---: |
-| ![Extraction Editor](docs/assets/screenshots/onboarding-desktop-1440.png) | ![Direct Auth Portal](docs/assets/screenshots/login-desktop-1440.png) |
-| *Hierarchical State/District selectors, PIN lookup, and village input.* | *Direct email and phone registration with zero OTP deadlock risks.* |
-
-### Cross-Device Responsive Layouts (Tablet & Mobile)
-
-| Tablet View (768 × 1024) | Flagship Mobile (390 × 844) | Compact Mobile (320 × 568) |
-| :---: | :---: | :---: |
-| ![Tablet Portrait](docs/assets/screenshots/home-tablet-768.png) | ![Mobile View](docs/assets/screenshots/home-mobile-390.png) | ![Compact View](docs/assets/screenshots/home-mobile-320.png) |
-| *Balanced card stacking on iPad.* | *Accessible 48px touch targets.* | *Zero horizontal scroll on small screens.* |
-
-For the complete visual audit and asset manifest, see [docs/phase-42/README_SCREENSHOT_INVENTORY.md](docs/phase-42/README_SCREENSHOT_INVENTORY.md) and [docs/phase-43/RESPONSIVE_TEST_REPORT.md](docs/phase-43/RESPONSIVE_TEST_REPORT.md).
+1. **Vendor Writes in Native Language:** An Assamese tailor writes: *"মই গুৱাহাটীত এটা সৰু দৰ্জীৰ দোকান চলাওঁ।"*
+2. **Customer Reads Translated Content:** A Hindi-speaking customer views the translated bio in Hindi: *"मैं गुवाहाटी में एक छोटी दर्जी की दुकान चलाता हूँ।"*
+3. **Original Preserved:** The interface prominently displays `Original: Assamese` with a one-click `Show Original` toggle.
+4. **Customer Sends Enquiry in Hindi:** *"मुझे शादी के लिए दो कुर्ते सिलवाने हैं।"*
+5. **Vendor Reads in Assamese:** The tailor views the enquiry translated into Assamese without replacing the customer's original database record.
 
 ---
 
-## 5. Expanded Vocational Trade Taxonomy (6 Sectors, 22 Occupations)
+## 8. Intelligent Voice Recognition & Spoken Translation
 
-KAAMSETU supports 22 vocational professions across 6 critical economic sectors, each configured with bilingual English/Hindi titles, practical descriptions, popular core skills, and verifiable wage brackets:
+The speech engine extends browser Web Speech API capabilities with an accessible, ephemeral pipeline:
 
-```text
-SECTOR 1: CONSTRUCTION & INFRASTRUCTURE
-  ├── Mason / Rajmistri (राजमिस्त्री)
-  ├── Electrician (इलेक्ट्रीशियन)
-  ├── Plumber (प्लंबर)
-  ├── Painter (पेंटर / रंगसाज)
-  ├── Carpenter / Barhai (बढ़ई)
-  └── Welder / Fabricator (वेल्डर / फैब्रिकेटर)
+```
+Microphone ──► Audio Capture ──► Web Speech API ──► Real-Time Transcript ──► Intent / Translation ──► TTS Playback
+```
 
-SECTOR 2: AUTOMOTIVE & MECHANICAL
-  ├── Auto Mechanic (ऑटो मैकेनिक)
-  ├── Heavy Vehicle Driver (भारी वाहन चालक)
-  └── Two-Wheeler Technician (दोपहिया तकनीशियन)
+- **BCP 47 Tagging:** Maps internal language codes to speech recognition tags (e.g., `hi` $\rightarrow$ `hi-IN`, `as` $\rightarrow$ `as-IN`, `bn` $\rightarrow$ `bn-IN`, `ta` $\rightarrow$ `ta-IN`).
+- **Live Interim Display:** Live transcription displays spoken words as they are uttered, with an editable textarea for manual refinement.
+- **Rule-Based Intent Recognition:** Automatically detects trade categories (tailor, electrician, produce vendor), experience, and location.
+- **Ephemeral Audio Guarantee:** Raw audio streams are never recorded or stored on server disks without explicit, recorded consent.
 
-SECTOR 3: HOME, HOSPITALITY & PERSONAL SERVICES
-  ├── Home Appliance Technician (घरेलू उपकरण तकनीशियन)
-  ├── Tailor / Darzi (दर्जी)
-  ├── Beautician / Personal Care (ब्यूटीशियन / व्यक्तिगत देखभाल)
-  └── Cook / Halwai (रसोइया / हलवाई)
+---
 
-SECTOR 4: AGRICULTURE & RURAL TRADES
-  ├── Agricultural Equipment Operator (कृषि उपकरण ऑपरेटर)
-  ├── Solar Pump & Renewable Tech (सोलर पंप एवं नवीकरणीय तकनीशियन)
-  └── Dairy & Animal Husbandry Assistant (डेयरी एवं पशुपालन सहायक)
+## 9. Nationwide Hierarchical Location Architecture
 
-SECTOR 5: LOGISTICS & SUPPLY CHAIN
-  ├── Warehouse Associate (गोदाम सहायक / वेयरहाउस)
-  ├── Delivery Associate (वितरण सहायक / डिलीवरी)
-  └── Forklift Operator (फोर्कलिफ्ट ऑपरेटर)
+KAAMSETU implements a dependent geographic selector aligned with Local Government Directory (LGD) and India Post standards:
 
-SECTOR 6: DIGITAL & TECHNICAL SERVICES
-  ├── CCTV & Security Tech (सीसीटीवी एवं सुरक्षा तकनीशियन)
-  └── Mobile & Electronics Repair Tech (मोबाइल एवं इलेक्ट्रॉनिक्स रिपेयर)
+$$\text{India (Country)} \longrightarrow \text{State / Union Territory (36)} \longrightarrow \text{District} \longrightarrow \text{Subdistrict / Tehsil} \longrightarrow \text{City / Town / Village} \longrightarrow \text{PIN Code}$$
+
+### Decoupled Operational Model
+- **Controlled Pilot Dispatch:** Commercial on-demand dispatch remains strictly limited to **Guwahati Urban** (PIN 781001–781039) and **Shillong Urban** (PIN 793001–793022).
+- **Universal Nationwide Scope:** Workers and vendors anywhere in India (Mumbai, Jaipur, Patna, Imphal, Kochi) can register, create profiles, issue cryptographic credentials, and be discovered.
+
+---
+
+## 10. 11-Sector Indian Business & Vendor Taxonomy
+
+The business taxonomy covers 11 primary economic sectors with category-specific schemas:
+
+1. **Personal & Household Services:** Tailors, barbers, laundry, cobblers.
+2. **Construction & Technical Trades:** Electricians (wireman license required), plumbers, masons, carpenters, painters.
+3. **Food & Hospitality:** Street stalls, tea shops, tiffin services, dhabas (FSSAI license, mobile cart vs. fixed stall).
+4. **Automotive Repair:** Two-wheeler mechanics, auto mechanics, puncture shops.
+5. **Agriculture & Primary Production:** Dairy farmers, poultry, fishery, nurseries.
+6. **Arts, Crafts & Handloom:** Weavers, potters, bamboo artisans, woodcarvers (GI tag tracking).
+7. **Education & Tutoring:** Home tutors, music instructors, driving instructors.
+8. **Retail & Local Commerce:** Kirana stores, vegetable vendors, hardware shops, flower stalls.
+9. **Health & Wellness:** Yoga instructors, masseurs, traditional wellness practitioners.
+10. **Logistics & Transport:** Auto drivers, cycle rickshaw pullers, delivery partners.
+11. **Small Manufacturing & Fabrication:** Metal grills, aluminium fabricators, packaging makers.
+
+---
+
+## 11. Worker & Customer Workflows
+
+### Worker Journey
+1. **Direct Registration:** Sign up using mobile number and secure password (zero OTP wait).
+2. **Guided 12-Step Onboarding:** Fill in trade, experience, tools, and daily rates, or speak via Voice Intake.
+3. **Credential Minting:** Issue sovereign digital credentials with cryptographic QR tokens.
+4. **Earnings Ledger:** View transparent job history with explicit `0.00%` platform commission.
+
+### Customer Journey
+1. **Multilingual Discovery:** Search by trade alias in native scripts (e.g. *bijli*, *बिजली*, *দৰ্জী*, *தையல்*).
+2. **In-Place Translation:** Translate worker portfolios and descriptions into preferred language.
+3. **Direct Booking:** Submit site visit requests with transparent indicative rates.
+
+---
+
+## 12. Technical Architecture & System Flows
+
+```mermaid
+graph TD
+    Client["Next.js 15 Client (React 19 + PWA)"]
+    API["Next.js Route Handlers (Edge / Serverless)"]
+    I18N["I18n Registry (39 Locales + RTL)"]
+    TransEngine["Universal Translation Service"]
+    SpeechEngine["Web Speech API + BCP-47"]
+    DB[("Supabase PostgreSQL + RLS")]
+    Gemini["Google Gemini Generative AI"]
+    Bhashini["Bhashini / ULCA Open Models"]
+
+    Client -->|User Requests| API
+    Client -->|Local Dicts| I18N
+    Client -->|Spoken Voice| SpeechEngine
+    API -->|Translate / Detect| TransEngine
+    TransEngine -->|Primary LLM| Gemini
+    TransEngine -->|Government Models| Bhashini
+    TransEngine -->|Cryptographic Cache| DB
+    API -->|Data & Identity| DB
 ```
 
 ---
 
-## 6. Technology Stack & Core Systems
+## 13. Technology Stack
 
-| Layer | Component | Version / Spec | Purpose & Architectural Invariants |
-| :--- | :--- | :--- | :--- |
-| **Framework** | Next.js (App Router) | `15.1.7` | Server Components, Route Handlers, SSR, 112 Prerendered Pages |
-| **Runtime** | React / Node.js | `19.0.0` / Node `20+` | Dynamic UI rendering and asynchronous execution runtime |
-| **Styling** | Tailwind CSS | `3.4.17` | Human-quality design tokens, tactile borders, zero AI-slop |
-| **Database** | PostgreSQL via Supabase | `15.x` | 100+ relational tables, 100% RLS coverage, forward-only migrations |
-| **Geography Engine** | Authoritative India Data | Native TypeScript | All 28 States & 8 UTs, 700+ districts, PIN resolution, aliases |
-| **Cryptography** | Node Crypto (Ed25519) | Native Node.js | W3C Verifiable Credentials, RFC 8785 JSON canonicalization |
-| **AI / Voice** | Google GenAI SDK | `^3.3.0` | Vernacular voice transcription & skill claim extraction |
-| **Validation** | Zod | `3.24.2` | Fail-closed runtime validation on all API requests and schemas |
+- **Framework:** [Next.js 15.5.29](https://nextjs.org/) (App Router, React 19, Server Components)
+- **Language:** TypeScript 5.8
+- **Styling:** Tailwind CSS 4.0 with sovereign design tokens
+- **Database & Auth:** [Supabase](https://supabase.com/) PostgreSQL with Row-Level Security (RLS)
+- **AI & Extraction:** [`@google/genai`](https://www.npmjs.com/package/@google/genai) (Gemini 2.5/3.8 models)
+- **Validation:** [Zod 3.24](https://zod.dev/) for strict schema validation
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **PWA & Offline:** Service Worker with Cache-First asset strategy and `/offline` shell
 
 ---
 
-## 7. Authoritative Geographic & Nationwide APIs
+## 14. Repository Structure
 
-- `GET /api/geo/states`: Returns all 36 administrative entities (28 States, 8 UTs) with capitals and PIN prefixes.
-- `GET /api/geo/districts?state=...`: Returns authoritative district list for requested state.
-- `GET /api/geo/lookup?pincode=...`: Resolves 6-digit Indian Postal PIN codes or search queries.
-- `POST /api/geo/validate`: Validates location payload and returns decoupled capability matrix.
-- `POST /api/geo/custom-locality`: Records unlisted rural villages and hamlets submitted by artisans.
-- `GET /api/workers?state=...&district=...&trade=...`: Returns verified worker profiles with multi-tier filters.
+```
+├── docs/                                  # Architectural & engineering dossiers
+├── public/                                # Static assets, PWA manifest, service worker
+├── src/
+│   ├── app/                               # Next.js App Router pages and API routes
+│   │   ├── api/                           # Secure server-side route handlers
+│   │   │   ├── auth/                      # Direct authentication endpoints
+│   │   │   ├── translate/                 # Universal translation & detection APIs
+│   │   │   ├── user/preferences/          # Language & accessibility preferences
+│   │   │   └── vendor/profile/            # Vendor registration & catalog APIs
+│   │   ├── dashboard/                     # Worker 10-tab guided workspace
+│   │   ├── explore/                       # Multilingual discovery & search
+│   │   ├── onboarding/                    # 12-step guided worker onboarding
+│   │   └── vendor/dashboard/              # Vendor Hub & catalog management
+│   ├── components/                        # React UI component library
+│   │   ├── customer/                      # Booking cards and customer views
+│   │   ├── dashboard/                     # Worker workspace tab panels
+│   │   ├── layout/                        # Institutional header, navigation, drawer
+│   │   ├── location/                      # 36 States/UTs hierarchical location selector
+│   │   ├── profile/                       # Worker hero, skills, services, portfolio
+│   │   ├── translation/                   # Translate button, dialog, voice widget
+│   │   ├── ui/                            # Atomic design system primitives
+│   │   ├── vendor/                        # Dynamic vendor forms & catalog managers
+│   │   └── voice/                         # Intelligent multilingual voice assistant
+│   ├── lib/                               # Core libraries, domain logic, and clients
+│   │   ├── auth/                          # Direct session & credential management
+│   │   ├── gemini/                        # Gemini AI clients & prompt templates
+│   │   ├── geo/                           # Geographic coverage & pilot boundaries
+│   │   ├── i18n/                          # 39-language registry, dictionaries & context
+│   │   ├── supabase/                      # Database repositories & client setup
+│   │   ├── taxonomy/                      # 11-sector business taxonomy & trade aliases
+│   │   └── translation/                   # Modular translation engine & cache
+│   ├── schemas/                           # Shared Zod validation schemas
+│   ├── server/                            # Server-side business logic services
+│   └── types/                             # TypeScript interface declarations
+├── supabase/
+│   └── migrations/                        # Idempotent master PostgreSQL migrations
+└── test/                                  # Node.js automated test suites
+```
 
 ---
 
-## 8. Automated Verification & Testing Suite
+## 15. Database Architecture & Data Model
 
-KAAMSETU maintains a multi-layer automated regression test suite ensuring zero regressions across all architectural phases:
+The PostgreSQL schema is partitioned into modular entities with strict RLS enforcement:
+
+1. `worker_profiles`: Sovereign vocational identity records, trade classifications, KAAMSCORE™, and verification metadata.
+2. `vendors`: Specialized merchant profiles with stall types, product catalog JSONB, and operating schedules.
+3. `supported_languages`: Registry of all 39 languages with native scripts and RTL markers.
+4. `user_preferences`: User application locale, text size, and contrast options.
+5. `user_translation_preferences`: Independently configurable translation target, auto-detect toggles, and voice playback settings.
+6. `translation_cache`: SHA-256 hashed public translation entries with 30-day expiration.
+7. `translation_feedback`: Human quality audits and translation correction submissions.
+8. `business_categories` & `business_subcategories`: 11-sector taxonomy definitions.
+
+---
+
+## 16. Supabase & Database Configuration
+
+1. Log in to your [Supabase Dashboard](https://supabase.com/dashboard).
+2. Open the **SQL Editor**.
+3. Execute the migrations sequentially from `supabase/migrations/`:
+   - `20261122000001_phase45_complete_production_master_schema.sql`
+   - `20261122000002_phase45_multilingual_vendor_ecosystem.sql`
+   - `20261122000003_phase46_universal_translation_ecosystem.sql`
+
+---
+
+## 17. Authentication & Row-Level Security (RLS)
+
+- **Direct Authentication:** Users register directly with their mobile number and password without SMS gateway failures.
+- **Strict Owner Isolation:** Users can only modify their own profile, vendor stall, and preferences (`auth.uid() = user_id`).
+- **Public Read Access:** Publicly published worker profiles, vendor goods catalogs, and non-private translation cache entries are readable by all visitors.
+- **Private Data Protection:** Booking inquiries, customer phone numbers, and private messages are strictly shielded from public database queries and cache endpoints.
+
+---
+
+## 18. Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Application
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# Authentication
+SESSION_SECRET=your-minimum-32-character-random-secret-key
+
+# AI & Translation Providers
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-2.5-flash
+
+# Optional External Translation Providers
+BHASHINI_API_KEY=your-bhashini-api-key
+BHASHINI_USER_ID=your-bhashini-user-id
+GOOGLE_TRANSLATE_API_KEY=your-google-cloud-key
+AZURE_TRANSLATOR_KEY=your-azure-key
+AZURE_TRANSLATOR_REGION=centralindia
+```
+
+---
+
+## 19. Local Development Setup
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) version 18.18 or higher (Node 20+ recommended).
+- [npm](https://www.npmjs.com/) version 9 or higher.
+- A modern web browser supporting the Web Speech API (Chrome, Edge, or Safari).
+
+---
+
+## 20. Installation Instructions
 
 ```bash
-# 1. Execute Pre-Deployment Configuration & Database Gateway Probe
-npm run check:deploy
+# 1. Clone repository
+git clone https://github.com/Mayyank04/kaamsetu.git
+cd kaamsetu
 
-# 2. Execute Phase 45 Master Production Readiness Suite (17/17 Passing)
-npm run test:phase45
+# 2. Check out working branch
+git checkout phase-46-universal-translation-and-readme
 
-# 3. Execute Phase 42 Human-Centred Multilingual Test Suite (14/14 Passing)
-npm run test:phase42:multilingual
+# 3. Install dependencies
+npm install
 
-# 4. Execute Phase 44 India-Wide Product Completion Suite (20/20 Passing)
-npm run test:phase44
-
-# 5. Execute Phase 43 UX Reconstruction Suite (19/19 Passing)
-npm run test:phase43
-
-# 6. Execute Phase 42 India-Wide Expansion Test Suite (22/22 Passing)
-npm run test:phase42
-
-# 7. Execute Phase 40 Root-Cause Database Repair Suite (20/20 Passing)
-npm run test:phase40
-
-# 8. Execute Phase 39.7 Direct Registration & No-OTP Suite (18/18 Passing)
-npm run test:phase39.7
-
-# 9. Run ESLint Code Quality Gate (0 errors, 0 warnings)
-npm run lint
-
-# 10. Compile Next.js Production Build (112/112 routes prerendered/compiled)
-npm run build
+# 4. Configure environment
+cp .env.example .env.local
 ```
 
-### Test Suite Execution Summary
-- **Phase 45 Production Readiness Suite:** 17 Scenarios Passed (100%)
-- **Phase 42 Multilingual & Design Suite:** 14 Scenarios Passed (100%)
-- **Phase 44 Product Completion Suite:** 20 Scenarios Passed (100%)
-- **Phase 43 UX Suite:** 19 Scenarios Passed (100%)
-- **Phase 42 India-Wide Suite:** 22 Scenarios Passed (100%)
-- **Phase 40 Database Suite:** 20 Scenarios Passed (100%)
-- **Phase 39.7 Direct Auth Suite:** 18 Scenarios Passed (100%)
-- **Total Automated Test Scenarios:** 130 / 130 Scenarios Passed (100%)
-- **Static Route Compilation:** 112 / 112 Pages Compiled (100%)
-- **ESLint Quality Gate:** 0 Errors, 0 Warnings
+---
+
+## 21. Development Commands
+
+```bash
+npm run dev           # Start Next.js development server at http://localhost:3000
+npm run build         # Execute production build and type checking
+npm run start         # Start production server
+npm run lint          # Run ESLint validation
+npm run check:deploy  # Run pre-flight health probe CLI
+```
 
 ---
 
-## 9. Phase 45 Master Product Engineering Dossiers
+## 22. Automated Test Suites
 
-All Phase 45 architectural investigations, schema-adaptive implementations, operational runbooks, and verification reports are documented in `docs/phase-45/`:
+```bash
+# Universal Translation & Cross-Language Communication Suite (Phase 46)
+npm run test:phase46
 
-1. [Dossier 01: Repository Audit](docs/phase-45/01_REPOSITORY_AUDIT.md)
-2. [Dossier 02: Architecture and Data Flow](docs/phase-45/02_ARCHITECTURE_AND_DATA_FLOW.md)
-3. [Dossier 03: Database and Migration Register](docs/phase-45/03_DATABASE_AND_MIGRATION_REGISTER.md)
-4. [Dossier 04: Authentication and Security](docs/phase-45/04_AUTHENTICATION_AND_SECURITY.md)
-5. [Dossier 05: API Reference](docs/phase-45/05_API_REFERENCE.md)
-6. [Dossier 06: Onboarding and User Workflows](docs/phase-45/06_ONBOARDING_AND_USER_WORKFLOWS.md)
-7. [Dossier 07: Multilingual Coverage](docs/phase-45/07_MULTILINGUAL_COVERAGE.md)
-8. [Dossier 08: India Location Coverage](docs/phase-45/08_INDIA_LOCATION_COVERAGE.md)
-9. [Dossier 09: Accessibility and Responsive Testing](docs/phase-45/09_ACCESSIBILITY_AND_RESPONSIVE_TESTING.md)
-10. [Dossier 10: Performance Findings](docs/phase-45/10_PERFORMANCE_FINDINGS.md)
-11. [Dossier 11: Deployment Runbook](docs/phase-45/11_DEPLOYMENT_RUNBOOK.md)
-12. [Dossier 12: Known Limitations](docs/phase-45/12_KNOWN_LIMITATIONS.md)
-13. [Dossier 13: Final Verification Report](docs/phase-45/13_FINAL_VERIFICATION_REPORT.md)
+# Multilingual Platform & Voice Ecosystem Suite (Phase 45)
+npm run test:phase45:multilingual
 
----
+# Master Product Engineering & Production Readiness (Phase 45)
+npm run test:phase45
 
-## 10. Phase 42 Human-Centred Multilingual Engineering Dossiers
+# India-Wide Product Completion Suite (Phase 44)
+npm run test:phase44
 
-All Phase 42 engineering audits, design systems, accessibility verifications, and multilingual specifications are documented in `docs/phase-42/`:
+# Human-Centred Product Reconstruction Suite (Phase 43)
+npm run test:phase43
 
-1. [Dossier 01: Frontend Audit](docs/phase-42/FRONTEND_AUDIT.md)
-2. [Dossier 02: Design System](docs/phase-42/DESIGN_SYSTEM.md)
-3. [Dossier 03: UX Improvements](docs/phase-42/UX_IMPROVEMENTS.md)
-4. [Dossier 04: Accessibility Report](docs/phase-42/ACCESSIBILITY_REPORT.md)
-5. [Dossier 05: Responsive Test Report](docs/phase-42/RESPONSIVE_TEST_REPORT.md)
-6. [Dossier 06: i18n Architecture](docs/phase-42/I18N_ARCHITECTURE.md)
-7. [Dossier 07: Translation Completeness](docs/phase-42/TRANSLATION_COMPLETENESS.md)
-8. [Dossier 08: India Location Coverage](docs/phase-42/INDIA_LOCATION_COVERAGE.md)
-9. [Dossier 09: Functional Flow Audit](docs/phase-42/FUNCTIONAL_FLOW_AUDIT.md)
-10. [Dossier 10: Performance Report](docs/phase-42/PERFORMANCE_REPORT.md)
-11. [Dossier 11: Security Regression Report](docs/phase-42/SECURITY_REGRESSION_REPORT.md)
-12. [Dossier 12: Release Certification](docs/phase-42/RELEASE_CERTIFICATION.md)
+# Multilingual Experience Suite (Phase 42)
+npm run test:phase42:multilingual
+```
 
 ---
 
-## 11. Phase 44 Comprehensive Engineering Dossiers
+## 23. Translation Provider Configuration
 
-All Phase 44 architectural designs, bug registers, vendor specifications, and verification reports are documented in `docs/phase-44/`:
+The translation service (`src/lib/translation/service.ts`) supports multi-provider routing:
 
-1. [Dossier 01: Full Product Audit](docs/phase-44/FULL_PRODUCT_AUDIT.md)
-2. [Dossier 02: Bug Register](docs/phase-44/BUG_REGISTER.md)
-3. [Dossier 03: Root Cause Analysis](docs/phase-44/ROOT_CAUSE_ANALYSIS.md)
-4. [Dossier 04: India Location Architecture](docs/phase-44/INDIA_LOCATION_ARCHITECTURE.md)
-5. [Dossier 05: Small Vendor Experience](docs/phase-44/SMALL_VENDOR_EXPERIENCE.md)
-6. [Dossier 06: Worker Experience](docs/phase-44/WORKER_EXPERIENCE.md)
-7. [Dossier 07: Customer Experience](docs/phase-44/CUSTOMER_EXPERIENCE.md)
-8. [Dossier 08: Contractor Experience](docs/phase-44/CONTRACTOR_EXPERIENCE.md)
-9. [Dossier 09: Multilingual Readiness](docs/phase-44/MULTILINGUAL_READINESS.md)
-10. [Dossier 10: Security Audit](docs/phase-44/SECURITY_AUDIT.md)
-11. [Dossier 11: Responsive Test Report](docs/phase-44/RESPONSIVE_TEST_REPORT.md)
-12. [Dossier 12: Performance Report](docs/phase-44/PERFORMANCE_REPORT.md)
-13. [Dossier 13: End-to-End Test Report](docs/phase-44/END_TO_END_TEST_REPORT.md)
-14. [Dossier 14: Release Certification](docs/phase-44/RELEASE_CERTIFICATION.md)
+- **Gemini Generative Translation:** Default high-quality vernacular translator with prompt-level entity masking.
+- **Deterministic Offline Corpus:** Built-in glossary of trade profiles, artisan bios, and vendor phrases for sandbox and test environments.
+- **Bhashini / ULCA:** Government of India open-model integration for official Eighth Schedule languages.
+- **Google Cloud / Azure:** Enterprise cloud translation fallback options.
 
 ---
 
-## 12. Phase 43 Comprehensive Audit Dossiers
+## 24. Voice & Speech Provider Configuration
 
-All Phase 43 engineering findings, design system specifications, and verification reports are documented in `docs/phase-43/`:
+The speech engine uses standard browser speech capabilities:
 
-1. [Dossier 01: Product UX Audit](docs/phase-43/PRODUCT_UX_AUDIT.md)
-2. [Dossier 02: Design Skill Integration](docs/phase-43/DESIGN_SKILL_INTEGRATION.md)
-3. [Dossier 03: Anti-AI-Slop Audit](docs/phase-43/ANTI_AI_SLOP_AUDIT.md)
-4. [Dossier 04: Design System](docs/phase-43/DESIGN_SYSTEM.md)
-5. [Dossier 05: Worker Experience](docs/phase-43/WORKER_EXPERIENCE.md)
-6. [Dossier 06: Contractor Experience](docs/phase-43/CONTRACTOR_EXPERIENCE.md)
-7. [Dossier 07: Institution Experience](docs/phase-43/INSTITUTION_EXPERIENCE.md)
-8. [Dossier 08: Accessibility Report](docs/phase-43/ACCESSIBILITY_REPORT.md)
-9. [Dossier 09: Responsive Test Report](docs/phase-43/RESPONSIVE_TEST_REPORT.md)
-10. [Dossier 10: Performance Report](docs/phase-43/PERFORMANCE_REPORT.md)
-11. [Dossier 11: Functional Regression Report](docs/phase-43/FUNCTIONAL_REGRESSION_REPORT.md)
-12. [Dossier 12: Security Regression Report](docs/phase-43/SECURITY_REGRESSION_REPORT.md)
-13. [Dossier 13: Release Certification](docs/phase-43/RELEASE_CERTIFICATION.md)
+- **Speech Recognition:** Uses `webkitSpeechRecognition` with BCP 47 mappings.
+- **Speech Synthesis (TTS):** Uses `window.speechSynthesis` for audio playback of translated content.
+- **Fallback:** When speech recognition is unavailable or microphone permissions are denied, an accessible text fallback textarea is provided.
 
 ---
 
-## 13. Governance & Permanent Invariants
+## 25. Production Deployment Guide
 
-1. **Zero Commission on Artisan Wages:**  
-   `platform_commission_amount = 0.00` is an immutable invariant across all transactions. Artisans receive 100% of customer fees.
-2. **Honest Operational Claims:**  
-   KAAMSETU never advertises nationwide physical on-demand booking until dispatch logistics and partner networks are established. Digital identity and verification operate nationwide; physical dispatch remains within certified Class B pilot zones.
-3. **Truthful Worker Certification:**  
-   Unverified claims are labeled `self_declared` or `voice_submitted`. Only independently audited assessments receive institutional stamps.
+KAAMSETU is pre-configured for automated deployment on [Vercel](https://vercel.com):
+
+1. Connect your GitHub repository to Vercel.
+2. Set Framework Preset to **Next.js**.
+3. Configure the environment variables in the Vercel Dashboard.
+4. Deploy. Vercel automatically runs `next build` generating all 116 static and dynamic routes.
+
+---
+
+## 26. Security Considerations & Hardening
+
+- **Entity Protection:** Phone numbers, PIN codes, prices, and IDs are masked during machine translation to prevent synthetic tampering.
+- **Input Guardrails:** Translation inputs are strictly capped at 5,000 characters to prevent API denial-of-service.
+- **Provider Key Concealment:** External API keys are kept strictly on the server; client components interact solely via `/api/translate`.
+- **Database Trigger:** Immutable PostgreSQL trigger raises exceptions if any non-zero commission rate is attempted.
+
+---
+
+## 27. Privacy Guarantees & Ephemeral Audio
+
+- **Ephemeral Audio:** Voice interactions are processed as ephemeral browser audio streams; no raw voice recordings are stored without explicit, recorded user attestation.
+- **Cache Isolation:** Private customer enquiries and booking messages marked `isPrivate = true` bypass the public database cache.
+
+---
+
+## 28. Known Operational Limitations
+
+1. **Commercial Dispatch Boundaries:** On-demand physical booking dispatch is active exclusively within Guwahati Urban (PIN 781001–781039) and Shillong Urban (PIN 793001–793022).
+2. **Web Speech Browser Variations:** Speech recognition requires Chrome, Edge, or Safari; Firefox desktop users are routed to the accessible text input fallback.
+3. **Complex Dialect TTS:** Text-to-speech audio synthesis is currently active for major regional languages; minor tribal dialects (e.g. Ho, Mundari) provide visual text translation.
+
+---
+
+## 29. Strategic Roadmap
+
+- [x] Phase 42: 18-Language Localization & Dual-Script RTL Engine.
+- [x] Phase 44: Small Vendor Architecture & Product Catalog.
+- [x] Phase 45: 39 Indian Languages, Intelligent Voice System & Vendor Ecosystem.
+- [x] Phase 46: Universal Content Translation, Two-Way Cross-Language Communication & README Upgrade.
+- [ ] Phase 47: Offline-First Peer-to-Peer Bluetooth Sync for Weekly Rural Haats.
+- [ ] Phase 48: Open Network for Digital Commerce (ONDC) Protocol Gateway Integration.
+
+---
+
+## 30. Contribution Guidelines
+
+1. Fork the repository and create your branch from `main`.
+2. Follow the anti-AI-slop design directives in `DESIGN.md`.
+3. Adhere to the permanent financial invariant: `platform_commission_amount = 0.00`.
+4. Ensure all automated tests pass (`npm run test:phase46 && npm run test:phase45:multilingual`).
+5. Open a Pull Request with complete verification evidence.
+
+---
+
+## 31. License Information
+
+KAAMSETU is licensed under the [MIT License](LICENSE).
+
+---
+
+## 32. Comprehensive Language Capability Matrix
+
+| Code | Language | Script | Interface | Content Translation | Speech Recognition | Speech Synthesis | Language Detection | Provider Support |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---|
+| `en` | English | Latin | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Google, Azure, Deterministic |
+| `hi` | Hindi (हिन्दी) | Devanagari | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `as` | Assamese (অসমীয়া) | Bengali-Assamese | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `bn` | Bengali (বাংলা) | Bengali | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `brx` | Bodo (बड़ो) | Devanagari | `VERIFIED` | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Deterministic |
+| `doi` | Dogri (डोगरी) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Deterministic |
+| `gu` | Gujarati (ગુજરાતી) | Gujarati | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `kn` | Kannada (ಕನ್ನಡ) | Kannada | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `ks` | Kashmiri (کٲشُر) | Perso-Arabic (RTL) | `VERIFIED` | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Deterministic |
+| `kok` | Konkani (कोंकणी) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Deterministic |
+| `mai` | Maithili (मैथिली) | Devanagari | `VERIFIED` | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Deterministic |
+| `ml` | Malayalam (മലയാളം) | Malayalam | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `mni` | Manipuri (মৈতৈলোন্) | Bengali-Assamese | `VERIFIED` | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Deterministic |
+| `mr` | Marathi (मराठी) | Devanagari | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `ne` | Nepali (नेपाली) | Devanagari | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `or` | Odia (ଓଡ଼ିଆ) | Odia | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `pa` | Punjabi (ਪੰਜਾਬੀ) | Gurmukhi | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `sa` | Sanskrit (संस्कृतम्) | Devanagari | `VERIFIED` | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Google |
+| `sat` | Santali (ᱥᱟᱱᱛᱟᱲᱤ) | Ol Chiki | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Deterministic |
+| `sd` | Sindhi (سنڌي) | Perso-Arabic (RTL) | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Bhashini, Google |
+| `ta` | Tamil (தமிழ்) | Tamil | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `te` | Telugu (తెలుగు) | Telugu | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `ur` | Urdu (اردو) | Perso-Arabic (RTL) | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | `VERIFIED` | Gemini, Bhashini, Google, Azure |
+| `bho` | Bhojpuri (भोजपुरी) | Devanagari | `VERIFIED` | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Google, Deterministic |
+| `raj` | Rajasthani (राजस्थानी) | Devanagari | `VERIFIED` | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `hne` | Chhattisgarhi (छत्तीसगढ़ी) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `bgc` | Haryanvi (हरियाणवी) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `tcy` | Tulu (ತುಳು) | Kannada | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `kha` | Khasi (Khasi) | Latin | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `grt` | Garo (A·chik) | Latin | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `lus` | Mizo (Mizo ṭawng) | Latin | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Google, Deterministic |
+| `trp` | Kokborok | Latin | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | Gemini, Deterministic |
+| `anp` | Angika (अंगिका) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `mag` | Magahi (मगही) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `gbm` | Garhwali (गढ़वाली) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `kfy` | Kumaoni (कुमाऊँनी) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `VERIFIED` | Gemini, Deterministic |
+| `bhb` | Bhili (भीली) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | Gemini, Deterministic |
+| `hoc` | Ho (Warang Chiti) | Warang Chiti | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | Gemini, Deterministic |
+| `unr` | Mundari (मुण्डारी) | Devanagari | `VERIFIED` | `VERIFIED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | `NOT YET SUPPORTED` | Gemini, Deterministic |

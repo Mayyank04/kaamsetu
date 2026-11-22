@@ -6,6 +6,9 @@ import { VendorProfile, VendorDashboardData } from "@/types/vendor";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TranslatedContent } from "@/components/translation/translated-content";
+import { VoiceTranslationWidget } from "@/components/translation/voice-translation-widget";
+import { TranslationDialog } from "@/components/translation/translation-dialog";
 import { DynamicVendorForm } from "@/components/vendor/dynamic-vendor-form";
 import {
   Store,
@@ -34,6 +37,7 @@ export function VendorDashboardView({ initialVendor }: VendorDashboardViewProps)
   const { t } = useTranslation();
   const [vendor, setVendor] = React.useState<VendorProfile | null>(initialVendor);
   const [isEditing, setIsEditing] = React.useState(!initialVendor);
+  const [isTranslatorOpen, setIsTranslatorOpen] = React.useState(false);
 
   if (!vendor && !isEditing) {
     return (
@@ -259,6 +263,35 @@ export function VendorDashboardView({ initialVendor }: VendorDashboardViewProps)
               "Ensure your stall address and operating hours are accurate to maximize local customer discovery."}
           </p>
         </div>
+
+        {/* Two-Way Cross-Language Communication for Customer Inquiries */}
+        <div className="pt-4 border-t border-forest/10 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-serif font-bold text-sm text-forest">Two-Way Customer Communication</h4>
+              <p className="text-[11px] text-charcoal-muted">Translate customer enquiries or communicate via live voice translation</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsTranslatorOpen(true)}
+              className="text-xs border-forest/20 text-forest h-7"
+            >
+              Open Universal Translator
+            </Button>
+          </div>
+          <VoiceTranslationWidget
+            initialSourceLang="hi"
+            initialTargetLang="en"
+            className="border-dashed"
+          />
+        </div>
+
+        <TranslationDialog
+          isOpen={isTranslatorOpen}
+          onClose={() => setIsTranslatorOpen(false)}
+          title="Customer Enquiry & Order Translator"
+        />
       </div>
     </div>
   );
