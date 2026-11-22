@@ -45,11 +45,22 @@ interface SpeechRecognitionInstance {
 const BCP47_MAP: Record<SupportedLanguageCode, string> = {
   hi: "hi-IN",
   en: "en-IN",
+  as: "as-IN",
   bn: "bn-IN",
+  or: "or-IN",
+  pa: "pa-IN",
+  gu: "gu-IN",
   mr: "mr-IN",
+  ur: "ur-IN",
   ta: "ta-IN",
   te: "te-IN",
-  as: "as-IN",
+  kn: "kn-IN",
+  ml: "ml-IN",
+  ne: "ne-IN",
+  brx: "brx-IN",
+  mni: "mni-IN",
+  ks: "ks-IN",
+  sa: "sa-IN",
 };
 
 export function AudioRecorder({

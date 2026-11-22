@@ -30,8 +30,10 @@ import { ProfessionalCard } from "@/components/identity/professional-card";
 import { KaamScoreGauge } from "@/components/identity/kaamscore-gauge";
 import { PROFESSIONS_DATA } from "@/lib/data/professions";
 import { FEATURED_PROFESSIONALS } from "@/lib/data/professionals";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [selectedTradeSlug, setSelectedTradeSlug] = React.useState<string>("all");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
 
@@ -66,17 +68,17 @@ export default function HomePage() {
               {/* Mission Sub-badge */}
               <div className="inline-flex items-center gap-2 rounded-xs bg-forest/10 px-3.5 py-1.5 border border-forest/20 text-xs font-bold text-forest uppercase tracking-wider shadow-2xs">
                 <ShieldCheck className="h-4 w-4 text-forest" />
-                <span>Every skill deserves to be seen, even without a degree</span>
+                <span>{t.home?.heroPill || "Every skill deserves to be seen, even without a degree"}</span>
               </div>
 
               {/* Approved Primary Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-forest leading-[1.1]">
-                Your skills deserve recognition.
+                {t.home?.heroTitle || "Your skills deserve recognition."}
               </h1>
 
               {/* Approved Supporting Copy */}
               <p className="text-lg sm:text-xl text-charcoal-muted leading-relaxed max-w-2xl font-normal">
-                Whether you are an electrician, carpenter, mason, plumber, or technician, KAAMSETU helps you build a recognized digital work profile. Document your hands-on experience, showcase your completed work, and connect with customers and contractors looking for your craft.
+                {t.home?.heroSubtitle || "Whether you are an electrician, carpenter, mason, plumber, or technician, KAAMSETU helps you build a recognized digital work profile. Document your hands-on experience, showcase your completed work, and connect with customers and contractors looking for your craft."}
               </p>
 
               {/* Two Direct CTAs */}
@@ -89,7 +91,7 @@ export default function HomePage() {
                 >
                   <Link href="/onboarding">
                     <Mic className="mr-2.5 h-5 w-5 text-sand" />
-                    Create Your Skill Profile
+                    {t.home?.createProfileBtn || "Create Your Skill Profile"}
                   </Link>
                 </Button>
 
@@ -101,7 +103,7 @@ export default function HomePage() {
                 >
                   <Link href="/explore">
                     <Search className="mr-2.5 h-5 w-5 text-forest" />
-                    Find a Professional
+                    {t.home?.findCraftspersonBtn || "Find a Professional"}
                   </Link>
                 </Button>
               </div>

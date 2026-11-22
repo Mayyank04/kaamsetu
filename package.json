@@ -61,6 +61,7 @@
     "test:phase40": "tsx --env-file=.env.local --test test/phase-40-database-auth-recovery.test.ts",
     "test:phase41": "tsx --env-file=.env.local --test test/phase-41-responsive-frontend.test.ts",
     "test:phase42": "tsx --env-file=.env.local --test test/phase-42-india-wide-expansion.test.ts",
+    "test:phase42:multilingual": "tsx --env-file=.env.local --test test/phase-42-human-centred-multilingual.test.ts",
     "test:phase43": "tsx --env-file=.env.local --test test/phase-43-ux-reconstruction.test.ts",
     "test:phase44": "tsx --env-file=.env.local --test test/phase-44-india-wide-product-completion.test.ts",
     "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"

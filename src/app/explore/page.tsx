@@ -229,11 +229,11 @@ export default function ExplorePage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-forest leading-tight font-serif">
-            Find Skilled Professionals Across Trades
+            {t.explore?.pageTitle || "Find Skilled Professionals Across Trades"}
           </h1>
 
           <p className="text-sm sm:text-base text-charcoal-muted max-w-2xl mx-auto leading-relaxed">
-            Every professional profile features documented work experience, peer references, and verifiable trade qualifications.
+            {t.explore?.pageSubtitle || "Every professional profile features documented work experience, peer references, and verifiable trade qualifications."}
           </p>
 
           <div className="pt-2">
@@ -267,7 +267,7 @@ export default function ExplorePage() {
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span>{t.explore.allListings}</span>
+              <span>{t.explore?.allListings || "All Listings"}</span>
             </button>
             <button
               type="button"
@@ -279,7 +279,7 @@ export default function ExplorePage() {
               }`}
             >
               <Briefcase className="h-3.5 w-3.5" />
-              <span>{t.explore.serviceProfessionals}</span>
+              <span>{t.explore?.serviceProfessionals || "Service Professionals"}</span>
             </button>
             <button
               type="button"
@@ -291,7 +291,7 @@ export default function ExplorePage() {
               }`}
             >
               <Store className="h-3.5 w-3.5" />
-              <span>{t.explore.vendorsAndArtisans}</span>
+              <span>{t.explore?.vendorsAndArtisans || "Local Vendors & Goods"}</span>
             </button>
           </div>
 
@@ -300,7 +300,7 @@ export default function ExplorePage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-forest/50" />
             <input
               type="text"
-              placeholder="Search by worker name, craft (e.g. Solar, Joinery, Weaving), tool, or city..."
+              placeholder={t.explore?.searchPlaceholder || "Search by worker name, craft, tool, or city..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-13 pl-12 pr-4 rounded-sm border border-forest/20 bg-background text-sm text-foreground focus:outline-none focus:border-forest focus:ring-2 focus:ring-sand/60 shadow-inner"

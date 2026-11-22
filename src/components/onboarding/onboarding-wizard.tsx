@@ -10,11 +10,13 @@ import { ONBOARDING_I18N } from "@/lib/i18n/onboarding";
 import { LanguageSelector } from "@/components/onboarding/language-selector";
 import { AudioRecorder } from "@/components/onboarding/audio-recorder";
 import { ExtractionEditor } from "@/components/onboarding/extraction-editor";
+import { Guided12StepWizard } from "@/components/onboarding/guided-12-step-wizard";
 import {
   SovereignSuccessCard,
   SovereignCardData,
 } from "@/components/onboarding/sovereign-success-card";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import {
   ShieldCheck,
   ChevronLeft,
@@ -46,6 +48,7 @@ export function OnboardingWizard() {
   const { user, isAuthenticated, refreshSession } = useAuth();
 
   const [currentStep, setCurrentStep] = React.useState<Step>(1);
+  const [workflowStyle, setWorkflowStyle] = React.useState<"guided_12_step" | "voice_attestation">("guided_12_step");
   const [language, setLanguage] = React.useState<SupportedLanguageCode>("hi");
   const [inputMode, setInputMode] = React.useState<"voice" | "text">("voice");
   const [transcript, setTranscript] = React.useState<string>("");
@@ -386,65 +389,104 @@ export function OnboardingWizard() {
         </div>
       )}
 
-      {/* Step Indicator Bar */}
-      <div className="relative">
-        <div className="flex items-center justify-between max-w-2xl mx-auto mb-2">
-          {([1, 2, 3, 4] as Step[]).map((stepNumber) => {
-            const isCompleted = currentStep > stepNumber;
-            const isCurrent = currentStep === stepNumber;
-            return (
-              <div key={stepNumber} className="flex flex-col items-center">
-                <button
-                  type="button"
-                  disabled={stepNumber > currentStep || isAnalyzing || isSubmitting}
-                  onClick={() => {
-                    if (stepNumber < currentStep) {
-                      setCurrentStep(stepNumber);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }
-                  }}
-                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                    isCompleted
-                      ? "bg-forest text-ivory ring-2 ring-forest"
-                      : isCurrent
-                      ? "bg-sand text-forest ring-2 ring-forest shadow-sm"
-                      : "bg-surface-elevated text-charcoal-muted border border-forest/20"
-                  }`}
-                  aria-label={`Step ${stepNumber}: ${stepTitles[stepNumber].en}`}
-                >
-                  {isCompleted ? <Check className="w-4 h-4 text-ivory" /> : stepNumber}
-                </button>
-                <span
-                  className={`mt-1.5 text-[11px] font-medium hidden sm:block ${
-                    isCurrent ? "text-forest font-bold" : "text-charcoal-muted"
-                  }`}
-                >
-                  {stepTitles[stepNumber][language === "hi" ? "hi" : "en"]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Progress Bar Line */}
-        <div className="max-w-xl mx-auto h-0.5 bg-forest/15 relative -top-7 sm:-top-9 -z-10">
-          <div
-            className="h-full bg-forest transition-all duration-300"
-            style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Analysis or Submission Error Alert */}
-      {(analysisError || submitError) && (
-        <div className="p-4 rounded-md bg-red-50 border border-red-200 text-xs text-red-800 flex items-start gap-3">
-          <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-          <div className="space-y-1">
-            <span className="font-semibold">Unable to proceed:</span>
-            <p className="text-red-700">{analysisError || submitError}</p>
-          </div>
+      {/* Mode Switcher: Guided 12-Step Form vs Voice Attestation */}
+      {currentStep < 4 && (
+        <div className="flex items-center justify-center gap-2 border-b border-forest/10 pb-4">
+          <button
+            type="button"
+            onClick={() => setWorkflowStyle("guided_12_step")}
+            className={cn(
+              "px-4 py-2 rounded-sm text-xs font-bold transition-all",
+              workflowStyle === "guided_12_step"
+                ? "bg-forest text-ivory shadow-xs"
+                : "bg-card text-charcoal border border-forest/15 hover:bg-forest/5"
+            )}
+          >
+            Guided 12-Step Form
+          </button>
+          <button
+            type="button"
+            onClick={() => setWorkflowStyle("voice_attestation")}
+            className={cn(
+              "px-4 py-2 rounded-sm text-xs font-bold transition-all flex items-center gap-1.5",
+              workflowStyle === "voice_attestation"
+                ? "bg-forest text-ivory shadow-xs"
+                : "bg-card text-charcoal border border-forest/15 hover:bg-forest/5"
+            )}
+          >
+            <Mic className="w-3.5 h-3.5 text-sand" />
+            Voice Attestation
+          </button>
         </div>
       )}
+
+      {currentStep < 4 && workflowStyle === "guided_12_step" ? (
+        <Guided12StepWizard
+          initialLanguage={language}
+          onComplete={handleApprove}
+          isSubmitting={isSubmitting}
+        />
+      ) : (
+        <>
+          {/* Step Indicator Bar */}
+          <div className="relative">
+            <div className="flex items-center justify-between max-w-2xl mx-auto mb-2">
+              {([1, 2, 3, 4] as Step[]).map((stepNumber) => {
+                const isCompleted = currentStep > stepNumber;
+                const isCurrent = currentStep === stepNumber;
+                return (
+                  <div key={stepNumber} className="flex flex-col items-center">
+                    <button
+                      type="button"
+                      disabled={stepNumber > currentStep || isAnalyzing || isSubmitting}
+                      onClick={() => {
+                        if (stepNumber < currentStep) {
+                          setCurrentStep(stepNumber);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }}
+                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+                        isCompleted
+                          ? "bg-forest text-ivory ring-2 ring-forest"
+                          : isCurrent
+                          ? "bg-sand text-forest ring-2 ring-forest shadow-sm"
+                          : "bg-surface-elevated text-charcoal-muted border border-forest/20"
+                      }`}
+                      aria-label={`Step ${stepNumber}: ${stepTitles[stepNumber].en}`}
+                    >
+                      {isCompleted ? <Check className="w-4 h-4 text-ivory" /> : stepNumber}
+                    </button>
+                    <span
+                      className={`mt-1.5 text-[11px] font-medium hidden sm:block ${
+                        isCurrent ? "text-forest font-bold" : "text-charcoal-muted"
+                      }`}
+                    >
+                      {stepTitles[stepNumber][language === "hi" ? "hi" : "en"]}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Progress Bar Line */}
+            <div className="max-w-xl mx-auto h-0.5 bg-forest/15 relative -top-7 sm:-top-9 -z-10">
+              <div
+                className="h-full bg-forest transition-all duration-300"
+                style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Analysis or Submission Error Alert */}
+          {(analysisError || submitError) && (
+            <div className="p-4 rounded-md bg-red-50 border border-red-200 text-xs text-red-800 flex items-start gap-3">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+              <div className="space-y-1">
+                <span className="font-semibold">Unable to proceed:</span>
+                <p className="text-red-700">{analysisError || submitError}</p>
+              </div>
+            </div>
+          )}
 
       {/* STEP 1: Language & Input Mode Selection */}
       {currentStep === 1 && (
@@ -531,6 +573,8 @@ export function OnboardingWizard() {
             isSubmitting={isSubmitting}
           />
         </div>
+      )}
+        </>
       )}
 
       {/* STEP 4: Minted Sovereign Credential Card */}

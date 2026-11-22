@@ -338,6 +338,7 @@ describe("PHASE 44: India-Wide Product Completion, Complete Bug Elimination & Un
         role: "worker" as const,
         fullName: "Babulal Meena",
         phone: "+919876543210",
+        isDemo: false,
       };
 
       const vendorSubmission = {

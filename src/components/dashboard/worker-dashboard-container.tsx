@@ -721,7 +721,7 @@ export function WorkerDashboardContainer({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-forest/10 pb-4">
               <div>
                 <h2 className="font-serif text-xl sm:text-2xl font-bold text-forest">
-                  Earnings & Settlement Ledger
+                  Payment History & Earnings
                 </h2>
                 <p className="text-xs text-charcoal-muted mt-0.5">
                   100% of customer payments belong to the working artisan. Permanent zero platform commission.
