@@ -247,7 +247,38 @@ export async function getPublishedWorkerProfiles(
       query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1);
     }
 
-    const { data, error } = await query;
+    let { data, error } = await query;
+    if (error && (error.message.includes("profile_type does not exist") || error.message.includes("vendor_type does not exist") || error.message.includes("stall_type does not exist"))) {
+      let fallbackQuery = supabase
+        .from("worker_profiles")
+        .select(`
+          *,
+          occupation:occupations(*)
+        `)
+        .eq("is_published", true)
+        .order("kaamscore", { ascending: false });
+
+      if (filters.search && filters.search.trim()) {
+        const q = `%${filters.search.trim()}%`;
+        fallbackQuery = fallbackQuery.or(`headline.ilike.${q},bio.ilike.${q},city.ilike.${q}`);
+      }
+      if (filters.state && filters.state !== "all") {
+        fallbackQuery = fallbackQuery.ilike("state", filters.state);
+      }
+      if (filters.city && filters.city !== "all") {
+        fallbackQuery = fallbackQuery.ilike("city", filters.city);
+      }
+      if (filters.pincode && filters.pincode.trim()) {
+        fallbackQuery = fallbackQuery.eq("pincode", filters.pincode.trim());
+      }
+      if (filters.limit) {
+        fallbackQuery = fallbackQuery.limit(filters.limit);
+      }
+      const retryResult = await fallbackQuery;
+      data = retryResult.data;
+      error = retryResult.error;
+    }
+
     if (error || (process.env.NODE_ENV !== "production" && (!data || data.length === 0 || (data[0] && !(data[0] as any).profile_type)))) {
       if (process.env.NODE_ENV !== "production") {
         if (error) {

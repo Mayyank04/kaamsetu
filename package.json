@@ -64,6 +64,8 @@
     "test:phase42:multilingual": "tsx --env-file=.env.local --test test/phase-42-human-centred-multilingual.test.ts",
     "test:phase43": "tsx --env-file=.env.local --test test/phase-43-ux-reconstruction.test.ts",
     "test:phase44": "tsx --env-file=.env.local --test test/phase-44-india-wide-product-completion.test.ts",
+    "test:phase45": "tsx --env-file=.env.local --test test/phase-45-production-readiness.test.ts",
+    "check:deploy": "tsx --env-file=.env.local src/bin/check-deployment.ts",
     "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"
   },
   "dependencies": {
