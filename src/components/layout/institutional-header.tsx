@@ -33,12 +33,13 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useTranslation } from "@/lib/i18n/i18n-context";
+import { SUPPORTED_LOCALES_METADATA } from "@/lib/i18n/translations";
 
 export function InstitutionalHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
-  const { locale, setLocale, t } = useTranslation();
+  const { locale, setLocale, t, textSize, setTextSize, isRTL } = useTranslation();
 
   // Close mobile drawer on route navigation
   React.useEffect(() => {
@@ -68,12 +69,12 @@ export function InstitutionalHeader() {
   }, [mobileMenuOpen]);
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/explore", label: "Find Professionals" },
-    { href: "/how-it-works", label: "How It Works" },
-    { href: "/contractor/dashboard", label: "Contractor Pro" },
-    { href: "/institution/dashboard", label: "Institutions" },
-    { href: "/about", label: "About" },
+    { href: "/", label: t.header?.home || "Home" },
+    { href: "/explore", label: t.header?.findProfessionals || "Find Professionals" },
+    { href: "/how-it-works", label: t.header?.howItWorks || "How It Works" },
+    { href: "/contractor/dashboard", label: t.header?.contractorPro || "Contractor Pro" },
+    { href: "/institution/dashboard", label: t.header?.institutions || "Institutions" },
+    { href: "/about", label: t.header?.about || "About" },
   ];
 
   return (
@@ -84,22 +85,22 @@ export function InstitutionalHeader() {
           <div className="flex items-center gap-2">
             <span className="flex h-1.5 w-1.5 rounded-full bg-sand animate-pulse" />
             <span className="font-semibold text-sand-300">
-              Direct Worker Recognition Platform
+              {t.header?.bannerTitle || "Direct Worker Recognition Platform"}
             </span>
             <span className="text-ivory/60">•</span>
             <span className="text-ivory/80">
-              Permanent Zero Commission on Artisan Earnings
+              {t.header?.bannerSub || "Permanent Zero Commission on Artisan Earnings"}
             </span>
           </div>
           <div className="flex items-center gap-4 text-ivory/80 text-[10px]">
             <span className="bg-sand/20 text-sand px-2 py-0.5 rounded-xs font-semibold">
-              Class B Controlled Rollout: Guwahati & Shillong
+              {t.header?.controlledNotice || "Class B Controlled Rollout: Guwahati & Shillong"}
             </span>
             <Link
               href="/login"
               className="text-sand underline hover:text-sand-300 font-medium"
             >
-              Sign In
+              {t.header?.signIn || "Sign In"}
             </Link>
           </div>
         </div>
@@ -149,7 +150,24 @@ export function InstitutionalHeader() {
 
         {/* Right Actions & User Menu */}
         <div className="hidden md:flex items-center gap-2 lg:gap-3">
-          {/* Vernacular Language Switcher */}
+          {/* Accessibility: Text Size Toggle */}
+          <button
+            type="button"
+            onClick={() => setTextSize(textSize === "normal" ? "large" : "normal")}
+            className={cn(
+              "px-2 py-1.5 rounded-sm border text-xs font-bold transition-colors outline-none cursor-pointer flex items-center gap-1",
+              textSize === "large"
+                ? "border-forest bg-forest text-ivory"
+                : "border-forest/20 bg-card hover:bg-forest/5 text-forest"
+            )}
+            title={textSize === "normal" ? t.accessibility?.textSizeLarge : t.accessibility?.textSizeNormal}
+            aria-label={textSize === "normal" ? t.accessibility?.textSizeLarge : t.accessibility?.textSizeNormal}
+          >
+            <span className="text-[11px]">A</span>
+            <span className="text-xs">{textSize === "large" ? "A+" : "A"}</span>
+          </button>
+
+          {/* Vernacular Language Switcher (All 18 Indian Languages) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -158,59 +176,50 @@ export function InstitutionalHeader() {
                 aria-label="Select vernacular language"
               >
                 <Globe className="w-3.5 h-3.5 text-forest/70" />
-                <span>
-                  {locale === "en" ? "English" : locale === "hi" ? "हिन्दी" : locale === "as" ? "অসমীয়া" : "বাংলা"}
+                <span className="font-bold">
+                  {SUPPORTED_LOCALES_METADATA.find((m) => m.code === locale)?.nativeName || "English"}
                 </span>
                 <ChevronDown className="w-3 h-3 text-forest/50" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 p-1.5">
+            <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto p-1.5">
               <DropdownMenuLabel className="text-[10px] uppercase font-bold text-charcoal-muted tracking-wider px-2 py-1">
-                Select Language
+                {t.accessibility?.languageSelector || "18 Indian Languages"}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setLocale("en")}
-                className="text-xs flex items-center justify-between cursor-pointer py-1.5 px-2"
-              >
-                <span className="font-medium">English</span>
-                {locale === "en" && <Check className="w-3.5 h-3.5 text-forest" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setLocale("hi")}
-                className="text-xs flex items-center justify-between cursor-pointer py-1.5 px-2"
-              >
-                <span className="font-medium">हिन्दी (Hindi)</span>
-                {locale === "hi" && <Check className="w-3.5 h-3.5 text-forest" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setLocale("as")}
-                className="text-xs flex items-center justify-between cursor-pointer py-1.5 px-2"
-              >
-                <span className="font-medium">অসমীয়া (Assamese)</span>
-                {locale === "as" && <Check className="w-3.5 h-3.5 text-forest" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setLocale("bn")}
-                className="text-xs flex items-center justify-between cursor-pointer py-1.5 px-2"
-              >
-                <span className="font-medium">বাংলা (Bengali)</span>
-                {locale === "bn" && <Check className="w-3.5 h-3.5 text-forest" />}
-              </DropdownMenuItem>
+              {SUPPORTED_LOCALES_METADATA.map((meta) => {
+                const isSelected = locale === meta.code;
+                return (
+                  <DropdownMenuItem
+                    key={meta.code}
+                    onClick={() => setLocale(meta.code)}
+                    className={cn(
+                      "text-xs flex items-center justify-between cursor-pointer py-1.5 px-2 rounded-xs",
+                      isSelected ? "bg-forest/10 font-bold text-forest" : "text-charcoal hover:bg-forest/5"
+                    )}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-bold">{meta.nativeName}</span>
+                      <span className="text-[10px] text-charcoal-muted">{meta.name} • {meta.region}</span>
+                    </div>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-forest shrink-0 ml-2" />}
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
 
           <Button variant="outline" size="sm" asChild className="border-forest/20 text-forest hover:bg-forest/5 text-xs">
             <Link href="/explore">
               <Search className="mr-1.5 h-3.5 w-3.5 text-forest" />
-              Find a Professional
+              {t.header?.findProfessionals || "Find Professionals"}
             </Link>
           </Button>
 
           <Button variant="default" size="sm" asChild className="bg-forest text-ivory hover:bg-forest-500 shadow-sm text-xs">
             <Link href="/onboarding">
               <Mic className="mr-1.5 h-3.5 w-3.5 text-sand" />
-              Create Identity
+              {t.header?.register || "Create Profile"}
             </Link>
           </Button>
 
@@ -343,34 +352,49 @@ export function InstitutionalHeader() {
               </div>
             )}
 
-            {/* Mobile Vernacular Selector */}
-            <div className="p-3 bg-forest/5 rounded-md border border-forest/10 space-y-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted flex items-center gap-1.5">
-                <Globe className="w-3 h-3 text-forest" />
-                Language / भाषा / ভাষা
-              </span>
-              <div className="grid grid-cols-2 gap-1.5 text-xs">
-                {(["en", "hi", "as", "bn"] as const).map((code) => {
-                  const names: Record<string, string> = {
-                    en: "English",
-                    hi: "हिन्दी",
-                    as: "অসমীয়া",
-                    bn: "বাংলা",
-                  };
+            {/* Mobile Vernacular & Text Size Controls */}
+            <div className="p-3 bg-forest/5 rounded-md border border-forest/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted flex items-center gap-1.5">
+                  <Globe className="w-3 h-3 text-forest" />
+                  Language / भाषा / ভাষা (18 Languages)
+                </span>
+                {/* Text Size Control */}
+                <button
+                  type="button"
+                  onClick={() => setTextSize(textSize === "normal" ? "large" : "normal")}
+                  className={cn(
+                    "px-2 py-0.5 rounded-xs border text-[11px] font-bold transition-colors",
+                    textSize === "large"
+                      ? "bg-forest text-ivory border-forest"
+                      : "bg-card text-forest border-forest/20"
+                  )}
+                  aria-label={textSize === "normal" ? t.accessibility?.textSizeLarge : t.accessibility?.textSizeNormal}
+                >
+                  Size: {textSize === "large" ? "Large (A+)" : "Normal (A)"}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-1 text-xs">
+                {SUPPORTED_LOCALES_METADATA.map((meta) => {
+                  const isSelected = locale === meta.code;
                   return (
                     <button
-                      key={code}
+                      key={meta.code}
                       type="button"
-                      onClick={() => setLocale(code)}
+                      onClick={() => setLocale(meta.code)}
                       className={cn(
                         "py-1.5 px-2 rounded-xs border text-left font-medium transition-colors flex items-center justify-between",
-                        locale === code
+                        isSelected
                           ? "bg-forest text-ivory border-forest font-bold"
                           : "bg-card text-charcoal border-forest/15 hover:bg-forest/5"
                       )}
                     >
-                      <span>{names[code]}</span>
-                      {locale === code && <Check className="w-3 h-3 text-sand" />}
+                      <div className="truncate">
+                        <span className="block font-bold">{meta.nativeName}</span>
+                        <span className="block text-[9px] opacity-75">{meta.name}</span>
+                      </div>
+                      {isSelected && <Check className="w-3 h-3 text-sand shrink-0 ml-1" />}
                     </button>
                   );
                 })}
@@ -402,13 +426,13 @@ export function InstitutionalHeader() {
               <Button variant="outline" className="w-full justify-center text-xs" asChild>
                 <Link href="/explore" onClick={() => setMobileMenuOpen(false)}>
                   <Search className="mr-2 h-4 w-4" />
-                  Find a Professional
+                  {t.header?.findProfessionals || "Find Professionals"}
                 </Link>
               </Button>
               <Button variant="default" className="w-full justify-center text-xs bg-forest text-ivory" asChild>
                 <Link href="/onboarding" onClick={() => setMobileMenuOpen(false)}>
                   <Mic className="mr-2 h-4 w-4 text-sand" />
-                  Create Your Identity
+                  {t.header?.register || "Create Profile"}
                 </Link>
               </Button>
               {isAuthenticated ? (

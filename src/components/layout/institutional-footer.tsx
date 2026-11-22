@@ -15,11 +15,11 @@ export function InstitutionalFooter() {
             </span>
           </div>
           <div className="flex items-center gap-4 text-ivory/70 text-[11px]">
-            <span>DigiLocker Integration Ready</span>
+            <span>Sovereign Identity Protocol</span>
             <span>•</span>
-            <span>Zero Platform Commission</span>
+            <span>Permanent 0% Platform Commission</span>
             <span>•</span>
-            <span>Direct Bank Settlements</span>
+            <span>Direct Customer Discovery</span>
           </div>
         </div>
       </div>

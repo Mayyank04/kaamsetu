@@ -1,6 +1,25 @@
 import { z } from "zod";
 
-export const supportedLanguageCodes = ["en", "hi", "as", "bn", "ta", "te", "mr"] as const;
+export const supportedLanguageCodes = [
+  "en",
+  "hi",
+  "as",
+  "bn",
+  "or",
+  "pa",
+  "gu",
+  "mr",
+  "ur",
+  "ta",
+  "te",
+  "kn",
+  "ml",
+  "ne",
+  "brx",
+  "mni",
+  "ks",
+  "sa",
+] as const;
 export type SupportedLanguageCode = (typeof supportedLanguageCodes)[number];
 
 export interface LanguageOption {
@@ -12,13 +31,24 @@ export interface LanguageOption {
 }
 
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
+  { code: "en", name: "English", nativeName: "English", greeting: "Welcome", flagEmoji: "🌐" },
   { code: "hi", name: "Hindi", nativeName: "हिन्दी", greeting: "नमस्ते", flagEmoji: "🇮🇳" },
-  { code: "en", name: "English", nativeName: "English", greeting: "Namaste / Welcome", flagEmoji: "🌐" },
+  { code: "as", name: "Assamese", nativeName: "অসমীয়া", greeting: "নমস্কাৰ", flagEmoji: "🇮🇳" },
   { code: "bn", name: "Bengali", nativeName: "বাংলা", greeting: "নমস্কার", flagEmoji: "🇮🇳" },
+  { code: "or", name: "Odia", nativeName: "ଓଡ଼ିଆ", greeting: "ନମସ୍କାର", flagEmoji: "🇮🇳" },
+  { code: "pa", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ", greeting: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ", flagEmoji: "🇮🇳" },
+  { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી", greeting: "નમસ્તે", flagEmoji: "🇮🇳" },
   { code: "mr", name: "Marathi", nativeName: "मराठी", greeting: "नमस्कार", flagEmoji: "🇮🇳" },
+  { code: "ur", name: "Urdu", nativeName: "اردو", greeting: "آداب / سلام", flagEmoji: "🇮🇳" },
   { code: "ta", name: "Tamil", nativeName: "தமிழ்", greeting: "வணக்கம்", flagEmoji: "🇮🇳" },
   { code: "te", name: "Telugu", nativeName: "తెలుగు", greeting: "నమస్కారం", flagEmoji: "🇮🇳" },
-  { code: "as", name: "Assamese", nativeName: "অসমীয়া", greeting: "নমস্কাৰ", flagEmoji: "🇮🇳" },
+  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ", greeting: "ನಮಸ್ಕಾರ", flagEmoji: "🇮🇳" },
+  { code: "ml", name: "Malayalam", nativeName: "മലയാളം", greeting: "നമസ്കാരം", flagEmoji: "🇮🇳" },
+  { code: "ne", name: "Nepali", nativeName: "नेपाली", greeting: "नमस्ते", flagEmoji: "🇮🇳" },
+  { code: "brx", name: "Bodo", nativeName: "बड़ो", greeting: "खुलुमबाय", flagEmoji: "🇮🇳" },
+  { code: "mni", name: "Manipuri", nativeName: "মৈতৈলোন্", greeting: "খুরুমজরি", flagEmoji: "🇮🇳" },
+  { code: "ks", name: "Kashmiri", nativeName: "کٲشُر", greeting: "سلام / نمسکار", flagEmoji: "🇮🇳" },
+  { code: "sa", name: "Sanskrit", nativeName: "संस्कृतम्", greeting: "नमो नमः", flagEmoji: "🇮🇳" },
 ];
 
 // Zod input validation for onboarding extraction
