@@ -1,26 +1,12 @@
 import { z } from "zod";
+import {
+  SUPPORTED_LOCALES,
+  AppLocale,
+} from "@/lib/i18n/types";
+import { SUPPORTED_LOCALES_METADATA } from "@/lib/i18n/registry";
 
-export const supportedLanguageCodes = [
-  "en",
-  "hi",
-  "as",
-  "bn",
-  "or",
-  "pa",
-  "gu",
-  "mr",
-  "ur",
-  "ta",
-  "te",
-  "kn",
-  "ml",
-  "ne",
-  "brx",
-  "mni",
-  "ks",
-  "sa",
-] as const;
-export type SupportedLanguageCode = (typeof supportedLanguageCodes)[number];
+export const supportedLanguageCodes = SUPPORTED_LOCALES;
+export type SupportedLanguageCode = AppLocale;
 
 export interface LanguageOption {
   code: SupportedLanguageCode;
@@ -30,26 +16,13 @@ export interface LanguageOption {
   flagEmoji: string;
 }
 
-export const SUPPORTED_LANGUAGES: LanguageOption[] = [
-  { code: "en", name: "English", nativeName: "English", greeting: "Welcome", flagEmoji: "🌐" },
-  { code: "hi", name: "Hindi", nativeName: "हिन्दी", greeting: "नमस्ते", flagEmoji: "🇮🇳" },
-  { code: "as", name: "Assamese", nativeName: "অসমীয়া", greeting: "নমস্কাৰ", flagEmoji: "🇮🇳" },
-  { code: "bn", name: "Bengali", nativeName: "বাংলা", greeting: "নমস্কার", flagEmoji: "🇮🇳" },
-  { code: "or", name: "Odia", nativeName: "ଓଡ଼ିଆ", greeting: "ନମସ୍କାର", flagEmoji: "🇮🇳" },
-  { code: "pa", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ", greeting: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ", flagEmoji: "🇮🇳" },
-  { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી", greeting: "નમસ્તે", flagEmoji: "🇮🇳" },
-  { code: "mr", name: "Marathi", nativeName: "मराठी", greeting: "नमस्कार", flagEmoji: "🇮🇳" },
-  { code: "ur", name: "Urdu", nativeName: "اردو", greeting: "آداب / سلام", flagEmoji: "🇮🇳" },
-  { code: "ta", name: "Tamil", nativeName: "தமிழ்", greeting: "வணக்கம்", flagEmoji: "🇮🇳" },
-  { code: "te", name: "Telugu", nativeName: "తెలుగు", greeting: "నమస్కారం", flagEmoji: "🇮🇳" },
-  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ", greeting: "ನಮಸ್ಕಾರ", flagEmoji: "🇮🇳" },
-  { code: "ml", name: "Malayalam", nativeName: "മലയാളം", greeting: "നമസ്കാരം", flagEmoji: "🇮🇳" },
-  { code: "ne", name: "Nepali", nativeName: "नेपाली", greeting: "नमस्ते", flagEmoji: "🇮🇳" },
-  { code: "brx", name: "Bodo", nativeName: "बड़ो", greeting: "खुलुमबाय", flagEmoji: "🇮🇳" },
-  { code: "mni", name: "Manipuri", nativeName: "মৈতৈলোন্", greeting: "খুরুমজরি", flagEmoji: "🇮🇳" },
-  { code: "ks", name: "Kashmiri", nativeName: "کٲشُر", greeting: "سلام / نمسکار", flagEmoji: "🇮🇳" },
-  { code: "sa", name: "Sanskrit", nativeName: "संस्कृतम्", greeting: "नमो नमः", flagEmoji: "🇮🇳" },
-];
+export const SUPPORTED_LANGUAGES: LanguageOption[] = SUPPORTED_LOCALES_METADATA.map((meta) => ({
+  code: meta.code,
+  name: meta.name,
+  nativeName: meta.nativeName,
+  greeting: meta.greeting,
+  flagEmoji: meta.code === "en" ? "🌐" : "🇮🇳",
+}));
 
 // Zod input validation for onboarding extraction
 export const onboardingExtractionRequestSchema = z.object({
@@ -58,7 +31,7 @@ export const onboardingExtractionRequestSchema = z.object({
     .trim()
     .min(10, "Please provide at least 10 characters describing your trade experience.")
     .max(5000, "Spoken claim transcript exceeds maximum character limit."),
-  language: z.enum(supportedLanguageCodes).default("hi"),
+  language: z.enum(supportedLanguageCodes as unknown as [string, ...string[]]).default("hi"),
   inputMode: z.enum(["voice", "text"]).default("voice"),
 });
 

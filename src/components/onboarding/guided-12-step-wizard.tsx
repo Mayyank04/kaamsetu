@@ -373,7 +373,7 @@ export function Guided12StepWizard({
               <h2 className="text-lg font-bold">1. {t.onboarding?.step1 || "Choose Your Language"}</h2>
             </div>
             <p className="text-xs text-charcoal-muted">
-              KAAMSETU supports 18 Indian languages. Pick the language you feel most comfortable using.
+              KAAMSETU supports 39 Indian languages and dialects. Pick the language you feel most comfortable using.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
               {SUPPORTED_LANGUAGES.map((lang) => {

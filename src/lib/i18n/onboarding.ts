@@ -41,7 +41,7 @@ export interface OnboardingTranslations {
   }[];
 }
 
-export const ONBOARDING_I18N: Record<SupportedLanguageCode, OnboardingTranslations> = {
+const ONBOARDING_I18N_RAW: Record<string, OnboardingTranslations> = {
   hi: {
     step1Title: "भाषा और पंजीकरण माध्यम चुनें",
     step1Subtitle: "कामसेतु आपकी मातृभाषा समझता है। बोलकर या लिखकर अपनी पहचान बनाएं।",
@@ -738,3 +738,15 @@ export const ONBOARDING_I18N: Record<SupportedLanguageCode, OnboardingTranslatio
     sampleTestimonies: [],
   },
 };
+
+export const ONBOARDING_I18N: Record<SupportedLanguageCode, OnboardingTranslations> = new Proxy(
+  ONBOARDING_I18N_RAW as unknown as Record<SupportedLanguageCode, OnboardingTranslations>,
+  {
+    get(target, prop: string) {
+      if (prop in target) {
+        return (target as any)[prop];
+      }
+      return target.en || target.hi;
+    },
+  }
+);

@@ -52,6 +52,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth/use-auth";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 export type WorkerDashboardTab =
   | "dashboard"
@@ -73,6 +74,7 @@ export function WorkerDashboardContainer({
   initialData,
 }: WorkerDashboardContainerProps) {
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [data, setData] = React.useState<WorkerDashboardData>(initialData);
   const [activeTab, setActiveTab] = React.useState<WorkerDashboardTab>("dashboard");
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
@@ -313,16 +315,16 @@ export function WorkerDashboardContainer({
 
   // Full 10-section navigation menu per Phase 43 UX specifications
   const navTabs = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "profile", label: "My Profile", icon: User },
-    { id: "skills", label: `My Skills (${data.skills.length})`, icon: Award },
-    { id: "opportunities", label: `Work Opportunities (${pendingInvitations.length})`, icon: Briefcase },
-    { id: "bookings", label: `Bookings (${data.bookings.length})`, icon: CalendarCheck },
-    { id: "portfolio", label: `Portfolio (${data.portfolio.length})`, icon: Layers },
-    { id: "credentials", label: "Credentials & Trust", icon: ShieldCheck },
-    { id: "earnings", label: "Earnings & Payouts", icon: TrendingUp },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "settings", label: "Help & Settings", icon: Settings },
+    { id: "dashboard", label: t.dashboard?.tabDashboard || "Dashboard", icon: LayoutDashboard },
+    { id: "profile", label: t.dashboard?.tabProfile || "My Profile", icon: User },
+    { id: "skills", label: `${t.dashboard?.tabSkills || "My Skills"} (${data.skills.length})`, icon: Award },
+    { id: "opportunities", label: `${t.dashboard?.tabOpportunities || "Work Opportunities"} (${pendingInvitations.length})`, icon: Briefcase },
+    { id: "bookings", label: `${t.dashboard?.tabBookings || "Bookings"} (${data.bookings.length})`, icon: CalendarCheck },
+    { id: "portfolio", label: `${t.dashboard?.tabPortfolio || "Portfolio"} (${data.portfolio.length})`, icon: Layers },
+    { id: "credentials", label: t.dashboard?.tabCredentials || "Credentials & Trust", icon: ShieldCheck },
+    { id: "earnings", label: t.dashboard?.tabEarnings || "Earnings & Payouts", icon: TrendingUp },
+    { id: "notifications", label: t.dashboard?.tabNotifications || "Notifications", icon: Bell },
+    { id: "settings", label: t.dashboard?.tabSettings || "Help & Settings", icon: Settings },
   ] as const;
 
   return (

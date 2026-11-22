@@ -71,6 +71,7 @@ export function InstitutionalHeader() {
   const navLinks = [
     { href: "/", label: t.header?.home || "Home" },
     { href: "/explore", label: t.header?.findProfessionals || "Find Professionals" },
+    { href: "/vendor/dashboard", label: t.header?.vendorHub || "Vendor Hub" },
     { href: "/how-it-works", label: t.header?.howItWorks || "How It Works" },
     { href: "/contractor/dashboard", label: t.header?.contractorPro || "Contractor Pro" },
     { href: "/institution/dashboard", label: t.header?.institutions || "Institutions" },
@@ -184,7 +185,7 @@ export function InstitutionalHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto p-1.5">
               <DropdownMenuLabel className="text-[10px] uppercase font-bold text-charcoal-muted tracking-wider px-2 py-1">
-                {t.accessibility?.languageSelector || "18 Indian Languages"}
+                {t.accessibility?.languageSelector || "39 Indian Languages & Dialects"}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {SUPPORTED_LOCALES_METADATA.map((meta) => {
