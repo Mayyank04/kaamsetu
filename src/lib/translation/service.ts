@@ -131,6 +131,12 @@ export class TranslationService {
         ...req,
         sourceLanguage: source,
       });
+      if (providerToUse !== "deterministic") {
+        result.isFallback = true;
+        result.fallbackReason =
+          result.fallbackReason ||
+          `Primary provider '${providerToUse}' was unavailable or timed out; served from verified offline lexicon.`;
+      }
     }
 
     // 6. Cache Result (if not private)

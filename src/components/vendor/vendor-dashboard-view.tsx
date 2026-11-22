@@ -239,6 +239,85 @@ export function VendorDashboardView({ initialVendor }: VendorDashboardViewProps)
         )}
       </div>
 
+      {/* 3b. Professional Services & Labor Rates */}
+      <div className="p-6 rounded-md bg-card border border-forest/15 shadow-sovereign-sm space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-forest/10">
+          <div>
+            <h3 className="font-serif text-lg font-bold text-forest">
+              Bespoke Services & Labor Rates
+            </h3>
+            <p className="text-xs text-charcoal-muted">
+              Custom alterations, on-site diagnostics, repairs, or craft orders.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            variant="outline"
+            className="border-forest/20 text-forest hover:bg-forest/5 text-xs h-8"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            Manage Services
+          </Button>
+        </div>
+
+        {vendor?.servicesCatalog && vendor.servicesCatalog.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {vendor.servicesCatalog.map((svc) => (
+              <div
+                key={svc.id}
+                className="p-3.5 rounded-sm border border-forest/15 bg-background space-y-1 text-xs"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-bold text-forest line-clamp-1">{svc.name}</span>
+                  <Badge variant="outline" className="bg-sand/30 text-sand-800 border-sand/40 text-[10px] shrink-0 font-mono font-semibold">
+                    ₹{svc.price} ({svc.priceType.replace("_", " ")})
+                  </Badge>
+                </div>
+                {svc.durationEstimate && (
+                  <div className="flex items-center justify-between text-[10px] text-charcoal-muted pt-1">
+                    <span>Estimated Duration:</span>
+                    <span className="font-medium text-forest">{svc.durationEstimate}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-xs text-charcoal-muted space-y-1">
+            <p>No discrete services listed yet. You can list labor rates, alterations, or consultations.</p>
+          </div>
+        )}
+      </div>
+
+      {/* 3c. Workshop Photos Showcase */}
+      {vendor?.businessImages && vendor.businessImages.length > 0 && (
+        <div className="p-6 rounded-md bg-card border border-forest/15 shadow-sovereign-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-forest/10">
+            <div>
+              <h3 className="font-serif text-lg font-bold text-forest">Workshop & Storefront Photos</h3>
+              <p className="text-xs text-charcoal-muted">Authentic photos of your stall and completed work.</p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setIsEditing(true)}
+              variant="outline"
+              className="border-forest/20 text-forest hover:bg-forest/5 text-xs h-8"
+            >
+              Update Photos
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {vendor.businessImages.map((imgUrl, i) => (
+              <div key={i} className="relative rounded border border-forest/20 overflow-hidden h-28 bg-forest/5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={imgUrl} alt={`Storefront ${i + 1}`} className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 4. Customer Inquiries & Bookings (Truthful Empty State) */}
       <div className="p-6 rounded-md bg-card border border-forest/15 shadow-sovereign-sm space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-forest/10">

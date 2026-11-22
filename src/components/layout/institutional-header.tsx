@@ -71,14 +71,29 @@ export function InstitutionalHeader() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [mobileMenuOpen]);
 
-  const navLinks = [
+  const primaryNavLinks = [
     { href: "/", label: t.header?.home || "Home" },
     { href: "/explore", label: t.header?.findProfessionals || "Find Professionals" },
     { href: "/vendor/dashboard", label: t.header?.vendorHub || "Vendor Hub" },
     { href: "/how-it-works", label: t.header?.howItWorks || "How It Works" },
-    { href: "/contractor/dashboard", label: t.header?.contractorPro || "Contractor Pro" },
-    { href: "/institution/dashboard", label: t.header?.institutions || "Institutions" },
-    { href: "/about", label: t.header?.about || "About" },
+  ];
+
+  const portalLinks = [
+    {
+      href: "/contractor/dashboard",
+      label: t.header?.contractorPro || "Contractor Pro",
+      desc: "Project dispatch & sub-contracting",
+    },
+    {
+      href: "/institution/dashboard",
+      label: t.header?.institutions || "Institutions",
+      desc: "Registry audit & skill certification",
+    },
+    {
+      href: "/about",
+      label: t.header?.about || "About Platform",
+      desc: "Sovereign trust & zero commission principles",
+    },
   ];
 
   return (
@@ -133,7 +148,7 @@ export function InstitutionalHeader() {
 
         {/* Desktop Navigation Links (Visible on lg 1024px and above) */}
         <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-xs xl:text-sm font-semibold text-charcoal">
-          {navLinks.map((link) => {
+          {primaryNavLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
@@ -150,6 +165,38 @@ export function InstitutionalHeader() {
               </Link>
             );
           })}
+
+          {/* Portals Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "flex items-center gap-1 transition-colors relative py-1 outline-none cursor-pointer",
+                  portalLinks.some((p) => pathname === p.href)
+                    ? "text-forest font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-forest"
+                    : "text-charcoal-muted hover:text-forest"
+                )}
+              >
+                <span>Portals</span>
+                <ChevronDown className="w-3 h-3 opacity-60" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64 p-2 shadow-sovereign-md">
+              <DropdownMenuLabel className="text-[10px] uppercase font-bold text-charcoal-muted tracking-wider px-2 py-1">
+                Specialized Operations Portals
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {portalLinks.map((p) => (
+                <DropdownMenuItem key={p.href} asChild className="cursor-pointer py-2 px-2.5 rounded-xs">
+                  <Link href={p.href} className="flex flex-col gap-0.5">
+                    <span className="font-bold text-xs text-forest">{p.label}</span>
+                    <span className="text-[10px] text-charcoal-muted">{p.desc}</span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
 
         {/* Right Actions & User Menu */}
@@ -222,13 +269,6 @@ export function InstitutionalHeader() {
           >
             <Languages className="mr-1.5 h-3.5 w-3.5 text-forest" />
             <span>Translate</span>
-          </Button>
-
-          <Button variant="outline" size="sm" asChild className="border-forest/20 text-forest hover:bg-forest/5 text-xs">
-            <Link href="/explore">
-              <Search className="mr-1.5 h-3.5 w-3.5 text-forest" />
-              {t.header?.findProfessionals || "Find Professionals"}
-            </Link>
           </Button>
 
           <Button variant="default" size="sm" asChild className="bg-forest text-ivory hover:bg-forest-500 shadow-sm text-xs">
@@ -417,7 +457,10 @@ export function InstitutionalHeader() {
             </div>
 
             <nav className="flex flex-col space-y-1 text-sm font-medium">
-              {navLinks.map((link) => {
+              <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted px-3 pt-1">
+                Main Services
+              </span>
+              {primaryNavLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
                   <Link
@@ -432,6 +475,29 @@ export function InstitutionalHeader() {
                     )}
                   >
                     {link.label}
+                  </Link>
+                );
+              })}
+
+              <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted px-3 pt-3">
+                Operations & Portals
+              </span>
+              {portalLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "px-3 py-2 rounded-lg transition-colors text-xs font-semibold",
+                      isActive
+                        ? "bg-forest/10 text-forest font-bold border-l-2 border-forest"
+                        : "text-charcoal hover:bg-forest/5"
+                    )}
+                  >
+                    <div className="font-bold text-forest">{link.label}</div>
+                    <div className="text-[10px] text-charcoal-muted font-normal">{link.desc}</div>
                   </Link>
                 );
               })}

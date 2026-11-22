@@ -42,6 +42,9 @@ export function TranslatedContent({
   const [translatedText, setTranslatedText] = React.useState<string | null>(null);
   const [detectedSource, setDetectedSource] = React.useState<string | null>(null);
   const [disclaimer, setDisclaimer] = React.useState<string | null>(null);
+  const [isFallback, setIsFallback] = React.useState<boolean>(false);
+  const [isPartial, setIsPartial] = React.useState<boolean>(false);
+  const [fallbackReason, setFallbackReason] = React.useState<string | null>(null);
   const [isTranslating, setIsTranslating] = React.useState(false);
   const [showOriginal, setShowOriginal] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -73,6 +76,9 @@ export function TranslatedContent({
       setTranslatedText(json.data.translatedText);
       setDetectedSource(json.data.detectedSourceLanguage);
       setDisclaimer(json.data.disclaimer);
+      setIsFallback(Boolean(json.data.isFallback));
+      setIsPartial(Boolean(json.data.isPartial));
+      setFallbackReason(json.data.fallbackReason || null);
       setShowOriginal(false);
     } catch (err: any) {
       console.error("[TranslatedContent] Error translating text:", err);
@@ -122,12 +128,19 @@ export function TranslatedContent({
         {!showOriginal && translatedText && (
           <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-forest/10 text-xs">
             <div className="flex items-center gap-1.5 text-forest font-semibold">
-              <span className="text-[11px] uppercase tracking-wider text-charcoal-muted">Translated:</span>
+              <span className="text-[11px] uppercase tracking-wider text-charcoal-muted">
+                {isPartial ? "Lexicon Match:" : isFallback ? "Corpus Match:" : "Translated:"}
+              </span>
               <span>{sourceCap.name}</span>
               <span className="text-forest/40">→</span>
               <span className="text-forest underline underline-offset-2">
                 {targetCap.name} ({targetCap.nativeName})
               </span>
+              {(isFallback || isPartial) && (
+                <span className="ml-1 text-[10px] px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded border border-amber-300 font-normal">
+                  {isPartial ? "Partial Approximation" : "Offline Lexicon"}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-1">

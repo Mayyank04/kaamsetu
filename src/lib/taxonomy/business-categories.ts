@@ -70,6 +70,31 @@ export const INDIAN_BUSINESS_CATEGORIES: BusinessCategory[] = [
             required: true,
           },
           {
+            id: "specializations",
+            labelKey: "electrician.specializations",
+            defaultLabel: "Work Specializations",
+            type: "multiselect",
+            options: [
+              { value: "inverter_wiring", label: "Solar Inverters & Battery Banks" },
+              { value: "panel_installation", label: "Distribution Boards & MCB Panels" },
+              { value: "earthing", label: "Safety Earthing & Surge Arrestors" },
+              { value: "smart_home", label: "Smart Lighting & Automation" },
+              { value: "motor_repair", label: "Submersible Pump & Motor Rewinding" },
+            ],
+          },
+          {
+            id: "applicable_qualifications",
+            labelKey: "electrician.qualifications",
+            defaultLabel: "Applicable Trade Qualifications",
+            type: "select",
+            options: [
+              { value: "licensed_supervisor", label: "State CEA Licensed Electrical Supervisor" },
+              { value: "wireman_permit", label: "State Wireman Competency Permit" },
+              { value: "iti_electrician", label: "ITI Electrician Certified (NCVT)" },
+              { value: "guild_master", label: "Guild Master / 10+ Years Practical Apprentice" },
+            ],
+          },
+          {
             id: "emergency_24x7",
             labelKey: "electrician.emergency24x7",
             defaultLabel: "Emergency 24x7 Support Available",
@@ -236,6 +261,18 @@ export const INDIAN_BUSINESS_CATEGORIES: BusinessCategory[] = [
             required: true,
           },
           {
+            id: "alteration_services",
+            labelKey: "tailor.alterationServices",
+            defaultLabel: "Alteration Services Offered",
+            type: "multiselect",
+            options: [
+              { value: "fitting", label: "Blouse, Kurti & Shirt Tightening / Loosening" },
+              { value: "length_adjust", label: "Trouser / Skirt Length Shortening & Hemming" },
+              { value: "zipper_replace", label: "Zipper & Button Replacement" },
+              { value: "patch_restoration", label: "Tear Mending & Patch Restoration" },
+            ],
+          },
+          {
             id: "custom_orders",
             labelKey: "tailor.customOrders",
             defaultLabel: "Custom Orders Accepted",
@@ -289,6 +326,64 @@ export const INDIAN_BUSINESS_CATEGORIES: BusinessCategory[] = [
     iconName: "Utensils",
     description: "Tea stalls, street food vendors, tiffin services, home kitchens, and bakers.",
     subcategories: [
+      {
+        id: "sub-restaurant",
+        code: "restaurant",
+        name: "Restaurant & Local Eatery",
+        hindiName: "रेस्तरां और भोजनालय",
+        description: "Dine-in family restaurants, local dhabas, cafes, and regional specialty eateries.",
+        requiresLicense: true,
+        licenseName: "FSSAI Food Safety License / Registration",
+        fields: [
+          {
+            id: "cuisine_types",
+            labelKey: "restaurant.cuisine",
+            defaultLabel: "Cuisine Specialization",
+            type: "multiselect",
+            options: [
+              { value: "assamese_northeastern", label: "Assamese & Northeastern Traditional" },
+              { value: "north_indian", label: "North Indian & Mughlai" },
+              { value: "south_indian", label: "South Indian & Tiffin" },
+              { value: "bengali", label: "Bengali Rice & Fish Dishes" },
+              { value: "chinese_tibetan", label: "Indo-Chinese & Tibetan (Momos, Thukpa)" },
+            ],
+            required: true,
+          },
+          {
+            id: "menu_highlights",
+            labelKey: "restaurant.menu",
+            defaultLabel: "Signature Menu Dishes",
+            type: "text",
+            placeholder: "e.g. Traditional Joha Rice Thali, Bamboo Shoot Pork/Fish, Dal Makhani",
+          },
+          {
+            id: "dietary_type",
+            labelKey: "restaurant.dietaryType",
+            defaultLabel: "Dietary Category",
+            type: "select",
+            options: [
+              { value: "pure_veg", label: "Pure Vegetarian (शुद्ध शाकाहारी)" },
+              { value: "non_veg", label: "Non-Vegetarian & Halal Options" },
+              { value: "both", label: "Separate Veg & Non-Veg Kitchens" },
+            ],
+          },
+          {
+            id: "fssai_license_number",
+            labelKey: "restaurant.fssaiLicense",
+            defaultLabel: "FSSAI License / Registration Number",
+            type: "text",
+            placeholder: "14-digit FSSAI Number (e.g. 10021000000000)",
+            required: true,
+          },
+          {
+            id: "seating_capacity",
+            labelKey: "restaurant.capacity",
+            defaultLabel: "Seating Capacity",
+            type: "number",
+            placeholder: "e.g. 35 seats",
+          },
+        ],
+      },
       {
         id: "sub-street-food",
         code: "street_food",
@@ -388,6 +483,19 @@ export const INDIAN_BUSINESS_CATEGORIES: BusinessCategory[] = [
             required: true,
           },
           {
+            id: "repair_services",
+            labelKey: "mechanic.repairServices",
+            defaultLabel: "Repair Services Offered",
+            type: "multiselect",
+            options: [
+              { value: "engine_overhaul", label: "Engine Overhaul & Tuning" },
+              { value: "brake_clutch", label: "Brake & Clutch Repair" },
+              { value: "electrical_battery", label: "Wiring, Self-Starter & Battery" },
+              { value: "tyre_puncture", label: "Tyre Replacement & Puncture Repair" },
+              { value: "oil_service", label: "Periodic Oil & Filter Change" },
+            ],
+          },
+          {
             id: "roadside_assistance",
             labelKey: "mechanic.roadsideAssistance",
             defaultLabel: "Provides Roadside Assistance / Towing",
@@ -458,6 +566,18 @@ export const INDIAN_BUSINESS_CATEGORIES: BusinessCategory[] = [
             required: true,
           },
           {
+            id: "seasonal_availability",
+            labelKey: "agri.seasons",
+            defaultLabel: "Seasonal Availability",
+            type: "multiselect",
+            options: [
+              { value: "kharif", label: "Kharif Season (Monsoon / Autumn Harvest)" },
+              { value: "rabi", label: "Rabi Season (Winter / Spring Harvest)" },
+              { value: "zaid", label: "Zaid Season (Summer Crop)" },
+              { value: "year_round", label: "Year-Round Continuous Supply" },
+            ],
+          },
+          {
             id: "organic_certified",
             labelKey: "agri.organic",
             defaultLabel: "Grown via Natural / Organic Practices",
@@ -498,6 +618,35 @@ export const INDIAN_BUSINESS_CATEGORIES: BusinessCategory[] = [
             type: "text",
             placeholder: "e.g. Mathematics, Science, Assamese, English",
             required: true,
+          },
+          {
+            id: "education_levels",
+            labelKey: "tutor.levels",
+            defaultLabel: "Education Levels Tutored",
+            type: "multiselect",
+            options: [
+              { value: "primary", label: "Primary (Classes 1–5)" },
+              { value: "middle", label: "Middle School (Classes 6–8)" },
+              { value: "secondary", label: "Secondary / 10th Board" },
+              { value: "senior_secondary", label: "Higher Secondary / 12th Board" },
+              { value: "competitive", label: "Foundational & Competitive Exams" },
+            ],
+            required: true,
+          },
+          {
+            id: "teaching_languages",
+            labelKey: "tutor.languages",
+            defaultLabel: "Teaching & Explanation Languages",
+            type: "multiselect",
+            options: [
+              { value: "as", label: "Assamese (অসমীয়া)" },
+              { value: "hi", label: "Hindi (हिन्दी)" },
+              { value: "bn", label: "Bengali (বাংলা)" },
+              { value: "en", label: "English" },
+              { value: "kha", label: "Khasi" },
+              { value: "grt", label: "Garo" },
+              { value: "bho", label: "Bhojpuri" },
+            ],
           },
           {
             id: "instruction_medium",
@@ -550,6 +699,27 @@ export const INDIAN_BUSINESS_CATEGORIES: BusinessCategory[] = [
               { value: "frame_loom", label: "Fly-shuttle Frame Loom" },
               { value: "backstrap", label: "Loin / Backstrap Loom" },
             ],
+          },
+          {
+            id: "materials_used",
+            labelKey: "artisan.materials",
+            defaultLabel: "Raw Materials Used",
+            type: "multiselect",
+            options: [
+              { value: "muga_silk", label: "Golden Muga Silk" },
+              { value: "eri_silk", label: "Ahimsa Eri (Endi) Silk" },
+              { value: "pure_cotton", label: "Natural Handspun Cotton" },
+              { value: "bamboo_cane", label: "Local Bamboo & Wild Cane" },
+              { value: "clay_terracotta", label: "Terracotta & River Clay" },
+              { value: "bell_metal", label: "Bell Metal & Brass" },
+            ],
+          },
+          {
+            id: "portfolio_samples_count",
+            labelKey: "artisan.samplesCount",
+            defaultLabel: "Completed Masterpiece Portfolio Samples",
+            type: "number",
+            placeholder: "e.g. 12 pieces",
           },
           {
             id: "gi_tagged",
@@ -753,4 +923,12 @@ export function searchTaxonomyMultilingual(query: string): {
   }
 
   return {};
+}
+
+export const BUSINESS_CATEGORIES = INDIAN_BUSINESS_CATEGORIES;
+
+export function getCategoryById(idOrCode: string): BusinessCategory | undefined {
+  return INDIAN_BUSINESS_CATEGORIES.find(
+    (c) => c.id === idOrCode || c.code === idOrCode || c.id === `cat-${idOrCode}`
+  );
 }

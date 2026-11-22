@@ -20,6 +20,7 @@ import { AvailabilitySettings } from "@/components/dashboard/availability-settin
 import { WorkHistoryView } from "@/components/dashboard/work-history-view";
 import { ReviewsView } from "@/components/dashboard/reviews-view";
 import { ProfileEditorModal } from "@/components/dashboard/profile-editor-modal";
+import { IntelligentVoiceAssistant, ExtractedVoiceIntent } from "@/components/voice/intelligent-voice-assistant";
 import {
   LayoutDashboard,
   User,
@@ -47,6 +48,11 @@ import {
   ArrowRight,
   Check,
   X as XIcon,
+  Mic,
+  Languages,
+  Sparkles,
+  Eye,
+  Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,8 +84,46 @@ export function WorkerDashboardContainer({
   const [data, setData] = React.useState<WorkerDashboardData>(initialData);
   const [activeTab, setActiveTab] = React.useState<WorkerDashboardTab>("dashboard");
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [isVoiceAssistantOpen, setIsVoiceAssistantOpen] = React.useState(false);
   const [isPublishing, setIsPublishing] = React.useState(false);
   const [pendingInvitations, setPendingInvitations] = React.useState<any[]>([]);
+
+  const handleVoiceIntentConfirmed = async (intent: ExtractedVoiceIntent) => {
+    setIsVoiceAssistantOpen(false);
+    if (!intent) return;
+
+    try {
+      const updates: Partial<DashboardWorkerProfile> = {};
+      if (intent.primaryTrade) updates.occupation = intent.primaryTrade;
+      if (intent.city) updates.city = intent.city;
+      if (intent.state) updates.state = intent.state;
+      if (intent.yearsExperience) updates.yearsExperience = intent.yearsExperience;
+
+      setData((prev) => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          ...updates,
+        },
+      }));
+
+      await fetch("/api/worker/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: data.profile.id,
+          headline: intent.primaryTrade,
+          city: intent.city,
+          state: intent.state,
+          years_experience: intent.yearsExperience,
+        }),
+      });
+
+      toast.success("Profile updated via voice interpretation!");
+    } catch {
+      toast.error("Failed to save voice updates");
+    }
+  };
 
   React.useEffect(() => {
     fetch("/api/worker/invitations")
@@ -374,6 +418,111 @@ export function WorkerDashboardContainer({
            ========================================================================= */}
         {activeTab === "dashboard" && (
           <div className="space-y-8">
+            {/* Direct Answer to Prompt 4.A: "What can I do next to find suitable work?" */}
+            <div className="rounded-md border border-forest/20 bg-card p-6 shadow-sovereign-sm space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-forest/10">
+                <div>
+                  <Badge className="bg-forest/10 text-forest border-forest/20 text-[10px] uppercase font-mono tracking-wider mb-1">
+                    First-Screen Action Hub
+                  </Badge>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-forest">
+                    What can I do next to find suitable work?
+                  </h2>
+                  <p className="text-xs text-charcoal-muted mt-0.5">
+                    Your immediate actions to receive client calls, local contractor invitations, and project requests.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => setIsVoiceAssistantOpen(true)}
+                    className="bg-forest text-ivory hover:bg-forest-600 text-xs h-9 shadow-sm"
+                  >
+                    <Mic className="w-3.5 h-3.5 mr-1.5 text-sand" />
+                    Speak to Update Profile
+                  </Button>
+                </div>
+              </div>
+
+              {/* 4 Direct Operational Action Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                {/* 1. Availability */}
+                <div className="p-3.5 rounded border border-forest/15 bg-background space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-charcoal-muted uppercase">Today&apos;s Availability</span>
+                    <span className={`w-2 h-2 rounded-full ${data.profile.availabilityStatus === "available" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+                  </div>
+                  <p className="font-bold text-forest text-sm capitalize">
+                    {data.profile.availabilityStatus === "available" ? "Available on Site" : "Busy on Scheduled Work"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateAvailability(data.profile.availabilityStatus === "available" ? "unavailable" : "available", data.profile.serviceRadiusKm)}
+                    className="text-[11px] text-forest underline font-medium hover:text-forest-600 block"
+                  >
+                    Switch to {data.profile.availabilityStatus === "available" ? "Unavailable" : "Available Today"} →
+                  </button>
+                </div>
+
+                {/* 2. Public Visibility */}
+                <div className="p-3.5 rounded border border-forest/15 bg-background space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-charcoal-muted uppercase">Public Search Listing</span>
+                    <Eye className="w-3.5 h-3.5 text-forest" />
+                  </div>
+                  <p className="font-bold text-forest text-sm">
+                    {data.profile.isPublished ? "Visible to Clients" : "Private Draft Mode"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePublish(!data.profile.isPublished)}
+                    className="text-[11px] text-forest underline font-medium hover:text-forest-600 block"
+                  >
+                    Turn {data.profile.isPublished ? "Off (Make Private)" : "On (Visible to All)"} →
+                  </button>
+                </div>
+
+                {/* 3. Open Work Inquiries */}
+                <div className="p-3.5 rounded border border-forest/15 bg-background space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-charcoal-muted uppercase">Open Inquiries & Jobs</span>
+                    <Badge className="bg-sand/30 text-sand-800 border-sand/40 text-[10px] font-mono">
+                      {pendingInvitations.length + data.bookings.filter(b => b.status === "confirmed").length}
+                    </Badge>
+                  </div>
+                  <p className="font-bold text-forest text-sm">
+                    {pendingInvitations.length > 0 ? `${pendingInvitations.length} Pending Invites` : "Browse Local Jobs"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("opportunities")}
+                    className="text-[11px] text-forest underline font-medium hover:text-forest-600 block"
+                  >
+                    Review Opportunities →
+                  </button>
+                </div>
+
+                {/* 4. Service Area & Dispatch */}
+                <div className="p-3.5 rounded border border-forest/15 bg-background space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-charcoal-muted uppercase">Dispatch Radius</span>
+                    <MapPin className="w-3.5 h-3.5 text-forest" />
+                  </div>
+                  <p className="font-bold text-forest text-sm">
+                    {data.profile.serviceRadiusKm} km around {data.profile.city}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("profile")}
+                    className="text-[11px] text-forest underline font-medium hover:text-forest-600 block"
+                  >
+                    Adjust Service Area →
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Quick Next Steps Card */}
             <div className="rounded-md border border-forest/15 bg-card p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-forest/10 pb-3">
@@ -873,6 +1022,25 @@ export function WorkerDashboardContainer({
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveProfile}
       />
+
+      {/* Voice Assistant Modal */}
+      {isVoiceAssistantOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-card rounded-md border border-forest/20 shadow-sovereign-lg">
+            <button
+              onClick={() => setIsVoiceAssistantOpen(false)}
+              className="absolute top-4 right-4 text-charcoal-muted hover:text-forest p-1 z-10"
+              aria-label="Close voice assistant"
+            >
+              <XIcon className="w-5 h-5" />
+            </button>
+            <IntelligentVoiceAssistant
+              targetMode="onboarding"
+              onIntentConfirmed={handleVoiceIntentConfirmed}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

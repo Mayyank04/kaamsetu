@@ -15,6 +15,16 @@ export interface VendorProductItem {
   imageUrl?: string;
 }
 
+export interface VendorServiceItem {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  priceType: "fixed" | "starting_from" | "per_hour" | "per_day" | "per_unit";
+  durationEstimate?: string; // e.g. "2 hours", "1-2 days"
+  category?: string;
+}
+
 export type VendorStallType =
   | "mobile_cart"
   | "fixed_stall"
@@ -55,6 +65,10 @@ export interface VendorProfile {
   serviceRadiusKm: number;
   deliveryAvailable: boolean;
   productCatalog: VendorProductItem[];
+  servicesCatalog?: VendorServiceItem[];
+  businessImages?: string[];
+  isDraft?: boolean;
+  draftStep?: number;
   priceModel: "fixed" | "hourly" | "daily" | "unit" | "custom";
   priceRangeMin?: number;
   priceRangeMax?: number;

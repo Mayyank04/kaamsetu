@@ -7,6 +7,7 @@ import { ALL_LOCALES_METADATA } from "@/lib/i18n/registry";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Mic,
   MicOff,
@@ -27,14 +28,24 @@ import {
 export interface ExtractedVoiceIntent {
   rawTranscript: string;
   detectedLanguage: string;
-  actionIntent: "search" | "onboard_worker" | "register_vendor" | "navigate";
+  actionIntent:
+    | "search"
+    | "onboard_worker"
+    | "register_vendor"
+    | "change_language"
+    | "add_product"
+    | "navigate";
   name?: string;
   primaryTrade?: string;
   businessCategory?: string;
+  subcategory?: string;
+  targetLanguageCode?: string;
+  targetLanguageName?: string;
   city?: string;
   state?: string;
   locality?: string;
   yearsExperience?: number;
+  productName?: string;
   confidence: number;
 }
 
@@ -49,7 +60,7 @@ export function IntelligentVoiceAssistant({
   targetMode = "onboarding",
   className = "",
 }: IntelligentVoiceAssistantProps) {
-  const { t, locale } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
   const [isListening, setIsListening] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [transcript, setTranscript] = React.useState("");
@@ -94,13 +105,89 @@ export function IntelligentVoiceAssistant({
     }
   }, []);
 
-  // Intent Extraction Function (Rule-based NLP with multilingua keyword matching)
+  // Intent Extraction Function (Rule-based NLP with multilingual keyword matching)
   const extractIntent = (text: string, langCode: string): ExtractedVoiceIntent => {
     const lower = text.toLowerCase();
     let actionIntent: ExtractedVoiceIntent["actionIntent"] =
       targetMode === "search" ? "search" : targetMode === "vendor" ? "register_vendor" : "onboard_worker";
 
-    // 1. Trade Detection
+    let targetLanguageCode: string | undefined;
+    let targetLanguageName: string | undefined;
+    let subcategory: string | undefined;
+
+    // 1. Language Change Intent
+    if (
+      lower.includes("language") ||
+      lower.includes("भाषा") ||
+      lower.includes("ভাষা") ||
+      lower.includes("மொழி") ||
+      lower.includes("భాష")
+    ) {
+      actionIntent = "change_language";
+      if (lower.includes("assamese") || lower.includes("অসমীয়া") || lower.includes("asomia")) {
+        targetLanguageCode = "as";
+        targetLanguageName = "Assamese (অসমীয়া)";
+      } else if (lower.includes("hindi") || lower.includes("हिन्दी") || lower.includes("हिंदी")) {
+        targetLanguageCode = "hi";
+        targetLanguageName = "Hindi (हिन्दी)";
+      } else if (lower.includes("bengali") || lower.includes("বাংলা") || lower.includes("bangla")) {
+        targetLanguageCode = "bn";
+        targetLanguageName = "Bengali (বাংলা)";
+      } else if (lower.includes("tamil") || lower.includes("தமிழ்")) {
+        targetLanguageCode = "ta";
+        targetLanguageName = "Tamil (தமிழ்)";
+      } else if (lower.includes("telugu") || lower.includes("తెలుగు")) {
+        targetLanguageCode = "te";
+        targetLanguageName = "Telugu (తెలుగు)";
+      } else if (lower.includes("english") || lower.includes("अंग्रेजी")) {
+        targetLanguageCode = "en";
+        targetLanguageName = "English";
+      } else {
+        targetLanguageCode = "as";
+        targetLanguageName = "Assamese (অসমীয়া)";
+      }
+    }
+    // 2. Add Product to Shop Intent
+    else if (
+      (lower.includes("add") || lower.includes("जोड़") || lower.includes("যোগ")) &&
+      (lower.includes("product") || lower.includes("item") || lower.includes("सामान") || lower.includes("দোকান"))
+    ) {
+      actionIntent = "add_product";
+    }
+    // 3. Register Vendor / Shop Intent
+    else if (
+      lower.includes("register") ||
+      lower.includes("stall") ||
+      lower.includes("दुकान") ||
+      lower.includes("पंजीकरण") ||
+      lower.includes("দোকান পঞ্জীয়ন")
+    ) {
+      actionIntent = "register_vendor";
+    }
+    // 4. Search Intent
+    else if (
+      lower.includes("find") ||
+      lower.includes("search") ||
+      lower.includes("near me") ||
+      lower.includes("चाहिए") ||
+      lower.includes("ढूंढ") ||
+      lower.includes("लाগে") ||
+      lower.includes("khoj")
+    ) {
+      actionIntent = "search";
+    }
+    // 5. Worker Onboarding Intent ("I am a carpenter...", "I work as...")
+    else if (
+      lower.includes("i am") ||
+      lower.includes("हूँ") ||
+      lower.includes("মই") ||
+      lower.includes("worker") ||
+      lower.includes("mistri")
+    ) {
+      actionIntent = "onboard_worker";
+    }
+
+    // Trade Detection
     let primaryTrade = "General Technician";
     let businessCategory = "home_repair";
 
@@ -112,6 +199,7 @@ export function IntelligentVoiceAssistant({
     ) {
       primaryTrade = "Electrician & Wireman";
       businessCategory = "home_repair";
+      subcategory = "electrician";
     } else if (
       lower.includes("tailor") ||
       lower.includes("दर्जी") ||
@@ -120,6 +208,7 @@ export function IntelligentVoiceAssistant({
     ) {
       primaryTrade = "Tailor & Garment Maker";
       businessCategory = "clothing";
+      subcategory = "tailor";
     } else if (
       lower.includes("plumb") ||
       lower.includes("नल") ||
@@ -128,6 +217,7 @@ export function IntelligentVoiceAssistant({
     ) {
       primaryTrade = "Plumber & Pipe Fitter";
       businessCategory = "home_repair";
+      subcategory = "plumber";
     } else if (
       lower.includes("carpent") ||
       lower.includes("बढ़ई") ||
@@ -136,6 +226,7 @@ export function IntelligentVoiceAssistant({
     ) {
       primaryTrade = "Carpenter & Woodworker";
       businessCategory = "home_repair";
+      subcategory = "carpenter";
     } else if (
       lower.includes("mason") ||
       lower.includes("राजमिस्त्री") ||
@@ -144,15 +235,18 @@ export function IntelligentVoiceAssistant({
     ) {
       primaryTrade = "Mason / Rajmistri";
       businessCategory = "construction";
+      subcategory = "mason";
     } else if (
       lower.includes("tea") ||
       lower.includes("चाय") ||
       lower.includes("খাদ্য") ||
       lower.includes("dosa") ||
+      lower.includes("restaurant") ||
       lower.includes("समोसा")
     ) {
       primaryTrade = "Street Food & Tea Stall";
       businessCategory = "food_hospitality";
+      subcategory = "street_food";
     } else if (
       lower.includes("farm") ||
       lower.includes("किसान") ||
@@ -161,17 +255,21 @@ export function IntelligentVoiceAssistant({
     ) {
       primaryTrade = "Farmer & Produce Seller";
       businessCategory = "agriculture";
+      subcategory = "farmer";
     } else if (
       lower.includes("bamboo") ||
       lower.includes("बांस") ||
       lower.includes("হস্তশিল্প") ||
-      lower.includes("शिल्प")
+      lower.includes("शिल्प") ||
+      lower.includes("handloom") ||
+      lower.includes("बुनकर")
     ) {
       primaryTrade = "Bamboo & Cane Artisan";
       businessCategory = "artisan_traditional";
+      subcategory = "bamboo_cane";
     }
 
-    // 2. Location Detection
+    // Location Detection
     let city = "Guwahati";
     let state = "Assam";
     let locality = "Paltan Bazaar";
@@ -199,22 +297,11 @@ export function IntelligentVoiceAssistant({
     if (lower.includes("paltan") || lower.includes("पलटन")) locality = "Paltan Bazaar";
     if (lower.includes("police bazar") || lower.includes("पुलिस बाजार")) locality = "Police Bazar";
 
-    // 3. Experience Years Extraction
+    // Experience Years Extraction
     let yearsExperience = 8;
     const yearMatch = text.match(/(\d+)\s*(साल|years?|বছৰ|ವರ್ಷ|வருடம்)/i);
     if (yearMatch) {
       yearsExperience = parseInt(yearMatch[1], 10);
-    }
-
-    // 4. Intent Classification
-    if (
-      lower.includes("chahiye") ||
-      lower.includes("want") ||
-      lower.includes("need") ||
-      lower.includes("खोज") ||
-      lower.includes("লাগে")
-    ) {
-      actionIntent = "search";
     }
 
     return {
@@ -223,11 +310,14 @@ export function IntelligentVoiceAssistant({
       actionIntent,
       primaryTrade,
       businessCategory,
+      subcategory,
+      targetLanguageCode,
+      targetLanguageName,
       city,
       state,
       locality,
       yearsExperience,
-      confidence: 0.94,
+      confidence: 0.95,
     };
   };
 
@@ -304,7 +394,12 @@ export function IntelligentVoiceAssistant({
 
   // User Confirmation Action
   const handleConfirm = () => {
-    if (extractedIntent && onIntentConfirmed) {
+    if (!extractedIntent) return;
+    if (extractedIntent.actionIntent === "change_language" && extractedIntent.targetLanguageCode) {
+      setLocale(extractedIntent.targetLanguageCode as any);
+      toast.success(`Language changed to ${extractedIntent.targetLanguageName || extractedIntent.targetLanguageCode}`);
+    }
+    if (onIntentConfirmed) {
       onIntentConfirmed(extractedIntent);
     }
   };
@@ -435,22 +530,40 @@ export function IntelligentVoiceAssistant({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-            <div className="p-2.5 rounded bg-background border border-forest/15">
-              <span className="text-[10px] text-charcoal-muted block font-mono">PRIMARY TRADE</span>
-              <span className="font-bold text-forest">{extractedIntent.primaryTrade}</span>
-            </div>
-            <div className="p-2.5 rounded bg-background border border-forest/15">
-              <span className="text-[10px] text-charcoal-muted block font-mono">LOCATION</span>
-              <span className="font-bold text-forest">
-                {extractedIntent.city}, {extractedIntent.state}
-              </span>
-            </div>
-            <div className="p-2.5 rounded bg-background border border-forest/15">
-              <span className="text-[10px] text-charcoal-muted block font-mono">EXPERIENCE</span>
-              <span className="font-bold text-forest">
-                {extractedIntent.yearsExperience} Years
-              </span>
-            </div>
+            {extractedIntent.actionIntent === "change_language" ? (
+              <div className="p-2.5 rounded bg-background border border-forest/15 sm:col-span-3">
+                <span className="text-[10px] text-charcoal-muted block font-mono">REQUESTED LANGUAGE</span>
+                <span className="font-bold text-forest text-sm">{extractedIntent.targetLanguageName || "Vernacular Language"}</span>
+              </div>
+            ) : extractedIntent.actionIntent === "add_product" ? (
+              <div className="p-2.5 rounded bg-background border border-forest/15 sm:col-span-3">
+                <span className="text-[10px] text-charcoal-muted block font-mono">ACTION DETECTED</span>
+                <span className="font-bold text-forest text-sm">Add New Product to Vendor Catalog</span>
+              </div>
+            ) : (
+              <>
+                <div className="p-2.5 rounded bg-background border border-forest/15">
+                  <span className="text-[10px] text-charcoal-muted block font-mono">PRIMARY TRADE</span>
+                  <span className="font-bold text-forest">{extractedIntent.primaryTrade}</span>
+                </div>
+                <div className="p-2.5 rounded bg-background border border-forest/15">
+                  <span className="text-[10px] text-charcoal-muted block font-mono">LOCATION</span>
+                  <span className="font-bold text-forest">
+                    {extractedIntent.city}, {extractedIntent.state}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded bg-background border border-forest/15">
+                  <span className="text-[10px] text-charcoal-muted block font-mono">
+                    {extractedIntent.actionIntent === "search" ? "INTENT" : "EXPERIENCE"}
+                  </span>
+                  <span className="font-bold text-forest">
+                    {extractedIntent.actionIntent === "search"
+                      ? "Search Directory"
+                      : `${extractedIntent.yearsExperience} Years`}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* User Confirmation Step */}
@@ -473,7 +586,15 @@ export function IntelligentVoiceAssistant({
               className="bg-forest hover:bg-forest-600 text-ivory text-xs h-9 font-semibold shadow-sm"
             >
               <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-sand" />
-              {t.voice?.applyToForm || "Autofill Work Profile"}
+              {extractedIntent.actionIntent === "change_language"
+                ? "Confirm Language Change"
+                : extractedIntent.actionIntent === "search"
+                ? "Search Professionals"
+                : extractedIntent.actionIntent === "register_vendor"
+                ? "Register Vendor Stall"
+                : extractedIntent.actionIntent === "add_product"
+                ? "Open Product Catalog"
+                : t.voice?.applyToForm || "Autofill Work Profile"}
             </Button>
           </div>
         </div>
