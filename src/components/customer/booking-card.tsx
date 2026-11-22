@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TranslatedContent } from "@/components/translation/translated-content";
 
 export interface CustomerBookingItem {
   id: string;
@@ -234,9 +235,11 @@ export function BookingCard({
           </h5>
 
           {booking.description && (
-            <p className="text-xs text-charcoal-muted leading-relaxed line-clamp-2">
-              {booking.description}
-            </p>
+            <TranslatedContent
+              content={booking.description}
+              contentType="booking_instruction"
+              textClassName="text-xs text-charcoal-muted leading-relaxed"
+            />
           )}
 
           <div className="flex flex-wrap items-center gap-3 text-xs text-charcoal-muted pt-1">

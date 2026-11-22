@@ -4,6 +4,7 @@ import * as React from "react";
 import { Layers, CheckCircle2, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
+import { TranslatedContent } from "@/components/translation/translated-content";
 
 interface ProfileServicesProps {
   dailyRateMin?: number | null;
@@ -78,9 +79,11 @@ export function ProfileServices({
                   {svc.indicativeRate}
                 </span>
               </div>
-              <p className="text-xs text-charcoal-muted leading-relaxed">
-                {svc.description}
-              </p>
+              <TranslatedContent
+                content={svc.description}
+                contentType="service_description"
+                textClassName="text-xs text-charcoal-muted leading-relaxed"
+              />
             </div>
 
             <div className="pt-2 border-t border-forest/10 flex items-center justify-between">

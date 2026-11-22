@@ -19,7 +19,9 @@ import {
   CheckCircle2,
   Globe,
   Check,
+  Languages,
 } from "lucide-react";
+import { TranslationDialog } from "@/components/translation/translation-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,6 +39,7 @@ import { SUPPORTED_LOCALES_METADATA } from "@/lib/i18n/translations";
 
 export function InstitutionalHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [isTranslationDialogOpen, setIsTranslationDialogOpen] = React.useState(false);
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
   const { locale, setLocale, t, textSize, setTextSize, isRTL } = useTranslation();
@@ -209,6 +212,17 @@ export function InstitutionalHeader() {
               })}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsTranslationDialogOpen(true)}
+            className="border-forest/20 text-forest hover:bg-forest/5 text-xs hidden md:inline-flex"
+            title="Open Universal Content & Voice Translator"
+          >
+            <Languages className="mr-1.5 h-3.5 w-3.5 text-forest" />
+            <span>Translate</span>
+          </Button>
 
           <Button variant="outline" size="sm" asChild className="border-forest/20 text-forest hover:bg-forest/5 text-xs">
             <Link href="/explore">
@@ -459,6 +473,13 @@ export function InstitutionalHeader() {
           </div>
         </>
       )}
+
+      {/* Universal Content & Voice Translation Modal */}
+      <TranslationDialog
+        isOpen={isTranslationDialogOpen}
+        onClose={() => setIsTranslationDialogOpen(false)}
+        title="Universal Content & Spoken Translator"
+      />
     </header>
   );
 }

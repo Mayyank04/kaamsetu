@@ -66,6 +66,8 @@
     "test:phase44": "tsx --env-file=.env.local --test test/phase-44-india-wide-product-completion.test.ts",
     "test:phase45": "tsx --env-file=.env.local --test test/phase-45-production-readiness.test.ts",
     "test:phase45:multilingual": "tsx --env-file=.env.local --test test/phase-45-multilingual-voice-vendor.test.ts",
+    "test:phase46": "tsx --env-file=.env.local --test test/phase-46-universal-translation.test.ts",
+    "test:phase46:translation": "tsx --env-file=.env.local --test test/phase-46-universal-translation.test.ts",
     "check:deploy": "tsx --env-file=.env.local src/bin/check-deployment.ts",
     "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"
   },

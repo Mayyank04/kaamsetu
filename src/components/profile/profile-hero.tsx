@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DashboardWorkerProfile } from "@/types/dashboard";
 import { useTranslation } from "@/lib/i18n/i18n-context";
+import { TranslatedContent } from "@/components/translation/translated-content";
 
 interface ProfileHeroProps {
   profile: DashboardWorkerProfile;
@@ -176,9 +177,11 @@ export function ProfileHero({
               {profile.headline}
             </p>
 
-            <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed line-clamp-3">
-              {profile.bio}
-            </p>
+            <TranslatedContent
+              content={profile.bio}
+              contentType="public_profile"
+              textClassName="text-xs sm:text-sm text-charcoal-muted leading-relaxed"
+            />
 
             {/* Micro Details Row */}
             <div className="flex flex-wrap items-center gap-3 text-xs text-charcoal-muted pt-2 font-mono">
