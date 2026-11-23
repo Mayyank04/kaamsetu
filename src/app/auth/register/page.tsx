@@ -9,6 +9,7 @@ import {
   Building2,
   Users,
   GraduationCap,
+  Store,
   Eye,
   EyeOff,
   AlertCircle,
@@ -18,12 +19,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/use-auth";
+import { sanitizeRedirectUrl } from "@/lib/security/redirect";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { refreshSession } = useAuth();
 
-  const [role, setRole] = React.useState<"worker" | "contractor" | "customer" | "institution">("worker");
+  const [role, setRole] = React.useState<"worker" | "contractor" | "customer" | "institution" | "vendor">("worker");
   const [fullName, setFullName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [phone, setPhone] = React.useState("");
@@ -93,7 +95,8 @@ export default function RegisterPage() {
       await refreshSession();
 
       // Navigate directly to onboarding or role dashboard
-      const targetUrl = result.redirectUrl || (role === "worker" ? "/onboarding" : "/dashboard");
+      const fallbackUrl = role === "worker" ? "/onboarding" : role === "vendor" ? "/vendor/dashboard" : role === "contractor" ? "/contractor/dashboard" : role === "customer" ? "/customer/bookings" : "/institution/dashboard";
+      const targetUrl = sanitizeRedirectUrl(result.redirectUrl, fallbackUrl);
       router.push(targetUrl);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Registration failed.";
@@ -135,7 +138,7 @@ export default function RegisterPage() {
             <label className="text-xs font-semibold text-forest block">
               I am registering as:
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setRole("worker")}
@@ -147,6 +150,19 @@ export default function RegisterPage() {
               >
                 <HardHat className="w-4 h-4 shrink-0" />
                 <span className="text-xs">Artisan / Worker</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole("vendor")}
+                className={`p-2.5 rounded-xs border text-left flex items-center gap-2 transition-colors ${
+                  role === "vendor"
+                    ? "bg-forest text-ivory border-forest font-semibold"
+                    : "bg-surface border-forest/15 text-charcoal hover:border-forest/40"
+                }`}
+              >
+                <Store className="w-4 h-4 shrink-0" />
+                <span className="text-xs">Local Vendor</span>
               </button>
 
               <button

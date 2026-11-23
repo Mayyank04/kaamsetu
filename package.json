@@ -69,6 +69,7 @@
     "test:phase46": "tsx --env-file=.env.local --test test/phase-46-universal-translation.test.ts",
     "test:phase46:translation": "tsx --env-file=.env.local --test test/phase-46-universal-translation.test.ts",
     "test:phase47": "tsx --env-file=.env.local --test test/phase-47-product-experience.test.ts",
+    "test:recovery": "tsx --env-file=.env.local --test test/master-engineering-recovery.test.ts",
     "check:deploy": "tsx --env-file=.env.local src/bin/check-deployment.ts",
     "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"
   },

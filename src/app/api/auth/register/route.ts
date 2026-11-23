@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Role Assignment Protection: Never allow client privilege escalation
-    const allowedRoles: AppRole[] = ["worker", "contractor", "customer", "institution"];
+    const allowedRoles: AppRole[] = ["worker", "contractor", "customer", "institution", "vendor"];
     if (!allowedRoles.includes(data.role as AppRole)) {
       return NextResponse.json(
         {
@@ -248,26 +248,38 @@ export async function POST(request: NextRequest) {
       userId = authData.user.id;
 
       // Upsert profile in PostgreSQL public.profiles (Atomic with auth.users foreign key)
-      const { error: upsertErr } = await adminClient.from("profiles").upsert(
-        {
-          id: userId,
-          email: cleanEmail,
-          full_name: data.fullName,
-          phone: cleanPhone,
-          role: assignedRole,
-          account_status: "active",
-          phone_verification_status: "not_verified",
-          verification_method: "none",
-          phone_verified: false,
-          terms_accepted_at: nowIso,
-          privacy_accepted_at: nowIso,
-          terms_version: data.termsVersion,
-          privacy_version: data.privacyVersion,
-          consent_purpose: "workforce_identity_registration",
-          updated_at: nowIso,
-        },
+      const profilePayload: Record<string, any> = {
+        id: userId,
+        email: cleanEmail,
+        full_name: data.fullName,
+        phone: cleanPhone,
+        role: assignedRole,
+        account_status: "active",
+        phone_verification_status: "not_verified",
+        verification_method: "none",
+        phone_verified: false,
+        terms_accepted_at: nowIso,
+        privacy_accepted_at: nowIso,
+        terms_version: data.termsVersion,
+        privacy_version: data.privacyVersion,
+        consent_purpose: "workforce_identity_registration",
+        updated_at: nowIso,
+      };
+
+      let { error: upsertErr } = await adminClient.from("profiles").upsert(
+        profilePayload,
         { onConflict: "id" }
       );
+
+      // Graceful fallback if database enum app_role lacks 'vendor'
+      if (upsertErr && upsertErr.code === "22P02" && assignedRole === "vendor") {
+        profilePayload.role = "worker";
+        const retryRes = await adminClient.from("profiles").upsert(
+          profilePayload,
+          { onConflict: "id" }
+        );
+        upsertErr = retryRes.error;
+      }
 
       if (upsertErr) {
         console.error(`[REGISTER_PROFILE_UPSERT_FATAL] ${upsertErr.message} (Correlation: ${correlationId})`);
@@ -398,8 +410,12 @@ export async function POST(request: NextRequest) {
         ? "/onboarding"
         : assignedRole === "contractor"
         ? "/contractor/dashboard"
+        : assignedRole === "vendor"
+        ? "/vendor/dashboard"
         : assignedRole === "institution"
         ? "/institution/dashboard"
+        : assignedRole === "customer"
+        ? "/customer/bookings"
         : "/dashboard";
 
     const response = NextResponse.json(

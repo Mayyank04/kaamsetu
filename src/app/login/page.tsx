@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/use-auth";
+import { sanitizeRedirectUrl } from "@/lib/security/redirect";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,8 +65,9 @@ export default function LoginPage() {
       // Refresh client session state
       await refreshSession();
 
-      // Navigate to destination
-      const destination = redirectTarget || result.redirectUrl || "/dashboard";
+      // Navigate to destination with open-redirect sanitization
+      const target = redirectTarget || result.redirectUrl || "/dashboard";
+      const destination = sanitizeRedirectUrl(target, "/dashboard");
       router.push(destination);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Sign in failed.";

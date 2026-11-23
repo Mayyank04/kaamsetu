@@ -23,6 +23,15 @@ export type TranslationContentType =
   | "voice_transcript"
   | "general";
 
+export type TranslationStatus =
+  | "translated"
+  | "same_language"
+  | "partial_translation"
+  | "fallback_limited"
+  | "provider_unavailable"
+  | "unsupported_language_pair"
+  | "translation_failed";
+
 export interface LanguageCapability {
   code: AppLocale;
   name: string;
@@ -55,6 +64,7 @@ export interface TranslationResult {
   targetLanguage: string;
   provider: TranslationProviderType;
   cached: boolean;
+  status?: TranslationStatus;
   confidence?: number;
   characterCount: number;
   preservedEntitiesCount: number;

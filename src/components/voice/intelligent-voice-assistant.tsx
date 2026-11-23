@@ -49,6 +49,16 @@ export interface ExtractedVoiceIntent {
   confidence: number;
 }
 
+export type VoiceState =
+  | "idle"
+  | "requesting_permission"
+  | "listening"
+  | "processing"
+  | "awaiting_confirmation"
+  | "executing"
+  | "completed"
+  | "error";
+
 interface IntelligentVoiceAssistantProps {
   onIntentConfirmed?: (intent: ExtractedVoiceIntent) => void;
   targetMode?: "onboarding" | "search" | "vendor";
@@ -61,8 +71,7 @@ export function IntelligentVoiceAssistant({
   className = "",
 }: IntelligentVoiceAssistantProps) {
   const { t, locale, setLocale } = useTranslation();
-  const [isListening, setIsListening] = React.useState(false);
-  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [voiceState, setVoiceState] = React.useState<VoiceState>("idle");
   const [transcript, setTranscript] = React.useState("");
   const [selectedVoiceLang, setSelectedVoiceLang] = React.useState<string>(locale);
   const [recognitionError, setRecognitionError] = React.useState<string | null>(null);
@@ -71,8 +80,13 @@ export function IntelligentVoiceAssistant({
 
   const recognitionRef = React.useRef<any>(null);
 
-  // Map AppLocale to BCP 47 SpeechRecognition language tags
-  const getBCP47Tag = (code: string): string => {
+  const isListening = voiceState === "listening" || voiceState === "requesting_permission";
+  const isProcessing = voiceState === "processing" || voiceState === "executing";
+
+  // Map AppLocale to BCP 47 SpeechRecognition language tags.
+  // Returns null if the browser speech recognition engine has no native model for the language,
+  // preventing silent and misleading misinterpretation as Hindi.
+  const getBCP47Tag = (code: string): string | null => {
     const map: Record<string, string> = {
       en: "en-IN",
       hi: "hi-IN",
@@ -87,22 +101,28 @@ export function IntelligentVoiceAssistant({
       pa: "pa-IN",
       as: "as-IN",
       or: "or-IN",
-      bho: "bho-IN",
-      mai: "mai-IN",
-      raj: "raj-IN",
-      ks: "ks-IN",
-      sa: "sa-IN",
     };
-    return map[code] || "hi-IN";
+    return map[code] || null;
   };
 
-  // Initialize browser SpeechRecognition
+  // Initialize browser SpeechRecognition and handle component unmount cleanup
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRec) {
       setIsSupported(false);
     }
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {
+          // Ignore cleanup errors
+        }
+        recognitionRef.current = null;
+      }
+    };
   }, []);
 
   // Intent Extraction Function (Rule-based NLP with multilingual keyword matching)
@@ -329,20 +349,32 @@ export function IntelligentVoiceAssistant({
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRec) {
       setIsSupported(false);
+      setVoiceState("error");
       setRecognitionError(
         t.voice?.unsupportedNotice || "Voice recognition is not supported in this browser. Please type directly."
       );
       return;
     }
 
+    const bcp47 = getBCP47Tag(selectedVoiceLang);
+    if (!bcp47) {
+      const langName = ALL_LOCALES_METADATA[selectedVoiceLang as AppLocale]?.name || selectedVoiceLang;
+      setVoiceState("error");
+      setRecognitionError(
+        `Native speech recognition for ${langName} is not supported by your browser's speech engine. You can type directly in the text area below or select another language.`
+      );
+      return;
+    }
+
     try {
+      setVoiceState("requesting_permission");
       const recognition = new SpeechRec();
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = getBCP47Tag(selectedVoiceLang);
+      recognition.lang = bcp47;
 
       recognition.onstart = () => {
-        setIsListening(true);
+        setVoiceState("listening");
       };
 
       recognition.onresult = (event: any) => {
@@ -355,7 +387,7 @@ export function IntelligentVoiceAssistant({
 
       recognition.onerror = (event: any) => {
         console.warn("[Voice Assistant] Recognition error:", event.error);
-        setIsListening(false);
+        setVoiceState("error");
         if (event.error === "not-allowed") {
           setRecognitionError(
             t.voice?.permissionDenied || "Microphone access was denied. Please allow microphone in browser settings."
@@ -366,41 +398,54 @@ export function IntelligentVoiceAssistant({
       };
 
       recognition.onend = () => {
-        setIsListening(false);
         if (transcript.trim()) {
-          setIsProcessing(true);
+          setVoiceState("processing");
           setTimeout(() => {
             const intent = extractIntent(transcript, selectedVoiceLang);
             setExtractedIntent(intent);
-            setIsProcessing(false);
+            setVoiceState("awaiting_confirmation");
           }, 400);
+        } else {
+          setVoiceState("idle");
         }
       };
 
       recognitionRef.current = recognition;
       recognition.start();
     } catch (err: any) {
-      setIsListening(false);
+      setVoiceState("error");
       setRecognitionError(err.message || "Could not start microphone.");
     }
   };
 
   const stopListening = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // Ignore stop error
+      }
     }
-    setIsListening(false);
+    if (voiceState === "listening" || voiceState === "requesting_permission") {
+      setVoiceState("idle");
+    }
   };
 
   // User Confirmation Action
   const handleConfirm = () => {
     if (!extractedIntent) return;
-    if (extractedIntent.actionIntent === "change_language" && extractedIntent.targetLanguageCode) {
-      setLocale(extractedIntent.targetLanguageCode as any);
-      toast.success(`Language changed to ${extractedIntent.targetLanguageName || extractedIntent.targetLanguageCode}`);
-    }
-    if (onIntentConfirmed) {
-      onIntentConfirmed(extractedIntent);
+    setVoiceState("executing");
+    try {
+      if (extractedIntent.actionIntent === "change_language" && extractedIntent.targetLanguageCode) {
+        setLocale(extractedIntent.targetLanguageCode as any);
+        toast.success(`Language changed to ${extractedIntent.targetLanguageName || extractedIntent.targetLanguageCode}`);
+      }
+      if (onIntentConfirmed) {
+        onIntentConfirmed(extractedIntent);
+      }
+      setVoiceState("completed");
+    } catch {
+      setVoiceState("error");
     }
   };
 
@@ -466,10 +511,18 @@ export function IntelligentVoiceAssistant({
 
         <div className="space-y-1">
           <p className="font-serif font-bold text-sm text-forest">
-            {isListening
+            {voiceState === "requesting_permission"
+              ? "Requesting microphone access..."
+              : voiceState === "listening"
               ? t.voice?.listening || "Listening... speak clearly"
-              : isProcessing
+              : voiceState === "processing"
               ? t.voice?.processing || "Extracting details from speech..."
+              : voiceState === "awaiting_confirmation"
+              ? "Review extracted details below"
+              : voiceState === "executing"
+              ? "Applying requested action..."
+              : voiceState === "completed"
+              ? "Action applied! Tap microphone to speak again"
               : t.voice?.startListening || "Tap the microphone to speak"}
           </p>
           <p className="text-[11px] text-charcoal-muted max-w-sm mx-auto">
