@@ -115,6 +115,8 @@ describe("MASTER ENGINEERING RECOVERY & PRODUCTION READINESS", () => {
 
         assert.strictEqual(res.sandboxCode, undefined, "Production sendOtp must NOT expose sandboxCode");
         assert.strictEqual(res.isSandbox, false, "Production must not advertise sandbox status");
+        assert.strictEqual(res.code, "SMS_GATEWAY_UNAVAILABLE");
+        assert.strictEqual(res.statusCode, 503);
       } finally {
         if (origNodeEnv !== undefined) {
           process.env.NODE_ENV = origNodeEnv;

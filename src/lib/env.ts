@@ -65,7 +65,7 @@ function validateEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-    GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
     AUTH_VERIFICATION_MODE: process.env.AUTH_VERIFICATION_MODE || "sandbox",
     SANDBOX_OTP_CODE: process.env.SANDBOX_OTP_CODE,
     CREDENTIAL_SIGNING_KEY: process.env.CREDENTIAL_SIGNING_KEY,

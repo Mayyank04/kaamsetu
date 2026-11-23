@@ -17,6 +17,7 @@ export interface AuthenticatedUser {
   workerProfileId?: string | null;
   contractorOrgId?: string | null;
   institutionId?: string | null;
+  vendorId?: string | null;
   slug?: string | null;
 }
 
@@ -87,7 +88,7 @@ export async function getAuthenticatedSession(): Promise<{
       }
 
       // Explicit role validation against allowed AppRole enum
-      const validRoles: AppRole[] = ["worker", "customer", "contractor", "admin", "institution"];
+      const validRoles: AppRole[] = ["worker", "customer", "contractor", "admin", "institution", "vendor"];
       if (!profile.role || !validRoles.includes(profile.role as AppRole)) {
         console.warn(`[AUTH_FAIL_CLOSED] User ${authUser.id} has invalid or unrecognized role: ${profile.role}`);
         return { user: null, isDemo: false };
@@ -100,6 +101,7 @@ export async function getAuthenticatedSession(): Promise<{
       let slug: string | null = null;
       let contractorOrgId: string | null = null;
       let institutionId: string | null = null;
+      let vendorId: string | null = null;
 
       if (verifiedRole === "worker") {
         const { data: worker } = await supabase
@@ -129,6 +131,15 @@ export async function getAuthenticatedSession(): Promise<{
         if (inst) {
           institutionId = inst.id;
         }
+      } else if (verifiedRole === "vendor") {
+        const { data: v } = await supabase
+          .from("vendors")
+          .select("id")
+          .eq("user_id", authUser.id)
+          .maybeSingle();
+        if (v) {
+          vendorId = v.id;
+        }
       }
 
       return {
@@ -142,6 +153,7 @@ export async function getAuthenticatedSession(): Promise<{
           workerProfileId,
           contractorOrgId,
           institutionId,
+          vendorId,
           slug,
         },
         isDemo: false,
@@ -292,8 +304,15 @@ export async function requireCustomer(): Promise<AuthenticatedUser> {
 }
 
 /**
- * Requires an authenticated institutional partner or admin.
+ * Requires an authenticated vendor or admin.
  */
+export async function requireVendor(): Promise<AuthenticatedUser> {
+  const user = await requireAuthenticatedUser();
+  if (user.role !== "vendor" && user.role !== "admin") {
+    throw new AuthError("Access denied: Vendor role required for this operation.", 403);
+  }
+  return user;
+}
 export async function requireInstitution(): Promise<AuthenticatedUser> {
   const user = await requireAuthenticatedUser();
   if (user.role !== "institution" && user.role !== "admin") {

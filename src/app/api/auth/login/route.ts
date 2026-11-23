@@ -222,8 +222,14 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        const meta = authData.user.user_metadata || {};
+        const metaRole = (meta.actual_role || meta.role) as AppRole | undefined;
+
         userFullName = profile.full_name || userFullName;
-        userRole = (role as AppRole) || (profile.role as AppRole) || userRole;
+        // Honor actual_role if database enum fallback was forced to worker
+        const dbRole = profile.role as AppRole;
+        const resolvedRole = (role as AppRole) || (dbRole === "worker" && metaRole === "vendor" ? "vendor" : dbRole) || metaRole || userRole;
+        userRole = resolvedRole;
         userPhone = profile.phone || userPhone;
         isPhoneVerified = Boolean(profile.phone_verified);
         phoneVerificationStatus = profile.phone_verification_status || "not_verified";
@@ -231,7 +237,7 @@ export async function POST(request: NextRequest) {
         // Fallback to auth metadata if profile trigger is delayed
         const meta = authData.user.user_metadata || {};
         userFullName = meta.full_name || userFullName;
-        userRole = (role as AppRole) || (meta.role as AppRole) || userRole;
+        userRole = (role as AppRole) || (meta.actual_role as AppRole) || (meta.role as AppRole) || userRole;
         userPhone = meta.phone || userPhone;
       }
     } else {
