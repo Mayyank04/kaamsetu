@@ -88,6 +88,8 @@ export class TranslationService {
         targetLanguage: req.targetLanguage,
         provider: "deterministic",
         cached: false,
+        status: "same_language",
+        confidence: 1.0,
         characterCount: req.text.length,
         preservedEntitiesCount: 0,
         disclaimer: "Original and target language are identical.",

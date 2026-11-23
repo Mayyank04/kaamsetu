@@ -114,6 +114,8 @@ export class DeterministicTranslationProvider implements TranslationProvider {
         targetLanguage: req.targetLanguage,
         provider: this.name,
         cached: false,
+        status: "same_language",
+        confidence: 1.0,
         characterCount: req.text.length,
         preservedEntitiesCount: 0,
         disclaimer: getTranslationDisclaimer(req.contentType, req.text),
@@ -132,6 +134,7 @@ export class DeterministicTranslationProvider implements TranslationProvider {
         targetLanguage: req.targetLanguage,
         provider: this.name,
         cached: false,
+        status: "translated",
         confidence: 0.98,
         isFallback: false,
         isPartial: false,
@@ -179,6 +182,7 @@ export class DeterministicTranslationProvider implements TranslationProvider {
       targetLanguage: req.targetLanguage,
       provider: this.name,
       cached: false,
+      status: hasChanged ? "partial_translation" : "fallback_limited",
       confidence: hasChanged ? 0.50 : 0.0,
       isFallback: true,
       isPartial: hasChanged,
@@ -232,6 +236,8 @@ export class GeminiTranslationProvider implements TranslationProvider {
         targetLanguage: req.targetLanguage,
         provider: this.name,
         cached: false,
+        status: "same_language",
+        confidence: 1.0,
         characterCount: req.text.length,
         preservedEntitiesCount: 0,
         disclaimer: getTranslationDisclaimer(req.contentType, req.text),
@@ -295,6 +301,7 @@ ${maskedText}`;
       targetLanguage: req.targetLanguage,
       provider: this.name,
       cached: false,
+      status: "translated",
       confidence: 0.95,
       isFallback: false,
       isPartial: false,
@@ -319,7 +326,12 @@ export class BhashiniTranslationProvider implements TranslationProvider {
   }
 
   async isHealthy(): Promise<boolean> {
-    return Boolean(this.apiKey && this.userId);
+    return Boolean(
+      this.apiKey &&
+      this.userId &&
+      !this.apiKey.includes("placeholder") &&
+      !this.userId.includes("placeholder")
+    );
   }
 
   async detect(text: string): Promise<LanguageDetectionResult> {
@@ -327,11 +339,89 @@ export class BhashiniTranslationProvider implements TranslationProvider {
   }
 
   async translate(req: TranslationRequest): Promise<TranslationResult> {
-    if (!this.apiKey || !this.userId) {
-      throw new Error("Bhashini credentials not configured.");
+    if (!this.apiKey || !this.userId || this.apiKey.includes("placeholder")) {
+      throw new Error("Bhashini credentials (BHASHINI_API_KEY / BHASHINI_USER_ID) are not configured.");
     }
-    // Bhashini ULCA API integration contract
-    throw new Error("Bhashini provider active when credentials are provided in production.");
+
+    const source =
+      !req.sourceLanguage || req.sourceLanguage === "auto"
+        ? (await this.detect(req.text)).detectedLanguage
+        : req.sourceLanguage;
+
+    if (source === req.targetLanguage) {
+      return {
+        translatedText: req.text,
+        detectedSourceLanguage: source,
+        targetLanguage: req.targetLanguage,
+        provider: this.name,
+        cached: false,
+        status: "same_language",
+        confidence: 1.0,
+        characterCount: req.text.length,
+        preservedEntitiesCount: 0,
+        disclaimer: getTranslationDisclaimer(req.contentType, req.text),
+      };
+    }
+
+    const { maskedText, entities } = protectEntities(req.text);
+
+    // Call Bhashini ULCA pipeline API
+    const response = await fetch("https://dhruva-api.bhashini.gov.in/services/inference/pipeline", {
+      method: "POST",
+      headers: {
+        Authorization: this.apiKey,
+        userID: this.userId,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        pipelineTasks: [
+          {
+            taskType: "translation",
+            config: {
+              language: {
+                sourceLanguage: source,
+                targetLanguage: req.targetLanguage,
+              },
+            },
+          },
+        ],
+        inputData: {
+          input: [{ source: maskedText }],
+        },
+      }),
+      signal: AbortSignal.timeout(7000),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      throw new Error(`Bhashini API responded with HTTP ${response.status}: ${errText.slice(0, 150)}`);
+    }
+
+    const json = await response.json();
+    const rawResult =
+      json?.pipelineResponse?.[0]?.output?.[0]?.target ||
+      json?.output?.[0]?.target;
+
+    if (!rawResult || typeof rawResult !== "string") {
+      throw new Error("Invalid or empty response format from Bhashini pipeline.");
+    }
+
+    const { restoredText, preservedCount } = restoreEntities(rawResult, entities);
+
+    return {
+      translatedText: restoredText,
+      detectedSourceLanguage: source,
+      targetLanguage: req.targetLanguage,
+      provider: this.name,
+      cached: false,
+      status: "translated",
+      confidence: 0.92,
+      isFallback: false,
+      isPartial: false,
+      characterCount: restoredText.length,
+      preservedEntitiesCount: preservedCount,
+      disclaimer: getTranslationDisclaimer(req.contentType, req.text),
+    };
   }
 }
 
@@ -347,7 +437,7 @@ export class GoogleCloudTranslationProvider implements TranslationProvider {
   }
 
   async isHealthy(): Promise<boolean> {
-    return Boolean(this.apiKey);
+    return Boolean(this.apiKey && !this.apiKey.includes("placeholder"));
   }
 
   async detect(text: string): Promise<LanguageDetectionResult> {
@@ -355,10 +445,76 @@ export class GoogleCloudTranslationProvider implements TranslationProvider {
   }
 
   async translate(req: TranslationRequest): Promise<TranslationResult> {
-    if (!this.apiKey) {
+    if (!this.apiKey || this.apiKey.includes("placeholder")) {
       throw new Error("GOOGLE_TRANSLATE_API_KEY is not configured.");
     }
-    throw new Error("Google Cloud Translate active when API key is provided.");
+
+    const source =
+      !req.sourceLanguage || req.sourceLanguage === "auto"
+        ? (await this.detect(req.text)).detectedLanguage
+        : req.sourceLanguage;
+
+    if (source === req.targetLanguage) {
+      return {
+        translatedText: req.text,
+        detectedSourceLanguage: source,
+        targetLanguage: req.targetLanguage,
+        provider: this.name,
+        cached: false,
+        status: "same_language",
+        confidence: 1.0,
+        characterCount: req.text.length,
+        preservedEntitiesCount: 0,
+        disclaimer: getTranslationDisclaimer(req.contentType, req.text),
+      };
+    }
+
+    const { maskedText, entities } = protectEntities(req.text);
+
+    // Call Google Cloud Translate v2 REST API
+    const response = await fetch(
+      `https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(this.apiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          q: maskedText,
+          target: req.targetLanguage,
+          source: source && source !== "auto" ? source : undefined,
+          format: "text",
+        }),
+        signal: AbortSignal.timeout(6000),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      throw new Error(`Google Cloud Translate error (HTTP ${response.status}): ${errText.slice(0, 150)}`);
+    }
+
+    const json = await response.json();
+    const rawResult = json?.data?.translations?.[0]?.translatedText;
+
+    if (!rawResult || typeof rawResult !== "string") {
+      throw new Error("Invalid or empty response format from Google Cloud Translation API.");
+    }
+
+    const { restoredText, preservedCount } = restoreEntities(rawResult, entities);
+
+    return {
+      translatedText: restoredText,
+      detectedSourceLanguage: source,
+      targetLanguage: req.targetLanguage,
+      provider: this.name,
+      cached: false,
+      status: "translated",
+      confidence: 0.94,
+      isFallback: false,
+      isPartial: false,
+      characterCount: restoredText.length,
+      preservedEntitiesCount: preservedCount,
+      disclaimer: getTranslationDisclaimer(req.contentType, req.text),
+    };
   }
 }
 
@@ -376,7 +532,12 @@ export class AzureTranslationProvider implements TranslationProvider {
   }
 
   async isHealthy(): Promise<boolean> {
-    return Boolean(this.key && this.region);
+    return Boolean(
+      this.key &&
+      this.region &&
+      !this.key.includes("placeholder") &&
+      !this.region.includes("placeholder")
+    );
   }
 
   async detect(text: string): Promise<LanguageDetectionResult> {
@@ -384,9 +545,75 @@ export class AzureTranslationProvider implements TranslationProvider {
   }
 
   async translate(req: TranslationRequest): Promise<TranslationResult> {
-    if (!this.key || !this.region) {
-      throw new Error("AZURE_TRANSLATOR_KEY/REGION is not configured.");
+    if (!this.key || !this.region || this.key.includes("placeholder")) {
+      throw new Error("AZURE_TRANSLATOR_KEY or AZURE_TRANSLATOR_REGION is not configured.");
     }
-    throw new Error("Azure Translator active when key and region are configured.");
+
+    const source =
+      !req.sourceLanguage || req.sourceLanguage === "auto"
+        ? (await this.detect(req.text)).detectedLanguage
+        : req.sourceLanguage;
+
+    if (source === req.targetLanguage) {
+      return {
+        translatedText: req.text,
+        detectedSourceLanguage: source,
+        targetLanguage: req.targetLanguage,
+        provider: this.name,
+        cached: false,
+        status: "same_language",
+        confidence: 1.0,
+        characterCount: req.text.length,
+        preservedEntitiesCount: 0,
+        disclaimer: getTranslationDisclaimer(req.contentType, req.text),
+      };
+    }
+
+    const { maskedText, entities } = protectEntities(req.text);
+
+    const fromQuery = source && source !== "auto" ? `&from=${encodeURIComponent(source)}` : "";
+    const endpoint = `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=${encodeURIComponent(
+      req.targetLanguage
+    )}${fromQuery}`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Ocp-Apim-Subscription-Key": this.key,
+        "Ocp-Apim-Subscription-Region": this.region,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([{ Text: maskedText }]),
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      throw new Error(`Azure Translator error (HTTP ${response.status}): ${errText.slice(0, 150)}`);
+    }
+
+    const json = await response.json();
+    const rawResult = json?.[0]?.translations?.[0]?.text;
+
+    if (!rawResult || typeof rawResult !== "string") {
+      throw new Error("Invalid or empty response format from Azure Translator API.");
+    }
+
+    const { restoredText, preservedCount } = restoreEntities(rawResult, entities);
+
+    return {
+      translatedText: restoredText,
+      detectedSourceLanguage: source,
+      targetLanguage: req.targetLanguage,
+      provider: this.name,
+      cached: false,
+      status: "translated",
+      confidence: 0.93,
+      isFallback: false,
+      isPartial: false,
+      characterCount: restoredText.length,
+      preservedEntitiesCount: preservedCount,
+      disclaimer: getTranslationDisclaimer(req.contentType, req.text),
+    };
   }
 }

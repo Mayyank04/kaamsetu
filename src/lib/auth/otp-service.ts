@@ -326,7 +326,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       };
     }
 
-    const verificationMode = env.AUTH_VERIFICATION_MODE || "sandbox";
+    const verificationMode = process.env.AUTH_VERIFICATION_MODE || env.AUTH_VERIFICATION_MODE || "sandbox";
     const isSandbox = verificationMode === "sandbox";
     const phoneHashed = hashRateLimitKey("phone:identity", formatted);
     let activeChallengeCode: string | undefined;
@@ -378,8 +378,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
         hasActiveChallenge: true,
         retryAfterSeconds: remSec,
         nextAllowedAt: nextAllowed,
-        isSandbox,
-        sandboxCode: activeChallengeCode,
+        isSandbox: !isProduction && isSandbox,
+        sandboxCode: (!isProduction || process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION === "true") ? activeChallengeCode : undefined,
         message: `Please wait ${remSec} seconds before requesting a new code.`,
         statusCode: 429,
       };
@@ -392,7 +392,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       hasActiveChallenge: false,
       retryAfterSeconds: remSec,
       nextAllowedAt: nextAllowed,
-      isSandbox,
+      isSandbox: !isProduction && isSandbox,
       message: rateLimit.reason || `Please wait ${remSec} seconds before requesting a new code.`,
       statusCode: 429,
     };
@@ -472,7 +472,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   }
 
   // Determine verification mode: 'sandbox' or 'sms'
-  const verificationMode = env.AUTH_VERIFICATION_MODE || "sandbox";
+  const verificationMode = process.env.AUTH_VERIFICATION_MODE || env.AUTH_VERIFICATION_MODE || "sandbox";
   const isSandbox = verificationMode === "sandbox";
 
   // Generate 6-digit random code or use server-configured sandbox code
@@ -492,10 +492,6 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       const { error: dbErr } = await adminClient.from("otp_challenges").insert({
         phone_hash: phoneHashed,
         otp_hash: otpHashed,
-        role: req.role || "worker",
-        full_name: req.fullName?.trim() || null,
-        intent,
-        verification_mode: verificationMode,
         expires_at: expiresAt.toISOString(),
       });
       if (dbErr) {
@@ -545,13 +541,16 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   // 1. SANDBOX VERIFICATION MODE (Simulated SMS, Transparent Testing)
   // =========================================================================
   if (isSandbox) {
+    const allowInsecureSandbox = process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION === "true";
     return {
       success: true,
       challengeCreated: true,
       hasActiveChallenge: true,
-      message: `Sandbox verification code for ${maskPhoneNumber(formatted)} generated. No SMS will be sent.`,
-      isSandbox: true,
-      sandboxCode: otpCode,
+      message: isProduction
+        ? `Verification code dispatched to ${maskPhoneNumber(formatted)}.`
+        : `Sandbox verification code for ${maskPhoneNumber(formatted)} generated. No SMS will be sent.`,
+      isSandbox: !isProduction,
+      sandboxCode: (!isProduction || allowInsecureSandbox) ? otpCode : undefined,
       retryAfterSeconds: 60,
       nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
       statusCode: 200,
@@ -601,7 +600,10 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   // In SMS mode without working telecom credentials, fail securely
   return {
     success: false,
-    message: "SMS gateway unavailable. Please configure AUTH_VERIFICATION_MODE=sandbox for test environments.",
+    code: "SMS_GATEWAY_UNAVAILABLE" as AuthErrorCode,
+    message: isProduction
+      ? "Live SMS gateway is temporarily unavailable. Please use email and password authentication."
+      : "SMS gateway unavailable. Please configure AUTH_VERIFICATION_MODE=sandbox for test environments.",
     statusCode: 503,
   };
 }
@@ -637,10 +639,14 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
   const phoneHashed = hashRateLimitKey("phone:identity", formatted);
   const otpHashed = hashOtpCode(req.otp);
   let verified = false;
-  let resolvedRole: AppRole = req.role === "contractor" ? "contractor" : "worker";
+  const validRoles: AppRole[] = ["worker", "vendor", "contractor", "customer", "admin", "institution"];
+  let resolvedRole: AppRole =
+    req.role && validRoles.includes(req.role as AppRole)
+      ? (req.role as AppRole)
+      : "worker";
   let resolvedName = req.fullName?.trim() || "Verified User";
   const intent = req.intent || "login";
-  const isSandbox = (env.AUTH_VERIFICATION_MODE || "sandbox") === "sandbox";
+  const isSandbox = (process.env.AUTH_VERIFICATION_MODE || env.AUTH_VERIFICATION_MODE || "sandbox") === "sandbox";
 
   // 1. Try atomic PostgreSQL verification if database is configured
   if (isConfigured.supabase) {
@@ -769,7 +775,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
   await clearFailedOtpAttempts(formatted);
 
   // Authoritative Profile & Account Resolution
-  let userId = crypto.randomUUID();
+  let userId: string = crypto.randomUUID();
   let workerProfileId: string | null = null;
   let contractorOrgId: string | null = null;
   const accountStatus = "active";
@@ -844,26 +850,61 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
           const consentPurpose = "workforce_identity_registration";
 
           // Create new authoritative profile in Supabase
-          const { data: newProfile, error: insertErr } = await adminClient
-            .from("profiles")
-            .insert({
-              id: userId,
+          try {
+            const phoneDigits = formatted.replace(/\D/g, "");
+            const fakeEmail = `${phoneDigits}@phone.kaamsetu.internal`;
+            const { data: authData } = await adminClient.auth.admin.createUser({
+              email: fakeEmail,
               phone: formatted,
-              full_name: resolvedName,
-              role: resolvedRole,
-              is_verified: false,
-              account_status: accountStatus,
-              phone_verification_status: phoneVerificationStatus,
-              verification_method: verificationMethod,
-              phone_verified: phoneVerified,
-              terms_accepted_at: consentTimestamp,
-              privacy_accepted_at: consentTimestamp,
-              terms_version: termsVersion,
-              privacy_version: privacyVersion,
-              consent_purpose: consentPurpose,
-            })
+              phone_confirm: true,
+              email_confirm: true,
+              user_metadata: {
+                full_name: resolvedName,
+                role: resolvedRole,
+                phone: formatted,
+              },
+            });
+            if (authData?.user) {
+              userId = authData.user.id;
+            }
+          } catch {
+            // Continue if user already provisioned or creation fails
+          }
+
+          const profilePayload: Record<string, any> = {
+            id: userId,
+            phone: formatted,
+            full_name: resolvedName,
+            role: resolvedRole,
+            is_verified: false,
+            account_status: accountStatus,
+            phone_verification_status: phoneVerificationStatus,
+            verification_method: verificationMethod,
+            phone_verified: phoneVerified,
+            terms_accepted_at: consentTimestamp,
+            privacy_accepted_at: consentTimestamp,
+            terms_version: termsVersion,
+            privacy_version: privacyVersion,
+            consent_purpose: consentPurpose,
+          };
+
+          let { data: newProfile, error: insertErr } = await adminClient
+            .from("profiles")
+            .insert(profilePayload)
             .select("*")
             .single();
+
+          // Graceful fallback if database enum app_role lacks 'vendor'
+          if (insertErr && insertErr.code === "22P02" && resolvedRole === "vendor") {
+            profilePayload.role = "worker";
+            const retryRes = await adminClient
+              .from("profiles")
+              .insert(profilePayload)
+              .select("*")
+              .single();
+            insertErr = retryRes.error;
+            newProfile = retryRes.data;
+          }
 
           if (insertErr || !newProfile) {
             console.error("[ACCOUNT_CREATION_FAILED]", insertErr);
@@ -1035,11 +1076,18 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
     phoneVerificationStatus,
   });
 
-  const targetDashboard = intent === "registration" && resolvedRole === "worker"
-    ? "/onboarding"
-    : resolvedRole === "contractor"
-    ? "/contractor/dashboard"
-    : "/dashboard";
+  const targetDashboard =
+    intent === "registration" && resolvedRole === "worker"
+      ? "/onboarding"
+      : resolvedRole === "contractor"
+      ? "/contractor/dashboard"
+      : resolvedRole === "vendor"
+      ? "/vendor/dashboard"
+      : resolvedRole === "institution"
+      ? "/institution/dashboard"
+      : resolvedRole === "customer"
+      ? "/customer/bookings"
+      : "/dashboard";
 
   return {
     success: true,

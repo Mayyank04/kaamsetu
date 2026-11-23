@@ -311,11 +311,15 @@ export async function POST(request: NextRequest) {
 
     const redirectUrl =
       userRole === "worker"
-        ? "/onboarding"
+        ? "/dashboard"
         : userRole === "contractor"
         ? "/contractor/dashboard"
+        : userRole === "vendor"
+        ? "/vendor/dashboard"
         : userRole === "institution"
         ? "/institution/dashboard"
+        : userRole === "customer"
+        ? "/customer/bookings"
         : "/dashboard";
 
     const response = NextResponse.json(

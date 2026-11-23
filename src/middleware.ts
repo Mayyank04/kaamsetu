@@ -14,6 +14,8 @@ const PROTECTED_PREFIXES = [
   "/contractor",
   "/institution/dashboard",
   "/institution",
+  "/vendor/dashboard",
+  "/vendor",
   "/identity/card",
   "/identity/edit",
   "/employer/manage",
@@ -46,6 +48,8 @@ export async function middleware(request: NextRequest) {
     let targetDashboard = "/dashboard";
     if (role === "contractor") {
       targetDashboard = "/contractor/dashboard";
+    } else if (role === "vendor") {
+      targetDashboard = "/vendor/dashboard";
     } else if (role === "institution") {
       targetDashboard = "/institution/dashboard";
     } else if (role === "customer") {

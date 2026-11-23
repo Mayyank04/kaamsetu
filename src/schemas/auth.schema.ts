@@ -21,6 +21,7 @@ export const phoneAuthSchema = z.object({
   role: z
     .enum([
       "worker",
+      "vendor",
       "contractor",
       "employer",
       "verifier",
@@ -71,6 +72,7 @@ export const otpVerificationSchema = z.object({
   role: z
     .enum([
       "worker",
+      "vendor",
       "contractor",
       "employer",
       "verifier",
@@ -119,7 +121,7 @@ export const directRegistrationSchema = z.object({
     })
     .transform((val) => (val && validateIndianMobile(val).valid ? validateIndianMobile(val).clean10 : undefined)),
   role: z
-    .enum(["worker", "contractor", "customer", "institution"])
+    .enum(["worker", "contractor", "customer", "institution", "vendor"])
     .default("worker"),
   termsAccepted: z.literal(true, {
     errorMap: () => ({ message: "Please accept the Terms of Service and Privacy Policy to continue." }),
@@ -141,7 +143,7 @@ export const directLoginSchema = z.object({
     .string({ required_error: "Password is required" })
     .min(1, "Password is required"),
   role: z
-    .enum(["worker", "contractor", "customer", "institution"])
+    .enum(["worker", "contractor", "customer", "institution", "vendor"])
     .optional(),
 });
 
