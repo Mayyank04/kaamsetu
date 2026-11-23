@@ -542,6 +542,18 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   // =========================================================================
   if (isSandbox) {
     const allowInsecureSandbox = process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION === "true";
+    if (isProduction && !allowInsecureSandbox) {
+      return {
+        success: false,
+        code: "SMS_GATEWAY_UNAVAILABLE" as AuthErrorCode,
+        message:
+          "Live SMS delivery is not configured for this production environment. Please register or sign in using your email and password.",
+        isSandbox: false,
+        sandboxCode: undefined,
+        statusCode: 503,
+      };
+    }
+
     return {
       success: true,
       challengeCreated: true,
@@ -853,6 +865,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
           try {
             const phoneDigits = formatted.replace(/\D/g, "");
             const fakeEmail = `${phoneDigits}@phone.kaamsetu.internal`;
+            const safeMetadataRole = resolvedRole === "vendor" ? "worker" : resolvedRole;
             const { data: authData } = await adminClient.auth.admin.createUser({
               email: fakeEmail,
               phone: formatted,
@@ -860,7 +873,8 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
               email_confirm: true,
               user_metadata: {
                 full_name: resolvedName,
-                role: resolvedRole,
+                role: safeMetadataRole,
+                actual_role: resolvedRole,
                 phone: formatted,
               },
             });

@@ -271,7 +271,8 @@ ${maskedText}`;
       let timer: NodeJS.Timeout | null = null;
       try {
         const timeoutPromise = new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error(`Timeout on model ${model}`)), 6000);
+          timer = setTimeout(() => reject(new Error(`Timeout on model ${model}`)), 8000);
+          timer?.unref?.();
         });
         const callPromise = ai.models
           .generateContent({

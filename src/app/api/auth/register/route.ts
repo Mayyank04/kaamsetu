@@ -190,6 +190,9 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Safe role for Supabase Auth metadata to prevent remote trigger failure on DBs without 'vendor' in enum
+      const safeMetadataRole = assignedRole === "vendor" ? "worker" : assignedRole;
+
       // Create real account in Supabase Auth via adminClient
       const { data: authData, error: authCreateErr } = await adminClient.auth.admin.createUser({
         email: cleanEmail,
@@ -197,7 +200,8 @@ export async function POST(request: NextRequest) {
         email_confirm: true,
         user_metadata: {
           full_name: data.fullName,
-          role: assignedRole,
+          role: safeMetadataRole,
+          actual_role: assignedRole,
           phone: cleanPhone,
         },
       });

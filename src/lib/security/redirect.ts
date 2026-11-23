@@ -58,6 +58,11 @@ export function sanitizeRedirectUrl(
       return fallback;
     }
 
+    // Redirections from authentication and navigation flows must point to application pages, not API endpoints
+    if (parsed.pathname.startsWith("/api/") || parsed.pathname === "/api") {
+      return fallback;
+    }
+
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
     return fallback;
