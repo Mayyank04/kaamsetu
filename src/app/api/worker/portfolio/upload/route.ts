@@ -151,7 +151,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 7. Demo Mode: Local preview fallback with explicit simulation banner
+    // 7. Demo Mode: Local preview fallback strictly for non-production environments
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        { success: false, message: "Storage backend unavailable in production mode." },
+        { status: 503 }
+      );
+    }
+
     const base64 = buffer.toString("base64");
     const dataUrl = `data:${file.type};base64,${base64}`;
 

@@ -12,7 +12,7 @@ const createBookingSchema = z.object({
   location_address: z.string().min(5, "Address must be at least 5 characters"),
   location_city: z.string().min(2, "City must be specified"),
   location_state: z.string().optional().default("Assam"),
-  location_pincode: z.string().regex(/^[1-9][0-9]{5}$/, "Pincode must be 6 digits").optional(),
+  location_pincode: z.string().regex(/^[1-9][0-9]{5}$/, "A valid 6-digit Indian Postal PIN code is required"),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
   scheduled_start: z.string().refine((val) => !isNaN(Date.parse(val)), {
@@ -20,19 +20,35 @@ const createBookingSchema = z.object({
   }),
   scheduled_end: z.string().optional(),
   estimated_cost: z.number().positive("Estimated cost must be positive").default(2000),
+  platform_commission_amount: z.number().optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuthenticatedUser();
     const json = await request.json();
+
+    // Reject explicit non-zero commission attempts
+    if (
+      json.platform_commission_amount !== undefined &&
+      Number(json.platform_commission_amount) !== 0
+    ) {
+      return NextResponse.json(
+        {
+          error: "Constitutional Invariant Violation: platform_commission_amount must be exactly 0.00",
+          code: "ZERO_COMMISSION_INVARIANT_VIOLATION",
+        },
+        { status: 400 }
+      );
+    }
+
     const data = createBookingSchema.parse(json);
 
     // Geographic boundary validation (Guwahati Urban & Shillong Urban permitted)
     const geoValidation = GeographicAuthorizationService.validateLocation({
       city: data.location_city,
       state: data.location_state || "Assam",
-      pincode: data.location_pincode || (data.location_city.toLowerCase().includes("shillong") ? "793001" : "781001"),
+      pincode: data.location_pincode,
       latitude: data.latitude,
       longitude: data.longitude,
     });
@@ -40,7 +56,7 @@ export async function POST(request: NextRequest) {
     if (!geoValidation.allowed) {
       return NextResponse.json(
         {
-          error: geoValidation.reason || "Booking location is outside the authorized Class B operating boundary.",
+          error: `Commercial booking dispatch is currently restricted to Guwahati Urban (PIN 781001-781039) and Shillong Urban (PIN 793001-793022) under CLASS_B_CONTROLLED_ROLLOUT. ${geoValidation.reason || ""}`.trim(),
           status: geoValidation.status,
           district: geoValidation.district,
         },
@@ -59,7 +75,8 @@ export async function POST(request: NextRequest) {
       scheduled_end: data.scheduled_end,
       estimated_cost: data.estimated_cost,
       status: "requested",
-    });
+      platform_commission_amount: 0.00,
+    } as any);
 
     return createSuccessResponse(booking, {
       message: "Booking request transmitted to worker. 100% of payment goes directly to the professional with zero commission.",

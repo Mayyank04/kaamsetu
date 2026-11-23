@@ -68,6 +68,14 @@ export function protectEntities(text: string): {
     return match;
   });
 
+  // 7. Masked Identity Tokens (e.g. XXXX-XXXX-1234, ****-****-1234, •••• •••• 1234)
+  const maskedIdRegex = /\b[X*•]{4}[-\s]?[X*•]{4}[-\s]?[0-9]{4}\b/gi;
+  masked = masked.replace(maskedIdRegex, (match) => {
+    const placeholder = `[[ENTITY_MASKED_ID_${counter++}]]`;
+    entities.push({ placeholder, originalValue: match, type: "registry_id" });
+    return placeholder;
+  });
+
   return { maskedText: masked, entities };
 }
 
