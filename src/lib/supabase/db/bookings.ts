@@ -12,6 +12,9 @@ export async function createBooking(input: InsertBooking): Promise<Booking> {
   const reference = input.booking_reference || `BK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
   if (!isConfigured.supabase) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("Database service is not configured. Production requires active Supabase credentials.");
+    }
     return {
       id: "booking-demo-01",
       booking_reference: reference,
@@ -38,11 +41,16 @@ export async function createBooking(input: InsertBooking): Promise<Booking> {
     .insert({
       ...input,
       booking_reference: reference,
+      platform_commission: 0.00,
     })
     .select("*")
     .single();
 
   if (error) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[createBooking] Production database insert failed:", error.message);
+      throw error;
+    }
     if (error.code === "PGRST205" || error.message.includes("schema cache") || error.message.includes("does not exist")) {
       console.warn("[createBooking] Table 'bookings' not yet migrated in database; providing structured booking confirmation:", error.message);
       return {

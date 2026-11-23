@@ -33,6 +33,36 @@ export function sanitizeRedirectUrl(
     return fallback;
   }
 
+  // Multi-level decode to prevent percent-encoded bypasses (e.g. /%2f%2fevil.com, /%5cevil.com)
+  try {
+    let decoded = decodeURIComponent(trimmed);
+    if (decoded.includes("%")) {
+      try {
+        decoded = decodeURIComponent(decoded);
+      } catch {
+        // Ignore second decode error
+      }
+    }
+    if (
+      !decoded.startsWith("/") ||
+      decoded.startsWith("//") ||
+      decoded.startsWith("/\\") ||
+      decoded.startsWith("\\")
+    ) {
+      return fallback;
+    }
+    const decodedLower = decoded.toLowerCase();
+    if (
+      decodedLower.includes("javascript:") ||
+      decodedLower.includes("data:") ||
+      decodedLower.includes("vbscript:")
+    ) {
+      return fallback;
+    }
+  } catch {
+    return fallback;
+  }
+
   // Disallow javascript:, data:, vbscript: pseudo-protocols anywhere in the path.
   const lower = trimmed.toLowerCase();
   if (

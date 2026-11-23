@@ -94,7 +94,12 @@ export async function getAuthenticatedSession(): Promise<{
         return { user: null, isDemo: false };
       }
 
-      const verifiedRole = profile.role as AppRole;
+      // Safe role adaptation for database enum compatibility
+      const metaActualRole = authUser.user_metadata?.actual_role as AppRole | undefined;
+      const verifiedRole: AppRole =
+        profile.role === "worker" && metaActualRole === "vendor"
+          ? "vendor"
+          : (profile.role as AppRole);
 
       // Query role-specific associated entity IDs
       let workerProfileId: string | null = null;
@@ -177,6 +182,8 @@ export async function getAuthenticatedSession(): Promise<{
         let workerProfileId: string | null = null;
         let slug: string | null = null;
         let contractorOrgId: string | null = null;
+        let institutionId: string | null = null;
+        let vendorId: string | null = null;
 
         if (isConfigured.supabase) {
           try {
@@ -188,7 +195,9 @@ export async function getAuthenticatedSession(): Promise<{
               .maybeSingle();
 
             if (profile) {
-              verifiedRole = profile.role as AppRole;
+              const dbRole = profile.role as AppRole;
+              // Do not downgrade verified token role if DB had enum fallback to worker
+              verifiedRole = (dbRole === "worker" && verified.role === "vendor") ? "vendor" : dbRole;
               fullName = profile.full_name || fullName;
               phone = profile.phone || phone;
               email = profile.email || email;
@@ -213,6 +222,24 @@ export async function getAuthenticatedSession(): Promise<{
               if (org) {
                 contractorOrgId = org.id;
               }
+            } else if (verifiedRole === "vendor") {
+              const { data: v } = await adminClient
+                .from("vendors")
+                .select("id")
+                .eq("user_id", verified.userId)
+                .maybeSingle();
+              if (v) {
+                vendorId = v.id;
+              }
+            } else if (verifiedRole === "institution") {
+              const { data: inst } = await adminClient
+                .from("institutions")
+                .select("id")
+                .eq("user_id", verified.userId)
+                .maybeSingle();
+              if (inst) {
+                institutionId = inst.id;
+              }
             }
           } catch {
             // Use verified token claims on DB query exception
@@ -230,7 +257,8 @@ export async function getAuthenticatedSession(): Promise<{
             isDemo: false,
             workerProfileId,
             contractorOrgId,
-            institutionId: null,
+            institutionId,
+            vendorId,
             slug,
           },
           isDemo: false,
