@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Languages, ShieldCheck, Sparkles, Mic, Volume2 } from "lucide-react";
-import { InstitutionalHeader } from "@/components/layout/institutional-header";
 import { UniversalTranslatorWorkspace } from "@/components/translation/universal-translator-workspace";
 
 export const metadata: Metadata = {
@@ -13,8 +12,6 @@ export const metadata: Metadata = {
 export default function TranslatePage() {
   return (
     <div className="min-h-screen bg-warm-ivory text-charcoal flex flex-col selection:bg-sand/30">
-      <InstitutionalHeader />
-
       <main className="flex-1 container mx-auto px-4 py-6 sm:py-10 max-w-6xl space-y-6">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center justify-between text-xs text-charcoal-muted">
@@ -44,7 +41,11 @@ export default function TranslatePage() {
         </div>
 
         {/* Translation Flagship Workspace */}
-        <UniversalTranslatorWorkspace />
+        <UniversalTranslatorWorkspace
+          initialText="মই গুৱাহাটীত এটা সৰু দৰ্জীৰ দোকান চলাওঁ।"
+          initialSourceLang="as"
+          initialTargetLang="hi"
+        />
 
         {/* Features & Language Assurance Card */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
@@ -79,16 +80,6 @@ export default function TranslatePage() {
           </div>
         </div>
       </main>
-
-      {/* Institutional Footer */}
-      <footer className="border-t border-forest/10 bg-warm-ivory py-6 mt-12 text-center text-xs text-charcoal-muted">
-        <p>
-          KAAMSETU Digital Skill Identity Platform • Every skill deserves to be seen, even without a degree.
-        </p>
-        <p className="text-[11px] mt-1 font-mono">
-          CLASS_B_CONTROLLED_ROLLOUT • Guwahati Urban & Shillong Urban • Zero Commission Guarantee
-        </p>
-      </footer>
     </div>
   );
 }

@@ -14,12 +14,10 @@ import {
   X,
   History,
   Trash2,
-  Sparkles,
   AlertCircle,
   HelpCircle,
   Globe,
   Search,
-  ExternalLink,
   ChevronDown,
   ArrowRight,
   Clipboard,
@@ -28,13 +26,19 @@ import { ALL_TRANSLATION_CAPABILITIES } from "@/lib/translation/registry";
 import { LanguageCapability } from "@/lib/translation/types";
 import {
   createSpeechRecognitionSession,
-  speakText,
   isSpeechRecognitionSupported,
-  isSpeechSynthesisSupported,
-  hasNativeVoice,
   VoiceInputState,
   SpeechErrorCode,
 } from "@/lib/translation/speech";
+import { playbackController } from "@/lib/voice/playback-controller";
+import {
+  AudioChannel,
+  PlaybackSpeed,
+  ChannelPlaybackStatus,
+  VoiceInfo,
+} from "@/lib/voice/types";
+import { detectScriptLanguage } from "@/lib/voice/voice-selection";
+import { AudioChannelBar } from "./audio-channel-bar";
 
 export interface TranslationHistoryItem {
   id: string;
@@ -107,11 +111,35 @@ export function UniversalTranslatorWorkspace({
   const [interimSpeech, setInterimSpeech] = React.useState("");
   const speechSessionRef = React.useRef<any>(null);
 
-  // Speech Synthesis (Audio Output) States
-  const [isPlayingAudio, setIsPlayingAudio] = React.useState(false);
-  const [audioTarget, setAudioTarget] = React.useState<"source" | "native" | "translit" | null>(null);
-  const [ttsNote, setTtsNote] = React.useState<string | null>(null);
-  const ttsPlayerRef = React.useRef<{ stop: () => void } | null>(null);
+  // Audio Channel States (Original, Translated, Transliteration)
+  const [channelStatuses, setChannelStatuses] = React.useState<Record<AudioChannel, ChannelPlaybackStatus>>({
+    original: playbackController.getStatus("original"),
+    translated: playbackController.getStatus("translated"),
+    transliteration: playbackController.getStatus("transliteration"),
+  });
+
+  // Subscribe to playbackController updates
+  React.useEffect(() => {
+    const unsubscribe = playbackController.subscribe((status) => {
+      setChannelStatuses((prev) => ({
+        ...prev,
+        [status.channel]: status,
+      }));
+    });
+
+    return () => {
+      unsubscribe();
+      playbackController.stopAll();
+    };
+  }, []);
+
+  // Initial translation if initialText provided on mount
+  React.useEffect(() => {
+    if (initialText && initialText.trim()) {
+      handleTranslate(initialText, initialTargetLang);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load history from localStorage on client mount
   React.useEffect(() => {
@@ -149,15 +177,13 @@ export function UniversalTranslatorWorkspace({
     }
   };
 
-  // Cleanup speech recognition and synthesis on unmount
+  // Cleanup speech recognition on unmount
   React.useEffect(() => {
     return () => {
       if (speechSessionRef.current) {
         speechSessionRef.current.destroy();
       }
-      if (ttsPlayerRef.current) {
-        ttsPlayerRef.current.stop();
-      }
+      playbackController.stopAll();
     };
   }, []);
 
@@ -198,99 +224,169 @@ export function UniversalTranslatorWorkspace({
     ? { name: "Auto Detect", nativeName: "স্বয়ংক্রিয় / पहचानें", code: "auto" }
     : ALL_TRANSLATION_CAPABILITIES[sourceLang] || { name: sourceLang, nativeName: "", code: sourceLang };
 
+  // Detected language for original audio
+  const effectiveSourceLang = React.useMemo(() => {
+    if (sourceLang !== "auto") return sourceLang;
+    if (detectedSource) return detectedSource;
+    if (sourceText.trim()) return detectScriptLanguage(sourceText);
+    return "en";
+  }, [sourceLang, detectedSource, sourceText]);
+
   // ==========================================================================
-  // CORE TRANSLATION DISPATCH
+  // TRANSLATION API DISPATCH
   // ==========================================================================
-  const handleTranslate = async (overrideText?: string, overrideTarget?: string, overrideSource?: string) => {
+  const handleTranslate = async (overrideText?: string, overrideTarget?: string) => {
     const textToTranslate = (overrideText !== undefined ? overrideText : sourceText).trim();
     const effectiveTarget = overrideTarget || targetLang;
-    const effectiveSource = overrideSource || sourceLang;
 
-    if (!textToTranslate) return;
+    if (!textToTranslate) {
+      setErrorMessage("Please enter text or speak using the microphone.");
+      return;
+    }
 
     setIsTranslating(true);
     setErrorMessage(null);
-
-    // Stop ongoing audio
-    if (ttsPlayerRef.current) {
-      ttsPlayerRef.current.stop();
-      setIsPlayingAudio(false);
-      setAudioTarget(null);
-    }
+    playbackController.stopAll();
 
     try {
-      const res = await fetch("/api/translate", {
+      const response = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: textToTranslate,
-          sourceLanguage: effectiveSource === "auto" ? undefined : effectiveSource,
+          sourceLanguage: sourceLang === "auto" ? undefined : sourceLang,
           targetLanguage: effectiveTarget,
+          contentType: "user_input",
           includeTransliteration: true,
           includeEnglishMeaning: true,
         }),
       });
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || "Translation request failed.");
+      const json = await response.json();
+
+      if (!response.ok || !json.success) {
+        throw new Error(json.error || `Translation request failed (HTTP ${response.status})`);
       }
 
       const data = json.data;
       setTranslatedText(data.translatedText);
-      setDetectedSource(data.detectedSourceLanguage);
+      setDetectedSource(data.detectedSourceLanguage || null);
       setTransliteration(data.transliteration || null);
       setEnglishMeaning(data.englishMeaning || null);
-      setTransliterationAvailable(Boolean(data.transliterationAvailable));
-      setEnglishMeaningAvailable(Boolean(data.englishMeaningAvailable));
-      setProviderName(data.provider || "gemini");
-      setConfidenceScore(data.confidence || 0.95);
+      setTransliterationAvailable(data.transliterationAvailable || false);
+      setEnglishMeaningAvailable(data.englishMeaningAvailable || false);
+      setProviderName(data.provider || "offline");
+      setConfidenceScore(data.confidence ?? null);
       setIsFallback(Boolean(data.isFallback));
 
-      // Save to history
+      // Save to recent translation history
       saveToHistory({
-        id: `th-${Date.now()}`,
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         sourceText: textToTranslate,
         translatedText: data.translatedText,
         transliteration: data.transliteration,
         englishMeaning: data.englishMeaning,
-        sourceLanguage: data.detectedSourceLanguage || effectiveSource,
+        sourceLanguage: data.detectedSourceLanguage || sourceLang,
         targetLanguage: effectiveTarget,
         timestamp: Date.now(),
       });
     } catch (err: any) {
-      setErrorMessage(err.message || "Translation could not be completed. Please retry.");
+      console.error("[Translation Error]", err);
+      setErrorMessage(err.message || "Translation could not be completed. Please check your connection.");
     } finally {
       setIsTranslating(false);
     }
   };
 
   // ==========================================================================
-  // SWAP LANGUAGES AND TEXT
+  // AUDIO PLAYBACK HANDLERS (ORIGINAL, TRANSLATED, TRANSLITERATION)
   // ==========================================================================
-  const handleSwap = () => {
-    // If source was auto, resolve to detected source or Hindi
-    const currentActualSource = sourceLang === "auto" ? (detectedSource || "en") : sourceLang;
-    const newSource = targetLang;
-    const newTarget = currentActualSource;
+  const handlePlayChannel = (channel: AudioChannel) => {
+    let text = "";
+    let lang = "";
 
-    setSourceLang(newSource);
-    setTargetLang(newTarget);
+    if (channel === "original") {
+      text = sourceText.trim();
+      lang = effectiveSourceLang;
+    } else if (channel === "translated") {
+      text = (translatedText || "").trim();
+      lang = targetLang;
+    } else if (channel === "transliteration") {
+      text = (transliteration || "").trim();
+      lang = "en"; // Transliteration is read phonetically in Latin script
+    }
 
-    // Swap text if translation exists
-    if (translatedText) {
-      const oldTranslated = translatedText;
-      const oldSource = sourceText;
-      setSourceText(oldTranslated);
-      setTranslatedText(oldSource);
-      // Re-translate with swapped values
-      handleTranslate(oldTranslated, newTarget, newSource);
+    if (!text) return;
+
+    const currentStatus = channelStatuses[channel];
+
+    if (currentStatus.state === "speaking") {
+      playbackController.pause(channel);
+    } else if (currentStatus.state === "paused") {
+      playbackController.resume(channel);
+    } else {
+      playbackController.play({
+        channel,
+        text,
+        language: lang,
+        speed: currentStatus.speed,
+        preferredVoiceId: currentStatus.selectedVoice?.id,
+      });
     }
   };
 
+  const handlePauseChannel = (channel: AudioChannel) => {
+    playbackController.pause(channel);
+  };
+
+  const handleResumeChannel = (channel: AudioChannel) => {
+    playbackController.resume(channel);
+  };
+
+  const handleStopChannel = (channel: AudioChannel) => {
+    playbackController.stop(channel);
+  };
+
+  const handleReplayChannel = (channel: AudioChannel) => {
+    playbackController.replay(channel);
+  };
+
+  const handleSpeedChange = (channel: AudioChannel, speed: PlaybackSpeed) => {
+    playbackController.setSpeed(channel, speed);
+  };
+
+  const handleVoiceChange = (channel: AudioChannel, voice: VoiceInfo) => {
+    playbackController.setVoice(channel, voice);
+  };
+
   // ==========================================================================
-  // COPY HELPERS
+  // SWAP SOURCE AND TARGET
   // ==========================================================================
+  const handleSwap = () => {
+    if (sourceLang === "auto" && !detectedSource) {
+      setErrorMessage("Cannot swap before source language is detected or selected.");
+      return;
+    }
+
+    playbackController.stopAll();
+
+    const newSource = targetLang;
+    const newTarget = sourceLang === "auto" ? (detectedSource || "hi") : sourceLang;
+    const newText = translatedText || "";
+
+    setSourceLang(newSource);
+    setTargetLang(newTarget);
+    setSourceText(newText);
+    setTranslatedText(sourceText);
+    setTransliteration(null);
+    setEnglishMeaning(null);
+
+    if (newText.trim()) {
+      handleTranslate(newText, newTarget);
+    }
+  };
+
+  // Copy helpers
   const copyToClipboard = async (text: string, key: string) => {
     if (!text || typeof navigator === "undefined" || !navigator.clipboard) return;
     try {
@@ -298,44 +394,39 @@ export function UniversalTranslatorWorkspace({
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(null), 2000);
     } catch {
-      // fallback
+      // ignore
     }
   };
 
   const copyAll = () => {
-    if (!translatedText) return;
     const parts = [
-      `[${targetCap.name} Native]: ${translatedText}`,
-      transliteration ? `[Pronunciation]: ${transliteration}` : null,
-      englishMeaning ? `[English Meaning]: ${englishMeaning}` : null,
+      `Original (${ALL_TRANSLATION_CAPABILITIES[effectiveSourceLang]?.name || effectiveSourceLang}): ${sourceText}`,
+      `Translation (${targetCap.name}): ${translatedText}`,
+      transliteration ? `Pronunciation (Roman): ${transliteration}` : "",
+      englishMeaning ? `Meaning (English): ${englishMeaning}` : "",
     ].filter(Boolean);
 
-    copyToClipboard(parts.join("\n"), "all");
+    copyToClipboard(parts.join("\n\n"), "all");
   };
 
-  // ==========================================================================
-  // PASTE HELPER
-  // ==========================================================================
   const handlePaste = async () => {
-    if (typeof navigator !== "undefined" && navigator.clipboard?.readText) {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          setSourceText(text);
-        }
-      } catch {
-        // clipboard permission denied
+    if (typeof navigator === "undefined" || !navigator.clipboard) return;
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setSourceText((prev) => (prev ? `${prev} ${text}` : text));
       }
+    } catch {
+      // clipboard access not permitted
     }
   };
 
   // ==========================================================================
-  // SPEECH RECOGNITION (VOICE INPUT)
+  // VOICE INPUT (MICROPHONE)
   // ==========================================================================
   const handleToggleMic = () => {
     setSpeechError(null);
 
-    // If currently listening, stop
     if (voiceState === "listening" || voiceState === "requesting_permission") {
       if (speechSessionRef.current) {
         speechSessionRef.current.stop();
@@ -344,7 +435,6 @@ export function UniversalTranslatorWorkspace({
       return;
     }
 
-    // Determine recognition language: if source is auto, use en or hi
     const recognitionLang = sourceLang === "auto" ? (detectedSource || "hi") : sourceLang;
 
     if (!isSpeechRecognitionSupported()) {
@@ -371,7 +461,6 @@ export function UniversalTranslatorWorkspace({
         setInterimSpeech(interim);
       },
       onFinalTranscript: (final) => {
-        // Place recognized text into source input for user review/editing (DO NOT AUTO-SUBMIT UNCONFIRMED)
         setSourceText((prev) => (prev ? `${prev} ${final}` : final));
         setInterimSpeech("");
         setVoiceState("idle");
@@ -396,66 +485,10 @@ export function UniversalTranslatorWorkspace({
     setSpeechError(null);
   };
 
-  // ==========================================================================
-  // SPEECH SYNTHESIS (AUDIO PLAYBACK)
-  // ==========================================================================
-  const handlePlayAudio = (type: "source" | "native" | "translit") => {
-    setTtsNote(null);
-
-    // If currently playing this target, stop it
-    if (isPlayingAudio && audioTarget === type) {
-      if (ttsPlayerRef.current) {
-        ttsPlayerRef.current.stop();
-      }
-      setIsPlayingAudio(false);
-      setAudioTarget(null);
-      return;
-    }
-
-    if (ttsPlayerRef.current) {
-      ttsPlayerRef.current.stop();
-    }
-
-    let textToSpeak = "";
-    let langForVoice = "en";
-
-    if (type === "native") {
-      textToSpeak = translatedText || "";
-      langForVoice = targetLang;
-    } else if (type === "source") {
-      textToSpeak = sourceText;
-      langForVoice = sourceLang === "auto" ? (detectedSource || "en") : sourceLang;
-    } else if (type === "translit") {
-      textToSpeak = transliteration || "";
-      langForVoice = "en"; // transliteration is read phonetically in Latin script
-    }
-
-    if (!textToSpeak.trim()) return;
-
-    // Check voice support
-    const voiceCheck = hasNativeVoice(langForVoice);
-    if (!voiceCheck.hasVoice) {
-      setTtsNote(voiceCheck.note || "Native regional voice not found in browser. Using system fallback voice.");
-    }
-
-    setIsPlayingAudio(true);
-    setAudioTarget(type);
-
-    const player = speakText(textToSpeak, langForVoice, {
-      onStart: () => setIsPlayingAudio(true),
-      onEnd: () => {
-        setIsPlayingAudio(false);
-        setAudioTarget(null);
-      },
-      onError: (err) => {
-        setIsPlayingAudio(false);
-        setAudioTarget(null);
-        console.warn("[TTS Playback] Error:", err);
-      },
-    });
-
-    ttsPlayerRef.current = player;
-  };
+  const anyAudioPlaying =
+    channelStatuses.original.state === "speaking" ||
+    channelStatuses.translated.state === "speaking" ||
+    channelStatuses.transliteration.state === "speaking";
 
   return (
     <div className={`w-full max-w-5xl mx-auto flex flex-col rounded-lg bg-card border border-forest/20 shadow-sovereign-lg overflow-hidden ${className}`}>
@@ -475,7 +508,7 @@ export function UniversalTranslatorWorkspace({
               </span>
             </div>
             <p className="text-xs text-charcoal-muted mt-0.5">
-              Native Script • Roman Transliteration (Pronunciation) • English Meaning • Voice Input & Audio
+              Native Script • Roman Transliteration (Pronunciation) • English Meaning • Voice Input & Slow Playback
             </p>
           </div>
         </div>
@@ -690,7 +723,7 @@ export function UniversalTranslatorWorkspace({
             }}
             className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors shrink-0 ${
               targetLang === lang.code
-                ? "bg-forest text-warm-ivory border-forest shadow-2xs"
+                ? "bg-forest text-warm-ivory border-forest shadow-2xs font-semibold"
                 : "bg-card border-forest/15 text-charcoal hover:border-forest/40"
             }`}
           >
@@ -700,11 +733,11 @@ export function UniversalTranslatorWorkspace({
       </div>
 
       {/* 3. DUAL-PANE WORKSPACE (INPUT & OUTPUT) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-forest/15 flex-1 min-h-[360px]">
+      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-forest/15 flex-1 min-h-[380px]">
         {/* LEFT PANE: INPUT AREA */}
         <div className="p-4 sm:p-5 flex flex-col justify-between bg-card space-y-3">
-          <div className="flex-1 flex flex-col">
-            <div className="flex items-center justify-between text-xs text-charcoal-muted mb-1.5">
+          <div className="flex-1 flex flex-col space-y-2">
+            <div className="flex items-center justify-between text-xs text-charcoal-muted">
               <span className="font-medium text-forest">
                 {sourceCap.name} {sourceLang !== "auto" && `(${sourceCap.nativeName})`}
               </span>
@@ -720,18 +753,20 @@ export function UniversalTranslatorWorkspace({
                   handleTranslate();
                 }
               }}
-              placeholder="Enter text to translate, or click microphone to speak in your dialect..."
-              className="w-full flex-1 min-h-[160px] sm:min-h-[200px] p-3 text-sm text-charcoal bg-warm-ivory/20 rounded border border-forest/15 focus:border-forest focus:outline-hidden focus:ring-1 focus:ring-forest resize-y"
+              placeholder="Enter text to translate, or click Voice Input to speak in your dialect..."
+              className="w-full flex-1 min-h-[140px] sm:min-h-[160px] p-3 text-sm text-charcoal bg-warm-ivory/20 rounded border border-forest/15 focus:border-forest focus:outline-hidden focus:ring-1 focus:ring-forest resize-y"
               maxLength={5000}
             />
 
             {/* LIVE SPEECH TRANSCRIPTION INDICATOR */}
             {(voiceState === "listening" || voiceState === "requesting_permission" || interimSpeech) && (
-              <div className="mt-2 p-2.5 rounded bg-forest/5 border border-forest/20 flex items-center justify-between text-xs text-forest animate-pulse">
+              <div className="p-2.5 rounded bg-forest/5 border border-forest/20 flex items-center justify-between text-xs text-forest animate-pulse">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />
                   <span className="font-medium">
-                    {voiceState === "requesting_permission" ? "Requesting microphone permission..." : "Listening... Speak clearly in your language"}
+                    {voiceState === "requesting_permission"
+                      ? "Requesting microphone permission..."
+                      : "Listening... Speak clearly in your language"}
                   </span>
                   {interimSpeech && <span className="italic text-charcoal font-normal">&ldquo;{interimSpeech}&rdquo;</span>}
                 </div>
@@ -747,13 +782,30 @@ export function UniversalTranslatorWorkspace({
 
             {/* SPEECH ERROR DISPLAY */}
             {speechError && (
-              <div className="mt-2 p-2.5 rounded bg-amber-50 border border-amber-300 text-xs text-amber-900 flex items-start gap-2">
+              <div className="p-2.5 rounded bg-amber-50 border border-amber-300 text-xs text-amber-900 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <div className="font-semibold">{speechError.message}</div>
                   <div className="text-[11px] text-amber-800 mt-0.5">{speechError.actionable}</div>
                 </div>
               </div>
+            )}
+
+            {/* ORIGINAL AUDIO PLAYBACK BAR */}
+            {sourceText.trim() && (
+              <AudioChannelBar
+                channel="original"
+                title="Original Audio"
+                subtitle={`${ALL_TRANSLATION_CAPABILITIES[effectiveSourceLang]?.name || effectiveSourceLang} • Natural Voice`}
+                status={channelStatuses.original}
+                onPlay={() => handlePlayChannel("original")}
+                onPause={() => handlePauseChannel("original")}
+                onResume={() => handleResumeChannel("original")}
+                onStop={() => handleStopChannel("original")}
+                onReplay={() => handleReplayChannel("original")}
+                onSpeedChange={(speed) => handleSpeedChange("original", speed)}
+                onVoiceChange={(voice) => handleVoiceChange("original", voice)}
+              />
             )}
           </div>
 
@@ -785,25 +837,12 @@ export function UniversalTranslatorWorkspace({
                 <Clipboard className="w-3.5 h-3.5" />
               </button>
 
-              {/* Speak Source Text */}
-              {sourceText.trim() && (
-                <button
-                  type="button"
-                  onClick={() => handlePlayAudio("source")}
-                  className={`p-1.5 rounded border border-forest/15 transition-colors ${
-                    isPlayingAudio && audioTarget === "source" ? "bg-forest text-warm-ivory" : "text-charcoal-muted hover:text-forest hover:bg-forest/5"
-                  }`}
-                  title="Listen to original source text"
-                >
-                  <Volume2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-
               {/* Clear Input */}
               {sourceText.trim() && (
                 <button
                   type="button"
                   onClick={() => {
+                    playbackController.stopAll();
                     setSourceText("");
                     setTranslatedText(null);
                     setTransliteration(null);
@@ -866,14 +905,6 @@ export function UniversalTranslatorWorkspace({
               </div>
             )}
 
-            {/* TTS ADVISORY NOTE */}
-            {ttsNote && (
-              <div className="p-2.5 rounded bg-warm-sand/30 border border-warm-sand text-[11px] text-charcoal flex items-start gap-1.5">
-                <HelpCircle className="w-3.5 h-3.5 text-forest shrink-0 mt-0.5" />
-                <span>{ttsNote}</span>
-              </div>
-            )}
-
             {/* EMPTY STATE */}
             {!translatedText && !isTranslating && !errorMessage && (
               <div className="h-48 flex flex-col items-center justify-center text-center p-6 border border-dashed border-forest/20 rounded bg-card/60">
@@ -896,79 +927,88 @@ export function UniversalTranslatorWorkspace({
 
             {/* STRUCTURED TRANSLATION OUTPUT SECTIONS */}
             {translatedText && !isTranslating && (
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {/* SECTION A: NATIVE SCRIPT TRANSLATION */}
-                <div className="p-3.5 rounded-md bg-card border border-forest/20 shadow-2xs space-y-1.5">
+                <div className="p-3.5 rounded-md bg-card border border-forest/20 shadow-2xs space-y-2.5">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-charcoal-muted">
                     <span className="text-forest uppercase tracking-wider">A. Native Script ({targetCap.name})</span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handlePlayAudio("native")}
-                        className={`p-1 rounded transition-colors ${
-                          isPlayingAudio && audioTarget === "native" ? "bg-forest text-warm-ivory" : "hover:text-forest hover:bg-forest/5"
-                        }`}
-                        title="Listen to native translation"
-                      >
-                        <Volume2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(translatedText, "native")}
-                        className="p-1 rounded hover:text-forest hover:bg-forest/5"
-                        title="Copy native script"
-                      >
-                        {copiedKey === "native" ? <Check className="w-3.5 h-3.5 text-forest" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(translatedText, "native")}
+                      className="p-1 rounded hover:text-forest hover:bg-forest/5"
+                      title="Copy native script"
+                    >
+                      {copiedKey === "native" ? <Check className="w-3.5 h-3.5 text-forest" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
+
                   <div
                     className="text-base sm:text-lg font-medium text-charcoal leading-relaxed selection:bg-sand/30"
                     dir={targetCap.direction}
                   >
                     {translatedText}
                   </div>
+
+                  {/* TRANSLATED AUDIO BAR (SPEECH ENGINE REBUILD) */}
+                  <AudioChannelBar
+                    channel="translated"
+                    title={`Listen in ${targetCap.name}`}
+                    subtitle={`${targetCap.name} Native Audio`}
+                    status={channelStatuses.translated}
+                    onPlay={() => handlePlayChannel("translated")}
+                    onPause={() => handlePauseChannel("translated")}
+                    onResume={() => handleResumeChannel("translated")}
+                    onStop={() => handleStopChannel("translated")}
+                    onReplay={() => handleReplayChannel("translated")}
+                    onSpeedChange={(speed) => handleSpeedChange("translated", speed)}
+                    onVoiceChange={(voice) => handleVoiceChange("translated", voice)}
+                  />
                 </div>
 
                 {/* SECTION B: ROMAN TRANSLITERATION (PRONUNCIATION IN ENGLISH LETTERS) */}
-                <div className="p-3 rounded-md bg-forest/5 border border-forest/15 space-y-1">
+                <div className="p-3.5 rounded-md bg-forest/5 border border-forest/15 space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-charcoal-muted">
                     <span className="text-forest uppercase tracking-wider flex items-center gap-1">
                       <span>B. Roman Transliteration</span>
                       <span className="text-[10px] font-normal text-charcoal-muted">(English Letters Pronunciation)</span>
                     </span>
-                    <div className="flex items-center gap-1">
-                      {transliteration && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handlePlayAudio("translit")}
-                            className={`p-1 rounded transition-colors ${
-                              isPlayingAudio && audioTarget === "translit" ? "bg-forest text-warm-ivory" : "hover:text-forest hover:bg-forest/5"
-                            }`}
-                            title="Listen to transliteration"
-                          >
-                            <Volume2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(transliteration, "translit")}
-                            className="p-1 rounded hover:text-forest hover:bg-forest/5"
-                            title="Copy transliteration"
-                          >
-                            {copiedKey === "translit" ? <Check className="w-3.5 h-3.5 text-forest" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
-                        </>
-                      )}
-                    </div>
+                    {transliteration && (
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(transliteration, "translit")}
+                        className="p-1 rounded hover:text-forest hover:bg-forest/5"
+                        title="Copy transliteration"
+                      >
+                        {copiedKey === "translit" ? <Check className="w-3.5 h-3.5 text-forest" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
                   </div>
-                  <div className="text-sm font-sans font-medium text-forest-700 tracking-wide italic">
+
+                  <div className="text-sm font-sans font-medium text-forest tracking-wide italic">
                     {transliteration || (transliterationAvailable ? "Transliteration unavailable" : "Not applicable for English script")}
                   </div>
+
+                  {/* PRONUNCIATION AUDIO BAR (ENGLISH LATIN VOICE) */}
+                  {transliteration && (
+                    <AudioChannelBar
+                      channel="transliteration"
+                      title="Pronunciation Audio"
+                      subtitle="Phonetic Audio (Latin English Voice)"
+                      status={channelStatuses.transliteration}
+                      compact
+                      onPlay={() => handlePlayChannel("transliteration")}
+                      onPause={() => handlePauseChannel("transliteration")}
+                      onResume={() => handleResumeChannel("transliteration")}
+                      onStop={() => handleStopChannel("transliteration")}
+                      onReplay={() => handleReplayChannel("transliteration")}
+                      onSpeedChange={(speed) => handleSpeedChange("transliteration", speed)}
+                      onVoiceChange={(voice) => handleVoiceChange("transliteration", voice)}
+                    />
+                  )}
                 </div>
 
                 {/* SECTION C: ENGLISH MEANING (SEMANTIC EXPLANATION) */}
-                <div className="p-3 rounded-md bg-warm-sand/20 border border-warm-sand/50 space-y-1">
+                <div className="p-3.5 rounded-md bg-warm-sand/20 border border-warm-sand/50 space-y-1">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-charcoal-muted">
                     <span className="text-forest uppercase tracking-wider flex items-center gap-1">
                       <span>C. English Meaning</span>
@@ -1006,16 +1046,16 @@ export function UniversalTranslatorWorkspace({
                   <span>{copiedKey === "all" ? "Copied All" : "Copy All Results"}</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => handlePlayAudio("native")}
-                  className={`px-2.5 py-1 text-xs font-medium rounded border transition-colors inline-flex items-center gap-1.5 ${
-                    isPlayingAudio ? "bg-forest text-warm-ivory border-forest" : "bg-card border-forest/25 text-forest hover:bg-forest/5"
-                  }`}
-                >
-                  {isPlayingAudio ? <VolumeX className="w-3.5 h-3.5 text-sand" /> : <Volume2 className="w-3.5 h-3.5" />}
-                  <span>{isPlayingAudio ? "Stop Audio" : `Listen (${targetCap.name})`}</span>
-                </button>
+                {anyAudioPlaying && (
+                  <button
+                    type="button"
+                    onClick={() => playbackController.stopAll()}
+                    className="px-2.5 py-1 text-xs font-medium rounded border border-forest/20 bg-forest/10 hover:bg-forest/20 text-forest inline-flex items-center gap-1.5"
+                  >
+                    <VolumeX className="w-3.5 h-3.5" />
+                    <span>Stop All Audio</span>
+                  </button>
+                )}
               </div>
 
               {confidenceScore !== null && (
@@ -1057,6 +1097,7 @@ export function UniversalTranslatorWorkspace({
                 <div
                   key={item.id}
                   onClick={() => {
+                    playbackController.stopAll();
                     setSourceText(item.sourceText);
                     setSourceLang(item.sourceLanguage);
                     setTargetLang(item.targetLanguage);

@@ -4,26 +4,25 @@ import * as React from "react";
 import {
   Mic,
   MicOff,
-  Volume2,
-  VolumeX,
   Languages,
   Copy,
   Check,
   RotateCcw,
   AlertCircle,
   Loader2,
-  Sparkles,
   ArrowRight,
+  VolumeX,
 } from "lucide-react";
 import { ALL_TRANSLATION_CAPABILITIES } from "@/lib/translation/registry";
 import {
   createSpeechRecognitionSession,
-  speakText,
   isSpeechRecognitionSupported,
-  isSpeechSynthesisSupported,
-  hasNativeVoice,
   VoiceInputState,
 } from "@/lib/translation/speech";
+import { playbackController } from "@/lib/voice/playback-controller";
+import { AudioChannel, ChannelPlaybackStatus, PlaybackSpeed, VoiceInfo } from "@/lib/voice/types";
+import { detectScriptLanguage } from "@/lib/voice/voice-selection";
+import { AudioChannelBar } from "./audio-channel-bar";
 
 interface VoiceTranslationWidgetProps {
   initialSourceLang?: string;
@@ -47,20 +46,31 @@ export function VoiceTranslationWidget({
   const [transliteration, setTransliteration] = React.useState<string | null>(null);
   const [englishMeaning, setEnglishMeaning] = React.useState<string | null>(null);
   const [isTranslating, setIsTranslating] = React.useState(false);
-  const [isSpeaking, setIsSpeaking] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
 
   const speechSessionRef = React.useRef<any>(null);
-  const ttsPlayerRef = React.useRef<{ stop: () => void } | null>(null);
+
+  // Playback statuses
+  const [channelStatuses, setChannelStatuses] = React.useState<Record<AudioChannel, ChannelPlaybackStatus>>({
+    original: playbackController.getStatus("original"),
+    translated: playbackController.getStatus("translated"),
+    transliteration: playbackController.getStatus("transliteration"),
+  });
 
   React.useEffect(() => {
+    const unsubscribe = playbackController.subscribe((status) => {
+      setChannelStatuses((prev) => ({
+        ...prev,
+        [status.channel]: status,
+      }));
+    });
+
     return () => {
+      unsubscribe();
+      playbackController.stopAll();
       if (speechSessionRef.current) {
         speechSessionRef.current.destroy();
-      }
-      if (ttsPlayerRef.current) {
-        ttsPlayerRef.current.stop();
       }
     };
   }, []);
@@ -71,6 +81,7 @@ export function VoiceTranslationWidget({
 
     setIsTranslating(true);
     setErrorMessage(null);
+    playbackController.stopAll();
 
     try {
       const res = await fetch("/api/translate", {
@@ -109,6 +120,7 @@ export function VoiceTranslationWidget({
   const startListening = () => {
     setErrorMessage(null);
     setInterimTranscript("");
+    playbackController.stopAll();
 
     if (!isSpeechRecognitionSupported()) {
       setErrorMessage("Speech recognition is not supported in this browser. Please type text below.");
@@ -131,7 +143,6 @@ export function VoiceTranslationWidget({
         setInterimTranscript(interim);
       },
       onFinalTranscript: (final) => {
-        // Place recognized text into original transcript input for user review/editing (DO NOT AUTO-SUBMIT UNCONFIRMED)
         setOriginalTranscript((prev) => (prev ? `${prev} ${final}` : final));
         setInterimTranscript("");
         setVoiceState("idle");
@@ -154,31 +165,6 @@ export function VoiceTranslationWidget({
     setVoiceState("idle");
   };
 
-  const speakTranslation = () => {
-    if (!translatedText) return;
-
-    if (isSpeaking) {
-      if (ttsPlayerRef.current) {
-        ttsPlayerRef.current.stop();
-      }
-      setIsSpeaking(false);
-      return;
-    }
-
-    const voiceCheck = hasNativeVoice(targetLang);
-    if (!voiceCheck.hasVoice) {
-      setErrorMessage(voiceCheck.note || "Native voice for this language is not installed in your browser.");
-    }
-
-    setIsSpeaking(true);
-    const player = speakText(translatedText, targetLang, {
-      onStart: () => setIsSpeaking(true),
-      onEnd: () => setIsSpeaking(false),
-      onError: () => setIsSpeaking(false),
-    });
-    ttsPlayerRef.current = player;
-  };
-
   const copyToClipboard = async (text: string, key: string) => {
     if (!text || typeof navigator === "undefined" || !navigator.clipboard) return;
     try {
@@ -190,9 +176,41 @@ export function VoiceTranslationWidget({
     }
   };
 
+  const handlePlayChannel = (channel: AudioChannel) => {
+    let text = "";
+    let lang = "";
+
+    if (channel === "original") {
+      text = originalTranscript.trim();
+      lang = sourceLang === "auto" ? detectScriptLanguage(text) : sourceLang;
+    } else if (channel === "translated") {
+      text = (translatedText || "").trim();
+      lang = targetLang;
+    } else if (channel === "transliteration") {
+      text = (transliteration || "").trim();
+      lang = "en";
+    }
+
+    if (!text) return;
+
+    const currentStatus = channelStatuses[channel];
+    if (currentStatus.state === "speaking") {
+      playbackController.pause(channel);
+    } else if (currentStatus.state === "paused") {
+      playbackController.resume(channel);
+    } else {
+      playbackController.play({
+        channel,
+        text,
+        language: lang,
+        speed: currentStatus.speed,
+        preferredVoiceId: currentStatus.selectedVoice?.id,
+      });
+    }
+  };
+
   const targetCap = ALL_TRANSLATION_CAPABILITIES[targetLang] || ALL_TRANSLATION_CAPABILITIES.as;
   const sourceCap = ALL_TRANSLATION_CAPABILITIES[sourceLang] || ALL_TRANSLATION_CAPABILITIES.hi;
-
   const isListening = voiceState === "listening" || voiceState === "requesting_permission";
 
   return (
@@ -258,7 +276,7 @@ export function VoiceTranslationWidget({
       {/* Spoken Transcript Input & Review */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-[11px] text-charcoal-muted font-medium">
-          <span>Spoken Transcript (Review & Edit before Translate)</span>
+          <span>Spoken Transcript (Review &amp; Edit before Translate)</span>
           {originalTranscript && (
             <button
               type="button"
@@ -278,6 +296,24 @@ export function VoiceTranslationWidget({
           rows={3}
           className="w-full p-2.5 text-xs rounded border border-forest/15 bg-card focus:outline-hidden focus:ring-1 focus:ring-forest text-charcoal resize-none"
         />
+
+        {/* Original Transcript Audio Playback */}
+        {originalTranscript.trim() && (
+          <AudioChannelBar
+            channel="original"
+            title="Original Voice"
+            subtitle={`${sourceCap.name} Audio`}
+            status={channelStatuses.original}
+            compact
+            onPlay={() => handlePlayChannel("original")}
+            onPause={() => playbackController.pause("original")}
+            onResume={() => playbackController.resume("original")}
+            onStop={() => playbackController.stop("original")}
+            onReplay={() => playbackController.replay("original")}
+            onSpeedChange={(s) => playbackController.setSpeed("original", s)}
+            onVoiceChange={(v) => playbackController.setVoice("original", v)}
+          />
+        )}
       </div>
 
       {/* Translate Action Trigger */}
@@ -295,7 +331,7 @@ export function VoiceTranslationWidget({
             </>
           ) : (
             <>
-              <span>Confirm & Translate Spoken Text to {targetCap.name}</span>
+              <span>Confirm &amp; Translate Spoken Text to {targetCap.name}</span>
               <ArrowRight className="w-3.5 h-3.5 text-sand" />
             </>
           )}
@@ -304,28 +340,18 @@ export function VoiceTranslationWidget({
 
       {/* Translated Result Output */}
       {translatedText && !isTranslating && (
-        <div className="p-3 bg-warm-ivory/80 rounded border border-forest/20 space-y-3">
+        <div className="p-3.5 bg-warm-ivory/80 rounded border border-forest/20 space-y-3">
           {/* Header */}
           <div className="flex items-center justify-between text-xs font-semibold text-forest pb-1 border-b border-forest/10">
             <span>Translated to {targetCap.name} ({targetCap.nativeName}):</span>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={speakTranslation}
-                className="p-1 rounded text-charcoal-muted hover:text-forest"
-                title="Read aloud"
-              >
-                {isSpeaking ? <VolumeX className="w-3.5 h-3.5 text-forest animate-pulse" /> : <Volume2 className="w-3.5 h-3.5" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => copyToClipboard(translatedText, "native")}
-                className="p-1 rounded text-charcoal-muted hover:text-forest"
-                title="Copy native script"
-              >
-                {copiedKey === "native" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => copyToClipboard(translatedText, "native")}
+              className="p-1 rounded text-charcoal-muted hover:text-forest"
+              title="Copy native script"
+            >
+              {copiedKey === "native" ? <Check className="w-3.5 h-3.5 text-forest" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
           </div>
 
           {/* Section A: Native Script */}
@@ -333,6 +359,22 @@ export function VoiceTranslationWidget({
             <div className="text-[10px] uppercase font-bold text-charcoal-muted tracking-wider">Native Script</div>
             <p className="text-sm text-charcoal font-semibold leading-relaxed mt-0.5">{translatedText}</p>
           </div>
+
+          {/* Translated Audio Bar with Slow Playback */}
+          <AudioChannelBar
+            channel="translated"
+            title={`Listen in ${targetCap.name}`}
+            subtitle={`${targetCap.name} Native Voice`}
+            status={channelStatuses.translated}
+            compact
+            onPlay={() => handlePlayChannel("translated")}
+            onPause={() => playbackController.pause("translated")}
+            onResume={() => playbackController.resume("translated")}
+            onStop={() => playbackController.stop("translated")}
+            onReplay={() => playbackController.replay("translated")}
+            onSpeedChange={(s) => playbackController.setSpeed("translated", s)}
+            onVoiceChange={(v) => playbackController.setVoice("translated", v)}
+          />
 
           {/* Section B: Roman Transliteration */}
           {transliteration && (
@@ -345,7 +387,7 @@ export function VoiceTranslationWidget({
                   className="hover:text-forest"
                   title="Copy pronunciation"
                 >
-                  {copiedKey === "translit" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                  {copiedKey === "translit" ? <Check className="w-3 h-3 text-forest" /> : <Copy className="w-3 h-3" />}
                 </button>
               </div>
               <p className="text-xs font-medium text-forest-700 italic">{transliteration}</p>
@@ -363,7 +405,7 @@ export function VoiceTranslationWidget({
                   className="hover:text-forest"
                   title="Copy meaning"
                 >
-                  {copiedKey === "meaning" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                  {copiedKey === "meaning" ? <Check className="w-3 h-3 text-forest" /> : <Copy className="w-3 h-3" />}
                 </button>
               </div>
               <p className="text-xs text-charcoal font-normal">{englishMeaning}</p>
