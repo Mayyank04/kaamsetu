@@ -75,6 +75,7 @@ export function InstitutionalHeader() {
     { href: "/", label: t.header?.home || "Home" },
     { href: "/explore", label: t.header?.findProfessionals || "Find Professionals" },
     { href: "/vendor/dashboard", label: t.header?.vendorHub || "Vendor Hub" },
+    { href: "/translate", label: "Translator" },
     { href: "/how-it-works", label: t.header?.howItWorks || "How It Works" },
   ];
 

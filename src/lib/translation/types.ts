@@ -56,6 +56,8 @@ export interface TranslationRequest {
   contentType?: TranslationContentType;
   isPrivate?: boolean;
   preserveEntities?: boolean;
+  includeTransliteration?: boolean;
+  includeEnglishMeaning?: boolean;
 }
 
 export interface TranslationResult {
@@ -64,6 +66,10 @@ export interface TranslationResult {
   targetLanguage: string;
   provider: TranslationProviderType;
   cached: boolean;
+  transliteration?: string;
+  englishMeaning?: string;
+  transliterationAvailable?: boolean;
+  englishMeaningAvailable?: boolean;
   status?: TranslationStatus;
   confidence?: number;
   characterCount: number;
