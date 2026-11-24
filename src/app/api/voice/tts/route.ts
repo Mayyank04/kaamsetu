@@ -1,9 +1,13 @@
 /**
  * KAAMSETU — Voice Engine TTS API Route
  * Endpoint: /api/voice/tts
+ * Phase 50.4 Specification
  * 
- * GET: Returns status of all TTS providers (Google Cloud, Azure, Bhashini, Browser).
- * POST: Performs server-side speech synthesis if configured, or signals fallback to browser.
+ * GET: Returns status of all TTS providers (Google Cloud, Azure, Bhashini, Browser),
+ * distinguishing server audio generators from client browser synthesizers.
+ * 
+ * POST: Performs server-side speech synthesis if configured, validating decodable audio
+ * bytes. If unconfigured, truthfully returns audioGenerated: false with client browser fallback signal.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -17,6 +21,9 @@ export async function GET() {
       success: true,
       timestamp: new Date().toISOString(),
       providers,
+      data: {
+        providers,
+      },
     });
   } catch (error: any) {
     return NextResponse.json(
@@ -37,21 +44,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Text parameter is required for speech synthesis",
+          audioGenerated: false,
+          error: "Text is required. Text parameter is required for speech synthesis.",
         },
         { status: 400 }
       );
     }
 
     const result = await TTSProviderService.synthesize(body);
+
     return NextResponse.json({
       timestamp: new Date().toISOString(),
       ...result,
+      success: true,
+      fallbackReason: result.error,
     });
   } catch (error: any) {
     return NextResponse.json(
       {
         success: false,
+        audioGenerated: false,
         error: error?.message || "Speech synthesis failed",
         fallbackToBrowser: true,
       },

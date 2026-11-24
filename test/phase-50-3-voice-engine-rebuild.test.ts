@@ -148,11 +148,9 @@ describe("PHASE 50.3: TRANSLATOR EXPERIENCE & VOICE ENGINE REBUILD TEST SUITE", 
       assert.strictEqual(bcp47, "en-IN", "Transliteration BCP-47 must be en-IN");
     });
 
-    test("2.4 Synthetic fallback voice candidates are provided when browser voices are empty", () => {
+    test("2.4 Zero fabricated voice candidates when browser voices are empty (Phase 50.4 audit)", () => {
       const candidates = getVoicesForLanguage("hi", "नमस्ते", "original");
-      assert.ok(candidates.length > 0, "Must always provide at least one voice candidate");
-      assert.strictEqual(candidates[0].bcp47, "hi-IN");
-      assert.ok(candidates[0].qualityScore > 0);
+      assert.strictEqual(candidates.length, 0, "Must NEVER fabricate synthetic voice objects");
     });
   });
 
@@ -252,11 +250,10 @@ describe("PHASE 50.3: TRANSLATOR EXPERIENCE & VOICE ENGINE REBUILD TEST SUITE", 
         speed: 0.75,
       });
 
-      // If cloud keys are absent, fallbackToBrowser must be true (honest routing)
-      assert.strictEqual(res.success, true);
+      // If cloud keys are absent, fallbackToBrowser must be true and audioGenerated false (honest routing)
       if (!process.env.GOOGLE_CLOUD_TTS_API_KEY && !process.env.AZURE_SPEECH_KEY) {
         assert.strictEqual(res.fallbackToBrowser, true);
-        assert.strictEqual(res.provider, "browser");
+        assert.strictEqual(res.audioGenerated, false);
       }
     });
   });

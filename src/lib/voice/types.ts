@@ -1,5 +1,6 @@
 /**
  * KAAMSETU — Voice Engine & Speech Synthesis Contracts
+ * Phase 50.4 Specification
  * 
  * Defines independent playback channel types, playback state machines,
  * playback speed options, voice quality metadata, and TTS provider contracts.
@@ -36,6 +37,9 @@ export interface VoiceInfo {
   isRemote: boolean;
   provider: "browser" | "google_cloud" | "azure" | "bhashini";
   qualityScore: number; // 0 - 100 ranking for naturalness
+  isInstalledInBrowser: boolean;
+  isFallback?: boolean;
+  fallbackNote?: string;
 }
 
 export interface ChannelPlaybackStatus {
@@ -44,10 +48,16 @@ export interface ChannelPlaybackStatus {
   speed: PlaybackSpeed;
   selectedVoice: VoiceInfo | null;
   availableVoices: VoiceInfo[];
+  hasNativeVoice: boolean;
+  isCrossDialectFallback?: boolean;
+  fallbackNote?: string;
   error?: string;
   text: string;
   language: string;
   bcp47: string;
+  scriptName?: string;
+  isLanguageAmbiguous?: boolean;
+  disambiguationCandidates?: { code: string; name: string; nativeName: string; confidence: number }[];
 }
 
 export interface TTSRequest {
@@ -64,4 +74,6 @@ export interface TTSProviderStatus {
   supportedLanguages: string[];
   latencyMs?: number;
   message?: string;
+  isServerGenerated: boolean;
+  decodableAudioFormats: string[];
 }

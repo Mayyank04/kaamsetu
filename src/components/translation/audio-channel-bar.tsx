@@ -11,6 +11,8 @@ import {
   ChevronDown,
   Sparkles,
   SlidersHorizontal,
+  AlertCircle,
+  HelpCircle,
 } from "lucide-react";
 import {
   AudioChannel,
@@ -19,6 +21,7 @@ import {
   VoiceInfo,
   SUPPORTED_PLAYBACK_SPEEDS,
 } from "@/lib/voice/types";
+import { previewVoice } from "@/lib/voice/voice-selection";
 
 interface AudioChannelBarProps {
   channel: AudioChannel;
@@ -34,6 +37,7 @@ interface AudioChannelBarProps {
   onReplay: () => void;
   onSpeedChange: (speed: PlaybackSpeed) => void;
   onVoiceChange: (voice: VoiceInfo) => void;
+  onDisambiguate?: (langCode: string) => void;
 }
 
 export function AudioChannelBar({
@@ -50,13 +54,40 @@ export function AudioChannelBar({
   onReplay,
   onSpeedChange,
   onVoiceChange,
+  onDisambiguate,
 }: AudioChannelBarProps) {
   const [isVoicePickerOpen, setIsVoicePickerOpen] = React.useState(false);
+  const [previewingVoiceId, setPreviewingVoiceId] = React.useState<string | null>(null);
+  const previewPlayerRef = React.useRef<{ stop: () => void } | null>(null);
 
   const isSpeaking = status.state === "speaking";
   const isPaused = status.state === "paused";
   const isLoading = status.state === "loading";
-  const isFailed = status.state === "failed";
+
+  const handlePreviewVoice = (v: VoiceInfo, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (previewPlayerRef.current) {
+      previewPlayerRef.current.stop();
+    }
+    if (previewingVoiceId === v.id) {
+      setPreviewingVoiceId(null);
+      return;
+    }
+    setPreviewingVoiceId(v.id);
+    const player = previewVoice(v, undefined, status.speed);
+    previewPlayerRef.current = player;
+    setTimeout(() => {
+      setPreviewingVoiceId(null);
+    }, 2500);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (previewPlayerRef.current) {
+        previewPlayerRef.current.stop();
+      }
+    };
+  }, []);
 
   return (
     <div
@@ -195,8 +226,8 @@ export function AudioChannelBar({
             })}
           </div>
 
-          {/* VOICE SELECTOR DROPDOWN (if multiple candidate voices exist) */}
-          {status.availableVoices.length > 1 && (
+          {/* VOICE SELECTOR DROPDOWN (if candidate voices exist in browser) */}
+          {status.availableVoices.length > 0 && (
             <div className="relative">
               <button
                 type="button"
@@ -213,21 +244,22 @@ export function AudioChannelBar({
               </button>
 
               {isVoicePickerOpen && (
-                <div className="absolute right-0 top-full mt-1 z-50 w-64 max-h-56 overflow-y-auto rounded-md bg-card border border-forest/20 shadow-sovereign-md p-1">
-                  <div className="px-2 py-1 text-[10px] uppercase font-bold text-charcoal-muted border-b border-forest/10 mb-1">
-                    Available Voices ({status.availableVoices.length})
+                <div className="absolute right-0 top-full mt-1 z-50 w-72 max-h-64 overflow-y-auto rounded-md bg-card border border-forest/20 shadow-sovereign-md p-1.5">
+                  <div className="px-2 py-1 text-[10px] uppercase font-bold text-charcoal-muted border-b border-forest/10 mb-1 flex items-center justify-between">
+                    <span>Installed Voices ({status.availableVoices.length})</span>
+                    <span className="text-[9px] font-normal text-forest">Click ▶ to preview</span>
                   </div>
                   {status.availableVoices.map((v) => {
                     const isSelected = status.selectedVoice?.id === v.id;
+                    const isPreviewing = previewingVoiceId === v.id;
                     return (
-                      <button
+                      <div
                         key={v.id}
-                        type="button"
                         onClick={() => {
                           onVoiceChange(v);
                           setIsVoicePickerOpen(false);
                         }}
-                        className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
+                        className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center justify-between transition-colors cursor-pointer ${
                           isSelected ? "bg-forest/10 font-bold text-forest" : "text-charcoal hover:bg-forest/5"
                         }`}
                       >
@@ -235,12 +267,30 @@ export function AudioChannelBar({
                           <div className="truncate font-medium">{v.name}</div>
                           <div className="text-[10px] text-charcoal-muted font-mono">{v.bcp47}</div>
                         </div>
-                        {v.isNatural && (
-                          <span className="px-1.5 py-0.5 rounded bg-sand/30 text-forest text-[9px] font-semibold shrink-0">
-                            Natural
-                          </span>
-                        )}
-                      </button>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {/* Voice Preview Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => handlePreviewVoice(v, e)}
+                            className="p-1 rounded bg-forest/10 hover:bg-forest text-forest hover:text-warm-ivory transition-colors text-[10px]"
+                            title="Preview this voice"
+                            aria-label={`Preview voice ${v.name}`}
+                          >
+                            {isPreviewing ? (
+                              <Volume2 className="w-3 h-3 animate-pulse text-sand" />
+                            ) : (
+                              <Play className="w-3 h-3 fill-current" />
+                            )}
+                          </button>
+
+                          {v.isNatural && (
+                            <span className="px-1.5 py-0.5 rounded bg-sand/30 text-forest text-[9px] font-semibold">
+                              Natural
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -250,9 +300,41 @@ export function AudioChannelBar({
         </div>
       </div>
 
-      {/* ERROR OR FALLBACK NOTICE */}
+      {/* LANGUAGE DISAMBIGUATION BANNER (When script is shared and ambiguous) */}
+      {status.isLanguageAmbiguous && status.disambiguationCandidates && status.disambiguationCandidates.length > 1 && (
+        <div className="mt-2.5 p-2 rounded bg-warm-sand/30 border border-warm-sand text-[11px] text-charcoal flex flex-wrap items-center justify-between gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <HelpCircle className="w-3.5 h-3.5 text-forest shrink-0" />
+            <span>
+              Script: <strong>{status.scriptName}</strong>. Clarify language for authentic voice:
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            {status.disambiguationCandidates.map((c) => (
+              <button
+                key={c.code}
+                type="button"
+                onClick={() => onDisambiguate?.(c.code)}
+                className="px-2 py-0.5 rounded bg-card border border-forest/20 text-forest hover:bg-forest hover:text-warm-ivory transition-colors font-semibold shadow-2xs"
+              >
+                {c.nativeName} ({c.name})
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TRANSPARENT CROSS-DIALECT FALLBACK NOTICE */}
+      {status.isCrossDialectFallback && status.fallbackNote && (
+        <div className="mt-2 text-[11px] text-charcoal-muted bg-warm-ivory/80 border border-forest/15 rounded px-2.5 py-1 flex items-start gap-1.5">
+          <AlertCircle className="w-3.5 h-3.5 text-forest shrink-0 mt-0.5" />
+          <span>{status.fallbackNote}</span>
+        </div>
+      )}
+
+      {/* ERROR NOTICE */}
       {status.error && (
-        <div className="mt-2 text-[11px] text-amber-800 bg-amber-50/80 border border-amber-200 rounded px-2 py-1">
+        <div className="mt-2 text-[11px] text-amber-800 bg-amber-50/80 border border-amber-200 rounded px-2.5 py-1">
           {status.error}
         </div>
       )}
