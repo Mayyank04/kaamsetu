@@ -215,7 +215,23 @@ export function speakText(
   // Cancel any ongoing speech
   window.speechSynthesis.cancel();
 
-  const bcp47 = getSpeechBCP47Tag(langCode) || "en-IN";
+  // Root-cause fix for Path A: If langCode is 'auto' or missing, detect from script
+  let effectiveLang = langCode;
+  if (!effectiveLang || effectiveLang === "auto") {
+    // Detect script directly from text characters
+    if (/[\u0900-\u097F]/.test(text)) effectiveLang = "hi";
+    else if (/[\u0980-\u09FF]/.test(text)) effectiveLang = text.includes("ৰ") || text.includes("ৱ") ? "as" : "bn";
+    else if (/[\u0B80-\u0BFF]/.test(text)) effectiveLang = "ta";
+    else if (/[\u0C00-\u0C7F]/.test(text)) effectiveLang = "te";
+    else if (/[\u0C80-\u0CFF]/.test(text)) effectiveLang = "kn";
+    else if (/[\u0D00-\u0D7F]/.test(text)) effectiveLang = "ml";
+    else if (/[\u0A80-\u0AFF]/.test(text)) effectiveLang = "gu";
+    else if (/[\u0A00-\u0A7F]/.test(text)) effectiveLang = "pa";
+    else if (/[\u0600-\u06FF]/.test(text)) effectiveLang = "ur";
+    else effectiveLang = "en";
+  }
+
+  const bcp47 = getSpeechBCP47Tag(effectiveLang) || "en-IN";
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = bcp47;
   utterance.rate = 0.95; // slightly deliberate for clarity across regional dialects
