@@ -1,29 +1,116 @@
 /**
  * KAAMSETU — Server-Side TTS Provider Service & Architecture
+ * Phase 50.4 Specification
  * 
- * Provides unified interface for:
+ * Provides unified interface and decodability validation for:
  * 1. Google Cloud Text-to-Speech
  * 2. Azure AI Cognitive Speech
  * 3. Bhashini ULCA TTS
- * 4. Client-side Browser SpeechSynthesis Fallback
+ * 4. Transparent Client-Side Browser SpeechSynthesis Guidance
  * 
- * Invariant: Never claim cloud TTS is OPERATIONAL when credentials are absent.
- * Always return truthful NOT_CONFIGURED status when environment keys are missing.
+ * Invariants:
+ * - Never claim audio was generated unless verified decodable audio bytes exist.
+ * - Distinguish server-generated audio files from browser speech synthesis streams.
+ * - Truthfully report NOT_CONFIGURED when environment keys are missing.
  */
 
 import { TTSProviderStatus, TTSRequest, PlaybackSpeed } from "./types";
 import { getLanguageBCP47, detectScriptLanguage } from "./voice-selection";
 
+export interface AudioBufferVerification {
+  isValid: boolean;
+  format: "audio/mpeg" | "audio/wav" | "mp3" | "wav" | "unknown";
+  byteLength: number;
+  hasValidHeader: boolean;
+  error?: string;
+}
+
 export interface SynthesizeAudioResult {
   success: boolean;
+  audioGenerated: boolean;
   audioContentBase64?: string;
+  audioBuffer?: Buffer | null;
   contentType?: string;
-  provider: "google_cloud" | "azure" | "bhashini" | "browser";
+  audioFormat?: string;
+  audioByteLength?: number;
+  provider: "google_cloud" | "azure" | "bhashini" | "none";
   error?: string;
+  message?: string;
   fallbackToBrowser: boolean;
 }
 
+/**
+ * Validates raw audio buffer headers for MP3 or WAV specification compliance.
+ */
+export function verifyAudioBuffer(buffer: Buffer): AudioBufferVerification {
+  if (!buffer || buffer.length < 32) {
+    return {
+      isValid: false,
+      format: "unknown",
+      byteLength: buffer?.length || 0,
+      hasValidHeader: false,
+      error: "Audio buffer too small or empty (< 32 bytes)",
+    };
+  }
+
+  // 1. WAV Check: Starts with 'RIFF' and has 'WAVE' at offset 8
+  if (
+    buffer[0] === 0x52 && // 'R'
+    buffer[1] === 0x49 && // 'I'
+    buffer[2] === 0x46 && // 'F'
+    buffer[3] === 0x46 && // 'F'
+    buffer[8] === 0x57 && // 'W'
+    buffer[9] === 0x41 && // 'A'
+    buffer[10] === 0x56 && // 'V'
+    buffer[11] === 0x45 // 'E'
+  ) {
+    return {
+      isValid: true,
+      format: "audio/wav",
+      byteLength: buffer.length,
+      hasValidHeader: true,
+    };
+  }
+
+  // 2. MP3 Check: ID3v2 tag (starts with 'ID3') OR MPEG frame sync (0xFF 0xFB / 0xFF 0xF3 / 0xFF 0xF2)
+  const isID3 = buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33; // 'ID3'
+  const isMPEGFrame =
+    buffer[0] === 0xff && (buffer[1] === 0xfb || buffer[1] === 0xf3 || buffer[1] === 0xf2 || (buffer[1] & 0xe0) === 0xe0);
+
+  if (isID3 || isMPEGFrame) {
+    return {
+      isValid: true,
+      format: "audio/mpeg",
+      byteLength: buffer.length,
+      hasValidHeader: true,
+    };
+  }
+
+  return {
+    isValid: false,
+    format: "unknown",
+    byteLength: buffer.length,
+    hasValidHeader: false,
+    error: "Buffer lacks recognizable MP3 or WAV header signatures",
+  };
+}
+
 export class TTSProviderService {
+  private static instance: TTSProviderService;
+
+  public static getInstance(): TTSProviderService {
+    if (!TTSProviderService.instance) {
+      TTSProviderService.instance = new TTSProviderService();
+    }
+    return TTSProviderService.instance;
+  }
+
+  /**
+   * Synthesize audio via instance or static method
+   */
+  public async synthesize(req: TTSRequest): Promise<SynthesizeAudioResult> {
+    return TTSProviderService.synthesize(req);
+  }
   /**
    * Inspect all TTS providers and return their truthful configuration status.
    */
@@ -60,43 +147,52 @@ export class TTSProviderService {
         status: isGoogleConfigured ? "OPERATIONAL" : "NOT_CONFIGURED",
         supportedLanguages: ["hi", "as", "bn", "ta", "te", "mr", "gu", "pa", "kn", "ml", "ur", "en"],
         message: isGoogleConfigured
-          ? "Google Cloud TTS configured and available."
-          : "GOOGLE_CLOUD_TTS_API_KEY not set. Falling back to local browser synthesis.",
+          ? "Google Cloud TTS configured and available for neural speech synthesis."
+          : "GOOGLE_CLOUD_TTS_API_KEY not configured. Falling back to local browser synthesis.",
+        isServerGenerated: true,
+        decodableAudioFormats: ["mp3"],
       },
       {
         name: "azure",
         status: isAzureConfigured ? "OPERATIONAL" : "NOT_CONFIGURED",
         supportedLanguages: ["hi", "as", "bn", "ta", "te", "mr", "gu", "pa", "kn", "ml", "ur", "en"],
         message: isAzureConfigured
-          ? "Azure Cognitive Speech configured and available."
-          : "AZURE_SPEECH_KEY or AZURE_SPEECH_REGION not set.",
+          ? "Azure Cognitive Speech configured with SSML neural voices."
+          : "AZURE_SPEECH_KEY or AZURE_SPEECH_REGION not configured.",
+        isServerGenerated: true,
+        decodableAudioFormats: ["mp3"],
       },
       {
         name: "bhashini",
         status: isBhashiniConfigured ? "OPERATIONAL" : "NOT_CONFIGURED",
         supportedLanguages: ["hi", "as", "bn", "ta", "te", "mr", "gu", "pa", "kn", "ml", "ur", "en"],
         message: isBhashiniConfigured
-          ? "Bhashini ULCA TTS configured and available."
-          : "BHASHINI_API_KEY or BHASHINI_USER_ID not set.",
+          ? "Bhashini ULCA TTS pipeline configured."
+          : "BHASHINI_API_KEY or BHASHINI_USER_ID not configured.",
+        isServerGenerated: true,
+        decodableAudioFormats: ["wav", "mp3"],
       },
       {
         name: "browser",
         status: "OPERATIONAL",
         supportedLanguages: ["hi", "as", "bn", "ta", "te", "mr", "gu", "pa", "kn", "ml", "ur", "en"],
         message: "Native Browser SpeechSynthesis active with Indic language routing.",
+        isServerGenerated: false,
+        decodableAudioFormats: ["native_speech_stream"],
       },
     ];
   }
 
   /**
    * Attempt server-side speech synthesis via available cloud providers.
-   * If no cloud provider is configured, returns fallbackToBrowser: true without failing silently.
+   * If no cloud provider is configured, returns audioGenerated: false with fallback instructions.
    */
   static async synthesize(req: TTSRequest): Promise<SynthesizeAudioResult> {
     if (!req.text || !req.text.trim()) {
       return {
         success: false,
-        provider: "browser",
+        audioGenerated: false,
+        provider: "none",
         error: "Text cannot be empty",
         fallbackToBrowser: true,
       };
@@ -113,15 +209,21 @@ export class TTSProviderService {
     const googleKey = process.env.GOOGLE_CLOUD_TTS_API_KEY || process.env.GOOGLE_TRANSLATE_API_KEY;
     if (googleKey && !googleKey.includes("placeholder") && googleKey.length > 10) {
       try {
-        const audioBase64 = await this.synthesizeGoogleCloud(req.text, bcp47, req.speed || 1.0, googleKey);
-        if (audioBase64) {
-          return {
-            success: true,
-            audioContentBase64: audioBase64,
-            contentType: "audio/mp3",
-            provider: "google_cloud",
-            fallbackToBrowser: false,
-          };
+        const audioBuffer = await this.synthesizeGoogleCloud(req.text, bcp47, req.speed || 1.0, googleKey);
+        if (audioBuffer) {
+          const verification = verifyAudioBuffer(audioBuffer);
+          if (verification.isValid) {
+            return {
+              success: true,
+              audioGenerated: true,
+              audioContentBase64: audioBuffer.toString("base64"),
+              contentType: "audio/mpeg",
+              audioFormat: verification.format,
+              audioByteLength: verification.byteLength,
+              provider: "google_cloud",
+              fallbackToBrowser: false,
+            };
+          }
         }
       } catch (err: any) {
         console.warn("[TTSProviderService] Google Cloud TTS error:", err?.message || err);
@@ -133,28 +235,38 @@ export class TTSProviderService {
     const azureRegion = process.env.AZURE_SPEECH_REGION;
     if (azureKey && azureRegion && !azureKey.includes("placeholder") && azureKey.length > 10) {
       try {
-        const audioBase64 = await this.synthesizeAzure(req.text, bcp47, req.speed || 1.0, azureKey, azureRegion);
-        if (audioBase64) {
-          return {
-            success: true,
-            audioContentBase64: audioBase64,
-            contentType: "audio/mp3",
-            provider: "azure",
-            fallbackToBrowser: false,
-          };
+        const audioBuffer = await this.synthesizeAzure(req.text, bcp47, req.speed || 1.0, azureKey, azureRegion);
+        if (audioBuffer) {
+          const verification = verifyAudioBuffer(audioBuffer);
+          if (verification.isValid) {
+            return {
+              success: true,
+              audioGenerated: true,
+              audioContentBase64: audioBuffer.toString("base64"),
+              contentType: "audio/mpeg",
+              audioFormat: verification.format,
+              audioByteLength: verification.byteLength,
+              provider: "azure",
+              fallbackToBrowser: false,
+            };
+          }
         }
       } catch (err: any) {
         console.warn("[TTSProviderService] Azure Speech TTS error:", err?.message || err);
       }
     }
 
-    // 3. Fallback: Local Client Browser Synthesis
+    // 3. Truthful response when no cloud provider generated audio:
+    // Do NOT claim audioGenerated: true when no bytes were generated!
     return {
-      success: true,
-      provider: "browser",
+      success: false,
+      audioGenerated: false,
+      audioBuffer: null,
+      provider: "none",
       fallbackToBrowser: true,
-      message: "Cloud TTS not configured or unavailable. Routed to enhanced browser speech synthesis.",
-    } as any;
+      error: "NO_CLOUD_TTS_CONFIGURED",
+      message: "Cloud TTS credentials not configured. Please use client-side browser speech synthesis.",
+    };
   }
 
   /**
@@ -165,7 +277,7 @@ export class TTSProviderService {
     bcp47: string,
     speed: PlaybackSpeed,
     apiKey: string
-  ): Promise<string | null> {
+  ): Promise<Buffer | null> {
     const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`;
     const response = await fetch(url, {
       method: "POST",
@@ -190,7 +302,10 @@ export class TTSProviderService {
     }
 
     const data = await response.json();
-    return data.audioContent || null;
+    if (data.audioContent) {
+      return Buffer.from(data.audioContent, "base64");
+    }
+    return null;
   }
 
   /**
@@ -202,9 +317,8 @@ export class TTSProviderService {
     speed: PlaybackSpeed,
     apiKey: string,
     region: string
-  ): Promise<string | null> {
+  ): Promise<Buffer | null> {
     const url = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
-    // Speed SSML mapping: e.g. 0.5x is -50%, 0.75x is -25%, 1x is 0%, 1.25x is +25%, 1.5x is +50%
     const ratePercentage = Math.round((speed - 1) * 100);
     const rateStr = ratePercentage >= 0 ? `+${ratePercentage}%` : `${ratePercentage}%`;
 
@@ -227,7 +341,6 @@ export class TTSProviderService {
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return buffer.toString("base64");
+    return Buffer.from(arrayBuffer);
   }
 }

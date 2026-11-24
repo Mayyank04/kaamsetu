@@ -38,6 +38,7 @@ import {
   VoiceInfo,
 } from "@/lib/voice/types";
 import { detectScriptLanguage } from "@/lib/voice/voice-selection";
+import { identifyTextLanguage } from "@/lib/voice/language-identification";
 import { AudioChannelBar } from "./audio-channel-bar";
 
 export interface TranslationHistoryItem {
@@ -224,11 +225,14 @@ export function UniversalTranslatorWorkspace({
     ? { name: "Auto Detect", nativeName: "স্বয়ংক্রিয় / पहचानें", code: "auto" }
     : ALL_TRANSLATION_CAPABILITIES[sourceLang] || { name: sourceLang, nativeName: "", code: sourceLang };
 
-  // Detected language for original audio
+  // Detected language for original audio (respects user selection first, then linguistic markers, then script)
   const effectiveSourceLang = React.useMemo(() => {
     if (sourceLang !== "auto") return sourceLang;
     if (detectedSource) return detectedSource;
-    if (sourceText.trim()) return detectScriptLanguage(sourceText);
+    if (sourceText.trim()) {
+      const idResult = identifyTextLanguage(sourceText, undefined);
+      return idResult.identifiedLanguage;
+    }
     return "en";
   }, [sourceLang, detectedSource, sourceText]);
 
@@ -331,6 +335,7 @@ export function UniversalTranslatorWorkspace({
         language: lang,
         speed: currentStatus.speed,
         preferredVoiceId: currentStatus.selectedVoice?.id,
+        userSelectedLang: channel === "original" && sourceLang !== "auto" ? sourceLang : undefined,
       });
     }
   };
@@ -805,6 +810,9 @@ export function UniversalTranslatorWorkspace({
                 onReplay={() => handleReplayChannel("original")}
                 onSpeedChange={(speed) => handleSpeedChange("original", speed)}
                 onVoiceChange={(voice) => handleVoiceChange("original", voice)}
+                onDisambiguate={(langCode) => {
+                  setSourceLang(langCode);
+                }}
               />
             )}
           </div>
