@@ -31,6 +31,8 @@ import {
   getCachedTranslation,
   setCachedTranslation,
 } from "./cache";
+import { transliterateToLatin } from "./transliteration";
+import { resolveEnglishMeaning } from "./meaning";
 
 export class TranslationService {
   private static instance: TranslationService;
@@ -82,6 +84,8 @@ export class TranslationService {
 
     // 2. Identity / Same-Language Shortcut
     if (source === req.targetLanguage) {
+      const transliteration = transliterateToLatin(req.text, req.targetLanguage);
+      const meaningResult = resolveEnglishMeaning(req.text, req.targetLanguage, source, req.text);
       return {
         translatedText: req.text,
         detectedSourceLanguage: source,
@@ -92,6 +96,10 @@ export class TranslationService {
         confidence: 1.0,
         characterCount: req.text.length,
         preservedEntitiesCount: 0,
+        transliteration,
+        englishMeaning: meaningResult.englishMeaning,
+        transliterationAvailable: Boolean(transliteration && (transliteration !== req.text || req.targetLanguage === "en")),
+        englishMeaningAvailable: meaningResult.isAvailable,
         disclaimer: "Original and target language are identical.",
       };
     }
@@ -108,6 +116,17 @@ export class TranslationService {
     const cacheKey = generateCacheKey(req.text, source, req.targetLanguage, providerToUse);
     const cached = await getCachedTranslation(cacheKey, req.isPrivate);
     if (cached) {
+      if (!cached.transliteration) {
+        cached.transliteration = transliterateToLatin(cached.translatedText, req.targetLanguage);
+        cached.transliterationAvailable = Boolean(
+          cached.transliteration && (cached.transliteration !== cached.translatedText || req.targetLanguage === "en")
+        );
+      }
+      if (!cached.englishMeaning) {
+        const meaning = resolveEnglishMeaning(cached.translatedText, req.targetLanguage, source, req.text);
+        cached.englishMeaning = meaning.englishMeaning;
+        cached.englishMeaningAvailable = meaning.isAvailable;
+      }
       return cached;
     }
 
@@ -138,6 +157,21 @@ export class TranslationService {
         result.fallbackReason =
           result.fallbackReason ||
           `Primary provider '${providerToUse}' was unavailable or timed out; served from verified offline lexicon.`;
+      }
+    }
+
+    // Enrich with Roman transliteration and English meaning
+    if (result) {
+      if (!result.transliteration) {
+        result.transliteration = transliterateToLatin(result.translatedText, req.targetLanguage);
+        result.transliterationAvailable = Boolean(
+          result.transliteration && (result.transliteration !== result.translatedText || req.targetLanguage === "en")
+        );
+      }
+      if (!result.englishMeaning) {
+        const meaning = resolveEnglishMeaning(result.translatedText, req.targetLanguage, source, req.text);
+        result.englishMeaning = meaning.englishMeaning;
+        result.englishMeaningAvailable = meaning.isAvailable;
       }
     }
 

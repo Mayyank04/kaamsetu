@@ -13,9 +13,17 @@ import {
   AlertCircle,
   Loader2,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { ALL_TRANSLATION_CAPABILITIES } from "@/lib/translation/registry";
-import { LanguagePairSelector } from "./language-pair-selector";
+import {
+  createSpeechRecognitionSession,
+  speakText,
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+  hasNativeVoice,
+  VoiceInputState,
+} from "@/lib/translation/speech";
 
 interface VoiceTranslationWidgetProps {
   initialSourceLang?: string;
@@ -26,60 +34,41 @@ interface VoiceTranslationWidgetProps {
 
 export function VoiceTranslationWidget({
   initialSourceLang = "hi",
-  initialTargetLang = "en",
+  initialTargetLang = "as",
   onTranslationComplete,
   className = "",
 }: VoiceTranslationWidgetProps) {
   const [sourceLang, setSourceLang] = React.useState(initialSourceLang);
   const [targetLang, setTargetLang] = React.useState(initialTargetLang);
-  const [isListening, setIsListening] = React.useState(false);
+  const [voiceState, setVoiceState] = React.useState<VoiceInputState>("idle");
   const [originalTranscript, setOriginalTranscript] = React.useState("");
+  const [interimTranscript, setInterimTranscript] = React.useState("");
   const [translatedText, setTranslatedText] = React.useState<string | null>(null);
-  const [detectedSource, setDetectedSource] = React.useState<string | null>(null);
+  const [transliteration, setTransliteration] = React.useState<string | null>(null);
+  const [englishMeaning, setEnglishMeaning] = React.useState<string | null>(null);
   const [isTranslating, setIsTranslating] = React.useState(false);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  const [isSupported, setIsSupported] = React.useState(true);
-  const [copied, setCopied] = React.useState(false);
+  const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
 
-  const recognitionRef = React.useRef<any>(null);
-
-  // Map AppLocale to BCP-47 for speech recognition
-  const getBCP47Tag = (code: string): string => {
-    const map: Record<string, string> = {
-      en: "en-IN",
-      hi: "hi-IN",
-      bn: "bn-IN",
-      ta: "ta-IN",
-      te: "te-IN",
-      mr: "mr-IN",
-      gu: "gu-IN",
-      kn: "kn-IN",
-      ml: "ml-IN",
-      ur: "ur-IN",
-      pa: "pa-IN",
-      as: "as-IN",
-      or: "or-IN",
-      bho: "bho-IN",
-      mai: "mai-IN",
-      raj: "raj-IN",
-      ks: "ks-IN",
-      sa: "sa-IN",
-    };
-    return map[code] || "hi-IN";
-  };
+  const speechSessionRef = React.useRef<any>(null);
+  const ttsPlayerRef = React.useRef<{ stop: () => void } | null>(null);
 
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const SpeechRec =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRec) {
-      setIsSupported(false);
-    }
+    return () => {
+      if (speechSessionRef.current) {
+        speechSessionRef.current.destroy();
+      }
+      if (ttsPlayerRef.current) {
+        ttsPlayerRef.current.stop();
+      }
+    };
   }, []);
 
-  const translateSpokenText = async (text: string) => {
-    if (!text.trim()) return;
+  const translateSpokenText = async (textToTranslate: string) => {
+    const text = textToTranslate.trim();
+    if (!text) return;
+
     setIsTranslating(true);
     setErrorMessage(null);
 
@@ -92,6 +81,8 @@ export function VoiceTranslationWidget({
           sourceLanguage: sourceLang === "auto" ? undefined : sourceLang,
           targetLanguage: targetLang,
           contentType: "voice_transcript",
+          includeTransliteration: true,
+          includeEnglishMeaning: true,
         }),
       });
 
@@ -100,11 +91,13 @@ export function VoiceTranslationWidget({
         throw new Error(json.error || "Failed to translate spoken transcript.");
       }
 
-      setTranslatedText(json.data.translatedText);
-      setDetectedSource(json.data.detectedSourceLanguage);
+      const data = json.data;
+      setTranslatedText(data.translatedText);
+      setTransliteration(data.transliteration || null);
+      setEnglishMeaning(data.englishMeaning || null);
 
       if (onTranslationComplete) {
-        onTranslationComplete(text, json.data.translatedText);
+        onTranslationComplete(text, data.translatedText);
       }
     } catch (err: any) {
       setErrorMessage(err.message || "Translation failed.");
@@ -115,102 +108,96 @@ export function VoiceTranslationWidget({
 
   const startListening = () => {
     setErrorMessage(null);
-    setTranslatedText(null);
-    setOriginalTranscript("");
+    setInterimTranscript("");
 
-    if (typeof window === "undefined") return;
-    const SpeechRec =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRec) {
-      setIsSupported(false);
-      setErrorMessage("Web Speech API is not supported in this browser. Please type text below.");
+    if (!isSpeechRecognitionSupported()) {
+      setErrorMessage("Speech recognition is not supported in this browser. Please type text below.");
       return;
     }
 
-    try {
-      const recognition = new SpeechRec();
-      recognition.lang = getBCP47Tag(sourceLang);
-      recognition.continuous = false;
-      recognition.interimResults = true;
-
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognition.onresult = (event: any) => {
-        let interim = "";
-        let final = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const item = event.results[i];
-          if (item.isFinal) {
-            final += item[0].transcript;
-          } else {
-            interim += item[0].transcript;
-          }
-        }
-
-        const currentText = final || interim;
-        setOriginalTranscript(currentText);
-
-        if (final) {
-          translateSpokenText(final);
-        }
-      };
-
-      recognition.onerror = (e: any) => {
-        console.warn("[VoiceTranslationWidget] Speech error:", e.error);
-        setIsListening(false);
-        if (e.error === "not-allowed") {
-          setErrorMessage("Microphone permission was denied. Please allow microphone access or use text input.");
-        } else {
-          setErrorMessage(`Speech recognition error: ${e.error}`);
-        }
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-      recognition.start();
-    } catch (err: any) {
-      setErrorMessage("Could not initialize microphone. Please check browser permissions.");
-      setIsListening(false);
+    if (speechSessionRef.current) {
+      speechSessionRef.current.destroy();
     }
+
+    const session = createSpeechRecognitionSession({
+      langCode: sourceLang,
+      onStateChange: (state) => {
+        setVoiceState(state);
+        if (state === "idle" || state === "completed") {
+          setInterimTranscript("");
+        }
+      },
+      onInterimTranscript: (interim) => {
+        setInterimTranscript(interim);
+      },
+      onFinalTranscript: (final) => {
+        // Place recognized text into original transcript input for user review/editing (DO NOT AUTO-SUBMIT UNCONFIRMED)
+        setOriginalTranscript((prev) => (prev ? `${prev} ${final}` : final));
+        setInterimTranscript("");
+        setVoiceState("idle");
+      },
+      onError: (err) => {
+        setErrorMessage(`${err.message} ${err.actionable}`);
+        setVoiceState("failed");
+        setInterimTranscript("");
+      },
+    });
+
+    speechSessionRef.current = session;
+    session.start();
   };
 
   const stopListening = () => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        // ignore
-      }
+    if (speechSessionRef.current) {
+      speechSessionRef.current.stop();
     }
-    setIsListening(false);
-    if (originalTranscript) {
-      translateSpokenText(originalTranscript);
-    }
+    setVoiceState("idle");
   };
 
   const speakTranslation = () => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window) || !translatedText) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(translatedText);
-    utterance.lang = targetLang === "en" ? "en-IN" : `${targetLang}-IN`;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+    if (!translatedText) return;
+
+    if (isSpeaking) {
+      if (ttsPlayerRef.current) {
+        ttsPlayerRef.current.stop();
+      }
+      setIsSpeaking(false);
+      return;
+    }
+
+    const voiceCheck = hasNativeVoice(targetLang);
+    if (!voiceCheck.hasVoice) {
+      setErrorMessage(voiceCheck.note || "Native voice for this language is not installed in your browser.");
+    }
+
+    setIsSpeaking(true);
+    const player = speakText(translatedText, targetLang, {
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
+    ttsPlayerRef.current = player;
   };
 
-  const targetCap = (targetLang ? ALL_TRANSLATION_CAPABILITIES[targetLang] : null) || ALL_TRANSLATION_CAPABILITIES.en;
+  const copyToClipboard = async (text: string, key: string) => {
+    if (!text || typeof navigator === "undefined" || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
+  const targetCap = ALL_TRANSLATION_CAPABILITIES[targetLang] || ALL_TRANSLATION_CAPABILITIES.as;
+  const sourceCap = ALL_TRANSLATION_CAPABILITIES[sourceLang] || ALL_TRANSLATION_CAPABILITIES.hi;
+
+  const isListening = voiceState === "listening" || voiceState === "requesting_permission";
 
   return (
     <div className={`p-4 rounded-md bg-card border border-forest/20 shadow-sovereign-sm space-y-4 ${className}`}>
-      {/* Header & Language Selectors */}
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-forest/10">
         <div>
           <h4 className="font-serif font-bold text-sm text-forest flex items-center gap-1.5">
@@ -218,24 +205,24 @@ export function VoiceTranslationWidget({
             <span>Spoken Voice Translation</span>
           </h4>
           <p className="text-[11px] text-charcoal-muted">
-            Speak in your mother tongue; translate in real-time for customer or vendor.
+            Speak in your mother tongue; translate in real-time with Native Script, Pronunciation, and English Meaning.
           </p>
         </div>
 
-        <LanguagePairSelector
-          sourceLanguage={sourceLang}
-          targetLanguage={targetLang}
-          onTargetChange={(newTarget) => {
-            setTargetLang(newTarget);
-            if (originalTranscript) {
-              translateSpokenText(originalTranscript);
-            }
-          }}
-        />
+        {/* Source & Target Indicator */}
+        <div className="flex items-center gap-2 text-xs font-semibold">
+          <span className="px-2 py-0.5 rounded bg-forest/10 text-forest border border-forest/20">
+            {sourceCap.name} ({sourceCap.nativeName})
+          </span>
+          <span className="text-forest/60">→</span>
+          <span className="px-2 py-0.5 rounded bg-forest text-warm-ivory">
+            {targetCap.name} ({targetCap.nativeName})
+          </span>
+        </div>
       </div>
 
       {/* Mic Trigger & Listening Indicator */}
-      <div className="flex flex-col items-center justify-center p-4 bg-warm-ivory/50 rounded border border-forest/15 space-y-3">
+      <div className="flex flex-col items-center justify-center p-4 bg-warm-ivory/50 rounded border border-forest/15 space-y-2">
         <button
           type="button"
           onClick={isListening ? stopListening : startListening}
@@ -246,54 +233,79 @@ export function VoiceTranslationWidget({
           }`}
           aria-label={isListening ? "Stop listening" : "Start speaking"}
         >
-          {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+          {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6 text-sand" />}
         </button>
 
         <span className="text-xs font-medium text-forest">
-          {isListening
+          {voiceState === "requesting_permission"
+            ? "Requesting microphone permission..."
+            : isListening
             ? "Listening... Speak clearly in your language"
             : "Tap microphone to speak"}
         </span>
 
-        {/* Ephemeral Notice */}
+        {interimTranscript && (
+          <p className="text-xs italic text-charcoal bg-card/80 px-3 py-1 rounded border border-forest/10">
+            &ldquo;{interimTranscript}&rdquo;
+          </p>
+        )}
+
         <span className="text-[10px] text-charcoal-muted">
-          Ephemeral audio: Raw recordings are never stored on platform servers.
+          Ephemeral audio: Recordings are transcribed live in-browser and never saved to platform storage.
         </span>
       </div>
 
-      {/* Text fallback / manual edit */}
+      {/* Spoken Transcript Input & Review */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-[11px] text-charcoal-muted font-medium">
-          <span>Spoken Transcript (Original)</span>
+          <span>Spoken Transcript (Review & Edit before Translate)</span>
           {originalTranscript && (
             <button
               type="button"
               onClick={() => translateSpokenText(originalTranscript)}
-              className="text-forest hover:underline"
+              disabled={isTranslating}
+              className="text-forest font-semibold hover:underline inline-flex items-center gap-1"
             >
-              Re-translate
+              <span>Translate Spoken Text</span>
+              <ArrowRight className="w-3 h-3" />
             </button>
           )}
         </div>
         <textarea
           value={originalTranscript}
           onChange={(e) => setOriginalTranscript(e.target.value)}
-          placeholder="Spoken words will appear here in real-time, or type text manually..."
+          placeholder="Spoken words will appear here in real-time, or you can type manually..."
           rows={3}
           className="w-full p-2.5 text-xs rounded border border-forest/15 bg-card focus:outline-hidden focus:ring-1 focus:ring-forest text-charcoal resize-none"
         />
       </div>
 
-      {/* Translated Result Output */}
-      {isTranslating && (
-        <div className="flex items-center gap-2 p-3 bg-forest/5 rounded text-xs text-forest">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          <span>Translating into {targetCap.name} ({targetCap.nativeName})...</span>
-        </div>
+      {/* Translate Action Trigger */}
+      {originalTranscript.trim() && !translatedText && (
+        <button
+          type="button"
+          onClick={() => translateSpokenText(originalTranscript)}
+          disabled={isTranslating}
+          className="w-full py-2 text-xs font-bold rounded bg-forest text-warm-ivory hover:bg-forest/90 transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+        >
+          {isTranslating ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Translating...</span>
+            </>
+          ) : (
+            <>
+              <span>Confirm & Translate Spoken Text to {targetCap.name}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-sand" />
+            </>
+          )}
+        </button>
       )}
 
+      {/* Translated Result Output */}
       {translatedText && !isTranslating && (
-        <div className="p-3 bg-warm-ivory/80 rounded border border-forest/20 space-y-2">
+        <div className="p-3 bg-warm-ivory/80 rounded border border-forest/20 space-y-3">
+          {/* Header */}
           <div className="flex items-center justify-between text-xs font-semibold text-forest pb-1 border-b border-forest/10">
             <span>Translated to {targetCap.name} ({targetCap.nativeName}):</span>
             <div className="flex items-center gap-1.5">
@@ -307,26 +319,63 @@ export function VoiceTranslationWidget({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(translatedText);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
+                onClick={() => copyToClipboard(translatedText, "native")}
                 className="p-1 rounded text-charcoal-muted hover:text-forest"
-                title="Copy text"
+                title="Copy native script"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedKey === "native" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
           </div>
-          <p className="text-xs text-charcoal leading-relaxed font-medium">{translatedText}</p>
+
+          {/* Section A: Native Script */}
+          <div>
+            <div className="text-[10px] uppercase font-bold text-charcoal-muted tracking-wider">Native Script</div>
+            <p className="text-sm text-charcoal font-semibold leading-relaxed mt-0.5">{translatedText}</p>
+          </div>
+
+          {/* Section B: Roman Transliteration */}
+          {transliteration && (
+            <div className="p-2 rounded bg-forest/5 border border-forest/10 space-y-0.5">
+              <div className="flex items-center justify-between text-[10px] uppercase font-bold text-forest tracking-wider">
+                <span>Pronunciation (English Letters)</span>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(transliteration, "translit")}
+                  className="hover:text-forest"
+                  title="Copy pronunciation"
+                >
+                  {copiedKey === "translit" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                </button>
+              </div>
+              <p className="text-xs font-medium text-forest-700 italic">{transliteration}</p>
+            </div>
+          )}
+
+          {/* Section C: English Meaning */}
+          {englishMeaning && (
+            <div className="p-2 rounded bg-warm-sand/20 border border-warm-sand/40 space-y-0.5">
+              <div className="flex items-center justify-between text-[10px] uppercase font-bold text-charcoal-muted tracking-wider">
+                <span>English Meaning</span>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(englishMeaning, "meaning")}
+                  className="hover:text-forest"
+                  title="Copy meaning"
+                >
+                  {copiedKey === "meaning" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                </button>
+              </div>
+              <p className="text-xs text-charcoal font-normal">{englishMeaning}</p>
+            </div>
+          )}
         </div>
       )}
 
       {/* Error alert */}
       {errorMessage && (
-        <div className="flex items-center gap-1.5 p-2 rounded bg-amber-50 border border-amber-200 text-xs text-amber-800">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+        <div className="flex items-start gap-1.5 p-2.5 rounded bg-amber-50 border border-amber-200 text-xs text-amber-900">
+          <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
           <span>{errorMessage}</span>
         </div>
       )}

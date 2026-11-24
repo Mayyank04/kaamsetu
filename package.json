@@ -73,6 +73,7 @@
     "test:phase49:auth": "tsx --env-file=.env.local --test test/phase-49-auth-acceptance.test.ts",
     "test:phase49:translation": "tsx --env-file=.env.local --test test/phase-49-translation-acceptance.test.ts",
     "test:phase50": "tsx --env-file=.env.local --test test/phase-50-production-hardening.test.ts",
+    "test:phase50.1": "tsx --env-file=.env.local --test test/phase-50-1-translator-rebuild.test.ts",
     "check:deploy": "tsx --env-file=.env.local src/bin/check-deployment.ts",
     "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"
   },
