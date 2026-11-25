@@ -1,0 +1,35 @@
+name: KAAMSETU CI & Pre-Vercel Build Check
+
+on:
+  push:
+    branches: ["main", "phase-*"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install dependencies cleanly
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Verify production Next.js build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key-ci-build-only
+          CREDENTIAL_SIGNING_KEY: ci-placeholder-signing-key-32-chars-minimum
+          RATE_LIMIT_HMAC_SECRET: ci-placeholder-hmac-secret-32-chars-minimum
+          AUTH_VERIFICATION_MODE: sandbox
+        run: npm run build

@@ -113,11 +113,42 @@ export function UniversalTranslatorWorkspace({
   const speechSessionRef = React.useRef<any>(null);
 
   // Audio Channel States (Original, Translated, Transliteration)
-  const [channelStatuses, setChannelStatuses] = React.useState<Record<AudioChannel, ChannelPlaybackStatus>>({
-    original: playbackController.getStatus("original"),
-    translated: playbackController.getStatus("translated"),
-    transliteration: playbackController.getStatus("transliteration"),
-  });
+  // SSR-safe static defaults avoid React #418 hydration mismatches caused by window.speechSynthesis voices.
+  const [channelStatuses, setChannelStatuses] = React.useState<Record<AudioChannel, ChannelPlaybackStatus>>(() => ({
+    original: {
+      channel: "original",
+      state: "idle",
+      speed: 1.0,
+      selectedVoice: null,
+      availableVoices: [],
+      hasNativeVoice: false,
+      text: "",
+      language: "en",
+      bcp47: "en-IN",
+    },
+    translated: {
+      channel: "translated",
+      state: "idle",
+      speed: 1.0,
+      selectedVoice: null,
+      availableVoices: [],
+      hasNativeVoice: false,
+      text: "",
+      language: "as",
+      bcp47: "as-IN",
+    },
+    transliteration: {
+      channel: "transliteration",
+      state: "idle",
+      speed: 0.75,
+      selectedVoice: null,
+      availableVoices: [],
+      hasNativeVoice: false,
+      text: "",
+      language: "en",
+      bcp47: "en-IN",
+    },
+  }));
 
   // Subscribe to playbackController updates
   React.useEffect(() => {
