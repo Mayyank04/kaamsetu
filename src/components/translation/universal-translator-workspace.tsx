@@ -498,9 +498,9 @@ export function UniversalTranslatorWorkspace({
   return (
     <div className={`w-full max-w-5xl mx-auto flex flex-col rounded-lg bg-card border border-forest/20 shadow-sovereign-lg overflow-hidden ${className}`}>
       {/* 1. WORKSPACE HEADER */}
-      <div className="flex flex-wrap items-center justify-between p-4 sm:p-5 border-b border-forest/15 bg-warm-ivory/70">
+      <div className="flex flex-wrap items-center justify-between p-4 sm:p-5 border-b border-forest/15 bg-ivory/70">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-md bg-forest text-warm-ivory flex items-center justify-center shadow-2xs">
+          <div className="w-9 h-9 rounded-md bg-forest text-ivory flex items-center justify-center shadow-2xs">
             <Languages className="w-5 h-5 text-sand" />
           </div>
           <div>
@@ -524,7 +524,7 @@ export function UniversalTranslatorWorkspace({
             onClick={() => setShowHistory(!showHistory)}
             className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors inline-flex items-center gap-1.5 ${
               showHistory
-                ? "bg-forest text-warm-ivory border-forest"
+                ? "bg-forest text-ivory border-forest"
                 : "bg-card border-forest/20 text-forest hover:bg-forest/5"
             }`}
             title="View translation history"
@@ -579,7 +579,7 @@ export function UniversalTranslatorWorkspace({
           {/* Source Search Dropdown */}
           {isSourceDropdownOpen && (
             <div className="absolute left-0 top-full mt-1.5 z-50 w-72 max-h-80 overflow-hidden rounded-md bg-card border border-forest/20 shadow-sovereign-lg flex flex-col">
-              <div className="p-2 border-b border-forest/10 bg-warm-ivory/50">
+              <div className="p-2 border-b border-forest/10 bg-ivory/50">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-charcoal-muted" />
                   <input
@@ -671,7 +671,7 @@ export function UniversalTranslatorWorkspace({
           {/* Target Search Dropdown */}
           {isTargetDropdownOpen && (
             <div className="absolute right-0 top-full mt-1.5 z-50 w-72 max-h-80 overflow-hidden rounded-md bg-card border border-forest/20 shadow-sovereign-lg flex flex-col">
-              <div className="p-2 border-b border-forest/10 bg-warm-ivory/50">
+              <div className="p-2 border-b border-forest/10 bg-ivory/50">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-charcoal-muted" />
                   <input
@@ -714,7 +714,7 @@ export function UniversalTranslatorWorkspace({
       </div>
 
       {/* QUICK CHIPS ROW */}
-      <div className="px-4 py-2 border-b border-forest/5 bg-warm-ivory/30 flex items-center gap-1.5 overflow-x-auto text-xs">
+      <div className="px-4 py-2 border-b border-forest/5 bg-ivory/30 flex items-center gap-1.5 overflow-x-auto text-xs">
         <span className="text-[11px] text-charcoal-muted font-medium shrink-0 mr-1">Quick Select:</span>
         {POPULAR_LANGUAGES.map((lang) => (
           <button
@@ -728,7 +728,7 @@ export function UniversalTranslatorWorkspace({
             }}
             className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors shrink-0 ${
               targetLang === lang.code
-                ? "bg-forest text-warm-ivory border-forest shadow-2xs font-semibold"
+                ? "bg-forest text-ivory border-forest shadow-2xs font-semibold"
                 : "bg-card border-forest/15 text-charcoal hover:border-forest/40"
             }`}
           >
@@ -759,7 +759,7 @@ export function UniversalTranslatorWorkspace({
                 }
               }}
               placeholder="Enter text to translate, or click Voice Input to speak in your dialect..."
-              className="w-full flex-1 min-h-[140px] sm:min-h-[160px] p-3 text-sm text-charcoal bg-warm-ivory/20 rounded border border-forest/15 focus:border-forest focus:outline-hidden focus:ring-1 focus:ring-forest resize-y"
+              className="w-full flex-1 min-h-[140px] sm:min-h-[160px] p-3 text-sm text-charcoal bg-ivory/20 rounded border border-forest/15 focus:border-forest focus:outline-hidden focus:ring-1 focus:ring-forest resize-y"
               maxLength={5000}
             />
 
@@ -831,7 +831,7 @@ export function UniversalTranslatorWorkspace({
                 }`}
                 title="Voice input in your selected language"
               >
-                {voiceState === "listening" ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-sand-dark" />}
+                {voiceState === "listening" ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-sand-700" />}
                 <span>{voiceState === "listening" ? "Stop Listening" : "Voice Input"}</span>
               </button>
 
@@ -869,7 +869,7 @@ export function UniversalTranslatorWorkspace({
               type="button"
               onClick={() => handleTranslate()}
               disabled={isTranslating || !sourceText.trim()}
-              className="px-4 py-2 text-xs font-bold rounded bg-forest text-warm-ivory hover:bg-forest/90 disabled:opacity-50 transition-colors inline-flex items-center gap-2 shadow-sovereign-sm"
+              className="px-4 py-2 text-xs font-bold rounded bg-forest text-ivory hover:bg-forest/90 disabled:opacity-50 transition-colors inline-flex items-center gap-2 shadow-sovereign-sm"
             >
               {isTranslating ? (
                 <>
@@ -887,7 +887,7 @@ export function UniversalTranslatorWorkspace({
         </div>
 
         {/* RIGHT PANE: TRANSLATION RESULT AREA */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between bg-warm-ivory/20 space-y-4">
+        <div className="p-4 sm:p-5 flex flex-col justify-between bg-ivory/20 space-y-4">
           <div className="flex-1 space-y-4">
             {/* Header info */}
             <div className="flex items-center justify-between text-xs text-charcoal-muted">
@@ -1079,7 +1079,7 @@ export function UniversalTranslatorWorkspace({
 
       {/* 4. TRANSLATION HISTORY DRAWER */}
       {showHistory && (
-        <div className="border-t border-forest/15 bg-warm-ivory/50 p-4 sm:p-5">
+        <div className="border-t border-forest/15 bg-ivory/50 p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <History className="w-4 h-4 text-forest" />

@@ -114,11 +114,11 @@ export function SovereignCard({ worker, className = "" }: SovereignCardProps) {
               <QrCode className="h-6 w-6 text-forest" />
             </div>
             <div>
-              <div className="text-[10px] font-bold text-forest">
-                VERIFY ON-CHAIN
+              <div className="text-xs font-bold text-forest">
+                CRYPTOGRAPHICALLY SIGNED
               </div>
-              <div className="text-[10px] text-charcoal-muted">
-                Scan to validate credentials
+              <div className="text-xs text-charcoal-muted">
+                Scan QR to verify details
               </div>
             </div>
           </div>

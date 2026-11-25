@@ -15,7 +15,6 @@ import {
   RotateCcw,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   Globe,
@@ -457,7 +456,7 @@ export function IntelligentVoiceAssistant({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-forest/10">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-sand-700" />
+            <Mic className="w-5 h-5 text-forest" />
             <h3 className="font-serif text-lg font-bold text-forest">
               {t.voice?.assistantTitle || "Intelligent Vernacular Voice Assistant"}
             </h3>

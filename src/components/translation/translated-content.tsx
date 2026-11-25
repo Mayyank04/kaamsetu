@@ -121,7 +121,7 @@ export function TranslatedContent({
       {/* Content Render Area */}
       <div
         className={`relative ${
-          !showOriginal && translatedText ? "bg-warm-ivory/60 p-3 rounded border border-forest/15" : ""
+          !showOriginal && translatedText ? "bg-ivory/60 p-3 rounded border border-forest/15" : ""
         }`}
       >
         {/* Active Translation Indicator Bar */}

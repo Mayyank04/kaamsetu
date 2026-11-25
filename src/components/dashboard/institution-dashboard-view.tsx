@@ -79,7 +79,7 @@ export function InstitutionDashboardView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-forest-50 text-forest-800 border border-forest-200 flex items-center gap-1.5">
+            <span className="px-3 py-1.5 rounded-md text-xs font-semibold bg-forest-50 text-forest-800 border border-forest-200 flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5 text-forest-600" />
               DPDP Act 2023 Compliant Consent Vault
             </span>
@@ -87,7 +87,7 @@ export function InstitutionDashboardView({
         </div>
 
         {/* Institutional Mission Note */}
-        <div className="mt-6 pt-6 border-t border-sand-100 text-xs text-forest-700/90 leading-relaxed bg-ivory-50/70 p-4 rounded-xl border border-sand-200/50">
+        <div className="mt-6 pt-6 border-t border-sand-100 text-xs text-forest-700/90 leading-relaxed bg-ivory-50/70 p-4 rounded-md border border-sand-200/50">
           <strong>Institutional Partnership Contract:</strong> KAAMSETU connects state vocational institutes, ITIs, and polytechnics to informal workforce certification. Trainee digital skill identities belong solely to the workers; institutional verification asserts certified course completion, apprenticeship hours, and skill assessments.
         </div>
       </div>
@@ -153,17 +153,17 @@ export function InstitutionDashboardView({
           {aggregateMetrics.districtsCovered.map((district) => (
             <span
               key={district}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-forest-50 text-forest-800 border border-forest-200"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-forest-50 text-forest-800 border border-forest-200"
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-forest-600" />
               {district}
             </span>
           ))}
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-sand-50 text-sand-800 border border-sand-300">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-sand-50 text-sand-800 border border-sand-300">
             <MapPin className="w-3.5 h-3.5 text-sand-600" />
             Udalguri (Next Stage Expansion)
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-sand-50 text-sand-800 border border-sand-300">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-sand-50 text-sand-800 border border-sand-300">
             <MapPin className="w-3.5 h-3.5 text-sand-600" />
             Sonitpur / Tezpur (Q3 Expansion)
           </span>
@@ -246,7 +246,7 @@ export function InstitutionDashboardView({
               <a
                 href={`/api/institution/cohorts/${selectedCohort.id}/export?format=csv`}
                 download
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-sand-100 hover:bg-sand-200 text-forest-900 border border-sand-300 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-sand-100 hover:bg-sand-200 text-forest-900 border border-sand-300 transition-colors"
               >
                 <FileCheck2 className="w-3.5 h-3.5 text-sand-700" />
                 Export CSV Dossier

@@ -233,21 +233,21 @@ export function VoiceTranslationWidget({
             {sourceCap.name} ({sourceCap.nativeName})
           </span>
           <span className="text-forest/60">→</span>
-          <span className="px-2 py-0.5 rounded bg-forest text-warm-ivory">
+          <span className="px-2 py-0.5 rounded bg-forest text-ivory">
             {targetCap.name} ({targetCap.nativeName})
           </span>
         </div>
       </div>
 
       {/* Mic Trigger & Listening Indicator */}
-      <div className="flex flex-col items-center justify-center p-4 bg-warm-ivory/50 rounded border border-forest/15 space-y-2">
+      <div className="flex flex-col items-center justify-center p-4 bg-ivory/50 rounded border border-forest/15 space-y-2">
         <button
           type="button"
           onClick={isListening ? stopListening : startListening}
           className={`w-14 h-14 rounded-full flex items-center justify-center shadow-sovereign-md transition-all ${
             isListening
               ? "bg-red-600 text-white animate-pulse scale-105"
-              : "bg-forest text-warm-ivory hover:bg-forest/90"
+              : "bg-forest text-ivory hover:bg-forest/90"
           }`}
           aria-label={isListening ? "Stop listening" : "Start speaking"}
         >
@@ -322,7 +322,7 @@ export function VoiceTranslationWidget({
           type="button"
           onClick={() => translateSpokenText(originalTranscript)}
           disabled={isTranslating}
-          className="w-full py-2 text-xs font-bold rounded bg-forest text-warm-ivory hover:bg-forest/90 transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+          className="w-full py-2 text-xs font-bold rounded bg-forest text-ivory hover:bg-forest/90 transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
         >
           {isTranslating ? (
             <>
@@ -340,7 +340,7 @@ export function VoiceTranslationWidget({
 
       {/* Translated Result Output */}
       {translatedText && !isTranslating && (
-        <div className="p-3.5 bg-warm-ivory/80 rounded border border-forest/20 space-y-3">
+        <div className="p-3.5 bg-ivory/80 rounded border border-forest/20 space-y-3">
           {/* Header */}
           <div className="flex items-center justify-between text-xs font-semibold text-forest pb-1 border-b border-forest/10">
             <span>Translated to {targetCap.name} ({targetCap.nativeName}):</span>

@@ -166,7 +166,7 @@ export function PortfolioManager({
                 </label>
 
                 {imageUrl ? (
-                  <div className="relative h-44 w-full rounded-xl overflow-hidden border border-forest/20 bg-forest/5">
+                  <div className="relative h-44 w-full rounded-md overflow-hidden border border-forest/20 bg-forest/5">
                     <Image
                       src={imageUrl}
                       alt="Uploaded preview"
@@ -185,7 +185,7 @@ export function PortfolioManager({
                 ) : (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="h-36 w-full rounded-xl border-2 border-dashed border-forest/25 hover:border-forest/50 bg-forest/5 flex flex-col items-center justify-center cursor-pointer transition-colors p-4 text-center"
+                    className="h-36 w-full rounded-md border-2 border-dashed border-forest/25 hover:border-forest/50 bg-forest/5 flex flex-col items-center justify-center cursor-pointer transition-colors p-4 text-center"
                   >
                     <Upload className="w-7 h-7 text-forest/60 mb-2" />
                     <span className="text-xs font-semibold text-forest">
@@ -310,7 +310,7 @@ export function PortfolioManager({
         {portfolio.map((item) => (
           <div
             key={item.id}
-            className="group rounded-xl overflow-hidden border border-forest/15 bg-card hover:border-forest/35 shadow-sovereign-xs hover:shadow-sovereign-sm transition-all flex flex-col justify-between"
+            className="group rounded-md overflow-hidden border border-forest/15 bg-card hover:border-forest/35 shadow-sovereign-xs hover:shadow-sovereign-sm transition-all flex flex-col justify-between"
           >
             {/* Image */}
             <div className="relative h-44 w-full bg-forest-900 overflow-hidden">

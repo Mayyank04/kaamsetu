@@ -298,14 +298,14 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                 setSelectedTier(organization.subscription_tier);
                 setShowUpgradeModal(true);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-sand-400/30 hover:bg-sand-400/50 text-forest-950 border border-sand-400/50 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-semibold bg-sand-400/30 hover:bg-sand-400/50 text-forest-950 border border-sand-400/50 transition-colors shadow-sm"
             >
               <CreditCard className="w-4 h-4 text-sand-700" />
               Manage Subscription
             </button>
             <button
               onClick={() => setShowNewProjectModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-forest-800 hover:bg-forest-900 text-sand-200 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-semibold bg-forest-800 hover:bg-forest-900 text-sand-200 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               New Project
@@ -401,7 +401,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
               onClick={() => {
                 toast.info("Generated PDF Compliance Dossier for active crew. Ready for DISCOM/PWD presentation.");
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-sand-100 hover:bg-sand-200 text-forest-900 border border-sand-300 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold bg-sand-100 hover:bg-sand-200 text-forest-900 border border-sand-300 transition-colors"
             >
               <Download className="w-3.5 h-3.5 text-sand-700" />
               Download Client Dossier (PDF)
@@ -409,7 +409,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
             <button
               onClick={() => setShowInviteWorkerModal(true)}
               disabled={data.workforceCount >= organization.max_roster_workers}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-forest-800 hover:bg-forest-900 disabled:opacity-50 text-sand-200 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold bg-forest-800 hover:bg-forest-900 disabled:opacity-50 text-sand-200 transition-colors shadow-sm"
             >
               <Mail className="w-3.5 h-3.5" />
               Invite Worker to Roster
@@ -634,7 +634,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
 
             {/* Monthly vs Annual Toggle */}
             <div className="flex justify-center">
-              <div className="bg-ivory-100 p-1 rounded-xl flex items-center gap-1 border border-sand-200">
+              <div className="bg-ivory-100 p-1 rounded-md flex items-center gap-1 border border-sand-200">
                 <button
                   type="button"
                   onClick={() => setSelectedCycle("monthly")}
@@ -770,7 +770,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                   <button
                     type="button"
                     onClick={() => setShowUpgradeModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-forest-700 hover:bg-ivory-100"
+                    className="px-4 py-2 rounded-md text-xs font-semibold text-forest-700 hover:bg-ivory-100"
                   >
                     Cancel
                   </button>
@@ -778,7 +778,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                     type="button"
                     onClick={handleProceedPayment}
                     disabled={isUpgrading || !billingConsentAgreed || selectedTier === "starter"}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-forest-800 hover:bg-forest-900 disabled:opacity-50 text-sand-200 transition-colors shadow-sm"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-md text-xs font-bold bg-forest-800 hover:bg-forest-900 disabled:opacity-50 text-sand-200 transition-colors shadow-sm"
                   >
                     {isUpgrading ? "Verifying..." : `Authorize ₹${breakdown.totalAmount.toLocaleString("en-IN")}`}
                   </button>
@@ -818,7 +818,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                   placeholder="e.g. 55555555-5555-5555-5555-555555550001"
                   value={inviteWorkerId}
                   onChange={(e) => setInviteWorkerId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs font-mono"
+                  className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs font-mono"
                 />
               </div>
               <div>
@@ -831,7 +831,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                   placeholder="e.g. Lead Solar Electrician, Shuttering Lead"
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
+                  className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
                 />
               </div>
               <div>
@@ -843,7 +843,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                   placeholder="1500"
                   value={inviteDailyWage}
                   onChange={(e) => setInviteDailyWage(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
+                  className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
                 />
               </div>
               <div>
@@ -854,21 +854,21 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                   rows={2}
                   value={inviteMessage}
                   onChange={(e) => setInviteMessage(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
+                  className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
                 />
               </div>
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowInviteWorkerModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-forest-700 hover:bg-ivory-100"
+                  className="px-4 py-2 rounded-md text-xs font-semibold text-forest-700 hover:bg-ivory-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSendingInvite}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-forest-800 hover:bg-forest-900 text-sand-200"
+                  className="px-4 py-2 rounded-md text-xs font-semibold bg-forest-800 hover:bg-forest-900 text-sand-200"
                 >
                   {isSendingInvite ? "Sending..." : "Send Invitation"}
                 </button>
@@ -902,7 +902,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                   placeholder="e.g. Guwahati Smart City Solar Substation"
                   value={projectTitle}
                   onChange={(e) => setProjectTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
+                  className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
                 />
               </div>
               <div>
@@ -915,7 +915,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                   placeholder="e.g. Assam PWD / APDCL"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
+                  className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
                 />
               </div>
               <div>
@@ -928,7 +928,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                   placeholder="e.g. Paltan Bazaar, Guwahati"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
+                  className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -941,7 +941,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                     placeholder="250000"
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
+                    className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
                   />
                 </div>
                 <div>
@@ -953,7 +953,7 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                     required
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
+                    className="w-full px-3 py-2 rounded-md border border-sand-300 focus:outline-none focus:ring-2 focus:ring-forest-600 text-xs"
                   />
                 </div>
               </div>
@@ -961,14 +961,14 @@ export function ContractorDashboardView({ initialData }: ContractorDashboardView
                 <button
                   type="button"
                   onClick={() => setShowNewProjectModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-forest-700 hover:bg-ivory-100"
+                  className="px-4 py-2 rounded-md text-xs font-semibold text-forest-700 hover:bg-ivory-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreatingProject}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-forest-800 hover:bg-forest-900 text-sand-200"
+                  className="px-4 py-2 rounded-md text-xs font-semibold bg-forest-800 hover:bg-forest-900 text-sand-200"
                 >
                   {isCreatingProject ? "Creating..." : "Create Project"}
                 </button>

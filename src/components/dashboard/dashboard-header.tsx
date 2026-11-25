@@ -44,7 +44,7 @@ export function DashboardHeader({
       {/* Top Banner: Sovereign Status & Publication Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-forest/10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-forest/10 border border-forest/20 flex items-center justify-center text-forest">
+          <div className="w-10 h-10 rounded-sm bg-forest/10 border border-forest/20 flex items-center justify-center text-forest">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
@@ -63,7 +63,7 @@ export function DashboardHeader({
         </div>
 
         {/* Self-Sovereign Publication Toggle */}
-        <div className="flex items-center gap-3 bg-forest/5 px-4 py-2 rounded-xl border border-forest/15">
+        <div className="flex items-center gap-3 bg-forest/5 px-4 py-2 rounded-sm border border-forest/15">
           <div className="text-right">
             <span className="block text-xs font-semibold text-forest">
               {profile.isPublished ? "Publicly Discoverable" : "Private / Draft Mode"}
@@ -198,7 +198,7 @@ export function DashboardHeader({
             {completionTasks.map((task) => (
               <div
                 key={task.id}
-                className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 transition-all ${
+                className={`p-3 rounded-md border text-xs flex items-start gap-2.5 transition-all ${
                   task.completed
                     ? "bg-forest/5 border-forest/15 text-forest"
                     : "bg-terracotta/5 border-terracotta/20 text-charcoal"

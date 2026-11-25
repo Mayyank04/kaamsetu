@@ -42,7 +42,7 @@ export function TranslationDialog({
           <Link
             href="/translate"
             onClick={onClose}
-            className="inline-flex items-center gap-1.5 text-xs text-warm-ivory/80 hover:text-warm-ivory underline underline-offset-2"
+            className="inline-flex items-center gap-1.5 text-xs text-ivory/80 hover:text-ivory underline underline-offset-2"
           >
             <span>Open in Fullscreen Workspace</span>
             <ExternalLink className="w-3 h-3" />

@@ -26,7 +26,6 @@ import {
   Star,
   Settings,
   Share2,
-  Sparkles,
 } from "lucide-react";
 
 interface VendorDashboardViewProps {

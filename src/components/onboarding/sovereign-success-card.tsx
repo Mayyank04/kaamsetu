@@ -138,7 +138,7 @@ export function SovereignSuccessCard({
           {/* Top Bar: Emblem & Registry Meta */}
           <div className="relative flex items-start justify-between border-b border-sand/20 pb-5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-sand/15 border border-sand/30 flex items-center justify-center text-sand shadow-inner">
+              <div className="w-12 h-12 rounded-md bg-sand/15 border border-sand/30 flex items-center justify-center text-sand shadow-inner">
                 <ShieldCheck className="w-7 h-7 text-sand" />
               </div>
               <div>
@@ -229,7 +229,7 @@ export function SovereignSuccessCard({
             </div>
 
             {/* Right Col: KAAMSCORE Gauge */}
-            <div className="md:col-span-1 bg-forest-900/80 border border-sand/30 rounded-xl p-4 text-center flex flex-col items-center justify-center space-y-1 shadow-inner">
+            <div className="md:col-span-1 bg-forest-900/80 border border-sand/30 rounded-md p-4 text-center flex flex-col items-center justify-center space-y-1 shadow-inner">
               <div className="flex items-center gap-1.5 text-sand text-[11px] font-mono tracking-wider uppercase">
                 <Award className="w-3.5 h-3.5" />
                 <span>KAAMSCORE</span>

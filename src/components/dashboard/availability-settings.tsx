@@ -119,7 +119,7 @@ export function AvailabilitySettings({
             <div
               key={opt.value}
               onClick={() => setStatus(opt.value)}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between space-y-3 ${
+              className={`p-4 rounded-md border-2 cursor-pointer transition-all flex flex-col justify-between space-y-3 ${
                 isSelected
                   ? "border-forest bg-forest/5 shadow-sovereign-xs"
                   : "border-forest/10 hover:border-forest/30 bg-card"
@@ -154,7 +154,7 @@ export function AvailabilitySettings({
       </div>
 
       {/* Service Radius Slider */}
-      <div className="p-5 rounded-xl bg-forest/5 border border-forest/15 space-y-4">
+      <div className="p-5 rounded-md bg-forest/5 border border-forest/15 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Compass className="w-4 h-4 text-forest" />

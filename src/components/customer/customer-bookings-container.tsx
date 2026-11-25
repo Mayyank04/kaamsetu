@@ -112,7 +112,7 @@ export function CustomerBookingsContainer({
 
         {/* Metric Highlights */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
-          <div className="p-4 rounded-xl bg-forest/5 border border-forest/10 space-y-1">
+          <div className="p-4 rounded-md bg-forest/5 border border-forest/10 space-y-1">
             <span className="text-[10px] font-mono uppercase text-charcoal-muted font-bold block">
               Active Projects
             </span>
@@ -124,7 +124,7 @@ export function CustomerBookingsContainer({
             </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-forest/5 border border-forest/10 space-y-1">
+          <div className="p-4 rounded-md bg-forest/5 border border-forest/10 space-y-1">
             <span className="text-[10px] font-mono uppercase text-charcoal-muted font-bold block">
               Completed Jobs
             </span>
@@ -136,7 +136,7 @@ export function CustomerBookingsContainer({
             </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-forest/5 border border-forest/10 space-y-1 col-span-2 sm:col-span-1">
+          <div className="p-4 rounded-md bg-forest/5 border border-forest/10 space-y-1 col-span-2 sm:col-span-1">
             <span className="text-[10px] font-mono uppercase text-charcoal-muted font-bold block">
               Total Engagements
             </span>
@@ -152,7 +152,7 @@ export function CustomerBookingsContainer({
 
       {/* 2. Filter Pills */}
       <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-forest/15">
-        <div className="flex items-center gap-1.5 bg-forest/5 p-1 rounded-xl border border-forest/10 text-xs">
+        <div className="flex items-center gap-1.5 bg-forest/5 p-1 rounded-md border border-forest/10 text-xs">
           {(
             [
               { id: "all", label: `All (${bookings.length})` },

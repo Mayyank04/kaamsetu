@@ -39,7 +39,7 @@ export function ReviewsView({ reviews }: ReviewsViewProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-sand/20 px-3.5 py-1.5 rounded-xl border border-sand/40 self-start sm:self-auto">
+        <div className="flex items-center gap-2 bg-sand/20 px-3.5 py-1.5 rounded-md border border-sand/40 self-start sm:self-auto">
           <div className="flex items-center text-amber-500">
             {[1, 2, 3, 4, 5].map((star) => (
               <Star key={star} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -58,7 +58,7 @@ export function ReviewsView({ reviews }: ReviewsViewProps) {
         {reviews.map((rev) => (
           <div
             key={rev.id}
-            className="p-5 rounded-xl border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs transition-all space-y-3"
+            className="p-5 rounded-md border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs transition-all space-y-3"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-forest/10 pb-2.5">
               <div className="flex items-center gap-2">

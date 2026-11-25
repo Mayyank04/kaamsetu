@@ -1,0 +1,46 @@
+{
+  "name": "kaamsetu-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "KAAMSETU cross-platform desktop client for macOS, Windows, and Linux",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "in.kaamsetu.desktop",
+    "productName": "KAAMSETU",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "../mobile/index.html"
+    ],
+    "protocols": [
+      {
+        "name": "KAAMSETU Protocol",
+        "schemes": ["kaamsetu"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "target": ["nsis"]
+    },
+    "linux": {
+      "category": "Office",
+      "target": ["AppImage", "deb"]
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}

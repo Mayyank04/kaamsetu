@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Languages, ShieldCheck, Sparkles, Mic, Volume2 } from "lucide-react";
+import { ArrowLeft, Languages, ShieldCheck, Mic, Volume2, Type } from "lucide-react";
 import { UniversalTranslatorWorkspace } from "@/components/translation/universal-translator-workspace";
 
 export const metadata: Metadata = {
@@ -61,7 +61,7 @@ export default function TranslatePage() {
 
           <div className="p-4 rounded-md bg-card border border-forest/15 shadow-2xs space-y-1.5">
             <div className="flex items-center gap-2 text-forest font-semibold text-xs">
-              <Sparkles className="w-4 h-4 text-sand-dark" />
+              <Type className="w-4 h-4 text-sand-dark" />
               <span>Roman Transliteration</span>
             </div>
             <p className="text-xs text-charcoal-muted leading-relaxed">

@@ -91,7 +91,7 @@ export function JobRequests({ bookings, onUpdateStatus }: JobRequestsProps) {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 bg-forest/5 p-1 rounded-xl border border-forest/10 self-start sm:self-auto text-xs">
+        <div className="flex items-center gap-1.5 bg-forest/5 p-1 rounded-md border border-forest/10 self-start sm:self-auto text-xs">
           {(["all", "requested", "confirmed", "completed"] as const).map((tab) => (
             <button
               key={tab}
@@ -110,7 +110,7 @@ export function JobRequests({ bookings, onUpdateStatus }: JobRequestsProps) {
 
       {/* Bookings List */}
       {filteredBookings.length === 0 ? (
-        <div className="p-8 text-center rounded-xl bg-forest/5 border border-forest/10 text-xs text-charcoal-muted">
+        <div className="p-8 text-center rounded-md bg-forest/5 border border-forest/10 text-xs text-charcoal-muted">
           No bookings matching &quot;{filter}&quot; filter.
         </div>
       ) : (
@@ -118,7 +118,7 @@ export function JobRequests({ bookings, onUpdateStatus }: JobRequestsProps) {
           {filteredBookings.map((b) => (
             <div
               key={b.id}
-              className="p-5 rounded-xl border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs transition-all space-y-3"
+              className="p-5 rounded-md border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs transition-all space-y-3"
             >
               {/* Top Meta */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-forest/10 pb-3">

@@ -77,7 +77,7 @@ export function QRDialog({
         </div>
 
         {/* Genuine Camera-Scannable QR Presentation */}
-        <div className="p-4 rounded-xl bg-[#F7F5F0] border-2 border-forest/20 max-w-[220px] mx-auto shadow-inner">
+        <div className="p-4 rounded-md bg-[#F7F5F0] border-2 border-forest/20 max-w-[220px] mx-auto shadow-inner">
           {qrDataUrl ? (
             <Image
               src={qrDataUrl}

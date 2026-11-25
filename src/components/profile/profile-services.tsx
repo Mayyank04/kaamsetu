@@ -262,7 +262,7 @@ export function ProfileServices({
         {resolvedServices.map((svc, i) => (
           <div
             key={i}
-            className="p-5 rounded-xl border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs flex flex-col justify-between space-y-3 transition-all"
+            className="p-5 rounded-md border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs flex flex-col justify-between space-y-3 transition-all"
           >
             <div className="space-y-1.5">
               <div className="flex items-start justify-between gap-2">

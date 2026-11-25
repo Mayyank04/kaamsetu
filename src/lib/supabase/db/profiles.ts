@@ -14,6 +14,7 @@ export interface WorkerFilterParams {
   district?: string;
   city?: string;
   pincode?: string;
+  language?: string;
   minExperience?: number;
   maxExperience?: number;
   availability?: "all" | "available" | "on_site";
@@ -143,6 +144,13 @@ function getMockWorkerProfiles(filters: WorkerFilterParams): WorkerProfile[] {
     );
   }
 
+  if (filters.language && filters.language !== "all") {
+    const langLower = filters.language.toLowerCase();
+    result = result.filter((w) =>
+      w.languages?.some((l) => l.toLowerCase().includes(langLower))
+    );
+  }
+
   if (filters.minExperience !== undefined) {
     result = result.filter((w) => w.years_experience >= filters.minExperience!);
   }
@@ -209,6 +217,10 @@ export async function getPublishedWorkerProfiles(
 
     if (filters.pincode && filters.pincode.trim()) {
       query = query.eq("pincode", filters.pincode.trim());
+    }
+
+    if (filters.language && filters.language !== "all") {
+      query = query.contains("languages", [filters.language]);
     }
 
     if (filters.minExperience !== undefined) {

@@ -1,17 +1,41 @@
 {
-  "name": "KAAMSETU — Worker Identity & Service Platform",
+  "name": "KAAMSETU — Skill Identity & Workforce Platform",
   "short_name": "KAAMSETU",
-  "description": "Every skill deserves to be seen, even without a degree. Sovereign worker identity, verifiable skill credentials and direct discovery.",
+  "description": "Every skill deserves to be seen, even without a degree. Digital skill identity, multilingual translation, and direct work discovery.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F7F5F0",
   "theme_color": "#153E35",
   "orientation": "portrait-primary",
   "icons": [
     {
+      "src": "/icons/icon-512.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find Professionals",
+      "short_name": "Find Work",
+      "url": "/explore"
+    },
+    {
+      "name": "Universal Translator",
+      "short_name": "Translate",
+      "url": "/translate"
+    },
+    {
+      "name": "Create Skill Profile",
+      "short_name": "Register",
+      "url": "/onboarding"
     }
   ],
   "categories": ["business", "productivity", "utilities"],

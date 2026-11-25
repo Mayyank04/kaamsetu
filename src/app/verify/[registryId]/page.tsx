@@ -263,7 +263,7 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
 
             {/* Scannable QR Code */}
             {qrDataUrl && (
-              <div className="w-20 h-20 bg-ivory p-1.5 rounded-xl border border-sand shrink-0 shadow-xs">
+              <div className="w-20 h-20 bg-ivory p-1.5 rounded-md border border-sand shrink-0 shadow-xs">
                 <Image src={qrDataUrl} alt={`QR verification for ${worker.registryId}`} width={80} height={80} unoptimized className="w-full h-full" />
               </div>
             )}
@@ -319,7 +319,7 @@ export default async function VerifyRegistryPage({ params }: VerifyPageProps) {
         </div>
 
         {/* Legal Trust Assurance Disclaimer */}
-        <div className="p-4 rounded-xl bg-forest/5 border border-forest/10 text-center space-y-1 text-xs text-charcoal-muted">
+        <div className="p-4 rounded-md bg-forest/5 border border-forest/10 text-center space-y-1 text-xs text-charcoal-muted">
           <strong className="text-forest block">
             Platform-Issued Sovereign Skill Credential
           </strong>

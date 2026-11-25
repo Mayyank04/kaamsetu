@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>KAAMSETU</title>
+  <style>
+    :root {
+      --bg: #F7F5F0;
+      --forest: #153E35;
+      --sand: #E8C999;
+      --ink: #171D1A;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(16px + env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom));
+    }
+    .shell {
+      max-width: 400px;
+      width: 100%;
+      background: #fff;
+      border: 1px solid rgba(21, 62, 53, 0.16);
+      border-radius: 6px;
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .monogram {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 16px;
+      border-radius: 4px;
+      background: var(--forest);
+      color: var(--sand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+    }
+    h1 { font-size: 20px; color: var(--forest); margin: 0 0 8px; }
+    p { font-size: 14px; line-height: 1.5; color: #414846; margin: 0 0 20px; }
+    button {
+      width: 100%;
+      min-height: 44px;
+      border: 0;
+      border-radius: 4px;
+      background: var(--forest);
+      color: var(--bg);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="monogram">KS</div>
+    <h1>KAAMSETU</h1>
+    <p>Waiting for internet connection to load your skill profile, regional registry, and voice translator.</p>
+    <button type="button" onclick="window.location.reload()">Try Again</button>
+  </main>
+</body>
+</html>

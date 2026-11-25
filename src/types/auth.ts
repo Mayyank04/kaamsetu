@@ -1,5 +1,6 @@
 export type UserRole =
   | "worker"
+  | "vendor"
   | "customer"
   | "contractor"
   | "employer"

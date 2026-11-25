@@ -9,7 +9,6 @@ import {
   Volume2,
   VolumeX,
   ChevronDown,
-  Sparkles,
   SlidersHorizontal,
   AlertCircle,
   HelpCircle,
@@ -91,9 +90,8 @@ export function AudioChannelBar({
 
   return (
     <div
-      className={`rounded-md border border-forest/15 bg-warm-ivory/50 transition-colors ${
-        isSpeaking ? "border-forest/40 bg-forest/5 shadow-2xs" : ""
-      } ${compact ? "p-2" : "p-2.5 sm:p-3"}`}
+      className={`rounded-md border border-forest/15 bg-warm-ivory/50 transition-colors ${isSpeaking ? "border-forest/40 bg-forest/5 shadow-2xs" : ""
+        } ${compact ? "p-2" : "p-2.5 sm:p-3"}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         {/* LEFT: Channel Title & State Indicator */}
@@ -127,11 +125,10 @@ export function AudioChannelBar({
                 type="button"
                 onClick={onPlay}
                 disabled={disabled || isLoading}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-2xs active:scale-95 shrink-0 ${
-                  disabled
-                    ? "bg-forest/20 text-charcoal-muted cursor-not-allowed"
-                    : "bg-forest text-warm-ivory hover:bg-forest/90"
-                }`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-2xs active:scale-95 shrink-0 ${disabled
+                  ? "bg-forest/20 text-charcoal-muted cursor-not-allowed"
+                  : "bg-forest text-warm-ivory hover:bg-forest/90"
+                  }`}
                 title={`Listen to ${title}`}
                 aria-label={`Listen to ${title}`}
               >
@@ -212,11 +209,10 @@ export function AudioChannelBar({
                   key={s.value}
                   type="button"
                   onClick={() => onSpeedChange(s.value)}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors font-semibold ${
-                    isSelected
-                      ? "bg-forest text-warm-ivory shadow-2xs"
-                      : "text-charcoal hover:bg-forest/10 text-charcoal-muted"
-                  }`}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors font-semibold ${isSelected
+                    ? "bg-forest text-warm-ivory shadow-2xs"
+                    : "text-charcoal hover:bg-forest/10 text-charcoal-muted"
+                    }`}
                   title={s.desc}
                   aria-pressed={isSelected}
                 >
@@ -259,9 +255,8 @@ export function AudioChannelBar({
                           onVoiceChange(v);
                           setIsVoicePickerOpen(false);
                         }}
-                        className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                          isSelected ? "bg-forest/10 font-bold text-forest" : "text-charcoal hover:bg-forest/5"
-                        }`}
+                        className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center justify-between transition-colors cursor-pointer ${isSelected ? "bg-forest/10 font-bold text-forest" : "text-charcoal hover:bg-forest/5"
+                          }`}
                       >
                         <div className="truncate pr-1">
                           <div className="truncate font-medium">{v.name}</div>

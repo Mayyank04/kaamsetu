@@ -43,7 +43,7 @@ export function ProfilePortfolio({ portfolio }: ProfilePortfolioProps) {
             <div
               key={item.id}
               onClick={() => setActiveItem(item)}
-              className="group rounded-xl overflow-hidden border border-forest/15 bg-card hover:border-forest/35 shadow-sovereign-xs hover:shadow-sovereign-sm transition-all cursor-pointer flex flex-col justify-between"
+              className="group rounded-md overflow-hidden border border-forest/15 bg-card hover:border-forest/35 shadow-sovereign-xs hover:shadow-sovereign-sm transition-all cursor-pointer flex flex-col justify-between"
             >
               <div className="relative h-48 w-full bg-forest-900 overflow-hidden">
                 <Image

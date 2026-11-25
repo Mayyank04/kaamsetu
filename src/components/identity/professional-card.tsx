@@ -60,7 +60,7 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
                 alt={`Dignified portrait of ${professional.fullName}, ${professional.primaryTrade}`}
                 width={72}
                 height={72}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-forest text-ivory font-bold text-lg">

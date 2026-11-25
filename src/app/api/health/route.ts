@@ -6,7 +6,7 @@ export async function GET() {
     status: "healthy",
     platform: "KAAMSETU Sovereign Workforce Identity Platform",
     version: "0.1.0",
-    commit: process.env.VERCEL_GIT_COMMIT_SHA || process.env.GIT_COMMIT || "d26dc73",
+    commit: process.env.VERCEL_GIT_COMMIT_SHA || process.env.GIT_COMMIT || "local-build",
     environment: env.NODE_ENV,
     timestamp: new Date().toISOString(),
     services: {

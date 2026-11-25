@@ -39,8 +39,6 @@ import { NextRequest } from "next/server";
 import {
   analyzeUnicodeScript,
   identifyTextLanguage,
-  isDevanagari,
-  isBengaliAssamese,
 } from "../src/lib/voice/language-identification";
 import {
   getLanguageBCP47,
