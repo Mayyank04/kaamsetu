@@ -204,7 +204,7 @@ export function ProfileHero({
         </div>
 
         {/* Right Col: Trust Gauge & Hire Action */}
-        <div className="lg:col-span-1 p-5 rounded-xl bg-forest/5 border border-forest/15 space-y-4 shadow-inner">
+        <div className="lg:col-span-1 p-5 rounded-md bg-forest/5 border border-forest/15 space-y-4 shadow-inner">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-mono text-charcoal-muted uppercase tracking-wider font-semibold">
               {t.profile?.kaamScoreTrust || "KAAMSCORE™ Trust Index"}

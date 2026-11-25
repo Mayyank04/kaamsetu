@@ -167,7 +167,7 @@ export function BookingCard({
               return (
                 <div
                   key={st.key}
-                  className={`p-2.5 rounded-xl border text-xs flex items-center gap-2 transition-all ${
+                  className={`p-2.5 rounded-md border text-xs flex items-center gap-2 transition-all ${
                     isCurrent
                       ? "bg-forest text-ivory border-forest shadow-sovereign-xs font-bold"
                       : isPast
@@ -185,10 +185,10 @@ export function BookingCard({
       )}
 
       {/* 3. Assigned Worker Card & Project Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center p-4 rounded-xl bg-forest/5 border border-forest/10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center p-4 rounded-md bg-forest/5 border border-forest/10">
         {/* Worker Summary */}
         <div className="flex items-center gap-3.5 md:border-r border-forest/10 md:pr-4">
-          <div className="relative h-14 w-14 shrink-0 rounded-xl overflow-hidden border border-sand/50 bg-forest-900 shadow-xs">
+          <div className="relative h-14 w-14 shrink-0 rounded-md overflow-hidden border border-sand/50 bg-forest-900 shadow-xs">
             {worker.avatar_url ? (
               <Image
                 src={worker.avatar_url}

@@ -107,7 +107,7 @@ export function CustomerReviewDialog({
               </div>
             )}
 
-            <div className="p-3 rounded-xl bg-forest/5 border border-forest/10 text-xs text-forest">
+            <div className="p-3 rounded-md bg-forest/5 border border-forest/10 text-xs text-forest">
               Reviewing completed booking with <strong>{workerName}</strong>. Your feedback strengthens their national KAAMSCORE™.
             </div>
 

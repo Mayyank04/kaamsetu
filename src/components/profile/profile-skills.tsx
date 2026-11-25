@@ -111,7 +111,7 @@ export function ProfileSkills({ skills }: ProfileSkillsProps) {
             {verified.map((s) => (
               <div
                 key={s.id}
-                className="p-3 rounded-xl border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs flex items-center justify-between transition-all"
+                className="p-3 rounded-md border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs flex items-center justify-between transition-all"
               >
                 <div>
                   <div className="font-semibold text-xs sm:text-sm text-forest">
@@ -146,7 +146,7 @@ export function ProfileSkills({ skills }: ProfileSkillsProps) {
             {selfDeclared.map((s) => (
               <div
                 key={s.id}
-                className="p-3 rounded-xl border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs flex items-center justify-between transition-all"
+                className="p-3 rounded-md border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs flex items-center justify-between transition-all"
               >
                 <div>
                   <div className="font-semibold text-xs sm:text-sm text-forest">

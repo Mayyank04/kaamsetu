@@ -388,11 +388,33 @@ export function getSigningKeyForVersion(version: string = DEFAULT_KEY_VERSION): 
   }
 
   const envVar = `CREDENTIAL_SIGNING_KEY_${normVersion.toUpperCase()}`;
-  let secret = process.env[envVar] || process.env.CREDENTIAL_SIGNING_KEY;
-  if (!secret) {
-    secret = "kaamsetu-credential-signing-key-minimum-32-chars-long";
+  const versionSecret = process.env[envVar];
+  const fallbackSecret = normVersion === DEFAULT_KEY_VERSION ? process.env.CREDENTIAL_SIGNING_KEY : undefined;
+  const secret = versionSecret || fallbackSecret;
+
+  if ((process.env.NODE_ENV as string) === "production") {
+    if (!secret) {
+      return { key: null, isRevoked: false, version: normVersion };
+    }
+    assertCryptographicKeyQuality(secret, versionSecret ? envVar : "CREDENTIAL_SIGNING_KEY");
+    return { key: secret, isRevoked: false, version: normVersion };
   }
-  return { key: secret, isRevoked: false, version: normVersion };
+
+  if (secret) {
+    return { key: secret, isRevoked: false, version: normVersion };
+  }
+
+  // Non-production fallback ONLY for the default key version in local development demos.
+  // Explicit unknown key versions (e.g. v99_nonexistent) must still fail closed with key: null.
+  if (normVersion === DEFAULT_KEY_VERSION && process.env.NODE_ENV !== "test") {
+    return {
+      key: "kaamsetu-credential-signing-key-minimum-32-chars-long",
+      isRevoked: false,
+      version: normVersion,
+    };
+  }
+
+  return { key: null, isRevoked: false, version: normVersion };
 }
 
 export function getActiveKeyVersion(): string {

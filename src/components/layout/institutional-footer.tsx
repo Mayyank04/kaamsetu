@@ -4,21 +4,21 @@ import { ShieldCheck, Lock, Globe } from "lucide-react";
 
 export function InstitutionalFooter() {
   return (
-    <footer className="border-t border-forest/15 bg-forest text-ivory">
+    <footer className="border-t border-forest/15 bg-forest text-ivory pb-20 md:pb-0">
       {/* Top Banner: Authority & Dignity */}
       <div className="border-b border-forest-500/30 bg-forest-700/60 py-4">
-        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 text-xs">
-          <div className="flex items-center gap-2 text-sand-300">
-            <ShieldCheck className="h-4 w-4 text-sand" />
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 text-xs text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2 text-sand-300">
+            <ShieldCheck className="h-4 w-4 text-sand shrink-0" />
             <span className="font-semibold tracking-wide">
               Digital Skill Infrastructure for India&apos;s Vocational Workforce
             </span>
           </div>
-          <div className="flex items-center gap-4 text-ivory/70 text-[11px]">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-3 gap-y-1 text-ivory/75 text-xs">
             <span>Sovereign Identity Protocol</span>
-            <span>•</span>
+            <span aria-hidden="true">•</span>
             <span>Permanent 0% Platform Commission</span>
-            <span>•</span>
+            <span aria-hidden="true">•</span>
             <span>Direct Customer Discovery</span>
           </div>
         </div>

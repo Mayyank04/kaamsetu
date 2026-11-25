@@ -4,27 +4,29 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Search,
-  Filter,
   ShieldCheck,
-  MapPin,
   RotateCcw,
   SlidersHorizontal,
-  ArrowRight,
   Briefcase,
-  Award,
-  Clock,
   Layers,
-  CheckCircle2,
+  Store,
+  Mic,
+  Zap,
+  Scissors,
+  Hammer,
+  Wrench,
+  Utensils,
+  Car,
+  Sprout,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ProfessionalCard } from "@/components/identity/professional-card";
 import { FEATURED_PROFESSIONALS } from "@/lib/data/professionals";
 import { PROFESSIONS_DATA } from "@/lib/data/professions";
 import { GeographicAuthorizationService } from "@/lib/geo/geographic-authorization-service";
-import { WorkerProfile } from "@/types/identity";
+import { SUPPORTED_LOCALES_METADATA } from "@/lib/i18n/translations";
 import { useTranslation } from "@/lib/i18n/i18n-context";
-import { Store, ShoppingBag, Mic } from "lucide-react";
 import { IntelligentVoiceAssistant, ExtractedVoiceIntent } from "@/components/voice/intelligent-voice-assistant";
 
 export default function ExplorePage() {
@@ -118,6 +120,8 @@ export default function ExplorePage() {
         if (selectedDistrict !== "all") params.set("district", selectedDistrict);
         if (selectedLocation !== "all") params.set("city", selectedLocation);
         if (selectedAvailability !== "all") params.set("availability", selectedAvailability);
+        if (selectedPincode.trim()) params.set("pincode", selectedPincode.trim());
+        if (selectedLanguage !== "all") params.set("language", selectedLanguage);
 
         if (selectedExperience !== "all") {
           const exp = parseInt(selectedExperience, 10);
@@ -129,7 +133,7 @@ export default function ExplorePage() {
         const json = await res.json();
 
         if (active && json.success && Array.isArray(json.data)) {
-          // Map backend workers or match with featured professionals
+          // Map backend workers cleanly without injecting fake trust scores or unverified claims
           const mapped = json.data.map((w: any) => {
             const matchedDemo = FEATURED_PROFESSIONALS.find(
               (p) => p.registryId === w.registry_id || p.id === w.id
@@ -141,37 +145,38 @@ export default function ExplorePage() {
               };
             }
 
+            const score = typeof w.kaamscore === "number" ? w.kaamscore : 300;
             return {
               id: w.id,
-              isDemoRecord: true as const,
-              registryId: w.registry_id || "IN-2026-KS",
-              fullName: w.fullName || w.headline?.split(" ")[0] || "Master Craftsman",
-              photoUrl: w.photoUrl || "https://images.unsplash.com/photo-1508873696983-2df570464756?auto=format&fit=crop&w=400&q=80",
-              primaryTrade: w.headline || "Certified Specialist",
-              subTrades: w.subTrades || ["Precision Craft", "Safety Certified"],
-              yearsExperience: w.years_experience || 5,
+              isDemoRecord: false as const,
+              registryId: w.registry_id || "IN-KS",
+              fullName: w.fullName || w.profile?.full_name || w.headline || "Skilled Professional",
+              photoUrl: w.photoUrl || w.profile?.avatar_url || "",
+              primaryTrade: w.headline || "Trade Specialist",
+              subTrades: Array.isArray(w.subTrades) ? w.subTrades : [],
+              yearsExperience: w.years_experience ?? 0,
               location: {
-                city: w.city || "Jaipur",
-                state: w.state || "Rajasthan",
-                pincode: w.pincode || "302001",
+                city: w.city || "",
+                state: w.state || "",
+                pincode: w.pincode || "",
               },
-              languages: w.languages || ["Hindi", "English"],
-              aadhaarVerified: w.aadhaar_verified ?? true,
-              digiLockerLinked: w.digilocker_linked ?? true,
-              bio: w.bio || "Certified trade professional on KAAMSETU.",
+              languages: Array.isArray(w.languages) ? w.languages : [],
+              aadhaarVerified: Boolean(w.aadhaar_verified),
+              digiLockerLinked: Boolean(w.digilocker_linked),
+              bio: w.bio || "",
               kaamScore: {
-                totalScore: w.kaamscore || 820,
-                tier: (w.kaamscore >= 820 ? "Sovereign Master" : "Institutional Tier") as any,
-                level: w.kaamscore_level || 4,
-                percentileRank: 95,
-                trajectory: "rising" as const,
-                lastVerifiedDate: "2026-11-14",
+                totalScore: score,
+                tier: (score >= 820 ? "Sovereign Master" : score >= 550 ? "Verified Professional" : "Starter Profile") as any,
+                level: w.kaamscore_level || 1,
+                percentileRank: score >= 800 ? 95 : 50,
+                trajectory: "stable" as const,
+                lastVerifiedDate: w.updated_at ? String(w.updated_at).split("T")[0] : "",
                 breakdown: {
-                  spokenAudioProof: 140,
-                  domainAIExtraction: 140,
-                  peerEndorsements: 160,
-                  completedJobs: 200,
-                  sovereignDigiLocker: 120,
+                  spokenAudioProof: 0,
+                  domainAIExtraction: 0,
+                  peerEndorsements: 0,
+                  completedJobs: 0,
+                  sovereignDigiLocker: 0,
                 },
               },
               badges: [],
@@ -179,8 +184,8 @@ export default function ExplorePage() {
               endorsements: [],
               qrVerificationUrl: `/verify/${w.registry_id}`,
               dailyRateEstimate: {
-                min: w.daily_rate_min || 1100,
-                max: w.daily_rate_max || 1800,
+                min: w.daily_rate_min || 0,
+                max: w.daily_rate_max || 0,
               },
               profileType: w.profile_type || "service_professional",
               businessName: w.business_name || undefined,
@@ -220,6 +225,8 @@ export default function ExplorePage() {
     selectedLocation,
     selectedExperience,
     selectedAvailability,
+    selectedPincode,
+    selectedLanguage,
   ]);
 
   const handleResetFilters = () => {
@@ -279,9 +286,9 @@ export default function ExplorePage() {
         <div className="absolute inset-0 bg-paper-grid opacity-35 pointer-events-none" />
 
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-xs bg-forest/10 px-3 py-1 border border-forest/20 text-xs font-bold text-forest uppercase tracking-wider">
-            <ShieldCheck className="h-4 w-4 text-forest" />
-            <span>National Credential Registry & Discovery</span>
+          <div className="inline-flex flex-wrap items-center justify-center gap-2 rounded-xs bg-forest/10 px-3 py-1 border border-forest/20 text-xs font-bold text-forest uppercase tracking-wider max-w-full">
+            <ShieldCheck className="h-4 w-4 text-forest shrink-0" />
+            <span>National Credential Registry &amp; Discovery</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-forest leading-tight font-serif">
@@ -351,39 +358,43 @@ export default function ExplorePage() {
             </button>
           </div>
 
-          {/* 1-Click Category Shortcuts */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-            <span className="text-[11px] font-bold text-charcoal-muted uppercase tracking-wider shrink-0 mr-1">
-              Popular Trades:
+          {/* 1-Click Category Shortcuts (Stroke-consistent Lucide icons, zero emoji substitutes) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+            <span className="text-xs font-semibold text-charcoal-muted shrink-0 mr-1">
+              Trades:
             </span>
             {[
-              { label: "All", value: "all" },
-              { label: "⚡ Electrician", value: "electrician" },
-              { label: "✂️ Tailor", value: "tailor" },
-              { label: "🪚 Carpenter", value: "carpenter" },
-              { label: "🔧 Plumber", value: "plumber" },
-              { label: "🍲 Food & Tea", value: "street_food" },
-              { label: "🛵 Mechanic", value: "mechanic" },
-              { label: "🌾 Farmer", value: "farmer" },
-              { label: "🧵 Handloom", value: "handloom" },
-              { label: "📚 Home Tutor", value: "tutor" },
-            ].map((cat) => (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(cat.value);
-                  if (cat.value === "all") setSearchQuery("");
-                }}
-                className={`px-2.5 py-1 rounded text-xs whitespace-nowrap border transition-colors ${
-                  selectedCategory === cat.value
-                    ? "bg-forest text-ivory border-forest font-bold"
-                    : "bg-background text-charcoal border-forest/15 hover:border-forest/30"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+              { label: "All", value: "all", icon: Layers },
+              { label: "Electrician", value: "electrician", icon: Zap },
+              { label: "Tailor", value: "tailor", icon: Scissors },
+              { label: "Carpenter", value: "carpenter", icon: Hammer },
+              { label: "Plumber", value: "plumber", icon: Wrench },
+              { label: "Food & Tea", value: "street_food", icon: Utensils },
+              { label: "Mechanic", value: "mechanic", icon: Car },
+              { label: "Farmer", value: "farmer", icon: Sprout },
+              { label: "Handloom", value: "handloom", icon: Layers },
+              { label: "Home Tutor", value: "tutor", icon: BookOpen },
+            ].map((cat) => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat.value);
+                    if (cat.value === "all") setSearchQuery("");
+                  }}
+                  className={`min-h-[38px] px-3 py-1.5 rounded-sm text-xs whitespace-nowrap border transition-colors inline-flex items-center gap-1.5 ${
+                    selectedCategory === cat.value
+                      ? "bg-forest text-ivory border-forest font-bold"
+                      : "bg-background text-charcoal border-forest/15 hover:border-forest/35"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Main Search Input & Voice Trigger */}
@@ -486,16 +497,16 @@ export default function ExplorePage() {
           </div>
 
           {/* Secondary Filter Dropdowns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-8 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 pt-1 items-end">
             {/* 1. Profession / Category */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                Profession / Trade
+            <div className="min-w-0">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1 truncate">
+                Trade / Craft
               </label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-11 px-2.5 rounded-sm border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:ring-2 focus:ring-forest"
               >
                 <option value="all">All Professions</option>
                 {PROFESSIONS_DATA.map((cat) => (
@@ -507,9 +518,9 @@ export default function ExplorePage() {
             </div>
 
             {/* 2. State / UT (Nationwide 36 entities) */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                State / UT (36)
+            <div className="min-w-0">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1 truncate">
+                State / UT
               </label>
               <select
                 value={selectedState}
@@ -517,7 +528,7 @@ export default function ExplorePage() {
                   setSelectedState(e.target.value);
                   setSelectedDistrict("all");
                 }}
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-11 px-2.5 rounded-sm border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:ring-2 focus:ring-forest"
               >
                 <option value="all">All States & UTs</option>
                 {allStates.map((st) => (
@@ -529,15 +540,15 @@ export default function ExplorePage() {
             </div>
 
             {/* 3. District (Dynamic) */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+            <div className="min-w-0">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1 truncate">
                 District
               </label>
               <select
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
                 disabled={selectedState === "all" || availableDistricts.length === 0}
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest disabled:opacity-50"
+                className="w-full h-11 px-2.5 rounded-sm border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:ring-2 focus:ring-forest disabled:opacity-50"
               >
                 <option value="all">
                   {selectedState === "all" ? "Select State First" : "All Districts"}
@@ -551,8 +562,8 @@ export default function ExplorePage() {
             </div>
 
             {/* 4. PIN Code Filter */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+            <div className="min-w-0">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1 truncate">
                 PIN Code
               </label>
               <input
@@ -561,40 +572,39 @@ export default function ExplorePage() {
                 value={selectedPincode}
                 onChange={(e) => setSelectedPincode(e.target.value)}
                 placeholder="e.g. 781001"
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-mono focus:outline-none focus:border-forest"
+                className="w-full h-11 px-2.5 rounded-sm border border-forest/20 bg-card text-xs text-forest font-mono focus:outline-none focus:ring-2 focus:ring-forest"
               />
             </div>
 
-            {/* 5. Language Spoken Filter */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
-                Language Spoken
+            {/* 5. Language Spoken Filter (All 39 Indian Languages) */}
+            <div className="min-w-0">
+              <label htmlFor="explore-language" className="text-[11px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1 truncate">
+                Language (39)
               </label>
               <select
+                id="explore-language"
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-11 px-2.5 rounded-sm border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:ring-2 focus:ring-forest"
               >
-                <option value="all">All Languages</option>
-                <option value="hindi">Hindi</option>
-                <option value="assamese">Assamese</option>
-                <option value="bengali">Bengali</option>
-                <option value="tamil">Tamil</option>
-                <option value="telugu">Telugu</option>
-                <option value="marathi">Marathi</option>
-                <option value="english">English</option>
+                <option value="all">All 39 Languages</option>
+                {SUPPORTED_LOCALES_METADATA.map((lang) => (
+                  <option key={lang.code} value={lang.name}>
+                    {lang.name} ({lang.nativeName})
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* 6. Experience Filter */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+            <div className="min-w-0">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1 truncate">
                 Experience
               </label>
               <select
                 value={selectedExperience}
                 onChange={(e) => setSelectedExperience(e.target.value)}
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-11 px-2.5 rounded-sm border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:ring-2 focus:ring-forest"
               >
                 <option value="all">Any Experience</option>
                 <option value="3">3+ Years</option>
@@ -604,14 +614,14 @@ export default function ExplorePage() {
             </div>
 
             {/* 7. Availability Filter */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+            <div className="min-w-0">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1 truncate">
                 Availability
               </label>
               <select
                 value={selectedAvailability}
                 onChange={(e) => setSelectedAvailability(e.target.value)}
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-11 px-2.5 rounded-sm border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:ring-2 focus:ring-forest"
               >
                 <option value="all">All Statuses</option>
                 <option value="available">Available for Hire</option>
@@ -620,14 +630,14 @@ export default function ExplorePage() {
             </div>
 
             {/* 8. Relevant Sorting Control */}
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1">
+            <div className="min-w-0">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-charcoal-muted block mb-1 truncate">
                 Sort By
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-full h-10 px-2 rounded-xs border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:border-forest"
+                className="w-full h-11 px-2.5 rounded-sm border border-forest/20 bg-card text-xs text-forest font-semibold focus:outline-none focus:ring-2 focus:ring-forest"
               >
                 <option value="recommended">Recommended (Verified First)</option>
                 <option value="experience">Experience (High to Low)</option>

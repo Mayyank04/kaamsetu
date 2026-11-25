@@ -34,7 +34,7 @@ export function TranslateButton({
       className={`inline-flex items-center font-medium rounded border transition-all ${
         isTranslated
           ? "bg-forest/10 border-forest/30 text-forest hover:bg-forest/15"
-          : "bg-warm-ivory border-forest/15 text-forest hover:bg-forest/5 hover:border-forest/30"
+          : "bg-ivory border-forest/15 text-forest hover:bg-forest/5 hover:border-forest/30"
       } ${sizeClasses} ${className}`}
       title={isTranslated ? "Switch translation or show original" : `Translate to ${targetCap.name}`}
       aria-label={isTranslated ? "Manage translation" : `Translate to ${targetCap.name}`}

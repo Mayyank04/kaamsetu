@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const district = searchParams.get("district") || undefined;
     const city = searchParams.get("city") || undefined;
     const pincode = searchParams.get("pincode") || undefined;
+    const language = searchParams.get("language") || undefined;
     const minExperience = searchParams.get("minExp")
       ? parseInt(searchParams.get("minExp")!, 10)
       : undefined;
@@ -51,6 +52,7 @@ export async function GET(request: NextRequest) {
       district,
       city,
       pincode,
+      language,
       minExperience,
       maxExperience,
       availability,

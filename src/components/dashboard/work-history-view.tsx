@@ -48,7 +48,7 @@ export function WorkHistoryView({ workRecords }: WorkHistoryViewProps) {
         {workRecords.map((rec) => (
           <div
             key={rec.id}
-            className="p-5 rounded-xl border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs transition-all space-y-3"
+            className="p-5 rounded-md border border-forest/15 bg-card hover:border-forest/30 shadow-sovereign-xs transition-all space-y-3"
           >
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
               <div>

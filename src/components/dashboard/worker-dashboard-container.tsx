@@ -50,15 +50,16 @@ import {
   X as XIcon,
   Mic,
   Languages,
-  Sparkles,
   Eye,
   Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useTranslation } from "@/lib/i18n/i18n-context";
+import { SUPPORTED_LOCALES_METADATA } from "@/lib/i18n/translations";
 
 export type WorkerDashboardTab =
   | "dashboard"
@@ -249,13 +250,31 @@ export function WorkerDashboardContainer({
     }
   };
 
-  // Add self-declared skill
+  // Add self-declared skill (persisted to /api/worker/skills)
   const handleAddSkill = async (
     name: string,
     category: string,
     years: number
   ) => {
-    const newSkill: DashboardSkill = {
+    const res = await fetch("/api/worker/skills", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        worker_profile_id: data.profile.id || undefined,
+        name,
+        category,
+        years_practiced: years,
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      const msg = json.error?.message || json.error || "Could not save skill to database.";
+      toast.error(msg);
+      throw new Error(msg);
+    }
+
+    const savedSkill: DashboardSkill = json.data || {
       id: `sk-decl-${Date.now()}`,
       name,
       category,
@@ -267,13 +286,22 @@ export function WorkerDashboardContainer({
 
     setData((prev) => ({
       ...prev,
-      skills: [...prev.skills, newSkill],
+      skills: [...prev.skills, savedSkill],
     }));
-    toast.success(`Skill "${name}" added to profile`);
+    toast.success(`Skill "${name}" saved to profile`);
   };
 
-  // Remove skill
+  // Remove skill (persisted to /api/worker/skills)
   const handleRemoveSkill = async (skillId: string) => {
+    const res = await fetch(`/api/worker/skills?id=${encodeURIComponent(skillId)}`, {
+      method: "DELETE",
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      toast.error(json.error?.message || json.error || "Could not remove skill.");
+      return;
+    }
+
     setData((prev) => ({
       ...prev,
       skills: prev.skills.filter((s) => s.id !== skillId),
@@ -450,8 +478,8 @@ export function WorkerDashboardContainer({
                 {/* 1. Availability */}
                 <div className="p-3.5 rounded border border-forest/15 bg-background space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-charcoal-muted uppercase">Today&apos;s Availability</span>
-                    <span className={`w-2 h-2 rounded-full ${data.profile.availabilityStatus === "available" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+                    <span className="text-[11px] font-mono text-charcoal-muted uppercase">Today&apos;s Availability</span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${data.profile.availabilityStatus === "available" ? "bg-emerald-600" : "bg-amber-600"}`} />
                   </div>
                   <p className="font-bold text-forest text-sm capitalize">
                     {data.profile.availabilityStatus === "available" ? "Available on Site" : "Busy on Scheduled Work"}
@@ -970,15 +998,122 @@ export function WorkerDashboardContainer({
             PANEL 10: HELP & SETTINGS
            ========================================================================= */}
         {activeTab === "settings" && (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div className="rounded-md border border-forest/15 bg-card p-6 sm:p-8 space-y-6 shadow-xs">
               <div className="border-b border-forest/10 pb-4">
                 <h2 className="font-serif text-xl sm:text-2xl font-bold text-forest">
-                  Account Settings & Availability
+                  Profile Settings, Languages &amp; Privacy
                 </h2>
                 <p className="text-xs text-charcoal-muted mt-0.5">
-                  Manage your working status, notification preferences, and account credentials.
+                  Manage your spoken languages, public visibility, availability radius, and voice accessibility preferences.
                 </p>
+              </div>
+
+              {/* Spoken Languages Manager */}
+              <div className="space-y-3 pb-6 border-b border-forest/10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-bold text-forest text-sm">Languages You Speak with Customers</h3>
+                    <p className="text-xs text-charcoal-muted">
+                      Shown on your public skill card and used to match customers looking for your language.
+                    </p>
+                  </div>
+                  <span className="text-xs font-mono text-forest font-semibold">
+                    {data.profile.languages.length} selected
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {SUPPORTED_LOCALES_METADATA.slice(0, 14).map((langMeta) => {
+                    const isSelected = data.profile.languages.some(
+                      (l) => l.toLowerCase() === langMeta.name.toLowerCase()
+                    );
+                    return (
+                      <button
+                        key={langMeta.code}
+                        type="button"
+                        onClick={async () => {
+                          const nextLangs = isSelected
+                            ? data.profile.languages.filter(
+                                (l) => l.toLowerCase() !== langMeta.name.toLowerCase()
+                              )
+                            : [...data.profile.languages, langMeta.name];
+                          if (nextLangs.length === 0) {
+                            toast.error("Select at least one language.");
+                            return;
+                          }
+                          const res = await fetch("/api/worker/profile", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              id: data.profile.id,
+                              languages: nextLangs,
+                            }),
+                          });
+                          if (res.ok) {
+                            setData((prev) => ({
+                              ...prev,
+                              profile: { ...prev.profile, languages: nextLangs },
+                            }));
+                            toast.success("Spoken languages updated");
+                          } else {
+                            toast.error("Could not save language preference");
+                          }
+                        }}
+                        className={`min-h-[40px] px-3 py-1.5 rounded-sm border text-xs font-semibold transition-colors ${
+                          isSelected
+                            ? "bg-forest text-ivory border-forest"
+                            : "bg-background text-charcoal border-forest/20 hover:border-forest/40"
+                        }`}
+                      >
+                        {langMeta.nativeName} ({langMeta.name})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Public Visibility & Voice Accessibility */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-6 border-b border-forest/10">
+                <div className="p-4 rounded-sm border border-forest/15 bg-background flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-sm text-forest">Public Search Visibility</div>
+                    <div className="text-xs text-charcoal-muted">
+                      Allow customers and contractors to find you in /explore.
+                    </div>
+                  </div>
+                  <Switch
+                    checked={data.profile.isPublished}
+                    disabled={isPublishing}
+                    onCheckedChange={(checked: boolean) => handleTogglePublish(checked)}
+                    aria-label="Toggle public profile visibility"
+                  />
+                </div>
+
+                <div className="p-4 rounded-sm border border-forest/15 bg-background flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-sm text-forest">Voice &amp; Audio Guidance</div>
+                    <div className="text-xs text-charcoal-muted">
+                      Enable spoken audio playback across translator &amp; onboarding.
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const res = await fetch("/api/user/preferences", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ enable_voice_playback: true }),
+                      });
+                      if (res.ok) toast.success("Voice guidance preference saved");
+                    }}
+                    className="min-h-[38px] text-xs border-forest/20 text-forest"
+                  >
+                    Enable Audio
+                  </Button>
+                </div>
               </div>
 
               <AvailabilitySettings
@@ -997,14 +1132,14 @@ export function WorkerDashboardContainer({
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button variant="outline" size="sm" asChild className="border-forest/20 text-forest text-xs">
+                  <Button variant="outline" size="sm" asChild className="min-h-[40px] border-forest/20 text-forest text-xs">
                     <Link href="/about">Support Channels</Link>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={logout}
-                    className="border-red-200 text-red-700 hover:bg-red-50 text-xs"
+                    className="min-h-[40px] border-red-200 text-red-700 hover:bg-red-50 text-xs"
                   >
                     Sign Out
                   </Button>

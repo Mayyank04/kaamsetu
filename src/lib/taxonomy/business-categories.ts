@@ -792,7 +792,7 @@ export const INDIAN_BUSINESS_CATEGORIES: BusinessCategory[] = [
     name: "Events and Other Services",
     hindiName: "उत्सव, कार्यक्रम व अन्य सेवाएं",
     translationKey: "eventsServices",
-    iconName: "Sparkles",
+    iconName: "Award",
     description: "Tent decorators, caterers, photographers, sound technicians, and event crews.",
     subcategories: [
       {

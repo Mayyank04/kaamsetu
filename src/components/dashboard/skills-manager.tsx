@@ -128,7 +128,7 @@ export function SkillsManager({
       {showAddForm && (
         <form
           onSubmit={handleAddSubmit}
-          className="p-4 rounded-xl bg-forest/5 border border-forest/20 space-y-3 animate-in fade-in-50"
+          className="p-4 rounded-md bg-forest/5 border border-forest/20 space-y-3 animate-in fade-in-50"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-forest uppercase tracking-wider">
@@ -203,7 +203,7 @@ export function SkillsManager({
             {verifiedSkills.map((skill) => (
               <div
                 key={skill.id}
-                className="p-3 rounded-xl bg-card border border-forest/15 hover:border-forest/30 shadow-sovereign-xs flex items-center justify-between transition-all"
+                className="p-3 rounded-md bg-card border border-forest/15 hover:border-forest/30 shadow-sovereign-xs flex items-center justify-between transition-all"
               >
                 <div className="space-y-1">
                   <div className="font-semibold text-xs sm:text-sm text-forest">
@@ -236,7 +236,7 @@ export function SkillsManager({
           </div>
 
           {selfDeclaredSkills.length === 0 ? (
-            <div className="p-6 text-center rounded-xl bg-forest/5 border border-forest/10 text-xs text-charcoal-muted">
+            <div className="p-6 text-center rounded-md bg-forest/5 border border-forest/10 text-xs text-charcoal-muted">
               No self-declared skills yet. Click &quot;Add Self-Declared Skill&quot; above to declare new trade techniques.
             </div>
           ) : (
@@ -244,7 +244,7 @@ export function SkillsManager({
               {selfDeclaredSkills.map((skill) => (
                 <div
                   key={skill.id}
-                  className="p-3 rounded-xl bg-card border border-forest/15 hover:border-forest/30 shadow-sovereign-xs flex items-center justify-between transition-all"
+                  className="p-3 rounded-md bg-card border border-forest/15 hover:border-forest/30 shadow-sovereign-xs flex items-center justify-between transition-all"
                 >
                   <div className="space-y-1">
                     <div className="font-semibold text-xs sm:text-sm text-forest">
@@ -274,7 +274,7 @@ export function SkillsManager({
             </div>
           )}
 
-          <div className="p-3 rounded-xl bg-sand/15 border border-sand/30 flex items-start gap-2 text-[11px] text-charcoal leading-relaxed">
+          <div className="p-3 rounded-md bg-sand/15 border border-sand/30 flex items-start gap-2 text-[11px] text-charcoal leading-relaxed">
             <Info className="w-4 h-4 text-sand-800 shrink-0 mt-0.5" />
             <span>
               Self-declared skills are highlighted to clients as worker assertions. Once you complete a verified booking or receive a peer confirmation, they automatically graduate to <strong>Verified Evidence</strong>.

@@ -97,7 +97,7 @@ export function IdentityWidget({ profile }: IdentityWidgetProps) {
           {/* Top Bar */}
           <div className="relative flex items-start justify-between border-b border-sand/20 pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-sand/15 border border-sand/30 flex items-center justify-center text-sand shadow-inner">
+              <div className="w-10 h-10 rounded-md bg-sand/15 border border-sand/30 flex items-center justify-center text-sand shadow-inner">
                 <ShieldCheck className="w-6 h-6 text-sand" />
               </div>
               <div>
@@ -137,7 +137,7 @@ export function IdentityWidget({ profile }: IdentityWidgetProps) {
             </div>
 
             {/* KAAMSCORE Display */}
-            <div className="bg-forest-900/80 border border-sand/30 rounded-xl px-4 py-3 text-center self-stretch sm:self-auto flex sm:flex-col items-center justify-between sm:justify-center">
+            <div className="bg-forest-900/80 border border-sand/30 rounded-md px-4 py-3 text-center self-stretch sm:self-auto flex sm:flex-col items-center justify-between sm:justify-center">
               <div>
                 <span className="text-[10px] font-mono text-sand/80 uppercase block">
                   KAAMSCORE

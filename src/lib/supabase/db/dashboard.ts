@@ -328,70 +328,237 @@ export async function getWorkerDashboardData(
 
   try {
     const supabase = await createServerSupabaseClient();
+    const mapWorkerRowToDashboard = (worker: any, fallbackName?: string): WorkerDashboardData => {
+      const resolvedSkills = Array.isArray(worker.worker_skills)
+        ? worker.worker_skills.map((ws: any) => ({
+            id: ws.id,
+            name: ws.skill?.name || "Trade Skill",
+            category: ws.skill?.category || worker.occupation?.name || "Trade",
+            isPrimary: Boolean(ws.is_primary),
+            verificationType: ws.verification_type || "self_declared",
+            yearsPracticed: ws.years_practiced || 1,
+            declaredAt: ws.created_at ? String(ws.created_at).split("T")[0] : undefined,
+          }))
+        : [];
+
+      const resolvedPortfolio = Array.isArray(worker.portfolio)
+        ? worker.portfolio.map((p: any) => ({
+            id: p.id,
+            workerProfileId: p.worker_profile_id,
+            title: p.title,
+            description: p.description || "",
+            imageUrl: p.image_url,
+            category: p.category || "Work Sample",
+            projectDate: p.project_date || "",
+            clientTestimony: p.client_testimony || "",
+            createdAt: p.created_at || "",
+          }))
+        : [];
+
+      const resolvedBookings = Array.isArray(worker.bookings)
+        ? worker.bookings.map((b: any) => ({
+            id: b.id,
+            bookingReference: b.booking_reference || b.id,
+            clientName: b.client_name || "Customer",
+            clientPhone: b.client_phone,
+            serviceTitle: b.service_title,
+            description: b.description || "",
+            locationAddress: b.location_address || "",
+            locationCity: b.location_city || worker.city,
+            scheduledStart: b.scheduled_start,
+            estimatedCost: Number(b.estimated_cost || 0),
+            status: b.status || "requested",
+            createdAt: b.created_at,
+          }))
+        : [];
+
+      const resolvedWorkRecords = Array.isArray(worker.work_records) ? worker.work_records : [];
+      const resolvedReviews = Array.isArray(worker.reviews) ? worker.reviews : [];
+
+      const tasks = [
+        {
+          id: "task-profile",
+          title: "Profile Identity & Bio",
+          description: worker.bio ? "Craft summary completed" : "Add a brief description of your work",
+          completed: Boolean(worker.headline && worker.bio),
+          impactScore: 25,
+        },
+        {
+          id: "task-skills",
+          title: "Craft Skills Listed",
+          description: `${resolvedSkills.length} skill(s) listed on profile`,
+          completed: resolvedSkills.length >= 1,
+          impactScore: 25,
+        },
+        {
+          id: "task-portfolio",
+          title: "Work Sample Photos",
+          description: `${resolvedPortfolio.length} project photo(s) uploaded`,
+          completed: resolvedPortfolio.length >= 1,
+          impactScore: 25,
+        },
+        {
+          id: "task-publish",
+          title: "Public Directory Visibility",
+          description: worker.is_published ? "Discoverable in directory" : "Turn on visibility so customers can find you",
+          completed: Boolean(worker.is_published),
+          impactScore: 25,
+        },
+      ];
+      const completionPercentage = tasks.reduce((sum, t) => sum + (t.completed ? t.impactScore : 0), 0);
+
+      return {
+        profile: {
+          id: worker.id,
+          userId: worker.user_id,
+          registryId: worker.registry_id,
+          slug: worker.slug,
+          fullName: worker.profile?.full_name || fallbackName || "Skilled Professional",
+          avatarUrl: worker.profile?.avatar_url || undefined,
+          occupation: worker.occupation?.name || worker.headline || "Skilled Trade",
+          occupationSlug: worker.occupation?.slug || "general-trade",
+          category: worker.occupation?.name || "Craft & Service",
+          headline: worker.headline,
+          bio: worker.bio || "",
+          yearsExperience: worker.years_experience || 0,
+          hourlyRate: Number(worker.hourly_rate || 0),
+          dailyRateMin: Number(worker.daily_rate_min || 0),
+          dailyRateMax: Number(worker.daily_rate_max || 0),
+          city: worker.city,
+          state: worker.state,
+          pincode: worker.pincode,
+          serviceRadiusKm: worker.service_radius_km || 25,
+          languages: Array.isArray(worker.languages) ? worker.languages : ["Hindi"],
+          kaamScore: {
+            totalScore: worker.kaamscore || 300,
+            level: worker.kaamscore_level || 1,
+            tier: worker.kaamscore >= 820 ? "Sovereign Master" : worker.kaamscore >= 550 ? "Verified Professional" : "Starter Profile",
+            percentile: worker.kaamscore >= 800 ? 95 : 50,
+          },
+          aadhaarVerified: Boolean(worker.aadhaar_verified),
+          digiLockerLinked: Boolean(worker.digilocker_linked),
+          isPublished: Boolean(worker.is_published),
+          availabilityStatus: worker.availability_status || "available",
+          businessName: worker.business_name || undefined,
+          stallType: worker.stall_type || undefined,
+          operatingHours: worker.operating_hours || undefined,
+          productCatalog: Array.isArray(worker.product_catalog) ? worker.product_catalog : [],
+          createdAt: worker.created_at,
+          updatedAt: worker.updated_at,
+        },
+        skills: resolvedSkills,
+        portfolio: resolvedPortfolio,
+        bookings: resolvedBookings,
+        workRecords: resolvedWorkRecords,
+        reviews: resolvedReviews,
+        analytics: {
+          profileViewsThisWeek: 0,
+          totalProfileViews: 0,
+          cardScans: 0,
+          inquiriesCount: resolvedBookings.length,
+          completionPercentage,
+          completionTasks: tasks,
+        },
+      };
+    };
+
+    // Public profile lookup by slug
+    if (targetSlug) {
+      const { data: slugWorker, error: slugErr } = await supabase
+        .from("worker_profiles")
+        .select(`
+          *,
+          profile:profiles(full_name, avatar_url),
+          occupation:occupations(*),
+          worker_skills(*, skill:skills(*)),
+          portfolio(*),
+          work_records(*),
+          reviews(*)
+        `)
+        .eq("slug", targetSlug)
+        .maybeSingle();
+
+      if (slugWorker && !slugErr) {
+        return mapWorkerRowToDashboard(slugWorker);
+      }
+
+      // Return matched illustrative profile if viewing featured example slug
+      return defaultDashboardData;
+    }
+
+    // Authenticated user's own dashboard
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // If user is authenticated, query their profile from database
     if (user) {
       const { data: worker, error } = await supabase
         .from("worker_profiles")
         .select(`
           *,
+          profile:profiles(full_name, avatar_url),
           occupation:occupations(*),
+          worker_skills(*, skill:skills(*)),
           portfolio(*),
           bookings(*),
           work_records(*),
           reviews(*)
         `)
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (worker && !error) {
-        // Map database records to dashboard format
-        return {
-          ...defaultDashboardData,
-          profile: {
-            ...defaultDashboardData.profile,
-            id: worker.id,
-            userId: worker.user_id,
-            registryId: worker.registry_id,
-            slug: worker.slug,
-            headline: worker.headline,
-            bio: worker.bio || defaultDashboardData.profile.bio,
-            yearsExperience: worker.years_experience,
-            dailyRateMin: worker.daily_rate_min || 1200,
-            dailyRateMax: worker.daily_rate_max || 1800,
-            city: worker.city,
-            state: worker.state,
-            pincode: worker.pincode,
-            serviceRadiusKm: worker.service_radius_km,
-            languages: worker.languages || ["Hindi", "English"],
-            kaamScore: {
-              totalScore: worker.kaamscore,
-              level: worker.kaamscore_level,
-              tier: worker.kaamscore >= 820 ? "Sovereign Master" : "Institutional Tier",
-              percentile: 96,
-            },
-            isPublished: worker.is_published,
-            availabilityStatus: worker.availability_status,
-          },
-          portfolio:
-            worker.portfolio && worker.portfolio.length > 0
-              ? worker.portfolio.map((p: any) => ({
-                  id: p.id,
-                  workerProfileId: p.worker_profile_id,
-                  title: p.title,
-                  description: p.description,
-                  imageUrl: p.image_url,
-                  category: p.category,
-                  projectDate: p.project_date,
-                  clientTestimony: p.client_testimony,
-                  createdAt: p.created_at,
-                }))
-              : defaultDashboardData.portfolio,
-        };
+        return mapWorkerRowToDashboard(worker, user.user_metadata?.full_name);
       }
+
+      // Authenticated user has not completed worker profile onboarding yet: never leak Rameshwar's demo data
+      return {
+        profile: {
+          ...defaultDashboardData.profile,
+          id: "",
+          userId: user.id,
+          registryId: "PENDING-ONBOARDING",
+          slug: "",
+          fullName: (user.user_metadata?.full_name as string) || "New Worker",
+          avatarUrl: undefined,
+          occupation: "Complete Onboarding to Set Trade",
+          headline: "Complete your 3-minute craft profile to appear in search",
+          bio: "",
+          yearsExperience: 0,
+          dailyRateMin: 0,
+          dailyRateMax: 0,
+          city: "Guwahati",
+          state: "Assam",
+          pincode: "781001",
+          languages: ["Hindi"],
+          kaamScore: { totalScore: 300, level: 1, tier: "Starter Profile", percentile: 0 },
+          aadhaarVerified: false,
+          digiLockerLinked: false,
+          isPublished: false,
+          availabilityStatus: "available",
+        },
+        skills: [],
+        portfolio: [],
+        bookings: [],
+        workRecords: [],
+        reviews: [],
+        analytics: {
+          profileViewsThisWeek: 0,
+          totalProfileViews: 0,
+          cardScans: 0,
+          inquiriesCount: 0,
+          completionPercentage: 10,
+          completionTasks: [
+            {
+              id: "task-onboard",
+              title: "Complete Guided Profile Intake",
+              description: "Add your craft, location, and languages in /onboarding",
+              completed: false,
+              impactScore: 90,
+            },
+          ],
+        },
+      };
     }
 
     return defaultDashboardData;
