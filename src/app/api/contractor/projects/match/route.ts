@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireContractor } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { evaluateExplainableMatch } from "@/lib/opportunity/matching-engine-v2";
 
 export async function POST(req: NextRequest) {
   try {
+    await requireContractor();
     const body = await req.json();
 
     if (!body.opportunity || !body.workers || !Array.isArray(body.workers)) {
@@ -31,7 +34,7 @@ export async function POST(req: NextRequest) {
       eligibleMatches: matches.filter((m: any) => m.evaluation.isEligible),
       allMatches: matches,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }

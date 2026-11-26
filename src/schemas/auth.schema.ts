@@ -3,6 +3,7 @@ import {
   INDIAN_MOBILE_REGEX,
   INVALID_PHONE_MESSAGE,
   validateIndianMobile,
+  normalizePhoneNumber,
 } from "@/lib/utilities/phone";
 
 export const indianMobileRegex = INDIAN_MOBILE_REGEX;
@@ -12,12 +13,12 @@ export const phoneAuthSchema = z.object({
     .string({ required_error: "Mobile number is required" })
     .trim()
     .refine(
-      (val) => validateIndianMobile(val).valid,
+      (val) => normalizePhoneNumber(val).valid,
       {
         message: INVALID_PHONE_MESSAGE,
       }
     )
-    .transform((val) => validateIndianMobile(val).clean10),
+    .transform((val) => normalizePhoneNumber(val).e164),
   role: z
     .enum([
       "worker",
@@ -59,12 +60,12 @@ export const otpVerificationSchema = z.object({
     .string({ required_error: "Mobile number is required" })
     .trim()
     .refine(
-      (val) => validateIndianMobile(val).valid,
+      (val) => normalizePhoneNumber(val).valid,
       {
         message: INVALID_PHONE_MESSAGE,
       }
     )
-    .transform((val) => validateIndianMobile(val).clean10),
+    .transform((val) => normalizePhoneNumber(val).e164),
   otp: z
     .string({ required_error: "Verification code is required" })
     .trim()
@@ -83,6 +84,7 @@ export const otpVerificationSchema = z.object({
     .default("worker"),
   fullName: z.string().optional(),
   intent: z.enum(["registration", "login"]).optional(),
+  deferAccountCreation: z.boolean().optional(),
   termsAccepted: z.boolean().optional(),
   privacyAccepted: z.boolean().optional(),
   termsVersion: z.string().optional(),
@@ -100,10 +102,18 @@ export const directRegistrationSchema = z.object({
     .min(2, "Full name must be at least 2 characters")
     .max(100, "Full name must not exceed 100 characters"),
   email: z
-    .string({ required_error: "Email address is required" })
-    .trim()
-    .toLowerCase()
-    .email("Please enter a valid email address"),
+    .preprocess(
+      (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
+      z
+        .union([
+          z.literal(""),
+          z.null(),
+          z.undefined(),
+          z.string().email("Please enter a valid email address"),
+        ])
+    )
+    .optional()
+    .transform((val) => (val && val.length > 0 ? val : null)),
   password: z
     .string({ required_error: "Password is required" })
     .min(8, "Password must be at least 8 characters long")
@@ -112,14 +122,16 @@ export const directRegistrationSchema = z.object({
     .string({ required_error: "Please confirm your password" })
     .min(8, "Confirm password must be at least 8 characters long"),
   phone: z
-    .string()
+    .string({ required_error: "Mobile number is required" })
     .trim()
-    .optional()
-    .nullable()
-    .refine((val) => !val || validateIndianMobile(val).valid, {
+    .refine((val) => normalizePhoneNumber(val).valid, {
       message: INVALID_PHONE_MESSAGE,
     })
-    .transform((val) => (val && validateIndianMobile(val).valid ? validateIndianMobile(val).clean10 : undefined)),
+    .transform((val) => normalizePhoneNumber(val).e164),
+  verificationProof: z
+    .string({ required_error: "Phone verification is required" })
+    .trim()
+    .min(16, "Valid phone verification proof is required"),
   role: z
     .enum(["worker", "contractor", "customer", "institution", "vendor"])
     .default("worker"),

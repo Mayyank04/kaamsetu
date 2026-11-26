@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextResponse } from "next/server";
 import {
   CANONICAL_SUSTAINED_REGIONAL_RECORDS,
@@ -5,6 +7,7 @@ import {
 } from "@/lib/regional/sustained-operations-service";
 
 export async function GET(request: Request) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const { searchParams } = new URL(request.url);
     const regionFilter = searchParams.get("region");

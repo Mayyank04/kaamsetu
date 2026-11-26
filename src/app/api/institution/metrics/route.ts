@@ -3,10 +3,12 @@ import {
   getInstitutions,
   getInstitutionalAggregateMetrics,
 } from "@/lib/supabase/db/institutions";
+import { requireInstitution } from "@/lib/auth/server";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
 
 export async function GET(request: NextRequest) {
   try {
+    await requireInstitution();
     const { searchParams } = new URL(request.url);
     const district = searchParams.get("district") || undefined;
     const status = searchParams.get("status") || undefined;

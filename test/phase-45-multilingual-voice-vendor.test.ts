@@ -81,17 +81,17 @@ describe("PHASE 45: Multilingual Platform, Intelligent Voice System & Dynamic Ve
         assert.ok(dict.onboarding.title.length > 0, `${code} onboarding.title must not be empty`);
 
         // Phase 45 Profile, Dashboard, Voice & Vendor Sections
-        assert.ok(dict.profile.trustProtocol.length > 0, `${code} profile.trustProtocol must not be empty`);
-        assert.ok(dict.profile.activeVerified.length > 0, `${code} profile.activeVerified must not be empty`);
-        assert.ok(dict.profile.scanQr.length > 0, `${code} profile.scanQr must not be empty`);
-        assert.ok(dict.dashboard.title.length > 0, `${code} dashboard.title must not be empty`);
-        assert.ok(dict.dashboard.tabDashboard.length > 0, `${code} dashboard.tabDashboard must not be empty`);
-        assert.ok(dict.dashboard.tabProfile.length > 0, `${code} dashboard.tabProfile must not be empty`);
-        assert.ok(dict.voice.assistantTitle.length > 0, `${code} voice.assistantTitle must not be empty`);
-        assert.ok(dict.vendorDashboard.dashboardTitle.length > 0, `${code} vendorDashboard.dashboardTitle must not be empty`);
-        assert.ok(dict.categories.homeRepair.length > 0, `${code} categories.homeRepair must not be empty`);
-        assert.ok(dict.location.country.length > 0, `${code} location.country must not be empty`);
-        assert.ok(dict.actions.save.length > 0, `${code} actions.save must not be empty`);
+        assert.ok(dict.profile!.trustProtocol.length > 0, `${code} profile.trustProtocol must not be empty`);
+        assert.ok(dict.profile!.activeVerified.length > 0, `${code} profile.activeVerified must not be empty`);
+        assert.ok(dict.profile!.scanQr.length > 0, `${code} profile.scanQr must not be empty`);
+        assert.ok(dict.dashboard!.title.length > 0, `${code} dashboard.title must not be empty`);
+        assert.ok(dict.dashboard!.tabDashboard.length > 0, `${code} dashboard.tabDashboard must not be empty`);
+        assert.ok(dict.dashboard!.tabProfile.length > 0, `${code} dashboard.tabProfile must not be empty`);
+        assert.ok(dict.voice!.assistantTitle.length > 0, `${code} voice.assistantTitle must not be empty`);
+        assert.ok(dict.vendorDashboard!.dashboardTitle.length > 0, `${code} vendorDashboard.dashboardTitle must not be empty`);
+        assert.ok(dict.categories!.homeRepair.length > 0, `${code} categories.homeRepair must not be empty`);
+        assert.ok(dict.location!.country.length > 0, `${code} location.country must not be empty`);
+        assert.ok(dict.actions!.save.length > 0, `${code} actions.save must not be empty`);
       }
     });
   });
@@ -115,15 +115,15 @@ describe("PHASE 45: Multilingual Platform, Intelligent Voice System & Dynamic Ve
       const khaDict = getTranslation("kha");
 
       // English
-      assert.equal(enDict.profile.trustProtocol, "National Digital Skill Trust Protocol");
-      assert.equal(enDict.profile.scanQr, "Scan QR");
+      assert.equal(enDict.profile?.trustProtocol, "National Digital Skill Trust Protocol");
+      assert.equal(enDict.profile?.scanQr, "Scan QR");
 
       // Hindi
-      assert.equal(hiDict.profile.trustProtocol, "राष्ट्रीय डिजिटल हुनर विश्वास प्रोटोकॉल");
-      assert.equal(hiDict.profile.scanQr, "क्यूआर स्कैन करें");
+      assert.equal(hiDict.profile?.trustProtocol, "राष्ट्रीय डिजिटल हुनर विश्वास प्रोटोकॉल");
+      assert.equal(hiDict.profile?.scanQr, "क्यूआर स्कैन करें");
 
       // Assamese
-      assert.ok(asDict.profile.trustProtocol.length > 0);
+      assert.ok((asDict.profile?.trustProtocol.length ?? 0) > 0);
 
       // Khasi
       assert.equal(khaDict.actions.save, "Kynshew");
@@ -136,10 +136,10 @@ describe("PHASE 45: Multilingual Platform, Intelligent Voice System & Dynamic Ve
 
     it("2.2 Dashboard navigation tabs localize accurately across languages", () => {
       const hiDict = getTranslation("hi");
-      assert.equal(hiDict.dashboard.tabDashboard, "अवलोकन");
-      assert.equal(hiDict.dashboard.tabProfile, "मेरी प्रोफ़ाइल");
-      assert.equal(hiDict.dashboard.tabSkills, "हुनर और काम");
-      assert.equal(hiDict.dashboard.tabEarnings, "कमाई और हिसाब");
+      assert.equal(hiDict.dashboard?.tabDashboard, "अवलोकन");
+      assert.equal(hiDict.dashboard?.tabProfile, "मेरी प्रोफ़ाइल");
+      assert.equal(hiDict.dashboard?.tabSkills, "हुनर और काम");
+      assert.equal(hiDict.dashboard?.tabEarnings, "कमाई और हिसाब");
     });
   });
 

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  requireAuthenticatedUser,
+  requireModerator,
+  requireOwnedWorkerProfile,
+} from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
+import {
   createWorkerDispute,
   transitionDisputeStage,
   DisputeSubmissionInput,
@@ -9,15 +15,24 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
     const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const workerProfileId = searchParams.get("workerProfileId");
     const status = searchParams.get("status");
 
+    let scopedWorkerProfileId = workerProfileId;
+    if (user.role === "worker") {
+      scopedWorkerProfileId = workerProfileId || user.workerProfileId || "";
+      await requireOwnedWorkerProfile(scopedWorkerProfileId);
+    } else {
+      await requireModerator();
+    }
+
     let query = supabase.from("worker_disputes").select("*");
 
-    if (workerProfileId) {
-      query = query.eq("worker_profile_id", workerProfileId);
+    if (scopedWorkerProfileId) {
+      query = query.eq("worker_profile_id", scopedWorkerProfileId);
     }
     if (status) {
       query = query.eq("status", status);
@@ -34,18 +49,20 @@ export async function GET(req: NextRequest) {
       count: data?.length || 0,
       disputes: data || [],
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
     const body = await req.json();
     const supabase = createAdminClient();
 
     if (body.action === "transition_stage") {
-      const { disputeId, targetStage, actorId, note, resolutionSummary, resolvedAmount } = body;
+      const moderator = await requireModerator();
+      const { disputeId, targetStage, note, resolutionSummary, resolvedAmount } = body;
       if (!disputeId || !targetStage) {
         return NextResponse.json(
           { error: "disputeId and targetStage are required for stage transition" },
@@ -76,7 +93,7 @@ export async function POST(req: NextRequest) {
       const transitionResult = transitionDisputeStage({
         dispute: domainDispute,
         targetStage: targetStage as DisputeStatus,
-        actorId: actorId || "compliance_reviewer",
+        actorId: moderator.id,
         note: note || "State updated via governance API",
         resolutionSummary,
         resolvedAmount,
@@ -119,8 +136,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Default: File new dispute
+    const targetWorkerId = body.workerProfileId || body.workerId;
+    if (user.role === "worker") {
+      await requireOwnedWorkerProfile(targetWorkerId);
+    } else if (user.role !== "admin") {
+      await requireModerator();
+    }
+
     const input: DisputeSubmissionInput = {
-      workerId: body.workerProfileId || body.workerId,
+      workerId: targetWorkerId,
       respondentId: body.respondentId || body.counterpartyName || "Unspecified Counterparty",
       reasonCode: body.disputeType || body.reasonCode || "unpaid_wages",
       description: body.evidenceNotes || body.description || "Unspecified dispute",
@@ -157,7 +181,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }

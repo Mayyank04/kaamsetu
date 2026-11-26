@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import {
   createReleaseManifestRecord,
@@ -7,6 +9,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const supabase = createAdminClient();
     const { data: dbRecords, error } = await supabase
@@ -55,6 +58,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const body: ReleaseManifestInput = await req.json();
     const validation = validateReleaseManifest(body);

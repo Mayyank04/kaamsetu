@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import {
   WorkerFinancialReadinessService,
@@ -6,6 +8,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const url = new URL(req.url);
     const workerId = url.searchParams.get("workerId");
@@ -37,6 +40,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const body = await req.json();
 

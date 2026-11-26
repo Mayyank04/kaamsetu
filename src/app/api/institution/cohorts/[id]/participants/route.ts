@@ -3,7 +3,11 @@ import {
   getCohortParticipants,
   updateCohortParticipantConsent,
 } from "@/lib/supabase/db/institutions";
-import { requireAuthenticatedUser } from "@/lib/auth/server";
+import {
+  requireAuthenticatedUser,
+  requireInstitutionCohortOwnership,
+  requireOwnedWorkerProfile,
+} from "@/lib/auth/server";
 import { handleApiError, createSuccessResponse } from "@/lib/error/handler";
 
 export async function GET(
@@ -12,6 +16,7 @@ export async function GET(
 ) {
   try {
     const { id: cohortId } = await params;
+    await requireInstitutionCohortOwnership(cohortId);
     const participants = await getCohortParticipants(cohortId);
 
     return createSuccessResponse(participants, { cohortId });
@@ -32,6 +37,12 @@ export async function POST(
     const { workerProfileId, consent } = body;
     if (!workerProfileId) {
       return handleApiError(new Error("Worker Profile ID is required."));
+    }
+
+    if (user.role === "worker") {
+      await requireOwnedWorkerProfile(workerProfileId);
+    } else {
+      await requireInstitutionCohortOwnership(cohortId);
     }
 
     await updateCohortParticipantConsent(cohortId, workerProfileId, Boolean(consent));

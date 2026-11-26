@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextResponse } from "next/server";
 import {
   IntegrationObservabilityService,
@@ -5,6 +7,7 @@ import {
 } from "@/lib/observability/integration-observability-service";
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   const connectors: ConnectorHealthMetrics[] = [
     IntegrationObservabilityService.calculateConnectorHealth(
       "ondc_gateway",

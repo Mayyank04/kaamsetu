@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { AuthError, requireAuthenticatedUser, requireOwnedContractorOrg } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { computeContractorHealthScore } from "@/lib/contractor/customer-success-service";
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
+    if (user.role !== "contractor" && user.role !== "admin") {
+      throw new AuthError("Forbidden: Contractor or Admin role required.", 403);
+    }
+
     const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
@@ -11,6 +18,8 @@ export async function GET(req: NextRequest) {
     if (!organizationId) {
       return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
     }
+
+    await requireOwnedContractorOrg(organizationId);
 
     const { data: events, error: eventErr } = await supabase
       .from("contractor_customer_success_events")
@@ -44,13 +53,18 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ organization: org, healthScore: health, events: events || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
+    if (user.role !== "contractor" && user.role !== "admin") {
+      throw new AuthError("Forbidden: Contractor or Admin role required.", 403);
+    }
+
     const body = await req.json();
     const {
       organizationId,
@@ -69,6 +83,8 @@ export async function POST(req: NextRequest) {
     if (!organizationId || !eventType) {
       return NextResponse.json({ error: "organizationId and eventType are required" }, { status: 400 });
     }
+
+    await requireOwnedContractorOrg(organizationId);
 
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -94,7 +110,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ successEvent: data }, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }

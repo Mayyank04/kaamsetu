@@ -80,6 +80,7 @@ describe("PHASE 45: Master Product Engineering & Production Readiness", () => {
         headline: "7 years experienced Solar Electrician in Patna, Bihar",
         bio: "Specializing in commercial 3-phase wiring, rooftop solar arrays, and high-voltage distribution.",
         skills: ["3-Phase Inverters", "Rooftop Solar Array", "MCB Distribution"],
+        equipmentHandled: ["Clamp Meter"],
         languages: ["hi", "en"],
         allowNonDispatchProfile: true,
       };
@@ -115,7 +116,10 @@ describe("PHASE 45: Master Product Engineering & Production Readiness", () => {
         district: "Kamrup Metropolitan",
         pincode: "781001",
         yearsExperience: 10,
+        headline: "Wholesale & Farm Produce Vendor in Guwahati",
+        bio: "Supplying fresh seasonal produce cleanly from local farmers.",
         skills: ["Wholesale Procurement", "Cold Chain Storage", "Seasonal Farm Produce"],
+        equipmentHandled: [],
         languages: ["as", "hi", "en"],
         allowNonDispatchProfile: true,
       };

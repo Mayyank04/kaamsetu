@@ -27,10 +27,10 @@ const envSchema = z.object({
     .optional()
     .default("gemini-3.8-flash"),
 
-  // Authentication Verification Mode: 'sandbox' (default, simulated SMS) or 'sms' (live gateway)
+  // Authentication Verification Mode: fail-closed 'sms' in production, 'sandbox' in dev/test
   AUTH_VERIFICATION_MODE: z
     .enum(["sandbox", "sms"])
-    .default("sandbox"),
+    .default(process.env.NODE_ENV === "production" ? "sms" : "sandbox"),
 
   // Optional server-configured sandbox verification code for controlled evaluation
   SANDBOX_OTP_CODE: z.string().optional(),
@@ -65,8 +65,10 @@ function validateEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-    GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
-    AUTH_VERIFICATION_MODE: process.env.AUTH_VERIFICATION_MODE || "sandbox",
+    GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    AUTH_VERIFICATION_MODE:
+      process.env.AUTH_VERIFICATION_MODE ||
+      (process.env.NODE_ENV === "production" ? "sms" : "sandbox"),
     SANDBOX_OTP_CODE: process.env.SANDBOX_OTP_CODE,
     CREDENTIAL_SIGNING_KEY: process.env.CREDENTIAL_SIGNING_KEY,
     ACTIVE_SIGNING_KEY_VERSION: process.env.ACTIVE_SIGNING_KEY_VERSION,
@@ -126,6 +128,16 @@ export function validateEnvironmentSafety(): void {
     if (process.env.ENABLE_LIVE_PAYMENTS === "true") {
       const paymentSecret = process.env.PAYMENT_GATEWAY_SECRET || process.env.RAZORPAY_KEY_SECRET;
       assertCryptographicKeyQuality(paymentSecret, "PAYMENT_GATEWAY_SECRET");
+    }
+
+    if (
+      process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION === "true" ||
+      process.env.ENABLE_DEMO_AUTH === "true" ||
+      process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true"
+    ) {
+      throw new Error(
+        "FATAL SECURITY VIOLATION: Sandbox or demo auth bypass flags cannot be enabled in production."
+      );
     }
   }
 }

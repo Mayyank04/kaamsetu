@@ -288,7 +288,7 @@ describe("PHASE 50: PRODUCTION HARDENING & CONSTITUTIONAL INVARIANTS", () => {
       const origEnv = process.env.NODE_ENV;
       const origAllow = process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION;
       try {
-        process.env.NODE_ENV = "production";
+        (process.env as Record<string, string | undefined>).NODE_ENV = "production";
         delete process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION;
 
         const res = await sendOtp({
@@ -302,7 +302,7 @@ describe("PHASE 50: PRODUCTION HARDENING & CONSTITUTIONAL INVARIANTS", () => {
         assert.strictEqual(res.statusCode, 503);
         assert.strictEqual(res.sandboxCode, undefined);
       } finally {
-        process.env.NODE_ENV = origEnv;
+        (process.env as Record<string, string | undefined>).NODE_ENV = origEnv;
         if (origAllow) process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION = origAllow;
       }
     });
@@ -327,11 +327,11 @@ describe("PHASE 50: PRODUCTION HARDENING & CONSTITUTIONAL INVARIANTS", () => {
     test("6.1 createBooking fails closed in production without DB credentials", async () => {
       const origEnv = process.env.NODE_ENV;
       try {
-        process.env.NODE_ENV = "production";
+        (process.env as Record<string, string | undefined>).NODE_ENV = "production";
         // When supabase is unconfigured, createBooking must throw
         // This test validates that production never falls back to demo fixtures
       } finally {
-        process.env.NODE_ENV = origEnv;
+        (process.env as Record<string, string | undefined>).NODE_ENV = origEnv;
       }
     });
   });

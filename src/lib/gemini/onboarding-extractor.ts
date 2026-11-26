@@ -42,15 +42,13 @@ OUTPUT FORMAT: Strict JSON matching the requested structure.
  * Validates configured environment model and falls back through verified stable versions.
  */
 export function getGeminiModelCandidates(): string[] {
-  const configured = env.GEMINI_MODEL || process.env.GEMINI_MODEL;
+  const configured = process.env.GEMINI_MODEL || env.GEMINI_MODEL;
   const candidates = [
     configured,
-    "gemini-3.5-flash-lite",
-    "gemini-3.5-flash",
-    "gemini-3.6-flash",
-    "gemini-3.7-flash",
     "gemini-3.8-flash",
-    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
   ].filter(Boolean) as string[];
   return Array.from(new Set(candidates));
 }

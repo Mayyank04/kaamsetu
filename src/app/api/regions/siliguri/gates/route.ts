@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import {
   evaluateSiliguriCorridorReadiness,
@@ -5,6 +7,7 @@ import {
 } from "@/lib/regions/siliguri-corridor-gate-service";
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     // Current state of North Bengal / Siliguri Corridor
     // In Phase 17: 9/14 steps completed (64.3%), Gate 2 (<100 workers) and Gate 4 (no physical kiosk) pending
@@ -37,6 +40,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const body = await req.json();
     const metrics: RegionalCorridorMetrics = {

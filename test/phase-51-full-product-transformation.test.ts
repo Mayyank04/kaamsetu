@@ -61,12 +61,14 @@ describe("PHASE 51: FULL PRODUCT TRANSFORMATION, UX REBUILD & CROSS-PLATFORM REL
       assert.deepStrictEqual(offenders, [], "Cards and containers must use calibrated rounded-md/sm/xs");
     });
 
-    test("1.3 globals.css defines semantic tokens, Indic script fonts, and prefers-reduced-motion", () => {
+    test("1.3 globals.css & layout.tsx define semantic tokens, self-hosted Indic fonts, and prefers-reduced-motion", () => {
       const css = readSrc("src/app/globals.css");
-      assert.ok(css.includes("Noto+Sans+Devanagari"), "Devanagari webfont must be loaded");
-      assert.ok(css.includes("Noto+Sans+Bengali"), "Bengali/Assamese webfont must be loaded");
-      assert.ok(css.includes("Noto+Sans+Tamil"), "Tamil webfont must be loaded");
-      assert.ok(css.includes("Noto+Sans+Telugu"), "Telugu webfont must be loaded");
+      const layout = readSrc("src/app/layout.tsx");
+      assert.ok(layout.includes("Noto_Sans_Devanagari"), "Devanagari webfont must be loaded via next/font/google");
+      assert.ok(layout.includes("Noto_Sans_Bengali"), "Bengali/Assamese webfont must be loaded via next/font/google");
+      assert.ok(layout.includes("Noto_Sans_Tamil"), "Tamil webfont must be loaded via next/font/google");
+      assert.ok(layout.includes("Noto_Sans_Telugu"), "Telugu webfont must be loaded via next/font/google");
+      assert.ok(css.includes("--font-devanagari"), "globals.css must reference --font-devanagari variable");
       assert.ok(css.includes("--primary-hover"), "Semantic --primary-hover token required");
       assert.ok(css.includes("--status-success"), "Semantic --status-success token required");
       assert.ok(css.includes("prefers-reduced-motion: reduce"), "Reduced motion media rule required");
@@ -233,6 +235,40 @@ describe("PHASE 51: FULL PRODUCT TRANSFORMATION, UX REBUILD & CROSS-PLATFORM REL
       } finally {
         __resetTestSession();
       }
+    });
+  });
+
+  describe("6. Vercel Hosting, Build Telemetry & Cache Safety", () => {
+    test("6.1 vercel.json, .nvmrc, robots.ts, and sitemap.ts exist with valid configuration", () => {
+      const vercelCfg = JSON.parse(readSrc("vercel.json"));
+      assert.strictEqual(vercelCfg.framework, "nextjs");
+      assert.strictEqual(vercelCfg.installCommand, "npm ci");
+      assert.strictEqual(vercelCfg.buildCommand, "npm run build");
+      assert.deepStrictEqual(vercelCfg.regions, ["bom1"]);
+
+      assert.strictEqual(readSrc(".nvmrc").trim(), "22");
+      const pkg = JSON.parse(readSrc("package.json"));
+      assert.strictEqual(pkg.engines?.node, "22.x");
+
+      assert.ok(fs.existsSync(path.join(ROOT, "src/app/robots.ts")));
+      assert.ok(fs.existsSync(path.join(ROOT, "src/app/sitemap.ts")));
+      assert.ok(fs.existsSync(path.join(ROOT, ".github/workflows/ci.yml")));
+    });
+
+    test("6.2 /api/health exposes live Vercel deployment visibility without fake schema counts", async () => {
+      const { GET } = await import("../src/app/api/health/route");
+      const res = await GET();
+      assert.strictEqual(res.status, 200);
+      const body = await res.json();
+      assert.strictEqual(body.success, true);
+      assert.strictEqual(body.data.governance.classification, "CLASS_B_CONTROLLED_ROLLOUT");
+      assert.strictEqual(body.data.governance.platformCommissionAmount, "0.00");
+      assert.ok("vercelEnv" in body.data.hosting);
+      assert.strictEqual(body.data.services.schema, undefined, "Hardcoded fake migrationsApplied/tablesCount must be removed");
+
+      const sw = readSrc("public/sw.js");
+      assert.ok(!sw.includes('"/"'), "Service worker must not precache mutable root SSR HTML");
+      assert.ok(sw.includes("kaamsetu-shell-v2"));
     });
   });
 });

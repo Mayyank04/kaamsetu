@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function TranslatePage() {
   return (
-    <div className="min-h-screen bg-warm-ivory text-charcoal flex flex-col selection:bg-sand/30">
+    <div className="min-h-screen bg-ivory text-charcoal flex flex-col selection:bg-sand/30">
       <main className="flex-1 container mx-auto px-4 py-6 sm:py-10 max-w-6xl space-y-6">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center justify-between text-xs text-charcoal-muted">
@@ -61,7 +61,7 @@ export default function TranslatePage() {
 
           <div className="p-4 rounded-md bg-card border border-forest/15 shadow-2xs space-y-1.5">
             <div className="flex items-center gap-2 text-forest font-semibold text-xs">
-              <Type className="w-4 h-4 text-sand-dark" />
+              <Type className="w-4 h-4 text-sand-700" />
               <span>Roman Transliteration</span>
             </div>
             <p className="text-xs text-charcoal-muted leading-relaxed">

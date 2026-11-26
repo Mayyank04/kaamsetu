@@ -16,7 +16,7 @@ export async function getWorkerPortfolio(workerProfileId: string): Promise<Portf
         title: "85kW Commercial Solar Installation",
         description: "Zero electrical faults recorded during grid synchronization by DISCOM engineers.",
         image_url:
-          "https://images.unsplash.com/photo-1508873696983-2df570464756?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=800&q=80",
         project_date: "2025-09-15",
         category: "Commercial Solar",
         client_testimony: "Flawless execution by Rameshwar and team.",

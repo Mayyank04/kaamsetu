@@ -24,7 +24,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isConfigured, env } from "@/lib/env";
 import { AppRole } from "@/types/database.types";
-import { validateIndianMobile } from "@/lib/utilities/phone";
+import { validateIndianMobile, normalizePhoneNumber } from "@/lib/utilities/phone";
 import { __getLocalFallbackAccounts } from "@/app/api/auth/register/route";
 import { createClient } from "@supabase/supabase-js";
 import * as crypto from "crypto";
@@ -134,19 +134,42 @@ export async function POST(request: NextRequest) {
       // Resolve email for authentication
       let emailToAuth: string;
       if (cleanIdentifier.includes("@")) {
-        emailToAuth = cleanIdentifier.toLowerCase();
+        const lowerEmail = cleanIdentifier.toLowerCase();
+        // Resolve phone-bound synthetic auth handle via profile lookup first (supports unverified optional email sign-in),
+        // falling back to direct email for legacy pre-Phase-53 accounts.
+        const { data: emailProfile } = await adminClient
+          .from("profiles")
+          .select("id")
+          .eq("email", lowerEmail)
+          .limit(1)
+          .maybeSingle();
+
+        if (emailProfile?.id) {
+          const { data: authUserLookup } = await adminClient.auth.admin.getUserById(emailProfile.id);
+          emailToAuth = authUserLookup?.user?.email || lowerEmail;
+        } else {
+          emailToAuth = lowerEmail;
+        }
       } else {
-        // Resolve mobile number to registered email
-        const phoneValidation = validateIndianMobile(cleanIdentifier);
-        const lookupPhone = phoneValidation.valid ? phoneValidation.clean10 : cleanIdentifier;
+        // Resolve mobile number across E.164 and legacy 10-digit formats
+        const norm = normalizePhoneNumber(cleanIdentifier);
+        const indian = validateIndianMobile(cleanIdentifier);
+        const candidates = Array.from(
+          new Set(
+            [norm.valid ? norm.e164 : "", indian.valid ? indian.clean10 : "", cleanIdentifier].filter(
+              Boolean
+            )
+          )
+        );
 
         const { data: phoneProfile, error: phoneLookupErr } = await adminClient
           .from("profiles")
           .select("id, email, phone")
-          .eq("phone", lookupPhone)
+          .in("phone", candidates)
+          .limit(1)
           .maybeSingle();
 
-        if (phoneLookupErr || !phoneProfile || !phoneProfile.email) {
+        if (phoneLookupErr || !phoneProfile) {
           recordFailedLoginAttempt(cleanIdentifier, clientIp);
           return NextResponse.json(
             {
@@ -159,7 +182,24 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        emailToAuth = phoneProfile.email.toLowerCase();
+        // Resolve canonical Supabase Auth email from auth.users (handles both synthetic phone handles and legacy accounts)
+        const { data: authUserLookup } = await adminClient.auth.admin.getUserById(phoneProfile.id);
+        if (authUserLookup?.user?.email) {
+          emailToAuth = authUserLookup.user.email;
+        } else if (phoneProfile.email) {
+          emailToAuth = phoneProfile.email.toLowerCase();
+        } else {
+          recordFailedLoginAttempt(cleanIdentifier, clientIp);
+          return NextResponse.json(
+            {
+              success: false,
+              code: "INVALID_CREDENTIALS",
+              message: "Invalid email, mobile number, or password.",
+              correlationId,
+            },
+            { status: 401 }
+          );
+        }
       }
 
       // Native Supabase Auth sign in using Anon client
@@ -256,11 +296,18 @@ export async function POST(request: NextRequest) {
 
       // Offline unit test fallback
       const fallbackStore = __getLocalFallbackAccounts();
-      let matchedAccount = fallbackStore.get(cleanIdentifier.toLowerCase());
+      const normPhone = !cleanIdentifier.includes("@") ? normalizePhoneNumber(cleanIdentifier) : null;
+      let matchedAccount =
+        fallbackStore.get(cleanIdentifier.toLowerCase()) ||
+        (normPhone?.valid ? fallbackStore.get(`phone:${normPhone.e164}`) : undefined);
 
       if (!matchedAccount) {
         for (const account of fallbackStore.values()) {
-          if (account.phone === cleanIdentifier || account.email === cleanIdentifier.toLowerCase()) {
+          if (
+            account.phone === cleanIdentifier ||
+            (normPhone?.valid && account.phone === normPhone.e164) ||
+            account.email === cleanIdentifier.toLowerCase()
+          ) {
             matchedAccount = account;
             break;
           }

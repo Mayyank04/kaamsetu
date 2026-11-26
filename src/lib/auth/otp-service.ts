@@ -34,10 +34,11 @@ import { AuthErrorCode } from "@/lib/auth/auth-error-codes";
 import {
   validateIndianMobile,
   normalizeIndianPhone,
+  normalizePhoneNumber,
   INVALID_PHONE_MESSAGE,
 } from "@/lib/utilities/phone";
 
-export { normalizeIndianPhone, validateIndianMobile };
+export { normalizeIndianPhone, validateIndianMobile, normalizePhoneNumber };
 
 export const CURRENT_TERMS_VERSION = "2026.1";
 export const CURRENT_PRIVACY_VERSION = "2026.1";
@@ -75,6 +76,7 @@ export interface VerifyOtpRequest {
   role?: string;
   fullName?: string;
   intent?: "registration" | "login";
+  deferAccountCreation?: boolean;
   termsAccepted?: boolean;
   privacyAccepted?: boolean;
   termsVersion?: string;
@@ -100,6 +102,7 @@ export interface VerifyOtpResponse {
   };
   verificationMethod?: string;
   phoneVerified?: boolean;
+  verificationProof?: string;
   sessionToken?: string;
   redirectUrl?: string;
   isSandbox?: boolean;
@@ -290,12 +293,108 @@ export function verifySessionToken(token: string): {
   }
 }
 
+const consumedProofJtis = new Map<string, number>();
+
+/**
+ * Signs a short-lived single-use proof token confirming OTP verification for a phone number.
+ */
+export function signPhoneVerificationProof(params: {
+  phone: string;
+  intent: "registration" | "login";
+  verificationMethod: string;
+  phoneVerified: boolean;
+}): string {
+  const secret = getRateLimitHmacSecret();
+  const payload = {
+    jti: crypto.randomUUID(),
+    phone: params.phone,
+    intent: params.intent,
+    verificationMethod: params.verificationMethod,
+    phoneVerified: params.phoneVerified,
+    exp: Math.floor(Date.now() / 1000) + 10 * 60, // 10-minute registration completion window
+  };
+  const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(`phone-proof:${encoded}`)
+    .digest("base64url");
+  return `${encoded}.${signature}`;
+}
+
+/**
+ * Verifies and atomically consumes a single-use phone verification proof token.
+ */
+export function consumePhoneVerificationProof(
+  token: string,
+  expectedPhone: string
+): {
+  valid: boolean;
+  verificationMethod?: string;
+  phoneVerified?: boolean;
+  error?: string;
+} {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 2) {
+      return { valid: false, error: "Malformed phone verification proof." };
+    }
+    const [encoded, signature] = parts;
+    const secret = getRateLimitHmacSecret();
+    const expectedSig = crypto
+      .createHmac("sha256", secret)
+      .update(`phone-proof:${encoded}`)
+      .digest("base64url");
+    const sigBuf = Buffer.from(signature, "utf8");
+    const expBuf = Buffer.from(expectedSig, "utf8");
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return { valid: false, error: "Invalid phone verification signature." };
+    }
+
+    const decoded = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as {
+      jti?: string;
+      phone?: string;
+      intent?: string;
+      verificationMethod?: string;
+      phoneVerified?: boolean;
+      exp?: number;
+    };
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!decoded.exp || decoded.exp < nowSec) {
+      return { valid: false, error: "Phone verification has expired. Please verify again." };
+    }
+    if (decoded.phone !== expectedPhone) {
+      return { valid: false, error: "Phone verification does not match submitted mobile number." };
+    }
+    if (!decoded.jti) {
+      return { valid: false, error: "Invalid verification token identifier." };
+    }
+
+    // Prune expired entries and prevent replay
+    for (const [key, expTs] of consumedProofJtis.entries()) {
+      if (expTs < nowSec) consumedProofJtis.delete(key);
+    }
+    if (consumedProofJtis.has(decoded.jti)) {
+      return { valid: false, error: "Phone verification token has already been used." };
+    }
+    consumedProofJtis.set(decoded.jti, decoded.exp);
+
+    return {
+      valid: true,
+      verificationMethod: decoded.verificationMethod || "sms",
+      phoneVerified: Boolean(decoded.phoneVerified),
+    };
+  } catch {
+    return { valid: false, error: "Invalid phone verification proof." };
+  }
+}
+
 /**
  * Sends or provisions an OTP challenge with rate limiting & provider dispatch
  */
 export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
   const isProduction = process.env.NODE_ENV === "production";
-  const { valid, formatted, error } = validateIndianMobile(req.phone);
+  const { valid, formatted, error } = normalizePhoneNumber(req.phone);
 
   if (!valid) {
     return {
@@ -326,7 +425,9 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       };
     }
 
-    const verificationMode = process.env.AUTH_VERIFICATION_MODE || env.AUTH_VERIFICATION_MODE || "sandbox";
+    const verificationMode =
+      process.env.AUTH_VERIFICATION_MODE ||
+      (isProduction ? "sms" : env.AUTH_VERIFICATION_MODE || "sandbox");
     const isSandbox = verificationMode === "sandbox";
     const phoneHashed = hashRateLimitKey("phone:identity", formatted);
     let activeChallengeCode: string | undefined;
@@ -398,6 +499,11 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     };
   }
 
+  const indianNorm = validateIndianMobile(req.phone);
+  const phoneVariants = Array.from(
+    new Set([formatted, indianNorm.valid ? indianNorm.clean10 : ""].filter(Boolean))
+  );
+
   // Account Existence Check:
   // When logging in, the account must exist. When registering, account must not exist.
   const intent = req.intent;
@@ -406,8 +512,9 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
       const adminClient = createAdminClient();
       const { data: existingProfile, error: queryErr } = await adminClient
         .from("profiles")
-        .select("id, role, full_name")
-        .eq("phone", formatted)
+        .select("id")
+        .in("phone", phoneVariants)
+        .limit(1)
         .maybeSingle();
 
       if (queryErr) {
@@ -471,8 +578,10 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     }
   }
 
-  // Determine verification mode: 'sandbox' or 'sms'
-  const verificationMode = process.env.AUTH_VERIFICATION_MODE || env.AUTH_VERIFICATION_MODE || "sandbox";
+  // Determine verification mode: fail closed to 'sms' in production unless explicitly overridden
+  const verificationMode =
+    process.env.AUTH_VERIFICATION_MODE ||
+    (isProduction ? "sms" : env.AUTH_VERIFICATION_MODE || "sandbox");
   const isSandbox = verificationMode === "sandbox";
 
   // Generate 6-digit random code or use server-configured sandbox code
@@ -625,7 +734,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
  */
 export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpResponse> {
   const isProduction = process.env.NODE_ENV === "production";
-  const { valid, formatted, clean10, error } = validateIndianMobile(req.phone);
+  const { valid, formatted, clean10, error } = normalizePhoneNumber(req.phone);
 
   if (!valid) {
     return {
@@ -658,7 +767,20 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
       : "worker";
   let resolvedName = req.fullName?.trim() || "Verified User";
   const intent = req.intent || "login";
-  const isSandbox = (process.env.AUTH_VERIFICATION_MODE || env.AUTH_VERIFICATION_MODE || "sandbox") === "sandbox";
+  const verificationMode =
+    process.env.AUTH_VERIFICATION_MODE ||
+    (isProduction ? "sms" : env.AUTH_VERIFICATION_MODE || "sandbox");
+  const isSandbox = verificationMode === "sandbox";
+
+  if (isProduction && isSandbox && process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION !== "true") {
+    return {
+      success: false,
+      code: "SMS_GATEWAY_UNAVAILABLE" as AuthErrorCode,
+      message:
+        "Sandbox OTP verification is disabled in production. Please use email and password sign-in.",
+      statusCode: 503,
+    };
+  }
 
   // 1. Try atomic PostgreSQL verification if database is configured
   if (isConfigured.supabase) {
@@ -795,6 +917,28 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
   const verificationMethod = isSandbox ? "sandbox" : "sms";
   const phoneVerified = !isSandbox;
 
+  // If caller requested a single-use verification proof for unified registration,
+  // return immediately BEFORE creating any auth user or profile row.
+  if (req.deferAccountCreation && intent === "registration") {
+    const verificationProof = signPhoneVerificationProof({
+      phone: formatted,
+      intent: "registration",
+      verificationMethod,
+      phoneVerified,
+    });
+    return {
+      success: true,
+      message: isSandbox
+        ? "Sandbox OTP verified. Complete your registration."
+        : "Mobile phone verified successfully.",
+      verificationMethod,
+      phoneVerified,
+      verificationProof,
+      isSandbox,
+      statusCode: 200,
+    };
+  }
+
   if (isConfigured.supabase) {
     try {
       const adminClient = createAdminClient();
@@ -904,7 +1048,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
 
           let { data: newProfile, error: insertErr } = await adminClient
             .from("profiles")
-            .insert(profilePayload)
+            .upsert(profilePayload, { onConflict: "id" })
             .select("*")
             .single();
 
@@ -913,7 +1057,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
             profilePayload.role = "worker";
             const retryRes = await adminClient
               .from("profiles")
-              .insert(profilePayload)
+              .upsert(profilePayload, { onConflict: "id" })
               .select("*")
               .single();
             insertErr = retryRes.error;
@@ -1061,6 +1205,27 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
       memoryConsentStore.set(formatted, consentRecord);
       memoryConsentStore.set(clean10, consentRecord);
     }
+  }
+
+  // Check if caller requested a single-use verification proof for unified registration
+  if (req.deferAccountCreation && intent === "registration") {
+    const verificationProof = signPhoneVerificationProof({
+      phone: formatted,
+      intent: "registration",
+      verificationMethod,
+      phoneVerified,
+    });
+    return {
+      success: true,
+      message: isSandbox
+        ? "Sandbox OTP verified. Complete your registration."
+        : "Mobile phone verified successfully.",
+      verificationMethod,
+      phoneVerified,
+      verificationProof,
+      isSandbox,
+      statusCode: 200,
+    };
   }
 
   // Always ensure memoryConsentStore is populated on successful registration verification

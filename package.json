@@ -2,6 +2,9 @@
   "name": "kaamsetu-digital-identity-platform",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -77,6 +80,8 @@
     "test:phase50.3": "tsx --env-file=.env.local --test test/phase-50-3-voice-engine-rebuild.test.ts",
     "test:phase50.4": "tsx --env-file=.env.local --test test/phase-50-4-real-voice-quality.test.ts",
     "test:phase51": "tsx --env-file=.env.local --test test/phase-51-full-product-transformation.test.ts",
+    "test:phase52": "tsx --env-file=.env.local --test test/phase-52-independent-audit.test.ts",
+    "test:phase53": "tsx --env-file=.env.local --test test/phase-53-phone-verified-registration.test.ts",
     "check:deploy": "tsx --env-file=.env.local src/bin/check-deployment.ts",
     "test:incident-repair": "tsx test/otp-rate-limiter-incident-repair.test.ts"
   },

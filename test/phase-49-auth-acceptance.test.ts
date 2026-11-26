@@ -59,11 +59,24 @@ describe("PHASE 49: AUTHENTICATION ACCEPTANCE & ROLE ROUTING", () => {
     for (const { role, expectedRegRedirect, expectedLoginRedirect } of roles) {
       test(`1.${roles.indexOf({ role, expectedRegRedirect, expectedLoginRedirect }) + 1} ${role.toUpperCase()} registration and login cycle`, async () => {
         __resetMemoryRateLimitStore();
+        __resetMemoryOtpStore();
         const email = makeUniqueEmail(role);
+        const phone = makeUniquePhone();
         const password = "StrongPassword2026!";
         const ip = makeUniqueIp();
 
-        // 1. Direct Registration
+        const sendRes = await sendOtp({ phone, intent: "registration", termsAccepted: true, clientIp: ip });
+        assert.ok(sendRes.success && sendRes.sandboxCode, `OTP send should succeed for ${role}`);
+        const verRes = await verifyOtp({
+          phone,
+          otp: sendRes.sandboxCode!,
+          intent: "registration",
+          deferAccountCreation: true,
+          termsAccepted: true,
+        });
+        assert.ok(verRes.success && verRes.verificationProof, `OTP verify should issue proof for ${role}`);
+
+        // 1. Direct Registration with verified phone proof
         const regReq = new NextRequest("http://localhost:3000/api/auth/register", {
           method: "POST",
           headers: {
@@ -73,6 +86,8 @@ describe("PHASE 49: AUTHENTICATION ACCEPTANCE & ROLE ROUTING", () => {
           body: JSON.stringify({
             fullName: `Test ${role.charAt(0).toUpperCase() + role.slice(1)} User`,
             email,
+            phone,
+            verificationProof: verRes.verificationProof,
             password,
             confirmPassword: password,
             role,
@@ -124,8 +139,21 @@ describe("PHASE 49: AUTHENTICATION ACCEPTANCE & ROLE ROUTING", () => {
   describe("2. Invalid Credentials & Anti-Brute-Force Protection", () => {
     test("2.1 Rejects wrong password with HTTP 401 INVALID_CREDENTIALS", async () => {
       __resetMemoryRateLimitStore();
+      __resetMemoryOtpStore();
       const email = makeUniqueEmail("worker");
+      const phone = makeUniquePhone();
       const ip = makeUniqueIp();
+
+      const sendRes = await sendOtp({ phone, intent: "registration", termsAccepted: true, clientIp: ip });
+      assert.ok(sendRes.success && sendRes.sandboxCode);
+      const verRes = await verifyOtp({
+        phone,
+        otp: sendRes.sandboxCode!,
+        intent: "registration",
+        deferAccountCreation: true,
+        termsAccepted: true,
+      });
+      assert.ok(verRes.success && verRes.verificationProof);
 
       // Register first
       const regReq = new NextRequest("http://localhost:3000/api/auth/register", {
@@ -134,6 +162,8 @@ describe("PHASE 49: AUTHENTICATION ACCEPTANCE & ROLE ROUTING", () => {
         body: JSON.stringify({
           fullName: "Valid User",
           email,
+          phone,
+          verificationProof: verRes.verificationProof,
           password: "ValidPassword123!",
           confirmPassword: "ValidPassword123!",
           role: "worker",

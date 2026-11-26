@@ -1,8 +1,11 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import { computePilotAggregateMetrics, getPilotParticipants } from "@/lib/pilot/registry";
 import { createSuccessResponse } from "@/lib/error/handler";
 
 export async function GET(request: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const aggregate = computePilotAggregateMetrics();
     const participants = getPilotParticipants();

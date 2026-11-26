@@ -90,7 +90,7 @@ export function AudioChannelBar({
 
   return (
     <div
-      className={`rounded-md border border-forest/15 bg-warm-ivory/50 transition-colors ${isSpeaking ? "border-forest/40 bg-forest/5 shadow-2xs" : ""
+      className={`rounded-md border border-forest/15 bg-ivory/50 transition-colors ${isSpeaking ? "border-forest/40 bg-forest/5 shadow-2xs" : ""
         } ${compact ? "p-2" : "p-2.5 sm:p-3"}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -103,7 +103,7 @@ export function AudioChannelBar({
                 type="button"
                 onClick={onPause}
                 disabled={disabled}
-                className="w-8 h-8 rounded-full bg-forest text-warm-ivory hover:bg-forest/90 flex items-center justify-center transition-colors shadow-2xs active:scale-95 shrink-0"
+                className="w-8 h-8 rounded-full bg-forest text-ivory hover:bg-forest/90 flex items-center justify-center transition-colors shadow-2xs active:scale-95 shrink-0"
                 title="Pause playback"
                 aria-label={`Pause ${title}`}
               >
@@ -114,7 +114,7 @@ export function AudioChannelBar({
                 type="button"
                 onClick={onResume}
                 disabled={disabled}
-                className="w-8 h-8 rounded-full bg-forest text-warm-ivory hover:bg-forest/90 flex items-center justify-center transition-colors shadow-2xs active:scale-95 shrink-0"
+                className="w-8 h-8 rounded-full bg-forest text-ivory hover:bg-forest/90 flex items-center justify-center transition-colors shadow-2xs active:scale-95 shrink-0"
                 title="Resume playback"
                 aria-label={`Resume ${title}`}
               >
@@ -127,7 +127,7 @@ export function AudioChannelBar({
                 disabled={disabled || isLoading}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-2xs active:scale-95 shrink-0 ${disabled
                   ? "bg-forest/20 text-charcoal-muted cursor-not-allowed"
-                  : "bg-forest text-warm-ivory hover:bg-forest/90"
+                  : "bg-forest text-ivory hover:bg-forest/90"
                   }`}
                 title={`Listen to ${title}`}
                 aria-label={`Listen to ${title}`}
@@ -210,7 +210,7 @@ export function AudioChannelBar({
                   type="button"
                   onClick={() => onSpeedChange(s.value)}
                   className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors font-semibold ${isSelected
-                    ? "bg-forest text-warm-ivory shadow-2xs"
+                    ? "bg-forest text-ivory shadow-2xs"
                     : "text-charcoal hover:bg-forest/10 text-charcoal-muted"
                     }`}
                   title={s.desc}
@@ -232,7 +232,7 @@ export function AudioChannelBar({
                 title="Select preferred voice"
                 aria-expanded={isVoicePickerOpen}
               >
-                <SlidersHorizontal className="w-3 h-3 text-sand-dark" />
+                <SlidersHorizontal className="w-3 h-3 text-sand-700" />
                 <span className="hidden sm:inline max-w-[90px] truncate font-sans">
                   {status.selectedVoice?.name.replace(/Google|Microsoft|Apple/i, "").trim() || "Voice"}
                 </span>
@@ -268,7 +268,7 @@ export function AudioChannelBar({
                           <button
                             type="button"
                             onClick={(e) => handlePreviewVoice(v, e)}
-                            className="p-1 rounded bg-forest/10 hover:bg-forest text-forest hover:text-warm-ivory transition-colors text-[10px]"
+                            className="p-1 rounded bg-forest/10 hover:bg-forest text-forest hover:text-ivory transition-colors text-[10px]"
                             title="Preview this voice"
                             aria-label={`Preview voice ${v.name}`}
                           >
@@ -310,7 +310,7 @@ export function AudioChannelBar({
                 key={c.code}
                 type="button"
                 onClick={() => onDisambiguate?.(c.code)}
-                className="px-2 py-0.5 rounded bg-card border border-forest/20 text-forest hover:bg-forest hover:text-warm-ivory transition-colors font-semibold shadow-2xs"
+                className="px-2 py-0.5 rounded bg-card border border-forest/20 text-forest hover:bg-forest hover:text-ivory transition-colors font-semibold shadow-2xs"
               >
                 {c.nativeName} ({c.name})
               </button>
@@ -321,7 +321,7 @@ export function AudioChannelBar({
 
       {/* TRANSPARENT CROSS-DIALECT FALLBACK NOTICE */}
       {status.isCrossDialectFallback && status.fallbackNote && (
-        <div className="mt-2 text-[11px] text-charcoal-muted bg-warm-ivory/80 border border-forest/15 rounded px-2.5 py-1 flex items-start gap-1.5">
+        <div className="mt-2 text-[11px] text-charcoal-muted bg-ivory/80 border border-forest/15 rounded px-2.5 py-1 flex items-start gap-1.5">
           <AlertCircle className="w-3.5 h-3.5 text-forest shrink-0 mt-0.5" />
           <span>{status.fallbackNote}</span>
         </div>

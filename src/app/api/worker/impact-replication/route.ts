@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextResponse } from "next/server";
 import {
   CANONICAL_GUWAHATI_CARPENTRY_REPLICATION,
@@ -5,6 +7,7 @@ import {
 } from "@/lib/worker/worker-impact-replication-service";
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const verification = verifyWorkerImpactReplication(CANONICAL_GUWAHATI_CARPENTRY_REPLICATION);
 

@@ -1,65 +1,22 @@
 import { NextResponse } from "next/server";
-import { getAuthenticatedSession } from "@/lib/auth/server";
+import { requireVendor } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isConfigured } from "@/lib/env";
 import { VendorProfile } from "@/types/vendor";
 
 export async function GET() {
   try {
-    const { user } = await getAuthenticatedSession();
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await requireVendor();
 
     if (!isConfigured.supabase) {
-      const mockVendor: VendorProfile = {
-        id: "v-demo-01",
-        userId: user.id,
-        businessName: "Sharma Electrical Works & Solar Repair",
-        displayName: "Rameshwar Sharma",
-        ownerName: "Rameshwar Sharma",
-        primaryCategory: "home_repair",
-        secondaryCategories: ["construction"],
-        subcategory: "electrician",
-        businessDescription: "Over 14 years specializing in 3-phase industrial panels, solar invertor synchronization, and house rewiring.",
-        preferredLanguage: "hi",
-        supportedCustomerLanguages: ["hi", "en", "as"],
-        businessPhone: "+91 98540 12345",
-        contactPreference: "phone",
-        businessAddress: "Shop No. 4, Paltan Bazaar Main Road",
-        state: "Assam",
-        district: "Kamrup Metropolitan",
-        city: "Guwahati",
-        locality: "Paltan Bazaar",
-        pincode: "781001",
-        stallType: "retail_shop",
-        operatingHours: "08:00 AM - 08:30 PM (Mon-Sat)",
-        serviceRadiusKm: 25,
-        deliveryAvailable: true,
-        productCatalog: [
-          { id: "p1", name: "3-Phase Inverter Health Diagnostic", price: 1200, unit: "visit", inStock: true },
-          { id: "p2", name: "Chemical Earthing Rod (Copper Coated)", price: 2400, unit: "piece", inStock: true },
-          { id: "p3", name: "MCB Distribution Board Rewiring", price: 800, unit: "board", inStock: true },
-        ],
-        priceModel: "fixed",
-        priceRangeMin: 500,
-        priceRangeMax: 4500,
-        availability: "open_today",
-        yearsInBusiness: 14,
-        categoryAttributes: {
-          work_scope: ["residential", "commercial", "industrial"],
-          emergency_24x7: true,
-          licensed_wireman: true,
-          license_number: "AS/EL/2012/9021",
-        },
-        verificationStatus: "institution_verified",
-        profileCompletion: 95,
-        isPublished: true,
-        createdAt: "2026-01-15T10:00:00Z",
-        updatedAt: new Date().toISOString(),
-      };
-
-      return NextResponse.json({ success: true, vendor: mockVendor });
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { success: false, error: "Database backend unavailable in production." },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json({ success: true, vendor: null, notice: "Supabase not configured locally." });
     }
 
     const supabase = await createServerSupabaseClient();
@@ -123,25 +80,28 @@ export async function GET() {
     }
 
     return NextResponse.json({ success: true, vendor: null });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const { user } = await getAuthenticatedSession();
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await requireVendor();
 
     const body = await req.json();
 
     if (!isConfigured.supabase) {
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { success: false, error: "Database backend unavailable in production." },
+          { status: 503 }
+        );
+      }
       return NextResponse.json({
         success: true,
-        vendorId: `v-${Date.now()}`,
-        message: "Vendor profile saved successfully (demo mode).",
+        vendorId: `v-dev-${Date.now()}`,
+        message: "Vendor profile saved in non-production offline mode.",
       });
     }
 
@@ -219,7 +179,7 @@ export async function POST(req: Request) {
       vendorId: wp?.id || `v-fallback-${Date.now()}`,
       notice: "Profile saved adaptively to worker store.",
     });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }

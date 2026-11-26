@@ -20,6 +20,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (body.text.length > 5000) {
+      return NextResponse.json(
+        { success: false, error: "Text exceeds maximum 5,000-character limit." },
+        { status: 400 }
+      );
+    }
+
     const translationRequest: TranslationRequest = {
       text: body.text,
       sourceLanguage: body.sourceLanguage || "auto",
@@ -27,6 +34,8 @@ export async function POST(req: NextRequest) {
       provider: body.provider,
       contentType: body.contentType || "general",
       isPrivate: Boolean(body.isPrivate),
+      includeTransliteration: body.includeTransliteration ?? true,
+      includeEnglishMeaning: body.includeEnglishMeaning ?? true,
     };
 
     const result = await translationService.translate(translationRequest);
