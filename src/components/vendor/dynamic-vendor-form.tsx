@@ -121,7 +121,7 @@ export function DynamicVendorForm({ initialData, onSuccess }: DynamicVendorFormP
   // Business Images
   const [businessImages, setBusinessImages] = React.useState<string[]>(
     initialData?.businessImages || [
-      "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=800&q=80",
     ]
   );
   const [newImageUrl, setNewImageUrl] = React.useState("");

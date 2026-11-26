@@ -75,11 +75,7 @@ export async function POST(request: NextRequest) {
         hasActiveChallenge: result.hasActiveChallenge,
         message: result.message,
         isSandbox: process.env.NODE_ENV === "production" ? false : result.isSandbox,
-        sandboxCode:
-          process.env.NODE_ENV !== "production" ||
-          process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION === "true"
-            ? result.sandboxCode
-            : undefined,
+        sandboxCode: process.env.NODE_ENV !== "production" ? result.sandboxCode : undefined,
         isInfrastructureError: result.isInfrastructureError,
         requiresDemoCode: result.requiresDemoCode,
         retryAfterSeconds: result.isInfrastructureError ? undefined : result.retryAfterSeconds,

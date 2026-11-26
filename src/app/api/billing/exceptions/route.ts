@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { recordFinancialException } from "@/lib/billing/financial-audit-service";
 
 export async function GET(req: NextRequest) {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
@@ -19,13 +22,14 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ exceptions: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
     const body = await req.json();
 
@@ -38,7 +42,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(result, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }

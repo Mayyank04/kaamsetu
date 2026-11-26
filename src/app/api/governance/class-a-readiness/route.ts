@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextResponse } from "next/server";
 import {
   evaluateClassAReadiness,
@@ -6,6 +8,7 @@ import {
 } from "@/lib/governance/class-a-readiness-assurance-service";
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     // Audit current state across all 12 mandatory requirements
     const evaluatedRequirements: ClassARequirementAudit[] = CANONICAL_CLASS_A_REQUIREMENTS.map((base) => {

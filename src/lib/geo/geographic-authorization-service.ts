@@ -471,6 +471,41 @@ export class GeographicAuthorizationService {
           };
         }
 
+        // Conjunction check: GPS coordinates (if provided) must lie near the declared dispatch cluster
+        if (
+          req.latitude !== undefined &&
+          req.latitude !== null &&
+          req.longitude !== undefined &&
+          req.longitude !== null
+        ) {
+          const lat = Number(req.latitude);
+          const lng = Number(req.longitude);
+          const boundsByZone: Record<string, { minLat: number; maxLat: number; minLng: number; maxLng: number }> = {
+            "ZONE-AS-01": { minLat: 25.6, maxLat: 26.8, minLng: 91.1, maxLng: 92.4 },
+            "ZONE-ML-01": { minLat: 25.1, maxLat: 26.0, minLng: 91.4, maxLng: 92.4 },
+          };
+          const bounds = boundsByZone[area.geographyId];
+          if (
+            bounds &&
+            (lat < bounds.minLat || lat > bounds.maxLat || lng < bounds.minLng || lng > bounds.maxLng)
+          ) {
+            return {
+              allowed: false,
+              status: "OUT_OF_BOUNDS",
+              district: area.district,
+              state: area.state,
+              pincode: pin,
+              reason: `Coordinate spoofing rejected: GPS (${lat.toFixed(2)}, ${lng.toFixed(2)}) does not match declared cluster ${area.urbanCenter}.`,
+              coordinateCheckPassed: false,
+              allowedForRegistration: false,
+              isDispatchEligible: false,
+              capabilities: NATIONWIDE_DEFAULT_CAPABILITIES,
+              isRecognizedIndianLocation: false,
+              serviceCoverageDescription: "Location GPS Mismatch",
+            };
+          }
+        }
+
         // Authorized Active Class B Operating Zone!
         return {
           allowed: true,

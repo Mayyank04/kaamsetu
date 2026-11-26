@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -10,6 +12,7 @@ import {
 } from "@/lib/governance/worker-outcome-service";
 
 export async function GET(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
@@ -69,6 +72,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const body: WorkerMilestoneInput = await req.json();
 

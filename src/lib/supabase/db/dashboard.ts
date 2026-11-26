@@ -97,7 +97,7 @@ export async function getWorkerDashboardData(
         description:
           "Complete synchronization of 85kW rooftop solar array with 440V distribution grid. Zero harmonic distortion recorded by DISCOM engineers.",
         imageUrl:
-          "https://images.unsplash.com/photo-1508873696983-2df570464756?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=800&q=80",
         category: "Commercial Solar",
         projectDate: "2025-09-15",
         clientTestimony:
@@ -125,7 +125,7 @@ export async function getWorkerDashboardData(
         description:
           "Automated AMF panel for 125kVA generator with dual-source interlock and surge protection devices.",
         imageUrl:
-          "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=800&q=80",
         category: "Switchgear",
         projectDate: "2026-02-18",
         clientTestimony:

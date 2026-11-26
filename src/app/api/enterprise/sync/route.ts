@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import {
   EnterpriseConnectorFramework,
@@ -6,6 +8,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const body: EnterpriseSyncRequest = await req.json();
 
@@ -67,6 +70,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   const url = new URL(req.url);
   const contractorOrgId = url.searchParams.get("contractorOrgId");
 

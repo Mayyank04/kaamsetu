@@ -128,7 +128,7 @@ describe("PHASE 49: TRANSLATION ACCEPTANCE & PROVIDER VERIFICATION", () => {
         targetLanguage: "hi",
       });
       assert.strictEqual(res.status, "translated");
-      assert.ok(res.confidence >= 0.95);
+      assert.ok((res.confidence ?? 0) >= 0.95);
       assert.strictEqual(res.isFallback, false);
       assert.strictEqual(res.isPartial, false);
       assert.strictEqual(res.translatedText, "मैं गुवाहाटी में एक छोटी दर्जी की दुकान चलाता हूँ।");
@@ -143,7 +143,7 @@ describe("PHASE 49: TRANSLATION ACCEPTANCE & PROVIDER VERIFICATION", () => {
       assert.strictEqual(res.status, "partial_translation");
       assert.strictEqual(res.isPartial, true);
       assert.strictEqual(res.isFallback, true);
-      assert.ok(res.confidence <= 0.60);
+      assert.ok((res.confidence ?? 1) <= 0.60);
       assert.ok(res.translatedText.includes("दर्जी"));
       assert.ok(res.translatedText.includes("इलेक्ट्रीशियन"));
     });
@@ -335,7 +335,7 @@ describe("PHASE 49: TRANSLATION ACCEPTANCE & PROVIDER VERIFICATION", () => {
       assert.strictEqual(res.status, "translated");
       assert.strictEqual(res.provider, "gemini");
       assert.strictEqual(res.isFallback, false);
-      assert.ok(res.confidence >= 0.90);
+      assert.ok((res.confidence ?? 0) >= 0.90);
       assert.ok(res.translatedText.includes("+91 98765 43210"), "Phone must be preserved in Gemini translation");
       assert.ok(elapsed > 0 && elapsed < 8000, `Gemini latency must be reasonable (${elapsed}ms)`);
     });

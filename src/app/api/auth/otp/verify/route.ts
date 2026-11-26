@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       role: data.role,
       fullName: data.fullName,
       intent: data.intent,
+      deferAccountCreation: data.deferAccountCreation,
       termsAccepted: data.termsAccepted,
       privacyAccepted: data.privacyAccepted,
       termsVersion: data.termsVersion,
@@ -54,6 +55,9 @@ export async function POST(request: NextRequest) {
         message: result.message,
         user: result.user,
         redirectUrl: result.redirectUrl,
+        verificationProof: result.verificationProof,
+        phoneVerified: result.phoneVerified,
+        verificationMethod: result.verificationMethod,
         isSandbox: result.isSandbox,
         retryAfterSeconds: result.retryAfterSeconds,
       },
@@ -63,7 +67,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Set secure HTTP-only session cookie if verified
-    if (result.success && result.sessionToken) {
+    if (result.success && result.sessionToken && !data.deferAccountCreation) {
       response.cookies.set("kaamsetu_session", result.sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",

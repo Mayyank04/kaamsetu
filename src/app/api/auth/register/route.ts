@@ -17,7 +17,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { directRegistrationSchema } from "@/schemas/auth.schema";
 import { validatePasswordStrength } from "@/lib/auth/password";
-import { signSessionToken } from "@/lib/auth/otp-service";
+import { signSessionToken, consumePhoneVerificationProof } from "@/lib/auth/otp-service";
+import { validateIndianMobile } from "@/lib/utilities/phone";
 import { checkRegistrationRateLimit } from "@/lib/security/auth-rate-limiter";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isConfigured, env } from "@/lib/env";
@@ -117,8 +118,36 @@ export async function POST(request: NextRequest) {
     }
 
     const assignedRole = data.role as AppRole;
-    const cleanEmail = data.email.toLowerCase().trim();
-    const cleanPhone = data.phone ? data.phone.trim() : null;
+    const normalizedPhone = data.phone; // Canonical E.164 format (+919876543210)
+    const indianCheck = validateIndianMobile(normalizedPhone);
+    const legacyClean10 = indianCheck.valid ? indianCheck.clean10 : normalizedPhone;
+    const optionalEmail = data.email ? data.email.toLowerCase().trim() : null;
+
+    // 4b. Cryptographically verify server-issued OTP proof (never trust client booleans)
+    const proofResult = consumePhoneVerificationProof(data.verificationProof, normalizedPhone);
+    if (!proofResult.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "PHONE_VERIFICATION_REQUIRED",
+          message: proofResult.error || "Please verify your mobile number via OTP before registering.",
+          correlationId,
+        },
+        { status: 401 }
+      );
+    }
+
+    const verifiedMethod = proofResult.verificationMethod || "sms";
+    const isPhoneVerified = Boolean(proofResult.phoneVerified);
+    const phoneStatus = isPhoneVerified ? "sms_verified" : "sandbox_unverified";
+    // Always bind Supabase Auth's internal login handle to the canonical verified phone identity.
+    // The user's optional real email is stored in public.profiles with email_verified = false (never auto-confirmed).
+    const supabaseAuthEmail = `phone.${crypto
+      .createHash("sha256")
+      .update(normalizedPhone)
+      .digest("hex")
+      .slice(0, 16)}@phone.kaamsetu.internal`;
+
     const nowIso = new Date().toISOString();
     let userId: string;
 
@@ -156,33 +185,54 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Check for duplicate phone in public.profiles if phone is provided
-      if (cleanPhone) {
-        const { data: existingPhone, error: phoneLookupErr } = await adminClient
+      // Check for duplicate phone across canonical E.164 and legacy 10-digit representations
+      const { data: existingPhone, error: phoneLookupErr } = await adminClient
+        .from("profiles")
+        .select("id")
+        .in("phone", Array.from(new Set([normalizedPhone, legacyClean10])))
+        .limit(1)
+        .maybeSingle();
+
+      if (phoneLookupErr && (phoneLookupErr.code === "PGRST205" || phoneLookupErr.message?.includes("schema cache"))) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: "SCHEMA_NOT_READY",
+            message:
+              "Database schema migration required: table 'public.profiles' does not exist in Supabase.",
+            correlationId,
+          },
+          { status: 503 }
+        );
+      }
+
+      if (existingPhone) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: "PHONE_ALREADY_REGISTERED",
+            message: "An account with this mobile number already exists. Please sign in instead.",
+            correlationId,
+          },
+          { status: 409 }
+        );
+      }
+
+      // If optional email was provided, check for duplicate email in public.profiles
+      if (optionalEmail) {
+        const { data: existingEmail } = await adminClient
           .from("profiles")
           .select("id")
-          .eq("phone", cleanPhone)
+          .eq("email", optionalEmail)
+          .limit(1)
           .maybeSingle();
 
-        if (phoneLookupErr && (phoneLookupErr.code === "PGRST205" || phoneLookupErr.message?.includes("schema cache"))) {
+        if (existingEmail) {
           return NextResponse.json(
             {
               success: false,
-              code: "SCHEMA_NOT_READY",
-              message:
-                "Database schema migration required: table 'public.profiles' does not exist in Supabase.",
-              correlationId,
-            },
-            { status: 503 }
-          );
-        }
-
-        if (existingPhone) {
-          return NextResponse.json(
-            {
-              success: false,
-              code: "PHONE_ALREADY_REGISTERED",
-              message: "An account with this mobile number already exists. Please sign in instead.",
+              code: "ACCOUNT_ALREADY_EXISTS",
+              message: "An account with this email address already exists. Please sign in instead.",
               correlationId,
             },
             { status: 409 }
@@ -195,14 +245,17 @@ export async function POST(request: NextRequest) {
 
       // Create real account in Supabase Auth via adminClient
       const { data: authData, error: authCreateErr } = await adminClient.auth.admin.createUser({
-        email: cleanEmail,
+        email: supabaseAuthEmail,
+        phone: isPhoneVerified ? normalizedPhone : undefined,
+        phone_confirm: isPhoneVerified,
         password: data.password,
-        email_confirm: true,
+        email_confirm: true, // Confirms only the internal synthetic phone-bound handle; real optionalEmail remains unverified in profiles.email_verified = false
         user_metadata: {
           full_name: data.fullName,
           role: safeMetadataRole,
           actual_role: assignedRole,
-          phone: cleanPhone,
+          phone: normalizedPhone,
+          optional_email: optionalEmail,
         },
       });
 
@@ -254,14 +307,15 @@ export async function POST(request: NextRequest) {
       // Upsert profile in PostgreSQL public.profiles (Atomic with auth.users foreign key)
       const profilePayload: Record<string, any> = {
         id: userId,
-        email: cleanEmail,
+        email: optionalEmail,
+        email_verified: false,
         full_name: data.fullName,
-        phone: cleanPhone,
+        phone: normalizedPhone,
         role: assignedRole,
         account_status: "active",
-        phone_verification_status: "not_verified",
-        verification_method: "none",
-        phone_verified: false,
+        phone_verification_status: phoneStatus,
+        verification_method: verifiedMethod,
+        phone_verified: isPhoneVerified,
         terms_accepted_at: nowIso,
         privacy_accepted_at: nowIso,
         terms_version: data.termsVersion,
@@ -274,6 +328,13 @@ export async function POST(request: NextRequest) {
         profilePayload,
         { onConflict: "id" }
       );
+
+      // Graceful fallback if optional columns (e.g. email_verified) haven't been migrated remotely yet
+      if (upsertErr && (upsertErr.code === "PGRST204" || upsertErr.message?.includes("email_verified"))) {
+        delete profilePayload.email_verified;
+        const retryCol = await adminClient.from("profiles").upsert(profilePayload, { onConflict: "id" });
+        upsertErr = retryCol.error;
+      }
 
       // Graceful fallback if database enum app_role lacks 'vendor'
       if (upsertErr && upsertErr.code === "22P02" && assignedRole === "vendor") {
@@ -293,6 +354,22 @@ export async function POST(request: NextRequest) {
           await adminClient.auth.admin.deleteUser(userId);
         } catch (cleanupErr) {
           console.warn("[REGISTER_ORPHAN_CLEANUP_WARN]", cleanupErr);
+        }
+
+        // Database unique constraint violation (race-condition duplicate registration)
+        if (upsertErr.code === "23505" || upsertErr.message?.toLowerCase().includes("duplicate key")) {
+          const isEmailDup = upsertErr.message?.toLowerCase().includes("email");
+          return NextResponse.json(
+            {
+              success: false,
+              code: isEmailDup ? "ACCOUNT_ALREADY_EXISTS" : "PHONE_ALREADY_REGISTERED",
+              message: isEmailDup
+                ? "An account with this email address already exists. Please sign in instead."
+                : "An account with this mobile number already exists. Please sign in instead.",
+              correlationId,
+            },
+            { status: 409 }
+          );
         }
 
         if (upsertErr.code === "PGRST205" || upsertErr.message?.includes("schema cache")) {
@@ -380,31 +457,60 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Offline unit test / development mock fallback
+      // Offline unit test / development mock fallback with duplicate enforcement
+      const phoneKey = `phone:${normalizedPhone}`;
+      if (localFallbackAccounts.has(phoneKey)) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: "PHONE_ALREADY_REGISTERED",
+            message: "An account with this mobile number already exists. Please sign in instead.",
+            correlationId,
+          },
+          { status: 409 }
+        );
+      }
+      if (optionalEmail && localFallbackAccounts.has(optionalEmail)) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: "ACCOUNT_ALREADY_EXISTS",
+            message: "An account with this email address already exists. Please sign in instead.",
+            correlationId,
+          },
+          { status: 409 }
+        );
+      }
+
       userId = crypto.randomUUID();
-      localFallbackAccounts.set(cleanEmail, {
+      const mockRecord = {
         id: userId,
-        email: cleanEmail,
+        email: optionalEmail,
+        email_verified: false,
         full_name: data.fullName,
-        phone: cleanPhone,
+        phone: normalizedPhone,
         role: assignedRole,
         account_status: "active",
-        phone_verification_status: "not_verified",
-        verification_method: "none",
-        phone_verified: false,
-      });
+        phone_verification_status: phoneStatus,
+        verification_method: verifiedMethod,
+        phone_verified: isPhoneVerified,
+      };
+      localFallbackAccounts.set(phoneKey, mockRecord);
+      if (optionalEmail) {
+        localFallbackAccounts.set(optionalEmail, mockRecord);
+      }
     }
 
     // 6. Issue cryptographically signed session token
     const sessionToken = signSessionToken({
       userId,
-      email: cleanEmail,
-      phone: cleanPhone,
+      email: optionalEmail,
+      phone: normalizedPhone,
       fullName: data.fullName,
       role: assignedRole,
-      phoneVerified: false,
-      phoneVerificationStatus: "not_verified",
-      verificationMethod: "none",
+      phoneVerified: isPhoneVerified,
+      phoneVerificationStatus: phoneStatus,
+      verificationMethod: verifiedMethod,
       accountStatus: "active",
     });
 
@@ -428,12 +534,13 @@ export async function POST(request: NextRequest) {
         message: "Account created successfully.",
         user: {
           id: userId,
-          email: cleanEmail,
+          email: optionalEmail,
+          emailVerified: false,
           fullName: data.fullName,
           role: assignedRole,
-          phone: cleanPhone,
-          phoneVerified: false,
-          phoneVerificationStatus: "not_verified",
+          phone: normalizedPhone,
+          phoneVerified: isPhoneVerified,
+          phoneVerificationStatus: phoneStatus,
         },
         redirectUrl,
         correlationId,

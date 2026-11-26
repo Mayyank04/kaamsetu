@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import {
   buildOnestProviderProfile,
@@ -7,6 +9,7 @@ import {
 } from "@/lib/ecosystem/onest/onest-live-service";
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const profile = buildOnestProviderProfile();
     return NextResponse.json({
@@ -24,6 +27,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const body = await req.json();
 

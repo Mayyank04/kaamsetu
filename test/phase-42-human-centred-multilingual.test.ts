@@ -123,11 +123,11 @@ describe("PHASE 42: Human-Centred Multilingual Experience & Accessibility", () =
     });
 
     test("1.4 Translation resolver gracefully falls back to English for unknown locales", () => {
-      const fallback = getTranslation("unknown_xyz");
+      const fallback = getTranslation("unknown_xyz" as any);
       assert.strictEqual(fallback.locale, "en");
       assert.ok(fallback.header.home);
 
-      const nullFallback = getTranslation(null);
+      const nullFallback = getTranslation(null as any);
       assert.strictEqual(nullFallback.locale, "en");
     });
 

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import {
   validateInstitutionalStageTransition,
   evaluateInstitutionProductionReadiness,
@@ -9,6 +11,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const institutionId = searchParams.get("institutionId");
@@ -28,13 +31,14 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ onboardingRecords: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    await requireAdmin();
     const body = await req.json();
     const {
       institutionId,
@@ -80,13 +84,14 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ onboardingRecord: data }, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
+    await requireAdmin();
     const body = await req.json();
     const { id, targetStage, updateData } = body;
 
@@ -150,7 +155,7 @@ export async function PATCH(req: NextRequest) {
     const readiness = evaluateInstitutionProductionReadiness(currentRecord);
 
     return NextResponse.json({ updatedRecord: updated, productionReadiness: readiness });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }

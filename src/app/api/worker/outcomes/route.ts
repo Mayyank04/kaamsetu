@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireInstitution } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import {
   validateFourTierEarnings,
   assertWorkerOutcomePrivacy,
@@ -8,6 +10,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    await requireInstitution();
     const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const cohortId = searchParams.get("cohortId");
@@ -38,13 +41,14 @@ export async function GET(req: NextRequest) {
       success: true,
       records: sanitized,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    await requireInstitution();
     const body = await req.json();
     const tierValidation = validateFourTierEarnings({
       workerReported: body.workerReportedMonthlyIncome ?? null,
@@ -85,13 +89,14 @@ export async function POST(req: NextRequest) {
       record: data,
       tierValidation,
     }, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
+    await requireInstitution();
     const body = await req.json();
     if (!body.workerProfileId) {
       return NextResponse.json({ error: "workerProfileId is required" }, { status: 400 });
@@ -116,7 +121,7 @@ export async function PATCH(req: NextRequest) {
       updatedCount: data?.length || 0,
       outcomeTrackingOptedIn: body.outcomeTrackingOptedIn,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return handleApiError(err);
   }
 }

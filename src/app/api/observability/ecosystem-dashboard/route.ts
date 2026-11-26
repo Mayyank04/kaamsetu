@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextResponse } from "next/server";
 import {
   buildEcosystemDashboardSnapshot,
@@ -5,6 +7,7 @@ import {
 } from "@/lib/observability/ecosystem-operations-dashboard-service";
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const connectors: IntegrationConnectorStatus[] = [
       {

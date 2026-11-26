@@ -1,8 +1,11 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import { OnestAdapter } from "@/lib/ecosystem/onest/onest-adapter";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const body = await req.json();
 
@@ -64,6 +67,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   return NextResponse.json({
     status: "active",
     protocol: "ONest/DSEP",

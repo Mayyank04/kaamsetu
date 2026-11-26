@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import {
   buildOndcSubscriberManifest,
@@ -8,6 +10,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const admin = createAdminClient();
     const { data: participant } = await admin
@@ -47,6 +50,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const body = await req.json();
     const { signingPublicKey, checklist, participantId, subscriberId, callbackUrl } = body;

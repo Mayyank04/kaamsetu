@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/auth/server";
+import { handleApiError } from "@/lib/error/handler";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -16,6 +18,7 @@ import {
 } from "@/lib/governance/institutional-ratification-service";
 
 export async function GET(req: NextRequest) {
+  try { await requireAdmin(); } catch (authError) { return handleApiError(authError); }
   try {
     const { searchParams } = new URL(req.url);
     const viewMode = searchParams.get("view") || "public";

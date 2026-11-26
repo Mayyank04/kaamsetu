@@ -101,7 +101,7 @@ describe("MASTER ENGINEERING RECOVERY & PRODUCTION READINESS", () => {
       const phone = getUniqueTestPhone();
       const ip = getUniqueTestIp();
       try {
-        process.env.NODE_ENV = "production";
+        (process.env as Record<string, string | undefined>).NODE_ENV = "production";
         delete process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION;
         process.env.AUTH_VERIFICATION_MODE = "sandbox";
 
@@ -119,9 +119,9 @@ describe("MASTER ENGINEERING RECOVERY & PRODUCTION READINESS", () => {
         assert.strictEqual(res.statusCode, 503);
       } finally {
         if (origNodeEnv !== undefined) {
-          process.env.NODE_ENV = origNodeEnv;
+          (process.env as Record<string, string | undefined>).NODE_ENV = origNodeEnv;
         } else {
-          delete process.env.NODE_ENV;
+          delete (process.env as Record<string, string | undefined>).NODE_ENV;
         }
         if (origMode !== undefined) {
           process.env.AUTH_VERIFICATION_MODE = origMode;
@@ -140,7 +140,7 @@ describe("MASTER ENGINEERING RECOVERY & PRODUCTION READINESS", () => {
       const phone = getUniqueTestPhone();
       const ip = getUniqueTestIp();
       try {
-        process.env.NODE_ENV = "production";
+        (process.env as Record<string, string | undefined>).NODE_ENV = "production";
         process.env.AUTH_VERIFICATION_MODE = "sms";
         delete process.env.TWILIO_ACCOUNT_SID;
 
@@ -157,9 +157,9 @@ describe("MASTER ENGINEERING RECOVERY & PRODUCTION READINESS", () => {
         assert.strictEqual(res.statusCode, 503);
       } finally {
         if (origNodeEnv !== undefined) {
-          process.env.NODE_ENV = origNodeEnv;
+          (process.env as Record<string, string | undefined>).NODE_ENV = origNodeEnv;
         } else {
-          delete process.env.NODE_ENV;
+          delete (process.env as Record<string, string | undefined>).NODE_ENV;
         }
         if (origMode !== undefined) {
           process.env.AUTH_VERIFICATION_MODE = origMode;
