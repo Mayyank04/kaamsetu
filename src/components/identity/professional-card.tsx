@@ -4,6 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import { WorkerProfile } from "@/types/identity";
 import { TrustBadge } from "@/components/identity/trust-badge";
+import { VerifiedPhoneBadge } from "@/components/ui/verified-phone-badge";
 import { CredentialDialog } from "@/components/identity/credential-dialog";
 import { formatINR } from "@/lib/utils";
 import { MapPin, CheckCircle2, Shield, Eye, Award, Clock, Store, ShoppingBag } from "lucide-react";
@@ -124,7 +125,8 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
         </div>
 
         {/* Badges Row */}
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <VerifiedPhoneBadge status={professional.phoneVerificationStatus} />
           {professional.aadhaarVerified && <TrustBadge type="aadhaar" />}
           {professional.digiLockerLinked && <TrustBadge type="digilocker" />}
           <TrustBadge type="peer_verified" />

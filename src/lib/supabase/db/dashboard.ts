@@ -40,6 +40,8 @@ export async function getWorkerDashboardData(
       digiLockerLinked: true,
       isPublished: true,
       availabilityStatus: "available",
+      phoneVerificationStatus: "sms_verified",
+      categorySlug: "electrical",
       createdAt: "2025-03-12T00:00:00Z",
       updatedAt: new Date().toISOString(),
     },
@@ -309,6 +311,8 @@ export async function getWorkerDashboardData(
         aadhaarVerified: matched.aadhaarVerified,
         digiLockerLinked: matched.digiLockerLinked,
         availabilityStatus: (matched.availabilityStatus as any) || "available",
+        phoneVerificationStatus: (matched as any).phoneVerificationStatus || "sms_verified",
+        categorySlug: (matched as any).categorySlug || "electrical",
       };
 
       defaultDashboardData.skills = matched.subTrades.map((st, idx) => ({

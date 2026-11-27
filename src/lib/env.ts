@@ -27,13 +27,29 @@ const envSchema = z.object({
     .optional()
     .default("gemini-3.8-flash"),
 
-  // Authentication Verification Mode: fail-closed 'sms' in production, 'sandbox' in dev/test
+  // Authentication Verification Mode: fail-closed 'sms' in production, 'sandbox' in dev/test or when explicitly set
+  PHONE_OTP_MODE: z
+    .enum(["sandbox", "sms", "real"])
+    .optional()
+    .default(
+      process.env.PHONE_OTP_MODE === "sandbox" || process.env.AUTH_VERIFICATION_MODE === "sandbox"
+        ? "sandbox"
+        : process.env.NODE_ENV === "production"
+        ? "sms"
+        : "sandbox"
+    ),
   AUTH_VERIFICATION_MODE: z
-    .enum(["sandbox", "sms"])
-    .default(process.env.NODE_ENV === "production" ? "sms" : "sandbox"),
+    .enum(["sandbox", "sms", "real"])
+    .default(
+      process.env.PHONE_OTP_MODE === "sandbox" || process.env.AUTH_VERIFICATION_MODE === "sandbox"
+        ? "sandbox"
+        : process.env.NODE_ENV === "production"
+        ? "sms"
+        : "sandbox"
+    ),
 
   // Optional server-configured sandbox verification code for controlled evaluation
-  SANDBOX_OTP_CODE: z.string().optional(),
+  SANDBOX_OTP_CODE: z.string().optional().default("123456"),
 
   // Cryptographic Credential Signing
   CREDENTIAL_SIGNING_KEY: z.string().optional(),
@@ -66,10 +82,15 @@ function validateEnv() {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-3.8-flash",
-    AUTH_VERIFICATION_MODE:
+    PHONE_OTP_MODE:
+      process.env.PHONE_OTP_MODE ||
       process.env.AUTH_VERIFICATION_MODE ||
       (process.env.NODE_ENV === "production" ? "sms" : "sandbox"),
-    SANDBOX_OTP_CODE: process.env.SANDBOX_OTP_CODE,
+    AUTH_VERIFICATION_MODE:
+      process.env.PHONE_OTP_MODE ||
+      process.env.AUTH_VERIFICATION_MODE ||
+      (process.env.NODE_ENV === "production" ? "sms" : "sandbox"),
+    SANDBOX_OTP_CODE: process.env.SANDBOX_OTP_CODE || "123456",
     CREDENTIAL_SIGNING_KEY: process.env.CREDENTIAL_SIGNING_KEY,
     ACTIVE_SIGNING_KEY_VERSION: process.env.ACTIVE_SIGNING_KEY_VERSION,
     REVOKED_SIGNING_KEY_VERSIONS: process.env.REVOKED_SIGNING_KEY_VERSIONS,

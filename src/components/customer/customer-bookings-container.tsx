@@ -198,7 +198,7 @@ export function CustomerBookingsContainer({
             </p>
           </div>
           <Button asChild className="bg-forest text-ivory text-xs h-9 px-5">
-            <Link href="/explore">
+            <Link href="/find-professionals">
               Explore Available Professionals
             </Link>
           </Button>

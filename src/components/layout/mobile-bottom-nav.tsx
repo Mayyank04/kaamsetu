@@ -37,10 +37,10 @@ export function MobileBottomNav() {
       active: pathname === "/",
     },
     {
-      href: "/explore",
-      label: "Find Work",
+      href: "/find-professionals",
+      label: "Find",
       icon: Search,
-      active: pathname.startsWith("/explore"),
+      active: pathname.startsWith("/find-professionals") || pathname.startsWith("/explore"),
     },
     {
       href: "/translate",

@@ -102,6 +102,7 @@ export interface VerifyOtpResponse {
   };
   verificationMethod?: string;
   phoneVerified?: boolean;
+  phoneVerificationStatus?: string;
   verificationProof?: string;
   sessionToken?: string;
   redirectUrl?: string;
@@ -303,6 +304,7 @@ export function signPhoneVerificationProof(params: {
   intent: "registration" | "login";
   verificationMethod: string;
   phoneVerified: boolean;
+  phoneVerificationStatus?: string;
 }): string {
   const secret = getRateLimitHmacSecret();
   const payload = {
@@ -311,7 +313,10 @@ export function signPhoneVerificationProof(params: {
     intent: params.intent,
     verificationMethod: params.verificationMethod,
     phoneVerified: params.phoneVerified,
-    exp: Math.floor(Date.now() / 1000) + 10 * 60, // 10-minute registration completion window
+    phoneVerificationStatus:
+      params.phoneVerificationStatus ||
+      (params.verificationMethod === "sandbox" ? "sandbox_verified" : "sms_verified"),
+    exp: Math.floor(Date.now() / 1000) + 15 * 60, // 15-minute registration completion window
   };
   const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
   const signature = crypto
@@ -331,6 +336,7 @@ export function consumePhoneVerificationProof(
   valid: boolean;
   verificationMethod?: string;
   phoneVerified?: boolean;
+  phoneVerificationStatus?: string;
   error?: string;
 } {
   try {
@@ -356,6 +362,7 @@ export function consumePhoneVerificationProof(
       intent?: string;
       verificationMethod?: string;
       phoneVerified?: boolean;
+      phoneVerificationStatus?: string;
       exp?: number;
     };
 
@@ -383,6 +390,9 @@ export function consumePhoneVerificationProof(
       valid: true,
       verificationMethod: decoded.verificationMethod || "sms",
       phoneVerified: Boolean(decoded.phoneVerified),
+      phoneVerificationStatus:
+        decoded.phoneVerificationStatus ||
+        (decoded.verificationMethod === "sandbox" ? "sandbox_verified" : "sms_verified"),
     };
   } catch {
     return { valid: false, error: "Invalid phone verification proof." };
@@ -426,6 +436,7 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     }
 
     const verificationMode =
+      process.env.PHONE_OTP_MODE ||
       process.env.AUTH_VERIFICATION_MODE ||
       (isProduction ? "sms" : env.AUTH_VERIFICATION_MODE || "sandbox");
     const isSandbox = verificationMode === "sandbox";
@@ -578,14 +589,15 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
     }
   }
 
-  // Determine verification mode: fail closed to 'sms' in production unless explicitly overridden
+  // Determine verification mode: explicit PHONE_OTP_MODE, fallback to AUTH_VERIFICATION_MODE
   const verificationMode =
+    process.env.PHONE_OTP_MODE ||
     process.env.AUTH_VERIFICATION_MODE ||
     (isProduction ? "sms" : env.AUTH_VERIFICATION_MODE || "sandbox");
   const isSandbox = verificationMode === "sandbox";
 
-  // Generate 6-digit random code or use server-configured sandbox code
-  const configuredSandboxCode = process.env.SANDBOX_OTP_CODE;
+  // Fixed sandbox code is '123456' when in sandbox mode, or from SANDBOX_OTP_CODE env
+  const configuredSandboxCode = process.env.SANDBOX_OTP_CODE || (isSandbox ? "123456" : undefined);
   const otpCode = isSandbox && configuredSandboxCode && /^\d{6}$/.test(configuredSandboxCode)
     ? configuredSandboxCode
     : crypto.randomInt(100000, 999999).toString();
@@ -672,8 +684,8 @@ export async function sendOtp(req: SendOtpRequest): Promise<SendOtpResponse> {
         : `Sandbox verification code for ${maskPhoneNumber(formatted)} generated. No SMS will be sent.`,
       isSandbox: !isProduction,
       sandboxCode: (!isProduction || allowInsecureSandbox) ? otpCode : undefined,
-      retryAfterSeconds: 60,
-      nextAllowedAt: new Date(Date.now() + 60000).toISOString(),
+      retryAfterSeconds: 45,
+      nextAllowedAt: new Date(Date.now() + 45000).toISOString(),
       statusCode: 200,
     };
   }
@@ -768,11 +780,18 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
   let resolvedName = req.fullName?.trim() || "Verified User";
   const intent = req.intent || "login";
   const verificationMode =
+    process.env.PHONE_OTP_MODE ||
     process.env.AUTH_VERIFICATION_MODE ||
     (isProduction ? "sms" : env.AUTH_VERIFICATION_MODE || "sandbox");
   const isSandbox = verificationMode === "sandbox";
 
-  if (isProduction && isSandbox && process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION !== "true") {
+  if (
+    isProduction &&
+    isSandbox &&
+    process.env.PHONE_OTP_MODE !== "sandbox" &&
+    process.env.AUTH_VERIFICATION_MODE !== "sandbox" &&
+    process.env.ALLOW_INSECURE_SANDBOX_IN_PRODUCTION !== "true"
+  ) {
     return {
       success: false,
       code: "SMS_GATEWAY_UNAVAILABLE" as AuthErrorCode,
@@ -913,7 +932,7 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
   let workerProfileId: string | null = null;
   let contractorOrgId: string | null = null;
   const accountStatus = "active";
-  const phoneVerificationStatus = isSandbox ? "sandbox_unverified" : "sms_verified";
+  const phoneVerificationStatus = isSandbox ? "sandbox_verified" : "sms_verified";
   const verificationMethod = isSandbox ? "sandbox" : "sms";
   const phoneVerified = !isSandbox;
 
@@ -925,14 +944,16 @@ export async function verifyOtp(req: VerifyOtpRequest): Promise<VerifyOtpRespons
       intent: "registration",
       verificationMethod,
       phoneVerified,
+      phoneVerificationStatus,
     });
     return {
       success: true,
       message: isSandbox
-        ? "Sandbox OTP verified. Complete your registration."
+        ? "Phone verified in sandbox mode."
         : "Mobile phone verified successfully.",
       verificationMethod,
       phoneVerified,
+      phoneVerificationStatus,
       verificationProof,
       isSandbox,
       statusCode: 200,

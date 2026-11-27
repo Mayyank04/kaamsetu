@@ -120,6 +120,9 @@ export interface DashboardWorkerProfile {
   productCatalog?: VendorProduct[];
   deliveryAvailable?: boolean;
   contactPreference?: ContactPreference;
+  phoneVerificationStatus?: "sms_verified" | "sandbox_verified" | "not_verified" | string;
+  categorySlug?: string;
+  subcategories?: string[];
   createdAt: string;
   updatedAt: string;
 }
