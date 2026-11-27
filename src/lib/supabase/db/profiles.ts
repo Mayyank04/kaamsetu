@@ -6,6 +6,8 @@ import { FEATURED_PROFESSIONALS } from "@/lib/data/professionals";
 export interface WorkerFilterParams {
   search?: string;
   categorySlug?: string;
+  subcategory?: string;
+  phoneVerificationStatus?: "all" | "sms_verified" | "sandbox_verified" | "verified_any" | string;
   profileType?: "all" | "service_professional" | "goods_vendor" | "hybrid_artisan";
   vendorType?: string;
   stallType?: string;
@@ -67,6 +69,8 @@ function getMockWorkerProfiles(filters: WorkerFilterParams): WorkerProfile[] {
     product_catalog: p.productCatalog || [],
     delivery_available: Boolean(p.deliveryAvailable),
     contact_preference: p.contactPreference || "phone",
+    phone_verification_status: (p as any).phoneVerificationStatus || "sms_verified",
+    category_slug: (p as any).categorySlug || "electrical",
     created_at: p.createdAt,
     updated_at: p.updatedAt,
     subTrades: p.subTrades,
@@ -108,9 +112,33 @@ function getMockWorkerProfiles(filters: WorkerFilterParams): WorkerProfile[] {
     const q = filters.categorySlug.toLowerCase().replace(/-/g, " ");
     result = result.filter(
       (w) =>
+        (w as any).category_slug === filters.categorySlug ||
         w.headline.toLowerCase().includes(q) ||
         w.subTrades?.some((s) => s.toLowerCase().includes(q))
     );
+  }
+
+  if (filters.subcategory && filters.subcategory !== "all") {
+    const sub = filters.subcategory.toLowerCase().trim();
+    result = result.filter(
+      (w) =>
+        w.headline.toLowerCase().includes(sub) ||
+        w.subTrades?.some((s) => s.toLowerCase().includes(sub))
+    );
+  }
+
+  if (filters.phoneVerificationStatus && filters.phoneVerificationStatus !== "all") {
+    if (filters.phoneVerificationStatus === "verified_any") {
+      result = result.filter(
+        (w) =>
+          (w as any).phone_verification_status === "sms_verified" ||
+          (w as any).phone_verification_status === "sandbox_verified"
+      );
+    } else {
+      result = result.filter(
+        (w) => (w as any).phone_verification_status === filters.phoneVerificationStatus
+      );
+    }
   }
 
   if (filters.skill && filters.skill !== "all") {

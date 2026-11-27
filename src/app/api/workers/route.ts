@@ -8,6 +8,11 @@ export async function GET(request: NextRequest) {
 
     const search = searchParams.get("search") || undefined;
     const categorySlug = searchParams.get("category") || undefined;
+    const subcategory = searchParams.get("subcategory") || undefined;
+    const phoneVerificationStatus =
+      searchParams.get("phoneVerificationStatus") ||
+      searchParams.get("phoneStatus") ||
+      undefined;
     const profileType = (searchParams.get("profileType") as
       | "all"
       | "service_professional"
@@ -44,6 +49,8 @@ export async function GET(request: NextRequest) {
     const workers = await getPublishedWorkerProfiles({
       search,
       categorySlug,
+      subcategory,
+      phoneVerificationStatus,
       profileType,
       vendorType,
       stallType,

@@ -83,7 +83,7 @@ export function InstitutionalHeader() {
   const primaryNavLinks = React.useMemo(() => {
     const base = [
       { href: "/", label: t.header?.home || "Home" },
-      { href: "/explore", label: t.header?.findProfessionals || "Find Professionals" },
+      { href: "/find-professionals", label: t.header?.findProfessionals || "Find Professionals" },
       { href: "/translate", label: "Translator" },
       { href: "/how-it-works", label: t.header?.howItWorks || "How It Works" },
     ];
@@ -503,7 +503,7 @@ export function InstitutionalHeader() {
 
             <div className="pt-3 border-t border-forest/10 flex flex-col gap-2.5">
               <Button variant="outline" className="w-full min-h-[44px] justify-center text-sm" asChild>
-                <Link href="/explore" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/find-professionals" onClick={() => setMobileMenuOpen(false)}>
                   <Search className="mr-2 h-4 w-4" />
                   {t.header?.findProfessionals || "Find Professionals"}
                 </Link>

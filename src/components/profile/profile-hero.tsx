@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { VerifiedPhoneBadge } from "@/components/ui/verified-phone-badge";
 import { DashboardWorkerProfile } from "@/types/dashboard";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { TranslatedContent } from "@/components/translation/translated-content";
@@ -155,6 +156,7 @@ export function ProfileHero({
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-forest tracking-tight">
                 {profile.fullName}
               </h1>
+              <VerifiedPhoneBadge status={profile.phoneVerificationStatus} size="sm" />
               {profile.aadhaarVerified && (
                 <Badge
                   variant="outline"

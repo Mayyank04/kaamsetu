@@ -73,7 +73,7 @@ export default function HomePage() {
                   asChild
                   className="bg-sand/35 hover:bg-sand/55 text-forest border border-forest/20 min-h-[48px] px-7 text-base font-semibold"
                 >
-                  <Link href="/explore">
+                  <Link href="/find-professionals">
                     <Search className="mr-2 h-5 w-5 text-forest" />
                     {t.home?.findCraftspersonBtn || "Find a Professional"}
                   </Link>
@@ -175,7 +175,7 @@ export default function HomePage() {
           </div>
 
           <Button variant="outline" asChild className="shrink-0 min-h-[44px] border-forest/25 text-forest">
-            <Link href="/explore">
+            <Link href="/find-professionals">
               Search All Professionals
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -278,7 +278,7 @@ export default function HomePage() {
           </div>
 
           <Button variant="outline" asChild className="shrink-0 min-h-[44px] border-forest/25 text-forest">
-            <Link href="/explore">
+            <Link href="/find-professionals">
               Open Full Directory
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
