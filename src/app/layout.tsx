@@ -1,11 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import {
-  Plus_Jakarta_Sans,
-  Noto_Sans_Devanagari,
-  Noto_Sans_Bengali,
-  Noto_Sans_Tamil,
-  Noto_Sans_Telugu,
-} from "next/font/google";
+import localFont from "next/font/local";
 import { InstitutionalHeader } from "@/components/layout/institutional-header";
 import { InstitutionalFooter } from "@/components/layout/institutional-footer";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
@@ -16,37 +10,61 @@ import { I18nProvider } from "@/lib/i18n/i18n-context";
 import { PwaRegister } from "@/components/pwa/pwa-register";
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+// Self-hosted typography: Plus_Jakarta_Sans and Indic Noto fonts (Noto_Sans_Devanagari, Noto_Sans_Bengali, Noto_Sans_Tamil, Noto_Sans_Telugu)
+// Preloaded locally via next/font/local to eliminate all external Google Fonts runtime & CI build network dependencies.
+
+const plusJakarta = localFont({
+  src: [
+    { path: "../fonts/plus-jakarta-sans-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/plus-jakarta-sans-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/plus-jakarta-sans-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/plus-jakarta-sans-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/plus-jakarta-sans-latin-800-normal.woff2", weight: "800", style: "normal" },
+  ],
   variable: "--font-jakarta",
   display: "swap",
 });
 
-const notoDevanagari = Noto_Sans_Devanagari({
-  subsets: ["devanagari"],
-  weight: ["400", "500", "600", "700"],
+const notoDevanagari = localFont({
+  src: [
+    { path: "../fonts/noto-sans-devanagari-devanagari-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/noto-sans-devanagari-devanagari-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/noto-sans-devanagari-devanagari-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/noto-sans-devanagari-devanagari-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-devanagari",
   display: "swap",
 });
 
-const notoBengali = Noto_Sans_Bengali({
-  subsets: ["bengali"],
-  weight: ["400", "500", "600", "700"],
+const notoBengali = localFont({
+  src: [
+    { path: "../fonts/noto-sans-bengali-bengali-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/noto-sans-bengali-bengali-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/noto-sans-bengali-bengali-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/noto-sans-bengali-bengali-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-bengali",
   display: "swap",
 });
 
-const notoTamil = Noto_Sans_Tamil({
-  subsets: ["tamil"],
-  weight: ["400", "500", "600", "700"],
+const notoTamil = localFont({
+  src: [
+    { path: "../fonts/noto-sans-tamil-tamil-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/noto-sans-tamil-tamil-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/noto-sans-tamil-tamil-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/noto-sans-tamil-tamil-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-tamil",
   display: "swap",
 });
 
-const notoTelugu = Noto_Sans_Telugu({
-  subsets: ["telugu"],
-  weight: ["400", "500", "600", "700"],
+const notoTelugu = localFont({
+  src: [
+    { path: "../fonts/noto-sans-telugu-telugu-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/noto-sans-telugu-telugu-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/noto-sans-telugu-telugu-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/noto-sans-telugu-telugu-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-telugu",
   display: "swap",
 });
