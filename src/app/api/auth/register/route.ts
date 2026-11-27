@@ -137,9 +137,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const verifiedMethod = proofResult.verificationMethod || "sms";
+    const verifiedMethod = proofResult.verificationMethod || "sandbox";
     const isPhoneVerified = Boolean(proofResult.phoneVerified);
-    const phoneStatus = isPhoneVerified ? "sms_verified" : "sandbox_unverified";
+    const phoneStatus = proofResult.phoneVerificationStatus || (isPhoneVerified ? "sms_verified" : "sandbox_verified");
     // Always bind Supabase Auth's internal login handle to the canonical verified phone identity.
     // The user's optional real email is stored in public.profiles with email_verified = false (never auto-confirmed).
     const supabaseAuthEmail = `phone.${crypto

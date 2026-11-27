@@ -161,12 +161,14 @@ describe("PHASE 53: SECURE PHONE-VERIFIED REGISTRATION & UNIQUE ACCOUNT ENFORCEM
       const env = process.env as Record<string, string | undefined>;
       const prevNodeEnv = env.NODE_ENV;
       const prevMode = env.AUTH_VERIFICATION_MODE;
+      const prevPhoneMode = env.PHONE_OTP_MODE;
       const prevSid = env.TWILIO_ACCOUNT_SID;
       const prevTok = env.TWILIO_AUTH_TOKEN;
 
       try {
         env.NODE_ENV = "production";
         env.AUTH_VERIFICATION_MODE = "sandbox";
+        delete env.PHONE_OTP_MODE;
         delete env.TWILIO_ACCOUNT_SID;
         delete env.TWILIO_AUTH_TOKEN;
 
@@ -189,6 +191,8 @@ describe("PHASE 53: SECURE PHONE-VERIFIED REGISTRATION & UNIQUE ACCOUNT ENFORCEM
         env.NODE_ENV = prevNodeEnv;
         if (prevMode === undefined) delete env.AUTH_VERIFICATION_MODE;
         else env.AUTH_VERIFICATION_MODE = prevMode;
+        if (prevPhoneMode === undefined) delete env.PHONE_OTP_MODE;
+        else env.PHONE_OTP_MODE = prevPhoneMode;
         if (prevSid !== undefined) env.TWILIO_ACCOUNT_SID = prevSid;
         if (prevTok !== undefined) env.TWILIO_AUTH_TOKEN = prevTok;
       }
